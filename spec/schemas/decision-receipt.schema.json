@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duly.dev/spec/v0/decision-receipt.schema.json",
+  "title": "DecisionReceipt",
+  "description": "The output of an adjudication: a conclusion plus the complete derivation that produced it, pinned to exact fact and rule versions. See spec/grounded-facts.md.",
+  "type": "object",
+  "required": ["id", "receiptSha256", "caseId", "decision", "asOf", "rulePack", "rulesFired", "derivation", "inputFacts", "abstentions", "engine"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^urn:duly:receipt:sha256:[0-9a-f]{64}$"
+    },
+    "receiptSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over RFC 8785 (JCS) canonical JSON of this object excluding 'id' and 'receiptSha256'."
+    },
+    "caseId": { "type": "string", "minLength": 1 },
+    "decision": {
+      "type": "object",
+      "required": ["attribute", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "entity": { "type": "string", "description": "Entity id the conclusion is about; defaults to the case." },
+        "attribute": { "$ref": "grounded-fact.schema.json#/$defs/Curie" },
+        "value": { "$ref": "grounded-fact.schema.json#/$defs/Value" }
+      }
+    },
+    "asOf": {
+      "type": "object",
+      "required": ["effective", "knowledge"],
+      "additionalProperties": false,
+      "description": "The bitemporal evaluation point: rules and facts as effective at 'effective', as known at 'knowledge'.",
+      "properties": {
+        "effective": { "type": "string", "format": "date-time" },
+        "knowledge": { "type": "string", "format": "date-time" }
+      }
+    },
+    "rulePack": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "url": { "type": "string" }
+      }
+    },
+    "rulesFired": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RuleRef" }
+    },
+    "derivation": { "$ref": "#/$defs/DerivationNode" },
+    "inputFacts": {
+      "type": "array",
+      "description": "Every consumed fact pinned by id and content hash so replay can verify inputs byte-for-byte.",
+      "items": {
+        "type": "object",
+        "required": ["id", "contentHash"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$" },
+          "contentHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "abstentions": {
+      "type": "array",
+      "description": "Attributes the decision needed but declined to use. Abstention lives on the receipt, not on the fact (spec D5).",
+      "items": {
+        "type": "object",
+        "required": ["attribute", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "entity": { "type": "string" },
+          "attribute": { "$ref": "grounded-fact.schema.json#/$defs/Curie" },
+          "reason": { "enum": ["missing", "low_confidence", "conflict"] },
+          "details": { "type": "string" },
+          "facts": {
+            "type": "array",
+            "description": "The facts involved (e.g. the low-confidence or conflicting candidates).",
+            "items": { "type": "string", "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$" }
+          },
+          "routedTo": { "type": "string", "description": "Review queue or actor the abstention was routed to." }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "required": ["kernel", "version", "backend"],
+      "additionalProperties": false,
+      "properties": {
+        "kernel": { "type": "string" },
+        "version": { "type": "string" },
+        "backend": { "type": "string", "description": "Evaluation backend, e.g. 'reference', 'souffle', 'clingo', 'z3'." }
+      }
+    }
+  },
+  "$defs": {
+    "RuleRef": {
+      "type": "object",
+      "required": ["ruleId", "version", "citation"],
+      "additionalProperties": false,
+      "properties": {
+        "ruleId": { "type": "string" },
+        "version": { "type": "string" },
+        "citation": {
+          "type": "object",
+          "required": ["text"],
+          "additionalProperties": false,
+          "properties": {
+            "text": { "type": "string", "description": "Legal citation, e.g. 'N.Y. Ins. Law § 3425(d)(1)'." },
+            "url": { "type": "string" }
+          }
+        },
+        "priority": { "type": "integer" },
+        "effectiveFrom": { "type": "string", "format": "date-time" },
+        "effectiveTo": { "type": "string", "format": "date-time" },
+        "defeated": {
+          "type": "array",
+          "description": "Rules this rule overrode under the defeasible IR — the non-monotonic story made auditable.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "DerivationNode": {
+      "type": "object",
+      "required": ["conclusion"],
+      "additionalProperties": false,
+      "properties": {
+        "conclusion": {
+          "type": "object",
+          "required": ["attribute", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "entity": { "type": "string" },
+            "attribute": { "$ref": "grounded-fact.schema.json#/$defs/Curie" },
+            "value": { "$ref": "grounded-fact.schema.json#/$defs/Value" }
+          }
+        },
+        "rule": { "type": "string", "description": "ruleId from rulesFired that produced this conclusion. Absent for leaf premises." },
+        "premises": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["factId"],
+                "additionalProperties": false,
+                "properties": {
+                  "factId": { "type": "string", "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$" }
+                }
+              },
+              { "$ref": "#/$defs/DerivationNode" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

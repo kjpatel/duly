@@ -1,0 +1,54 @@
+{
+  "id": "urn:duly:fact:sha256:6cf5e71b99495ce34fe4fade80aa2752d30248db63b43f76d03bc8b94bc883b0",
+  "contentHash": "6cf5e71b99495ce34fe4fade80aa2752d30248db63b43f76d03bc8b94bc883b0",
+  "caseId": "case:policy:HO-77401-NY",
+  "entity": {
+    "id": "policy:HO-77401-NY",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-NY",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:dec-page:HO-77401-NY:2025-09-01",
+    "documentSha256": "5c1e8a7b3d9f2c4e6a0b8d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c",
+    "rendition": {
+      "id": "rend:docling:2.15.0:5c1e8a7b",
+      "extractor": "docling",
+      "extractorVersion": "2.15.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 412,
+      "end": 447
+    },
+    "quote": "Insured Location: Albany, New York"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:05:41Z",
+    "extractor": {
+      "name": "duly-docling-adapter",
+      "version": "0.1.0",
+      "modelId": "docling-2.15.0",
+      "runId": "run:2026-07-28:003"
+    }
+  },
+  "confidence": {
+    "score": 0.998,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "effectiveFrom": "2025-09-01T00:00:00Z",
+  "recordedAt": "2026-07-28T14:05:41Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duly.dev/spec/v0/grounded-fact.schema.json",
+  "title": "GroundedFact",
+  "description": "A single typed assertion proposed by an extractor or a human, with grounding, confidence, and bitemporal fields. See spec/grounded-facts.md.",
+  "type": "object",
+  "required": ["id", "contentHash", "caseId", "entity", "attribute", "value", "grounding", "assertion", "recordedAt", "status", "schemaRef"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$",
+      "description": "Content-derived id: urn:duly:fact:sha256:<contentHash>."
+    },
+    "contentHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over RFC 8785 (JCS) canonical JSON of this object excluding 'id' and 'contentHash'."
+    },
+    "caseId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The adjudication scope this fact belongs to (a loan file, a claim, a filing)."
+    },
+    "entity": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/Curie" }
+      }
+    },
+    "attribute": {
+      "$ref": "#/$defs/Curie",
+      "description": "The attribute asserted, as a CURIE resolved against schemaRef.ontology."
+    },
+    "value": { "$ref": "#/$defs/Value" },
+    "grounding": {
+      "oneOf": [
+        { "$ref": "#/$defs/DocumentGrounding" },
+        { "$ref": "#/$defs/AttestationGrounding" }
+      ]
+    },
+    "assertion": {
+      "type": "object",
+      "required": ["kind", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["machine", "human"] },
+        "at": { "type": "string", "format": "date-time" },
+        "extractor": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "modelId": { "type": "string" },
+            "runId": { "type": "string" }
+          }
+        },
+        "actor": {
+          "type": "object",
+          "required": ["id"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "role": { "type": "string" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "machine" } } },
+          "then": { "required": ["extractor"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "human" } } },
+          "then": { "required": ["actor"] }
+        }
+      ]
+    },
+    "confidence": {
+      "type": "object",
+      "required": ["score", "method"],
+      "additionalProperties": false,
+      "description": "Required in practice for machine assertions; abstention thresholds are kernel policy, not stored here (spec D5).",
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "method": { "enum": ["raw", "temperature", "platt", "conformal"] },
+        "calibrationRef": { "type": "string", "description": "Identifier of the calibration artifact/run that produced this score." }
+      }
+    },
+    "effectiveFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the assertion becomes true in the world. Omitted = unbounded past."
+    },
+    "effectiveTo": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the assertion stops being true in the world (e.g. a premium quote good-through date). Omitted = unbounded future."
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Knowledge time: when the store recorded this fact. Append-only; assigned by the store."
+    },
+    "status": {
+      "enum": ["asserted", "superseded", "retracted"],
+      "description": "Store-level projection; the original record is never mutated (spec D7)."
+    },
+    "supersedes": {
+      "type": "string",
+      "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$",
+      "description": "The fact this one corrects, forming the correction chain."
+    },
+    "schemaRef": {
+      "type": "object",
+      "required": ["ontology", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "ontology": { "type": "string", "description": "Name or URI of the domain ontology (e.g. MISMO, project-local)." },
+        "version": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "Curie": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]*:[^\\s]+$"
+    },
+    "DecimalString": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+    },
+    "Value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "string" }, "value": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "decimal" }, "value": { "$ref": "#/$defs/DecimalString" } }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "amount", "currency"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "money" },
+            "amount": { "$ref": "#/$defs/DecimalString" },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "date" }, "value": { "type": "string", "format": "date" } }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "datetime" }, "value": { "type": "string", "format": "date-time" } }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "boolean" }, "value": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value", "codeSystem"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "code" },
+            "value": { "type": "string" },
+            "codeSystem": { "type": "string" },
+            "codeSystemVersion": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": { "kind": { "const": "entityRef" }, "value": { "type": "string" } }
+        }
+      ]
+    },
+    "DocumentGrounding": {
+      "type": "object",
+      "required": ["kind", "documentId", "documentSha256", "rendition"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "document" },
+        "documentId": { "type": "string" },
+        "documentSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "rendition": {
+          "type": "object",
+          "required": ["id", "extractor", "extractorVersion"],
+          "additionalProperties": false,
+          "description": "The immutable extracted-text/layout artifact offsets are defined against (spec D4).",
+          "properties": {
+            "id": { "type": "string" },
+            "extractor": { "type": "string" },
+            "extractorVersion": { "type": "string" }
+          }
+        },
+        "page": { "type": "integer", "minimum": 1 },
+        "charSpan": {
+          "type": "object",
+          "required": ["start", "end"],
+          "additionalProperties": false,
+          "description": "Unicode code point offsets into the rendition text, end-exclusive.",
+          "properties": {
+            "start": { "type": "integer", "minimum": 0 },
+            "end": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "bbox": {
+          "type": "object",
+          "required": ["page", "x", "y", "w", "h"],
+          "additionalProperties": false,
+          "description": "Normalized page coordinates in [0,1], origin top-left.",
+          "properties": {
+            "page": { "type": "integer", "minimum": 1 },
+            "x": { "type": "number", "minimum": 0, "maximum": 1 },
+            "y": { "type": "number", "minimum": 0, "maximum": 1 },
+            "w": { "type": "number", "minimum": 0, "maximum": 1 },
+            "h": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "quote": { "type": "string", "description": "The source text, carried so receipts can render without document access." }
+      },
+      "anyOf": [
+        { "required": ["charSpan"] },
+        { "required": ["bbox"] }
+      ]
+    },
+    "AttestationGrounding": {
+      "type": "object",
+      "required": ["kind", "actor", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "attestation" },
+        "actor": { "type": "string", "description": "Who attested the fact." },
+        "channel": { "type": "string", "description": "How it was received (phone, email, in person)." },
+        "at": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

@@ -29,32 +29,9 @@ duly is that seam.
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    docs["Source documents<br/><i>PDFs, scans, filings</i>"]
-    extract["Extraction adapters (neural)<br/><i>document AI, constrained decoding</i>"]
-    contract["Grounded fact contract<br/><i>typed facts + spans + confidence</i>"]
-    review["Review queue<br/><i>abstentions to humans</i>"]
-    store[("Bitemporal fact store<br/><i>effective time × knowledge time</i>")]
-    rules["Rule packs<br/><i>versioned, effective-dated, in git</i>"]
-    kernel["Adjudication kernel<br/><i>defeasible IR → stratified Datalog</i>"]
-    receipt["Decision receipt<br/><i>rule + facts + clauses cited</i>"]
-    assure["Assurance harness<br/><i>replay, golden-set CI</i>"]
-
-    docs --> extract --> contract --> store --> kernel --> receipt
-    contract -. "abstain" .-> review
-    review -. "human-asserted facts" .-> store
-    rules --> kernel
-    receipt --> assure
-    assure -. "rule-change impact analysis" .-> rules
-
-    classDef neural fill:#EEEDFE,stroke:#534AB7,color:#26215C
-    classDef seam fill:#FAECE7,stroke:#993C1D,color:#4A1B0C
-    classDef logic fill:#E1F5EE,stroke:#0F6E56,color:#04342C
-    class extract neural
-    class contract seam
-    class store,kernel,rules,receipt logic
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="duly architecture: documents flow through neural extraction adapters into the grounded fact contract, then a bitemporal fact store, adjudication kernel, and decision receipt; a review queue handles abstentions, rule packs feed the kernel, and an assurance harness replays receipts" width="680">
+</p>
 
 Everything above the contract is probabilistic and replaceable; everything below it is deterministic and replayable. Extractors and models can be swapped at the contract line without touching the reasoning layer — the approach OpenTelemetry took for telemetry: standardize the interchange format, ship adapters, and let the ecosystem form around the format rather than around any single engine.
 

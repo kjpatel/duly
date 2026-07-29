@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:517473cb59bc5017f1116b3694f22e23f00d0516b73976817d2ecf595baeada9",
-  "contentHash": "517473cb59bc5017f1116b3694f22e23f00d0516b73976817d2ecf595baeada9",
+  "id": "urn:duly:fact:sha256:42845869613f705b782057925072700a7565b5d6763a4ce755d7c1185594fe58",
+  "contentHash": "42845869613f705b782057925072700a7565b5d6763a4ce755d7c1185594fe58",
   "caseId": "case:golden:notice-ca-0074",
   "entity": {
     "id": "policy:notice-ca-0074",
@@ -9,17 +9,17 @@
   "attribute": "nc:policyExpirationDate",
   "value": {
     "kind": "date",
-    "value": "2026-05-16"
+    "value": "2026-06-20"
   },
   "grounding": {
     "kind": "attestation",
     "actor": "golden-generator",
     "channel": "synthetic",
-    "at": "2026-04-18T12:00:00Z"
+    "at": "2026-06-04T12:00:00Z"
   },
   "assertion": {
     "kind": "machine",
-    "at": "2026-04-18T12:00:00Z",
+    "at": "2026-06-04T12:00:00Z",
     "extractor": {
       "name": "duly-golden-generator",
       "version": "0.1.0"
@@ -29,7 +29,7 @@
     "score": 1.0,
     "method": "raw"
   },
-  "recordedAt": "2026-04-18T12:00:00Z",
+  "recordedAt": "2026-06-04T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
     "ontology": "duly-starter-notice",

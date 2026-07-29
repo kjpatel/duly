@@ -1,46 +1,45 @@
 {
-  "id": "urn:duly:receipt:sha256:2d27b1689f078fee8dfdb9409cda8af2d7845543b1206a5087ec3bdf41081e68",
-  "receiptSha256": "2d27b1689f078fee8dfdb9409cda8af2d7845543b1206a5087ec3bdf41081e68",
+  "id": "urn:duly:receipt:sha256:fda916d3a91206e55c6dee02f15463681219600c424fc2e23257372844e46c72",
+  "receiptSha256": "fda916d3a91206e55c6dee02f15463681219600c424fc2e23257372844e46c72",
   "caseId": "case:golden:notice-fl-0007",
   "decision": {
     "entity": "notice:notice-fl-0007",
     "attribute": "nc:noticeCompliant",
     "value": {
       "kind": "boolean",
-      "value": false
+      "value": true
     }
   },
   "asOf": {
-    "effective": "2025-04-16T00:00:00Z",
-    "knowledge": "2025-04-18T12:00:00Z"
+    "effective": "2025-10-15T00:00:00Z",
+    "knowledge": "2025-10-17T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
-      "ruleId": "FL-NR-120",
+      "ruleId": "NC-DEF-00",
       "version": "1.0.0",
       "citation": {
-        "text": "Fla. Stat. § 627.4133(2)(b)",
-        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+        "text": "Default presumption"
       },
-      "priority": 100,
-      "effectiveFrom": "2016-01-01T00:00:00Z",
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
       "defeated": []
     },
     {
-      "ruleId": "NC-NR-01",
-      "version": "1.0.2",
+      "ruleId": "FL-NONPAY-10",
+      "version": "1.0.0",
       "citation": {
-        "text": "N.Y. Ins. Law § 3425(d)(1)",
-        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+        "text": "Fla. Stat. § 627.4133(2)(b)1.",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
       },
-      "priority": 200,
-      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "priority": 150,
+      "effectiveFrom": "2016-01-01T00:00:00Z",
       "defeated": [
-        "NC-DEF-00"
+        "FL-NR-120"
       ]
     }
   ],
@@ -50,56 +49,13 @@
       "attribute": "nc:noticeCompliant",
       "value": {
         "kind": "boolean",
-        "value": false
+        "value": true
       }
     },
-    "rule": "NC-NR-01",
-    "premises": [
-      {
-        "factId": "urn:duly:fact:sha256:7cd3e791b73a8526309c18c2e8f46ddc134e8488c26ef194f0fbd8f6ea97198f"
-      },
-      {
-        "factId": "urn:duly:fact:sha256:bb062e2a4f59d40e2dd0a4781de87728d32369aa66deffc69790c3515515e389"
-      },
-      {
-        "conclusion": {
-          "entity": "notice:notice-fl-0007",
-          "attribute": "nc:requiredMinimumNoticeDays",
-          "value": {
-            "kind": "decimal",
-            "value": "120"
-          }
-        },
-        "rule": "FL-NR-120",
-        "premises": [
-          {
-            "factId": "urn:duly:fact:sha256:4ce7a815b368e109b18253c46a78a9035434dbe1bfd315a0ad95e79b9e77c706"
-          },
-          {
-            "factId": "urn:duly:fact:sha256:cf1de6335dbbe579b017325f7d05128197882963c8902b7173124be6a5075c2a"
-          }
-        ]
-      }
-    ]
+    "rule": "NC-DEF-00",
+    "premises": []
   },
-  "inputFacts": [
-    {
-      "id": "urn:duly:fact:sha256:7cd3e791b73a8526309c18c2e8f46ddc134e8488c26ef194f0fbd8f6ea97198f",
-      "contentHash": "7cd3e791b73a8526309c18c2e8f46ddc134e8488c26ef194f0fbd8f6ea97198f"
-    },
-    {
-      "id": "urn:duly:fact:sha256:bb062e2a4f59d40e2dd0a4781de87728d32369aa66deffc69790c3515515e389",
-      "contentHash": "bb062e2a4f59d40e2dd0a4781de87728d32369aa66deffc69790c3515515e389"
-    },
-    {
-      "id": "urn:duly:fact:sha256:4ce7a815b368e109b18253c46a78a9035434dbe1bfd315a0ad95e79b9e77c706",
-      "contentHash": "4ce7a815b368e109b18253c46a78a9035434dbe1bfd315a0ad95e79b9e77c706"
-    },
-    {
-      "id": "urn:duly:fact:sha256:cf1de6335dbbe579b017325f7d05128197882963c8902b7173124be6a5075c2a",
-      "contentHash": "cf1de6335dbbe579b017325f7d05128197882963c8902b7173124be6a5075c2a"
-    }
-  ],
+  "inputFacts": [],
   "abstentions": [],
   "engine": {
     "kernel": "duly-kernel",

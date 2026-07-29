@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:d07ada191a757b1eaaeb448c55cab78bece92477fbd328fcf089a2e53e2f3c5b",
-  "receiptSha256": "d07ada191a757b1eaaeb448c55cab78bece92477fbd328fcf089a2e53e2f3c5b",
+  "id": "urn:duly:receipt:sha256:fcb3e973862da8a4d77dde0c4cb16c8d7dea436d6ce8b26f1e6834784b688ebf",
+  "receiptSha256": "fcb3e973862da8a4d77dde0c4cb16c8d7dea436d6ce8b26f1e6834784b688ebf",
   "caseId": "case:golden:notice-ca-0067",
   "decision": {
     "entity": "notice:notice-ca-0067",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-12-04T00:00:00Z",
-    "knowledge": "2025-12-06T12:00:00Z"
+    "effective": "2026-05-24T00:00:00Z",
+    "knowledge": "2026-05-26T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,15 +30,17 @@
       "defeated": []
     },
     {
-      "ruleId": "CA-NR-75",
+      "ruleId": "CA-NONPAY-10",
       "version": "1.0.0",
       "citation": {
-        "text": "Cal. Ins. Code § 678(c)",
-        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=678."
+        "text": "Cal. Ins. Code § 677.4",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=677.4."
       },
-      "priority": 100,
-      "effectiveFrom": "2020-07-01T00:00:00Z",
-      "defeated": []
+      "priority": 150,
+      "effectiveFrom": "2023-01-01T00:00:00Z",
+      "defeated": [
+        "CA-NR-75"
+      ]
     }
   ],
   "derivation": {

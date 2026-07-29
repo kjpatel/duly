@@ -1,47 +1,45 @@
 {
-  "id": "urn:duly:receipt:sha256:b108cdee0c3601d9261677fa96b731a94780922270c2146221ab176e9d4d2ca8",
-  "receiptSha256": "b108cdee0c3601d9261677fa96b731a94780922270c2146221ab176e9d4d2ca8",
+  "id": "urn:duly:receipt:sha256:a8afab94ef4a73ab8d73a73b56ec14f16c2f0c7324794248098a872608f88864",
+  "receiptSha256": "a8afab94ef4a73ab8d73a73b56ec14f16c2f0c7324794248098a872608f88864",
   "caseId": "case:golden:notice-ny-0029",
   "decision": {
     "entity": "notice:notice-ny-0029",
     "attribute": "nc:noticeCompliant",
     "value": {
       "kind": "boolean",
-      "value": false
+      "value": true
     }
   },
   "asOf": {
-    "effective": "2026-01-25T00:00:00Z",
-    "knowledge": "2026-01-27T12:00:00Z"
+    "effective": "2025-06-16T00:00:00Z",
+    "knowledge": "2025-06-18T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
-      "ruleId": "NY-NR-45",
-      "version": "1.1.0",
+      "ruleId": "NC-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "NY-NR-45-LEGACY",
+      "version": "1.0.0",
       "citation": {
         "text": "N.Y. Ins. Law § 3425(d)(1)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
       "priority": 100,
-      "effectiveFrom": "2026-01-01T00:00:00Z",
-      "defeated": []
-    },
-    {
-      "ruleId": "NC-NR-01",
-      "version": "1.0.2",
-      "citation": {
-        "text": "N.Y. Ins. Law § 3425(d)(1)",
-        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
-      },
-      "priority": 200,
       "effectiveFrom": "1986-01-01T00:00:00Z",
-      "defeated": [
-        "NC-DEF-00"
-      ]
+      "effectiveTo": "2026-01-01T00:00:00Z",
+      "defeated": []
     }
   ],
   "derivation": {
@@ -50,57 +48,33 @@
       "attribute": "nc:noticeCompliant",
       "value": {
         "kind": "boolean",
-        "value": false
+        "value": true
       }
     },
-    "rule": "NC-NR-01",
-    "premises": [
-      {
-        "factId": "urn:duly:fact:sha256:354bb5a4d942d83a4c3f831095b533a3b98e7ed909eb085ddd72bb0c1d8d3188"
-      },
-      {
-        "factId": "urn:duly:fact:sha256:4fcd2ef5d4d1a1edcd27b4cdf557636f6d1e5c5021f8a92655e0d865a42aa38d"
-      },
-      {
-        "conclusion": {
-          "entity": "notice:notice-ny-0029",
-          "attribute": "nc:requiredMinimumNoticeDays",
-          "value": {
-            "kind": "decimal",
-            "value": "45"
-          }
-        },
-        "rule": "NY-NR-45",
-        "premises": [
-          {
-            "factId": "urn:duly:fact:sha256:66b49f1eb6e9251b5962a551fa09c4eba1b401c15fd6f568bd6d9854f1587622"
-          },
-          {
-            "factId": "urn:duly:fact:sha256:fade1f2962e63c4b92a473134d4a1c20a42c48b8822f7f37824a1349fcdc8efe"
-          }
-        ]
-      }
-    ]
+    "rule": "NC-DEF-00",
+    "premises": []
   },
-  "inputFacts": [
+  "inputFacts": [],
+  "abstentions": [
     {
-      "id": "urn:duly:fact:sha256:354bb5a4d942d83a4c3f831095b533a3b98e7ed909eb085ddd72bb0c1d8d3188",
-      "contentHash": "354bb5a4d942d83a4c3f831095b533a3b98e7ed909eb085ddd72bb0c1d8d3188"
-    },
-    {
-      "id": "urn:duly:fact:sha256:4fcd2ef5d4d1a1edcd27b4cdf557636f6d1e5c5021f8a92655e0d865a42aa38d",
-      "contentHash": "4fcd2ef5d4d1a1edcd27b4cdf557636f6d1e5c5021f8a92655e0d865a42aa38d"
-    },
-    {
-      "id": "urn:duly:fact:sha256:66b49f1eb6e9251b5962a551fa09c4eba1b401c15fd6f568bd6d9854f1587622",
-      "contentHash": "66b49f1eb6e9251b5962a551fa09c4eba1b401c15fd6f568bd6d9854f1587622"
-    },
-    {
-      "id": "urn:duly:fact:sha256:fade1f2962e63c4b92a473134d4a1c20a42c48b8822f7f37824a1349fcdc8efe",
-      "contentHash": "fade1f2962e63c4b92a473134d4a1c20a42c48b8822f7f37824a1349fcdc8efe"
+      "entity": "policy:notice-ny-0029",
+      "attribute": "nc:policyExpirationDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:4def3efaa80e309c84f2fccadd672d06b1eddc0ca62ae84c781041acc059a17e"
+      ],
+      "confidence": {
+        "score": 0.7,
+        "method": "temperature"
+      },
+      "threshold": {
+        "minConfidence": 0.75,
+        "source": "default",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
     }
   ],
-  "abstentions": [],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

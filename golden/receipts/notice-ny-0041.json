@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:3c334c40ce5524e2e608eb5a74c55afd4bedb9f0861f358fd262dd45519929ef",
-  "receiptSha256": "3c334c40ce5524e2e608eb5a74c55afd4bedb9f0861f358fd262dd45519929ef",
+  "id": "urn:duly:receipt:sha256:4df72c9a5d81893394a02731883d334a70a1ec06df87d1cf3a7b45da77db9280",
+  "receiptSha256": "4df72c9a5d81893394a02731883d334a70a1ec06df87d1cf3a7b45da77db9280",
   "caseId": "case:golden:notice-ny-0041",
   "decision": {
     "entity": "notice:notice-ny-0041",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-08-22T00:00:00Z",
-    "knowledge": "2026-08-24T12:00:00Z"
+    "effective": "2025-08-17T00:00:00Z",
+    "knowledge": "2025-08-19T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,14 +30,15 @@
       "defeated": []
     },
     {
-      "ruleId": "NY-NR-45",
-      "version": "1.1.0",
+      "ruleId": "NY-NR-45-LEGACY",
+      "version": "1.0.0",
       "citation": {
         "text": "N.Y. Ins. Law § 3425(d)(1)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
       "priority": 100,
-      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "effectiveTo": "2026-01-01T00:00:00Z",
       "defeated": []
     }
   ],
@@ -54,7 +55,44 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-ny-0041",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:c62fcf1eb654f6d14061dabcf1d639f7b72e010e79d445874b15c2abbeacd2ba"
+      ],
+      "confidence": {
+        "score": 0.6,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    },
+    {
+      "entity": "policy:notice-ny-0041",
+      "attribute": "nc:policyExpirationDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:65ca6290ad61f927ca2097f8afdb2df8f080e1186075b970c8ccd64a0d168df4"
+      ],
+      "confidence": {
+        "score": 0.7,
+        "method": "temperature"
+      },
+      "threshold": {
+        "minConfidence": 0.75,
+        "source": "default",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

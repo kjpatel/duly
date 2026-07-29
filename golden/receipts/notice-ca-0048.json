@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:e184780f49e91b241d797b5582a980f22c95cb30c982179f2fcb82a78c754614",
-  "receiptSha256": "e184780f49e91b241d797b5582a980f22c95cb30c982179f2fcb82a78c754614",
+  "id": "urn:duly:receipt:sha256:d032b230d685d72a55c7eddd1b03b8d35b68cae48b1cf19d3b3d669606fb27ae",
+  "receiptSha256": "d032b230d685d72a55c7eddd1b03b8d35b68cae48b1cf19d3b3d669606fb27ae",
   "caseId": "case:golden:notice-ca-0048",
   "decision": {
     "entity": "notice:notice-ca-0048",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-12-09T00:00:00Z",
-    "knowledge": "2026-12-11T12:00:00Z"
+    "effective": "2026-02-25T00:00:00Z",
+    "knowledge": "2026-02-27T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -56,7 +56,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-ca-0048",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:76bd7a493314a0b1c2fa57e39a83d550cc2133d01b5afd964a6ca38481ce3cad"
+      ],
+      "confidence": {
+        "score": 0.6,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

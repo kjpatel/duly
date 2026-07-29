@@ -1,45 +1,46 @@
 {
-  "id": "urn:duly:receipt:sha256:2b6f43737e8b5137c0af97cafd0264a4dfe558fbc5b3994787135c3ed701bff4",
-  "receiptSha256": "2b6f43737e8b5137c0af97cafd0264a4dfe558fbc5b3994787135c3ed701bff4",
+  "id": "urn:duly:receipt:sha256:b4bd584d3d89d42427846cd6b47fd848a4704dabe16bbc57cfbaea162d18b5f0",
+  "receiptSha256": "b4bd584d3d89d42427846cd6b47fd848a4704dabe16bbc57cfbaea162d18b5f0",
   "caseId": "case:golden:notice-ca-0005",
   "decision": {
     "entity": "notice:notice-ca-0005",
     "attribute": "nc:noticeCompliant",
     "value": {
       "kind": "boolean",
-      "value": true
+      "value": false
     }
   },
   "asOf": {
-    "effective": "2025-09-20T00:00:00Z",
-    "knowledge": "2025-09-22T12:00:00Z"
+    "effective": "2026-10-20T00:00:00Z",
+    "knowledge": "2026-10-22T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
-      "ruleId": "NC-DEF-00",
+      "ruleId": "CA-NR-75",
       "version": "1.0.0",
       "citation": {
-        "text": "Default presumption"
+        "text": "Cal. Ins. Code § 678(c)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=678."
       },
-      "priority": 0,
-      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "priority": 100,
+      "effectiveFrom": "2020-07-01T00:00:00Z",
       "defeated": []
     },
     {
-      "ruleId": "CA-NONPAY-10",
-      "version": "1.0.0",
+      "ruleId": "NC-NR-01",
+      "version": "1.0.2",
       "citation": {
-        "text": "Cal. Ins. Code § 677.4",
-        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=677.4."
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
-      "priority": 150,
-      "effectiveFrom": "2023-01-01T00:00:00Z",
+      "priority": 200,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
       "defeated": [
-        "CA-NR-75"
+        "NC-DEF-00"
       ]
     }
   ],
@@ -49,13 +50,56 @@
       "attribute": "nc:noticeCompliant",
       "value": {
         "kind": "boolean",
-        "value": true
+        "value": false
       }
     },
-    "rule": "NC-DEF-00",
-    "premises": []
+    "rule": "NC-NR-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:459b6b46f19659b838ce3d70e77135539dff8cdc3dc067a1967d374d8c64cc5e"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:84ae31a0db98742bfcd1a361e1ea771af87fc4e84bc90eaae12faa2fdda22f0d"
+      },
+      {
+        "conclusion": {
+          "entity": "notice:notice-ca-0005",
+          "attribute": "nc:requiredMinimumNoticeDays",
+          "value": {
+            "kind": "decimal",
+            "value": "75"
+          }
+        },
+        "rule": "CA-NR-75",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:0d0997528b35f121403ae9565ebd44e6585589cb525ffbb8aedc8fb40ceae616"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:ce9e4e678c801c88c2518d409220f3d64cea194ec3b18ca49669c4b24d514180"
+          }
+        ]
+      }
+    ]
   },
-  "inputFacts": [],
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:459b6b46f19659b838ce3d70e77135539dff8cdc3dc067a1967d374d8c64cc5e",
+      "contentHash": "459b6b46f19659b838ce3d70e77135539dff8cdc3dc067a1967d374d8c64cc5e"
+    },
+    {
+      "id": "urn:duly:fact:sha256:84ae31a0db98742bfcd1a361e1ea771af87fc4e84bc90eaae12faa2fdda22f0d",
+      "contentHash": "84ae31a0db98742bfcd1a361e1ea771af87fc4e84bc90eaae12faa2fdda22f0d"
+    },
+    {
+      "id": "urn:duly:fact:sha256:0d0997528b35f121403ae9565ebd44e6585589cb525ffbb8aedc8fb40ceae616",
+      "contentHash": "0d0997528b35f121403ae9565ebd44e6585589cb525ffbb8aedc8fb40ceae616"
+    },
+    {
+      "id": "urn:duly:fact:sha256:ce9e4e678c801c88c2518d409220f3d64cea194ec3b18ca49669c4b24d514180",
+      "contentHash": "ce9e4e678c801c88c2518d409220f3d64cea194ec3b18ca49669c4b24d514180"
+    }
+  ],
   "abstentions": [],
   "engine": {
     "kernel": "duly-kernel",

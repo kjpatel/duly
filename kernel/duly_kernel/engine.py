@@ -58,6 +58,7 @@ class EvalResult:
     surviving: list[Firing]             # firings whose conclusion survived, pack order
     fact_by_id: dict[str, dict]
     conflicts: list[dict]               # abstention entries, reason "conflict"
+    exclusions: list[dict] = field(default_factory=list)  # abstention entries, reason "low_confidence"
 
     def surviving_for(self, attribute: str) -> Firing | None:
         candidates = [f for f in self.surviving if f.attribute == attribute]
@@ -108,6 +109,63 @@ def _live_facts(facts: list[dict], effective: _dt.datetime) -> list[dict]:
     return live
 
 
+def _confidence_floor(policy: dict, attribute: str) -> tuple[float, str]:
+    """The floor that applies to `attribute` under `policy`, plus where it
+    came from: the per-attribute override when one exists, else the default."""
+    overrides = policy.get("attributes") or {}
+    if attribute in overrides:
+        return overrides[attribute], "attribute"
+    return policy["minConfidence"], "default"
+
+
+def _apply_abstention_policy(live: list[dict], pack: dict) -> tuple[list[dict], list[dict]]:
+    """Low-confidence exclusion (spec/rule-ir.md, "Abstention policy"):
+    under a pack-level `abstentionPolicy`, a machine-asserted fact binds
+    only when `confidence.score` clears the applicable floor (at the floor
+    binds; below it abstains).
+
+    Returns (facts that may bind, abstention entries with reason
+    "low_confidence", sorted by attribute/entity/fact id). Human-asserted
+    facts are never confidence-filtered. A machine-asserted fact carrying
+    no `confidence` fails closed: under an active policy it is excluded.
+    A pack with no policy filters nothing — receipts are unchanged.
+    """
+    policy = pack.get("abstentionPolicy")
+    if not policy:
+        return live, []
+    meta = pack["pack"]
+    kept: list[dict] = []
+    entries: list[dict] = []
+    for fact in live:
+        if fact["assertion"]["kind"] != "machine":
+            kept.append(fact)
+            continue
+        floor, source = _confidence_floor(policy, fact["attribute"])
+        confidence = fact.get("confidence")
+        if confidence is not None and confidence["score"] >= floor:
+            kept.append(fact)
+            continue
+        entry: dict = {
+            "entity": fact["entity"]["id"],
+            "attribute": fact["attribute"],
+            "reason": "low_confidence",
+            "facts": [fact["id"]],
+        }
+        if confidence is not None:
+            entry["confidence"] = {"score": confidence["score"], "method": confidence["method"]}
+        else:
+            entry["details"] = "machine assertion carries no confidence; policy fails closed"
+        entry["threshold"] = {
+            "minConfidence": floor,
+            "source": source,
+            "pack": meta["name"],
+            "packVersion": meta["version"],
+        }
+        entries.append(entry)
+    entries.sort(key=lambda e: (e["attribute"], e["entity"], e["facts"][0]))
+    return kept, entries
+
+
 def evaluate_pack(
     facts: list[dict],
     pack: dict,
@@ -123,6 +181,11 @@ def evaluate_pack(
     fact_by_id = {f["id"]: f for f in facts}
 
     live = _live_facts(facts, effective)
+
+    # Low-confidence exclusion runs before conflict detection: an excluded
+    # fact neither binds nor conflicts (so a below-floor machine duplicate
+    # does not poison an otherwise bindable attribute).
+    live, exclusions = _apply_abstention_policy(live, pack)
 
     # Fact conflicts: two live facts asserting the same attribute of the
     # same entity. Resolution policy (spec/grounded-facts.md, "conflict
@@ -193,6 +256,7 @@ def evaluate_pack(
         surviving=surviving,
         fact_by_id=fact_by_id,
         conflicts=conflicts,
+        exclusions=exclusions,
     )
 
 

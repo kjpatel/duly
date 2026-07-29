@@ -52,6 +52,8 @@ def validate_pack(pack: dict) -> None:
         if not isinstance(d, dict) or not isinstance(d.get("attribute"), str):
             raise PackValidationError(f"decisions[{i}] must have an 'attribute' CURIE")
 
+    _validate_abstention_policy(pack.get("abstentionPolicy"))
+
     rules = pack.get("rules")
     if not isinstance(rules, list) or not rules:
         raise PackValidationError("'rules' must be a non-empty list")
@@ -70,6 +72,41 @@ def validate_pack(pack: dict) -> None:
 
     _check_derived_cycles(rules)
     _check_priority_ambiguity(rules)
+
+
+def _validate_abstention_policy(policy: object) -> None:
+    """Validate the optional pack-level abstention policy
+    (spec/rule-ir.md, "Abstention policy")."""
+    if policy is None:
+        return
+    if not isinstance(policy, dict):
+        raise PackValidationError("'abstentionPolicy' must be a mapping")
+    unknown = set(policy) - {"minConfidence", "attributes"}
+    if unknown:
+        raise PackValidationError(
+            f"abstentionPolicy has unknown key(s): {', '.join(sorted(unknown))}"
+        )
+    _validate_confidence_floor(policy.get("minConfidence"), "abstentionPolicy.minConfidence")
+    attributes = policy.get("attributes")
+    if attributes is None:
+        return
+    if not isinstance(attributes, dict):
+        raise PackValidationError(
+            "abstentionPolicy.attributes must be a mapping of attribute CURIEs to floors"
+        )
+    for attr, floor in attributes.items():
+        if not isinstance(attr, str) or not attr:
+            raise PackValidationError(
+                "abstentionPolicy.attributes keys must be non-empty attribute CURIEs"
+            )
+        _validate_confidence_floor(floor, f"abstentionPolicy.attributes[{attr!r}]")
+
+
+def _validate_confidence_floor(v: object, where: str) -> None:
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise PackValidationError(f"{where} is required and must be a number in [0, 1]")
+    if not 0 <= v <= 1:
+        raise PackValidationError(f"{where} must be within [0, 1]")
 
 
 def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:

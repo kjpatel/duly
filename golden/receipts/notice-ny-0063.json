@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:8f88e0bf281edb360c4890debc5c0dca59b8a0b9f4ec45f8426d8d0e2beeee5f",
-  "receiptSha256": "8f88e0bf281edb360c4890debc5c0dca59b8a0b9f4ec45f8426d8d0e2beeee5f",
+  "id": "urn:duly:receipt:sha256:ae8b9e7cfa92ff330336eb637af8923a07d9cf7632afe5525c2bd59e9c6970f9",
+  "receiptSha256": "ae8b9e7cfa92ff330336eb637af8923a07d9cf7632afe5525c2bd59e9c6970f9",
   "caseId": "case:golden:notice-ny-0063",
   "decision": {
     "entity": "notice:notice-ny-0063",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-09-23T00:00:00Z",
-    "knowledge": "2026-09-25T12:00:00Z"
+    "effective": "2026-05-02T00:00:00Z",
+    "knowledge": "2026-05-04T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -56,10 +56,10 @@
     "rule": "NC-NR-01",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:275399bb1d1591f051e39b642cdb8ef4f6b73ea0cdcf8ae3821e73610c35c2a2"
+        "factId": "urn:duly:fact:sha256:e3987a561cd0fe9e361f3f3ba34378b8d82bfd9fd923394b7208b5f0be8fedef"
       },
       {
-        "factId": "urn:duly:fact:sha256:5fdb03f421dede3bd33befbbe5710f250c621fea8730ec6512e013cbd06fd2a7"
+        "factId": "urn:duly:fact:sha256:e9a2388b7caac962d35ab91417b0ff021ec271519bc54bc94476126a46b38766"
       },
       {
         "conclusion": {
@@ -73,10 +73,10 @@
         "rule": "NY-NR-45",
         "premises": [
           {
-            "factId": "urn:duly:fact:sha256:f7a4c5680abe8ee5618f06af5b280ad846af1ba25bd712f05883b79489640618"
+            "factId": "urn:duly:fact:sha256:7f219759d82faabb4a691b06249cd87fd627fd7d41c8216589766cde242e064d"
           },
           {
-            "factId": "urn:duly:fact:sha256:fa1d3903cf1a51eb72a53b00167763b668770d2119576b93cdce5152b797823e"
+            "factId": "urn:duly:fact:sha256:f0a97d5f1a4a344cf87503048c4491f8a5bc6c05081d64444613e96d2dcf1bab"
           }
         ]
       }
@@ -84,20 +84,20 @@
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:275399bb1d1591f051e39b642cdb8ef4f6b73ea0cdcf8ae3821e73610c35c2a2",
-      "contentHash": "275399bb1d1591f051e39b642cdb8ef4f6b73ea0cdcf8ae3821e73610c35c2a2"
+      "id": "urn:duly:fact:sha256:e3987a561cd0fe9e361f3f3ba34378b8d82bfd9fd923394b7208b5f0be8fedef",
+      "contentHash": "e3987a561cd0fe9e361f3f3ba34378b8d82bfd9fd923394b7208b5f0be8fedef"
     },
     {
-      "id": "urn:duly:fact:sha256:5fdb03f421dede3bd33befbbe5710f250c621fea8730ec6512e013cbd06fd2a7",
-      "contentHash": "5fdb03f421dede3bd33befbbe5710f250c621fea8730ec6512e013cbd06fd2a7"
+      "id": "urn:duly:fact:sha256:e9a2388b7caac962d35ab91417b0ff021ec271519bc54bc94476126a46b38766",
+      "contentHash": "e9a2388b7caac962d35ab91417b0ff021ec271519bc54bc94476126a46b38766"
     },
     {
-      "id": "urn:duly:fact:sha256:f7a4c5680abe8ee5618f06af5b280ad846af1ba25bd712f05883b79489640618",
-      "contentHash": "f7a4c5680abe8ee5618f06af5b280ad846af1ba25bd712f05883b79489640618"
+      "id": "urn:duly:fact:sha256:7f219759d82faabb4a691b06249cd87fd627fd7d41c8216589766cde242e064d",
+      "contentHash": "7f219759d82faabb4a691b06249cd87fd627fd7d41c8216589766cde242e064d"
     },
     {
-      "id": "urn:duly:fact:sha256:fa1d3903cf1a51eb72a53b00167763b668770d2119576b93cdce5152b797823e",
-      "contentHash": "fa1d3903cf1a51eb72a53b00167763b668770d2119576b93cdce5152b797823e"
+      "id": "urn:duly:fact:sha256:f0a97d5f1a4a344cf87503048c4491f8a5bc6c05081d64444613e96d2dcf1bab",
+      "contentHash": "f0a97d5f1a4a344cf87503048c4491f8a5bc6c05081d64444613e96d2dcf1bab"
     }
   ],
   "abstentions": [],

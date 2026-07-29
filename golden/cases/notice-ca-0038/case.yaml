@@ -1,5 +1,5 @@
 id: notice-ca-0038
 pack: rulepacks/termination-notice-us-states/pack.yaml
 question: nc:noticeCompliant
-asOfEffective: "2025-12-26"
-asOfKnowledge: "2025-12-28T12:00:00Z"
+asOfEffective: "2025-07-13"
+asOfKnowledge: "2025-07-15T12:00:00Z"

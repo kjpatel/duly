@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:94fe3e7e72e5b9feb3aad72c0f12ff95ef415875f8118a248a076741d29956f3",
-  "receiptSha256": "94fe3e7e72e5b9feb3aad72c0f12ff95ef415875f8118a248a076741d29956f3",
+  "id": "urn:duly:receipt:sha256:79918785f76f452e3cb47ee06b0281dffe5ad48b28d4a573be164fdd5694abce",
+  "receiptSha256": "79918785f76f452e3cb47ee06b0281dffe5ad48b28d4a573be164fdd5694abce",
   "caseId": "case:golden:notice-ca-0065",
   "decision": {
     "entity": "notice:notice-ca-0065",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-07-18T00:00:00Z",
-    "knowledge": "2026-07-20T12:00:00Z"
+    "effective": "2025-03-24T00:00:00Z",
+    "knowledge": "2025-03-26T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,17 +30,15 @@
       "defeated": []
     },
     {
-      "ruleId": "CA-NONPAY-10",
+      "ruleId": "CA-NR-75",
       "version": "1.0.0",
       "citation": {
-        "text": "Cal. Ins. Code § 677.4",
-        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=677.4."
+        "text": "Cal. Ins. Code § 678(c)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=678."
       },
-      "priority": 150,
-      "effectiveFrom": "2023-01-01T00:00:00Z",
-      "defeated": [
-        "CA-NR-75"
-      ]
+      "priority": 100,
+      "effectiveFrom": "2020-07-01T00:00:00Z",
+      "defeated": []
     }
   ],
   "derivation": {
@@ -56,7 +54,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-ca-0065",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:667e182adbdfa8c58640d9882229d460df80e713172a1caa4ab2e90b2f1638e0"
+      ],
+      "confidence": {
+        "score": 0.6,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

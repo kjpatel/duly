@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:6f103b0efdec3ae77608647e0d322c1509b3c66bae97af5e52df9d30012bd1e1",
-  "receiptSha256": "6f103b0efdec3ae77608647e0d322c1509b3c66bae97af5e52df9d30012bd1e1",
+  "id": "urn:duly:receipt:sha256:f2d3fc8021304329e229fd51ceeff73adb8ca7d8a614930fa5e5f03f6f96c172",
+  "receiptSha256": "f2d3fc8021304329e229fd51ceeff73adb8ca7d8a614930fa5e5f03f6f96c172",
   "caseId": "case:golden:notice-fl-0056",
   "decision": {
     "entity": "notice:notice-fl-0056",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-02-10T00:00:00Z",
-    "knowledge": "2025-02-12T12:00:00Z"
+    "effective": "2025-04-22T00:00:00Z",
+    "knowledge": "2025-04-24T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,17 +30,15 @@
       "defeated": []
     },
     {
-      "ruleId": "FL-NONPAY-10",
+      "ruleId": "FL-NR-120",
       "version": "1.0.0",
       "citation": {
-        "text": "Fla. Stat. § 627.4133(2)(b)1.",
+        "text": "Fla. Stat. § 627.4133(2)(b)",
         "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
       },
-      "priority": 150,
+      "priority": 100,
       "effectiveFrom": "2016-01-01T00:00:00Z",
-      "defeated": [
-        "FL-NR-120"
-      ]
+      "defeated": []
     }
   ],
   "derivation": {
@@ -56,7 +54,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-fl-0056",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:08f7a98ccf5cb90dea46c7b7b38d58ae79182cc108a67e509ccca75591fc7ee0"
+      ],
+      "confidence": {
+        "score": 0.85,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:0511d1591d57245bea26a36eaf8d1a100952bca6e579246c5b7a8932f9ed2e69",
-  "receiptSha256": "0511d1591d57245bea26a36eaf8d1a100952bca6e579246c5b7a8932f9ed2e69",
+  "id": "urn:duly:receipt:sha256:507df17dc2c80a687c61124d8f6c2d26f3a637a118ba39b8b33e6adf655a303f",
+  "receiptSha256": "507df17dc2c80a687c61124d8f6c2d26f3a637a118ba39b8b33e6adf655a303f",
   "caseId": "case:golden:notice-ny-0056",
   "decision": {
     "entity": "notice:notice-ny-0056",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-09-18T00:00:00Z",
-    "knowledge": "2026-09-20T12:00:00Z"
+    "effective": "2026-10-13T00:00:00Z",
+    "knowledge": "2026-10-15T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,15 +30,17 @@
       "defeated": []
     },
     {
-      "ruleId": "NY-NR-45",
+      "ruleId": "NY-NR-NONPAY-15",
       "version": "1.1.0",
       "citation": {
-        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "text": "N.Y. Ins. Law § 3425(c)(1)(A)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
-      "priority": 100,
-      "effectiveFrom": "2026-01-01T00:00:00Z",
-      "defeated": []
+      "priority": 150,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "defeated": [
+        "NY-NR-45"
+      ]
     }
   ],
   "derivation": {

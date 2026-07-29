@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:e77b74b1a74e7dadb9f77ed8792832e9f6a136bc0d189a1faa3168d975fb5878",
-  "receiptSha256": "e77b74b1a74e7dadb9f77ed8792832e9f6a136bc0d189a1faa3168d975fb5878",
+  "id": "urn:duly:receipt:sha256:d48ef3668568a9e6200722be3308b4d26b7e6a9780bd0fac52e5652c7edfe17d",
+  "receiptSha256": "d48ef3668568a9e6200722be3308b4d26b7e6a9780bd0fac52e5652c7edfe17d",
   "caseId": "case:golden:notice-ca-0001",
   "decision": {
     "entity": "notice:notice-ca-0001",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -54,7 +54,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "policy:notice-ca-0001",
+      "attribute": "nc:policyExpirationDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:0008aba4494776358cfe30942e9bba427208264ae02d50914926959ccf06e012"
+      ],
+      "confidence": {
+        "score": 0.7,
+        "method": "temperature"
+      },
+      "threshold": {
+        "minConfidence": 0.75,
+        "source": "default",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

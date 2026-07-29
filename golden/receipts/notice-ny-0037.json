@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:8753557b2910a767acdcad9d829083882c26e81b25d7921d9396bf78fef1a2ec",
-  "receiptSha256": "8753557b2910a767acdcad9d829083882c26e81b25d7921d9396bf78fef1a2ec",
+  "id": "urn:duly:receipt:sha256:251238bbcc618782900986a594c76fc92abae79db7a4dcc9bbfed8c851f722c9",
+  "receiptSha256": "251238bbcc618782900986a594c76fc92abae79db7a4dcc9bbfed8c851f722c9",
   "caseId": "case:golden:notice-ny-0037",
   "decision": {
     "entity": "notice:notice-ny-0037",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-01-23T00:00:00Z",
-    "knowledge": "2026-01-25T12:00:00Z"
+    "effective": "2026-10-06T00:00:00Z",
+    "knowledge": "2026-10-08T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -54,7 +54,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-ny-0037",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:6a09ce9afe762fb39cf7b26ed446fad4ce07abcc3fe8be47853c0c7b242e83de"
+      ],
+      "confidence": {
+        "score": 0.85,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

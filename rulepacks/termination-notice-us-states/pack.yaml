@@ -1,9 +1,20 @@
 pack:
   name: termination-notice-us-states
-  version: "2026.2.0"
+  version: "2026.3.0"
   ontology: duly-starter-notice
   ontologyVersion: "0.1.0"
   description: State-by-state cancellation/nonrenewal notice compliance.
+
+# Adjudication-time confidence policy (spec/rule-ir.md, "Abstention policy"):
+# a machine-asserted fact binds only when confidence.score clears the floor
+# (at the floor binds; below it the run abstains with reason low_confidence).
+# The mailing date drives the day-count arithmetic that decides compliance,
+# so it carries a tighter floor than the pack default. The policy is part of
+# the pack and versioned with it: 2026.3.0 introduces this block.
+abstentionPolicy:
+  minConfidence: 0.75
+  attributes:
+    nc:noticeMailedDate: 0.9
 
 decisions:
   - attribute: nc:noticeCompliant

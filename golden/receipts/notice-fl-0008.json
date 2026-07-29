@@ -1,34 +1,24 @@
 {
-  "id": "urn:duly:receipt:sha256:2eec3c21543c588e0f64d2f042e01a910a126487df36dbefbef4400e1824f5cc",
-  "receiptSha256": "2eec3c21543c588e0f64d2f042e01a910a126487df36dbefbef4400e1824f5cc",
+  "id": "urn:duly:receipt:sha256:6984209c1020d7fb063e7b7d19de43d52c22a1843ea94a1b28854e0806122559",
+  "receiptSha256": "6984209c1020d7fb063e7b7d19de43d52c22a1843ea94a1b28854e0806122559",
   "caseId": "case:golden:notice-fl-0008",
   "decision": {
     "entity": "notice:notice-fl-0008",
     "attribute": "nc:noticeCompliant",
     "value": {
       "kind": "boolean",
-      "value": true
+      "value": false
     }
   },
   "asOf": {
-    "effective": "2026-08-02T00:00:00Z",
-    "knowledge": "2026-08-04T12:00:00Z"
+    "effective": "2026-01-09T00:00:00Z",
+    "knowledge": "2026-01-11T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
-    {
-      "ruleId": "NC-DEF-00",
-      "version": "1.0.0",
-      "citation": {
-        "text": "Default presumption"
-      },
-      "priority": 0,
-      "effectiveFrom": "1900-01-01T00:00:00Z",
-      "defeated": []
-    },
     {
       "ruleId": "FL-NR-120",
       "version": "1.0.0",
@@ -39,6 +29,19 @@
       "priority": 100,
       "effectiveFrom": "2016-01-01T00:00:00Z",
       "defeated": []
+    },
+    {
+      "ruleId": "NC-NR-01",
+      "version": "1.0.2",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 200,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "defeated": [
+        "NC-DEF-00"
+      ]
     }
   ],
   "derivation": {
@@ -47,13 +50,56 @@
       "attribute": "nc:noticeCompliant",
       "value": {
         "kind": "boolean",
-        "value": true
+        "value": false
       }
     },
-    "rule": "NC-DEF-00",
-    "premises": []
+    "rule": "NC-NR-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:18323326c25f77802d04bc4b4f688d81ae0b41c0f6bce987cf7016c4cda2b3c4"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:580920889116128b125b86fdec29173e43d0fcefb86875afd7eeebac2fa4445c"
+      },
+      {
+        "conclusion": {
+          "entity": "notice:notice-fl-0008",
+          "attribute": "nc:requiredMinimumNoticeDays",
+          "value": {
+            "kind": "decimal",
+            "value": "120"
+          }
+        },
+        "rule": "FL-NR-120",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:a15f65156dca6ddfb42ac5f6adb27844ef9da1b2e2e4bd3f2676c23df974a2db"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:da8c4243a61a74e7d17158203e61bfa297c0e0792caf0fe0838aac623002d890"
+          }
+        ]
+      }
+    ]
   },
-  "inputFacts": [],
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:18323326c25f77802d04bc4b4f688d81ae0b41c0f6bce987cf7016c4cda2b3c4",
+      "contentHash": "18323326c25f77802d04bc4b4f688d81ae0b41c0f6bce987cf7016c4cda2b3c4"
+    },
+    {
+      "id": "urn:duly:fact:sha256:580920889116128b125b86fdec29173e43d0fcefb86875afd7eeebac2fa4445c",
+      "contentHash": "580920889116128b125b86fdec29173e43d0fcefb86875afd7eeebac2fa4445c"
+    },
+    {
+      "id": "urn:duly:fact:sha256:a15f65156dca6ddfb42ac5f6adb27844ef9da1b2e2e4bd3f2676c23df974a2db",
+      "contentHash": "a15f65156dca6ddfb42ac5f6adb27844ef9da1b2e2e4bd3f2676c23df974a2db"
+    },
+    {
+      "id": "urn:duly:fact:sha256:da8c4243a61a74e7d17158203e61bfa297c0e0792caf0fe0838aac623002d890",
+      "contentHash": "da8c4243a61a74e7d17158203e61bfa297c0e0792caf0fe0838aac623002d890"
+    }
+  ],
   "abstentions": [],
   "engine": {
     "kernel": "duly-kernel",

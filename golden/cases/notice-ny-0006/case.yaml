@@ -1,5 +1,5 @@
 id: notice-ny-0006
 pack: rulepacks/termination-notice-us-states/pack.yaml
 question: nc:noticeCompliant
-asOfEffective: "2025-05-19"
-asOfKnowledge: "2025-05-21T12:00:00Z"
+asOfEffective: "2025-07-05"
+asOfKnowledge: "2025-07-07T12:00:00Z"

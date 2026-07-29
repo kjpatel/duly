@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:a601d984346fb48b0c3ae1b7712261b5c641abd39de89cf5799034bf819ff3d3",
-  "receiptSha256": "a601d984346fb48b0c3ae1b7712261b5c641abd39de89cf5799034bf819ff3d3",
+  "id": "urn:duly:receipt:sha256:913197edbf39088f22b383bf218694a1bcaf1dfd6e9b6d832f64ff3a6569fa41",
+  "receiptSha256": "913197edbf39088f22b383bf218694a1bcaf1dfd6e9b6d832f64ff3a6569fa41",
   "caseId": "case:golden:notice-ny-0001",
   "decision": {
     "entity": "notice:notice-ny-0001",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {

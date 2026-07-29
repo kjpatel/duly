@@ -478,11 +478,22 @@ def main(argv: list[str] | None = None) -> int:
             facts, eff, kn, receipt = _generate_case(template, case_id, rng, packs[pack_rel], validator)
             generated.append((name, case_id, template, eff, kn, facts, receipt))
 
+    # Reset the synthetic corpus only: review-* entries are human-review
+    # golden cases (duly_review.golden), not generator output — they carry
+    # provenance no seed can regenerate, so regeneration preserves them
+    # (golden/README.md, "Case id series").
     for sub in ("cases", "receipts"):
         sub_dir = out / sub
         if sub_dir.exists():
-            shutil.rmtree(sub_dir)
-        sub_dir.mkdir(parents=True)
+            for entry in sub_dir.iterdir():
+                if entry.name.startswith("review-"):
+                    continue
+                if entry.is_dir():
+                    shutil.rmtree(entry)
+                else:
+                    entry.unlink()
+        else:
+            sub_dir.mkdir(parents=True)
     for _, case_id, template, eff, kn, facts, receipt in generated:
         _write_case(out, case_id, template, eff, kn, facts, receipt)
 

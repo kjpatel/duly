@@ -1,6 +1,6 @@
 # Golden corpus
 
-Committed synthetic adjudication cases with their golden receipts. This corpus is the baseline for two assurance tools:
+Committed adjudication cases with their golden receipts. This corpus is the baseline for two assurance tools:
 
 - **Replay verification** (`python -m duly_assurance verify`): re-adjudicate every case against its committed receipt and assert `receiptSha256` is byte-identical. Proves determinism continuously.
 - **Impact analysis** (`python -m duly_assurance impact`): re-adjudicate every case under the *current working-tree rule packs* and report every case whose decision differs from its golden receipt — "this change flips N of M historical decisions" — with before/after receipts for review. The committed receipts ARE the baseline; no git archaeology needed.
@@ -15,7 +15,12 @@ golden/
   receipts/<case-id>.json          # the golden DecisionReceipt
 ```
 
-`pack` is a repo-relative path to a `pack.yaml`. Case ids are stable, sorted, and derived from the generator seed — regeneration with the same seed and templates is byte-identical.
+`pack` is a repo-relative path to a `pack.yaml`.
+
+## Case id series
+
+- **Synthetic** (`notice-*`, `trid-*`): produced by the generator. Ids are stable, sorted, and derived from the generator seed — regeneration with the same seed and templates is byte-identical.
+- **Review-born** (`review-NNNN`): frozen from resolved review-queue items by `python -m duly_review golden` (duly_review.golden) — a real correction arc (machine fact abstained → human corrected → decision resolved), not a seeded draw. The generator **preserves** `review-*` entries when it resets the corpus, because no seed can regenerate them; their provenance lives in the review queue's event log (and, for the committed `review-0001`, in `review/tests/test_golden.py`, which replays the exact arc and asserts byte-identical output). `verify` and `impact` treat both series identically.
 
 ## Tool contracts
 
@@ -31,5 +36,5 @@ python -m duly_assurance impact  [--golden golden] [--json out.json] [--markdown
 
 ## Rules for humans
 
-- Never hand-edit a case or receipt; change the generator (or the packs) and regenerate.
+- Never hand-edit a case or receipt; change the generator (or the packs) and regenerate. Review-born cases are never hand-edited either — re-run the arc through the queue if one must change.
 - A rule-pack PR that flips golden decisions must either justify every flip in the PR description or fix the pack. Regenerating receipts to match a pack change is the *reviewed, deliberate* act of accepting the new baseline.

@@ -1,0 +1,5 @@
+id: review-0001
+pack: rulepacks/termination-notice-us-states/pack.yaml
+question: nc:noticeCompliant
+asOfEffective: "2026-07-25T00:00:00Z"
+asOfKnowledge: "2026-07-28T09:00:00Z"

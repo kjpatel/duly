@@ -81,12 +81,15 @@ def _validate_abstention_policy(policy: object) -> None:
         return
     if not isinstance(policy, dict):
         raise PackValidationError("'abstentionPolicy' must be a mapping")
-    unknown = set(policy) - {"minConfidence", "attributes"}
+    unknown = set(policy) - {"minConfidence", "attributes", "routeTo"}
     if unknown:
         raise PackValidationError(
             f"abstentionPolicy has unknown key(s): {', '.join(sorted(unknown))}"
         )
     _validate_confidence_floor(policy.get("minConfidence"), "abstentionPolicy.minConfidence")
+    route_to = policy.get("routeTo")
+    if route_to is not None and (not isinstance(route_to, str) or not route_to):
+        raise PackValidationError("abstentionPolicy.routeTo must be a non-empty string")
     attributes = policy.get("attributes")
     if attributes is None:
         return

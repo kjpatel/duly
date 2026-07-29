@@ -129,10 +129,15 @@ def _apply_abstention_policy(live: list[dict], pack: dict) -> tuple[list[dict], 
     facts are never confidence-filtered. A machine-asserted fact carrying
     no `confidence` fails closed: under an active policy it is excluded.
     A pack with no policy filters nothing — receipts are unchanged.
+
+    Routing (spec/rule-ir.md, "Routing"): when the policy declares
+    `routeTo`, every entry carries it as `routedTo` — decided here, at
+    adjudication time, because the receipt is content-hashed and immutable.
     """
     policy = pack.get("abstentionPolicy")
     if not policy:
         return live, []
+    route_to = policy.get("routeTo")
     meta = pack["pack"]
     kept: list[dict] = []
     entries: list[dict] = []
@@ -161,6 +166,8 @@ def _apply_abstention_policy(live: list[dict], pack: dict) -> tuple[list[dict], 
             "pack": meta["name"],
             "packVersion": meta["version"],
         }
+        if route_to:
+            entry["routedTo"] = route_to
         entries.append(entry)
     entries.sort(key=lambda e: (e["attribute"], e["entity"], e["facts"][0]))
     return kept, entries
@@ -193,6 +200,13 @@ def evaluate_pack(
     # it outranks the machine assertions and binds; otherwise the attribute
     # becomes unbindable and the run records an abstention with reason
     # "conflict".
+    #
+    # Conflict entries carry `routedTo` when the pack's abstentionPolicy
+    # declares `routeTo`: routing says where an abstention goes, not why it
+    # happened, so one destination covers both reasons. A pack without a
+    # policy leaves conflict entries unrouted (and byte-identical to the
+    # pre-routing kernel).
+    route_to = (pack.get("abstentionPolicy") or {}).get("routeTo")
     by_entity_attr: dict[tuple[str, str], list[dict]] = {}
     for fact in live:
         by_entity_attr.setdefault((fact["entity"]["id"], fact["attribute"]), []).append(fact)
@@ -206,14 +220,15 @@ def evaluate_pack(
                 outranked_ids.update(f["id"] for f in group if f is not human[0])
                 continue
             conflicted_attrs.add(attribute)
-            conflicts.append(
-                {
-                    "entity": entity_id,
-                    "attribute": attribute,
-                    "reason": "conflict",
-                    "facts": sorted(f["id"] for f in group),
-                }
-            )
+            entry = {
+                "entity": entity_id,
+                "attribute": attribute,
+                "reason": "conflict",
+                "facts": sorted(f["id"] for f in group),
+            }
+            if route_to:
+                entry["routedTo"] = route_to
+            conflicts.append(entry)
     if outranked_ids:
         live = [f for f in live if f["id"] not in outranked_ids]
 

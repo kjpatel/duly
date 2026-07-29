@@ -35,6 +35,24 @@ def test_same_seed_regeneration_is_byte_identical(tmp_path):
         assert tree_a[rel] == tree_b[rel], f"{rel} differs between regenerations"
 
 
+def test_regeneration_preserves_review_series_cases(tmp_path):
+    """review-* entries are human-review golden cases (duly_review), not
+    generator output; resetting the synthetic corpus must not delete them."""
+    out = tmp_path / "g"
+    assert generate.main(["--out", str(out), "--count", "4", "--seed", "3", "--templates", "ny"]) == 0
+    review_case = out / "cases" / "review-0001"
+    (review_case / "facts").mkdir(parents=True)
+    (review_case / "case.yaml").write_text("id: review-0001\n")
+    review_receipt = out / "receipts" / "review-0001.json"
+    review_receipt.write_text("{}\n")
+    assert generate.main(["--out", str(out), "--count", "4", "--seed", "3", "--templates", "ny"]) == 0
+    assert (review_case / "case.yaml").read_text() == "id: review-0001\n"
+    assert review_receipt.read_text() == "{}\n"
+    # The synthetic series was still reset (same seed -> same ids, no strays).
+    ids = sorted(p.name for p in (out / "cases").iterdir())
+    assert ids == ["notice-ny-0001", "notice-ny-0002", "notice-ny-0003", "notice-ny-0004", "review-0001"]
+
+
 def test_case_ids_allocation_and_layout(tmp_path):
     out = tmp_path / "g"
     assert generate.main(

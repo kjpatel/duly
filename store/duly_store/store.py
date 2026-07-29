@@ -131,8 +131,13 @@ _EVENT_COLUMNS = (
 class FactStore:
     """Append-only bitemporal store for GroundedFact documents."""
 
-    def __init__(self, path: str):
-        self._conn = sqlite3.connect(path)
+    def __init__(self, path: str, *, check_same_thread: bool = True):
+        """``check_same_thread=False`` allows the connection to be used from
+        threads other than the creating one (needed by HTTP surfaces whose
+        framework runs handlers on a threadpool, e.g. duly_review.api).
+        Python's sqlite3 serializes access internally; the store makes no
+        concurrency promises beyond that."""
+        self._conn = sqlite3.connect(path, check_same_thread=check_same_thread)
 
     @classmethod
     def in_memory(cls) -> "FactStore":

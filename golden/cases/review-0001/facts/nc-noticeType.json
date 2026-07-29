@@ -1,0 +1,40 @@
+{
+  "assertion": {
+    "at": "2026-07-25T12:00:00Z",
+    "extractor": {
+      "name": "review-arc-fixture",
+      "version": "0.1.0"
+    },
+    "kind": "machine"
+  },
+  "attribute": "nc:noticeType",
+  "caseId": "case:review:0001",
+  "confidence": {
+    "method": "raw",
+    "score": 1.0
+  },
+  "contentHash": "2e35314c5453cc4f159bd58e281ecfd10329c24886a1780e3bda621f46ebb910",
+  "entity": {
+    "id": "notice:review-0001",
+    "type": "nc:TerminationNotice"
+  },
+  "grounding": {
+    "actor": "review-arc-fixture",
+    "at": "2026-07-25T12:00:00Z",
+    "channel": "synthetic",
+    "kind": "attestation"
+  },
+  "id": "urn:duly:fact:sha256:2e35314c5453cc4f159bd58e281ecfd10329c24886a1780e3bda621f46ebb910",
+  "recordedAt": "2026-07-25T12:00:00Z",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  },
+  "status": "asserted",
+  "value": {
+    "codeSystem": "duly-starter-notice/notice-types",
+    "codeSystemVersion": "0.1.0",
+    "kind": "code",
+    "value": "Nonrenewal"
+  }
+}

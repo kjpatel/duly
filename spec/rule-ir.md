@@ -88,6 +88,7 @@ abstentionPolicy:        # optional; absent = no confidence filtering
   minConfidence: 0.75    # required when the block is present: the default floor
   attributes:            # optional per-attribute overrides (CURIE -> floor)
     nc:noticeMailedDate: 0.9
+  routeTo: notice-review # optional; the review queue abstentions route to (see "Routing")
 ```
 
 Semantics, applied by the kernel at fact-binding time (before conflict detection, so an excluded fact neither binds nor conflicts):
@@ -118,6 +119,20 @@ The policy is part of the pack and versioned with it: changing a floor is a pack
 ```
 
 `threshold.source` is `attribute` (an override applied) or `default`; `pack`/`packVersion` pin where the floor came from, so the entry routes and audits without the pack file in hand. `confidence` echoes the excluded fact's score and method; it is absent (and `details` explains) when the fact carried no confidence.
+
+### Routing
+
+The policy block may declare an optional `routeTo`: a plain string naming the review queue (or actor) this pack's abstentions go to. When present, the kernel copies it verbatim into **every** abstention entry the run emits — `low_confidence` exclusions and `conflict` entries alike — as the entry's `routedTo` field (already allowed by the receipt schema). Routing says where an abstention goes, not why it happened, so one destination covers both reasons; a pack that wants routed conflicts but no confidence filtering can declare `minConfidence: 0`.
+
+**Why on the pack, decided at adjudication time:** receipts are content-hashed and immutable, so anything that appears on the receipt must be known when the kernel runs. The pack is the only versioned artifact in hand at that moment, and routing is adjudication policy in exactly the sense the floors are — changing where abstentions go is a pack version bump that replays. `routeTo` is deliberately just a name, not an endpoint: the receipt records *which* queue was responsible; how that queue is hosted is deployment configuration, which must never leak into receipt bytes.
+
+**Backward compatibility:** `routeTo` is optional and additive. A pack without it — including every pack that predates the field — produces byte-identical receipts to the pre-routing kernel; a pack with no `abstentionPolicy` at all leaves conflict entries unrouted too. Consumers (the review queue's `enqueue_receipt`) accept unrouted entries, so routing is a labeling convenience, not a gate.
+
+**Rejected:**
+
+- *Routing decided by the review queue at enqueue time (not on the receipt).* Workable — and still supported, since `routedTo` is optional — but then the receipt cannot answer "who was responsible for this abstention?", which is an audit question, not an ops question.
+- *Deployment-level routing tables.* Same objection as engine-config floors: invisible to `rulePack.version`, so two byte-identical replays could have routed differently with no trace.
+- *Per-attribute routing.* No consumer yet; the per-attribute `attributes` map shows how it would be added additively if one appears.
 
 **Why pack-level, and why here:** abstention is policy, not data (grounded-facts D5) — the fact never carries an abstained flag, and the same fact may clear one pack's floor and not another's. The pack is the only artifact that is already versioned, effective-dated at selection time, and pinned on every receipt, so floors that live in the pack are floors that replay.
 

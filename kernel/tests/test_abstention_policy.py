@@ -190,6 +190,56 @@ class TestReceiptEntry:
         assert [a["reason"] for a in receipt["abstentions"]] == ["low_confidence"]
 
 
+class TestRouting:
+    """abstentionPolicy.routeTo -> entry routedTo (spec/rule-ir.md, "Routing")."""
+
+    def test_route_to_stamped_on_low_confidence_entry(self, spec_facts, ny_pack):
+        facts = with_confidence(spec_facts, MAILED, {"score": 0.5, "method": "platt"})
+        pack = with_policy(ny_pack, min_confidence=0.75)
+        pack["abstentionPolicy"]["routeTo"] = "notice-review"
+        receipt = run(facts, pack)
+        (entry,) = receipt["abstentions"]
+        assert entry["reason"] == "low_confidence"
+        assert entry["routedTo"] == "notice-review"
+
+    def test_route_to_stamped_on_conflict_entry(self, spec_facts, ny_pack):
+        facts = list(spec_facts)
+        mailed = next(f for f in facts if f["attribute"] == MAILED)
+        dup = copy.deepcopy(mailed)
+        dup["value"] = {"kind": "date", "value": "2026-06-01"}
+        facts.append(rehash_fact(dup))
+        pack = with_policy(ny_pack, min_confidence=0.0)
+        pack["abstentionPolicy"]["routeTo"] = "notice-review"
+        receipt = run(facts, pack)
+        (entry,) = receipt["abstentions"]
+        assert entry["reason"] == "conflict"
+        assert entry["routedTo"] == "notice-review"
+
+    def test_no_route_to_leaves_entries_unrouted(self, spec_facts, ny_pack):
+        facts = with_confidence(spec_facts, MAILED, {"score": 0.5, "method": "platt"})
+        receipt = run(facts, with_policy(ny_pack, min_confidence=0.75))
+        (entry,) = receipt["abstentions"]
+        assert "routedTo" not in entry
+
+    def test_no_policy_conflict_entries_stay_unrouted(self, spec_facts, ny_pack):
+        facts = list(spec_facts)
+        mailed = next(f for f in facts if f["attribute"] == MAILED)
+        dup = copy.deepcopy(mailed)
+        dup["value"] = {"kind": "date", "value": "2026-06-01"}
+        facts.append(rehash_fact(dup))
+        receipt = run(facts, ny_pack)
+        (entry,) = receipt["abstentions"]
+        assert entry["reason"] == "conflict"
+        assert "routedTo" not in entry
+
+    def test_route_to_must_be_non_empty_string(self, ny_pack):
+        for bad in ("", 7, ["q"]):
+            pack = copy.deepcopy(ny_pack)
+            pack["abstentionPolicy"] = {"minConfidence": 0.75, "routeTo": bad}
+            with pytest.raises(PackValidationError, match="routeTo"):
+                validate_pack(pack)
+
+
 class TestPolicyValidation:
     def test_policy_must_be_mapping(self, ny_pack):
         pack = copy.deepcopy(ny_pack)

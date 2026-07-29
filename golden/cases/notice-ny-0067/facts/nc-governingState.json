@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:e54b5af15eeb807db0b47d7e4270e236172910510af010949e4e084fd06141ce",
+  "contentHash": "e54b5af15eeb807db0b47d7e4270e236172910510af010949e4e084fd06141ce",
+  "caseId": "case:golden:notice-ny-0067",
+  "entity": {
+    "id": "policy:notice-ny-0067",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-NY",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-10-30T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-10-30T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-10-30T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

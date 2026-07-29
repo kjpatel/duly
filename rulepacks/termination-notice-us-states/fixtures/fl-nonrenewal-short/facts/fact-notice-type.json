@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:e045c8b3bf1f870fb98bf7c7ad63ae69ae0cd83c204bf13454322b69add4dcf7",
+  "contentHash": "e045c8b3bf1f870fb98bf7c7ad63ae69ae0cd83c204bf13454322b69add4dcf7",
+  "caseId": "case:policy:HO-33019-FL",
+  "entity": {
+    "id": "notice:HO-33019-FL:2026-09-15",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeType",
+  "value": {
+    "kind": "code",
+    "value": "Nonrenewal",
+    "codeSystem": "duly-starter-notice/notice-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-09-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-09-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-09-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

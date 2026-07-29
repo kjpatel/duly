@@ -1,0 +1,106 @@
+{
+  "id": "urn:duly:receipt:sha256:9dc04f2b0760b3232561a1fd908a524df58c4ab036e581293d41d278c64577bf",
+  "receiptSha256": "9dc04f2b0760b3232561a1fd908a524df58c4ab036e581293d41d278c64577bf",
+  "caseId": "case:golden:trid-0013",
+  "decision": {
+    "entity": "fee:transfer-tax:trid-0013",
+    "attribute": "trid:toleranceCureAmount",
+    "value": {
+      "kind": "money",
+      "amount": "24.59",
+      "currency": "USD"
+    }
+  },
+  "asOf": {
+    "effective": "2026-03-15T00:00:00Z",
+    "knowledge": "2026-03-17T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "trid-fee-tolerance-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "TRID-CAT-02",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR 1026.19(e)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2015-10-03T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "TRID-ZT-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR 1026.19(e)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2015-10-03T00:00:00Z",
+      "defeated": [
+        "TRID-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "fee:transfer-tax:trid-0013",
+      "attribute": "trid:toleranceCureAmount",
+      "value": {
+        "kind": "money",
+        "amount": "24.59",
+        "currency": "USD"
+      }
+    },
+    "rule": "TRID-ZT-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:b7748d6d6005e6356fe515ec7ae7a523be7c82b6346878700b7bc57db04a011f"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:e04acd46afbc225400ddfb4208ae2a482ecf75c034ee3c90670e95497710f5d2"
+      },
+      {
+        "conclusion": {
+          "entity": "fee:transfer-tax:trid-0013",
+          "attribute": "trid:toleranceCategory",
+          "value": {
+            "kind": "code",
+            "value": "ZeroTolerance",
+            "codeSystem": "duly-starter-trid/tolerance-categories",
+            "codeSystemVersion": "0.1.0"
+          }
+        },
+        "rule": "TRID-CAT-02",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:e462d9620bd55349c9198a0d5586c88f273ecd7284aa27cb0b5fe4c90a0ed7d8"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:b7748d6d6005e6356fe515ec7ae7a523be7c82b6346878700b7bc57db04a011f",
+      "contentHash": "b7748d6d6005e6356fe515ec7ae7a523be7c82b6346878700b7bc57db04a011f"
+    },
+    {
+      "id": "urn:duly:fact:sha256:e04acd46afbc225400ddfb4208ae2a482ecf75c034ee3c90670e95497710f5d2",
+      "contentHash": "e04acd46afbc225400ddfb4208ae2a482ecf75c034ee3c90670e95497710f5d2"
+    },
+    {
+      "id": "urn:duly:fact:sha256:e462d9620bd55349c9198a0d5586c88f273ecd7284aa27cb0b5fe4c90a0ed7d8",
+      "contentHash": "e462d9620bd55349c9198a0d5586c88f273ecd7284aa27cb0b5fe4c90a0ed7d8"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

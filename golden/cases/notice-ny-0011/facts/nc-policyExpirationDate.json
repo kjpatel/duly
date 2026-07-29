@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:ba75052b2fa7662a53808f29a1c7b02b22bcc485757975c82d24edc83f047aae",
+  "contentHash": "ba75052b2fa7662a53808f29a1c7b02b22bcc485757975c82d24edc83f047aae",
+  "caseId": "case:golden:notice-ny-0011",
+  "entity": {
+    "id": "policy:notice-ny-0011",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "value": {
+    "kind": "date",
+    "value": "2025-07-22"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2025-06-14T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2025-06-14T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2025-06-14T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

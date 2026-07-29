@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:258095c768ba1b76160181d2d637df3a07b6670531f78112cd10909d8ad86a45",
+  "receiptSha256": "258095c768ba1b76160181d2d637df3a07b6670531f78112cd10909d8ad86a45",
+  "caseId": "case:golden:notice-ca-0055",
+  "decision": {
+    "entity": "notice:notice-ca-0055",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-01-19T00:00:00Z",
+    "knowledge": "2026-01-21T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NC-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-NONPAY-10",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Ins. Code § 677.4",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=677.4."
+      },
+      "priority": 150,
+      "effectiveFrom": "2023-01-01T00:00:00Z",
+      "defeated": [
+        "CA-NR-75"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-ca-0055",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "NC-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

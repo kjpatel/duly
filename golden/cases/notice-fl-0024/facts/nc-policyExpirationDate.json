@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:c425fdc108398f82f2baa8ef1efa20baf210385c2f41e20901c68d59d6ca1409",
+  "contentHash": "c425fdc108398f82f2baa8ef1efa20baf210385c2f41e20901c68d59d6ca1409",
+  "caseId": "case:golden:notice-fl-0024",
+  "entity": {
+    "id": "policy:notice-fl-0024",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-05-31"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-03-13T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-13T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-13T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

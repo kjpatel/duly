@@ -28,3 +28,29 @@ cases:
     expectDecision: { kind: boolean, value: true }
     expectRulesFired: [NC-DEF-00, NY-NR-45-LEGACY]
     expectDefeated: {}
+
+  # Florida: notice mailed 2026-09-15 for a 2026-12-01 expiration = 77 days of
+  # notice, far short of the 120-day minimum of Fla. Stat. § 627.4133(2)(b)
+  # (FL-NR-120, effective 2016-01-01), so NC-NR-01 fires and defeats the
+  # compliance presumption.
+  - name: fl-nonrenewal-current-law-noncompliant
+    factsFrom: rulepacks/termination-notice-us-states/fixtures/fl-nonrenewal-short/facts
+    asOfEffective: "2026-09-15"
+    question: nc:noticeCompliant
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [FL-NR-120, NC-NR-01]
+    expectDefeated:
+      NC-NR-01: [NC-DEF-00]
+
+  # California: notice mailed 2026-09-15 for a 2026-11-01 expiration = 47 days
+  # of notice, short of the 75-day minimum of Cal. Ins. Code § 678(c)
+  # (CA-NR-75, effective 2020-07-01 per the statute's own applicability date),
+  # so NC-NR-01 fires and defeats the compliance presumption.
+  - name: ca-nonrenewal-current-law-noncompliant
+    factsFrom: rulepacks/termination-notice-us-states/fixtures/ca-nonrenewal-short/facts
+    asOfEffective: "2026-09-15"
+    question: nc:noticeCompliant
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [CA-NR-75, NC-NR-01]
+    expectDefeated:
+      NC-NR-01: [NC-DEF-00]

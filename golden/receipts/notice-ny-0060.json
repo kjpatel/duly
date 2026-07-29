@@ -1,0 +1,109 @@
+{
+  "id": "urn:duly:receipt:sha256:cc1ab1a7ee1cd5154821e8152d97c3c7ebab4df603cb979a4b2a614e32a452c7",
+  "receiptSha256": "cc1ab1a7ee1cd5154821e8152d97c3c7ebab4df603cb979a4b2a614e32a452c7",
+  "caseId": "case:golden:notice-ny-0060",
+  "decision": {
+    "entity": "notice:notice-ny-0060",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-08-04T00:00:00Z",
+    "knowledge": "2026-08-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NY-NR-45",
+      "version": "1.1.0",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 100,
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "NC-NR-01",
+      "version": "1.0.2",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 200,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "defeated": [
+        "NC-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-ny-0060",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "NC-NR-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:456e1682101ba2aea5a40b5efe3c8ec98057c028b1ad13e6eaa6ba62922ef0bb"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:ce73c17b4963f1a2c0f89ec168c5bd8a6f14ae754418445e50aeed3dc46e0afe"
+      },
+      {
+        "conclusion": {
+          "entity": "notice:notice-ny-0060",
+          "attribute": "nc:requiredMinimumNoticeDays",
+          "value": {
+            "kind": "decimal",
+            "value": "45"
+          }
+        },
+        "rule": "NY-NR-45",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:5c9a7a004643d43f2c0f6f94656850445e801e90117d606054a706bc4559ef9c"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:a7bb4def304481f77b627c16d25a5ebde191ddeb40341f80e8c161882ee215d8"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:456e1682101ba2aea5a40b5efe3c8ec98057c028b1ad13e6eaa6ba62922ef0bb",
+      "contentHash": "456e1682101ba2aea5a40b5efe3c8ec98057c028b1ad13e6eaa6ba62922ef0bb"
+    },
+    {
+      "id": "urn:duly:fact:sha256:ce73c17b4963f1a2c0f89ec168c5bd8a6f14ae754418445e50aeed3dc46e0afe",
+      "contentHash": "ce73c17b4963f1a2c0f89ec168c5bd8a6f14ae754418445e50aeed3dc46e0afe"
+    },
+    {
+      "id": "urn:duly:fact:sha256:5c9a7a004643d43f2c0f6f94656850445e801e90117d606054a706bc4559ef9c",
+      "contentHash": "5c9a7a004643d43f2c0f6f94656850445e801e90117d606054a706bc4559ef9c"
+    },
+    {
+      "id": "urn:duly:fact:sha256:a7bb4def304481f77b627c16d25a5ebde191ddeb40341f80e8c161882ee215d8",
+      "contentHash": "a7bb4def304481f77b627c16d25a5ebde191ddeb40341f80e8c161882ee215d8"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

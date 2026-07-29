@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:75c1be763e77387caa4a0d3d1d6103f2a6924b502da62ea1347896ca2566f402",
+  "contentHash": "75c1be763e77387caa4a0d3d1d6103f2a6924b502da62ea1347896ca2566f402",
+  "caseId": "case:golden:notice-ca-0072",
+  "entity": {
+    "id": "policy:notice-ca-0072",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2025-10-11T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2025-10-11T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2025-10-11T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,5 @@
+id: notice-ny-0060
+pack: rulepacks/termination-notice-us-states/pack.yaml
+question: nc:noticeCompliant
+asOfEffective: "2026-08-04"
+asOfKnowledge: "2026-08-06T12:00:00Z"

@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:3afd4b1af06fe14f320f64f9b51c1f9b94eda80954d663dea8fb7f653ef9a4a8",
+  "receiptSha256": "3afd4b1af06fe14f320f64f9b51c1f9b94eda80954d663dea8fb7f653ef9a4a8",
+  "caseId": "case:golden:trid-0007",
+  "decision": {
+    "entity": "fee:transfer-tax:trid-0007",
+    "attribute": "trid:toleranceCureAmount",
+    "value": {
+      "kind": "money",
+      "amount": "0.00",
+      "currency": "USD"
+    }
+  },
+  "asOf": {
+    "effective": "2026-03-15T00:00:00Z",
+    "knowledge": "2026-03-17T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "trid-fee-tolerance-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "TRID-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "2015-10-03T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "TRID-CAT-02",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR 1026.19(e)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2015-10-03T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "fee:transfer-tax:trid-0007",
+      "attribute": "trid:toleranceCureAmount",
+      "value": {
+        "kind": "money",
+        "amount": "0.00",
+        "currency": "USD"
+      }
+    },
+    "rule": "TRID-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

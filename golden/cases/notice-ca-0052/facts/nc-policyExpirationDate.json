@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:ed13803a77f21005ab0748053815c0b21aaef72260a30aa48c752b62c70e0720",
+  "contentHash": "ed13803a77f21005ab0748053815c0b21aaef72260a30aa48c752b62c70e0720",
+  "caseId": "case:golden:notice-ca-0052",
+  "entity": {
+    "id": "policy:notice-ca-0052",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "value": {
+    "kind": "date",
+    "value": "2025-07-19"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2025-06-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2025-06-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2025-06-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

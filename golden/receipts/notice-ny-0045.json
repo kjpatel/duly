@@ -1,0 +1,64 @@
+{
+  "id": "urn:duly:receipt:sha256:e5c74db90ff264b993c8b278bbd600e8d1f9cb7baa6cca8330f1a87e91e429be",
+  "receiptSha256": "e5c74db90ff264b993c8b278bbd600e8d1f9cb7baa6cca8330f1a87e91e429be",
+  "caseId": "case:golden:notice-ny-0045",
+  "decision": {
+    "entity": "notice:notice-ny-0045",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2025-06-09T00:00:00Z",
+    "knowledge": "2025-06-11T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NC-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "NY-NR-45-LEGACY",
+      "version": "1.0.0",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 100,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "effectiveTo": "2026-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-ny-0045",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "NC-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

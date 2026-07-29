@@ -9,6 +9,7 @@ same-attribute/same-priority ambiguity.
 from __future__ import annotations
 
 import datetime as _dt
+import re
 from pathlib import Path
 
 import yaml
@@ -241,10 +242,40 @@ def _windows_overlap(a: dict, b: dict) -> bool:
     )
 
 
+_EQ_GUARD = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s*==\s*"([^"]*)"\s*$')
+
+
+def _equality_guards(rule: dict) -> dict[str, str]:
+    """Map bound-attribute CURIE -> required literal, for `when` items of the
+    syntactic form `var == "literal"` where var is an attribute binding.
+
+    Used only to prove disjointness: two rules requiring different literals
+    for the same attribute can never both fire on one case (v0: one live fact
+    per attribute)."""
+    guards: dict[str, str] = {}
+    given = rule.get("given") or {}
+    for item in rule.get("when") or []:
+        m = _EQ_GUARD.match(item)
+        if not m:
+            continue
+        var, literal = m.group(1), m.group(2)
+        binding = given.get(var)
+        if isinstance(binding, dict) and "attribute" in binding:
+            guards[binding["attribute"]] = literal
+    return guards
+
+
+def _guards_disjoint(a: dict, b: dict) -> bool:
+    ga, gb = _equality_guards(a), _equality_guards(b)
+    return any(attr in gb and gb[attr] != lit for attr, lit in ga.items())
+
+
 def _check_priority_ambiguity(rules: list[dict]) -> None:
-    """Two rules concluding the same attribute at the same priority, with
-    overlapping effective windows, where neither overrides the other, make
-    the pack ambiguous."""
+    """Two rules concluding the same attribute at the same priority make the
+    pack ambiguous — unless they can provably never both apply: disjoint
+    effective windows (rule versioning) or contradictory equality guards on
+    the same attribute (e.g. jurisdiction scoping: state == "US-NY" vs
+    state == "US-FL"), or one overrides the other."""
     by_attr: dict[str, list[dict]] = {}
     for rule in rules:
         by_attr.setdefault(rule["then"]["attribute"], []).append(rule)
@@ -255,14 +286,17 @@ def _check_priority_ambiguity(rules: list[dict]) -> None:
                     continue
                 if not _windows_overlap(a, b):
                     continue
+                if _guards_disjoint(a, b):
+                    continue
                 a_over = set(a.get("overrides") or [])
                 b_over = set(b.get("overrides") or [])
                 if b["id"] in a_over or a["id"] in b_over:
                     continue
                 raise PackValidationError(
                     f"ambiguous pack: rules {a['id']!r} and {b['id']!r} both conclude "
-                    f"{attr!r} at priority {a['priority']} with overlapping effective "
-                    f"windows and neither overrides the other"
+                    f"{attr!r} at priority {a['priority']}, cannot be proven disjoint "
+                    f"(by effective window or equality guards), and neither overrides "
+                    f"the other"
                 )
 
 

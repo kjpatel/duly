@@ -1,0 +1,63 @@
+{
+  "id": "urn:duly:receipt:sha256:2eec3c21543c588e0f64d2f042e01a910a126487df36dbefbef4400e1824f5cc",
+  "receiptSha256": "2eec3c21543c588e0f64d2f042e01a910a126487df36dbefbef4400e1824f5cc",
+  "caseId": "case:golden:notice-fl-0008",
+  "decision": {
+    "entity": "notice:notice-fl-0008",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-08-02T00:00:00Z",
+    "knowledge": "2026-08-04T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NC-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "FL-NR-120",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fla. Stat. § 627.4133(2)(b)",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+      },
+      "priority": 100,
+      "effectiveFrom": "2016-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-fl-0008",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "NC-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

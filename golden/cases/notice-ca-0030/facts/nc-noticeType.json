@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:09e25c782595584bcee4ce2a88e85d390e2bf80f140a50f825c2f7e8b81d2a7e",
+  "contentHash": "09e25c782595584bcee4ce2a88e85d390e2bf80f140a50f825c2f7e8b81d2a7e",
+  "caseId": "case:golden:notice-ca-0030",
+  "entity": {
+    "id": "notice:notice-ca-0030",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeType",
+  "value": {
+    "kind": "code",
+    "value": "Nonrenewal",
+    "codeSystem": "duly-starter-notice/notice-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-02-13T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-02-13T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-02-13T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

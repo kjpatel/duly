@@ -1,0 +1,109 @@
+{
+  "id": "urn:duly:receipt:sha256:a919fc46060b6167e882a07bfba358987fd9643976474a960b9c27787f2078a5",
+  "receiptSha256": "a919fc46060b6167e882a07bfba358987fd9643976474a960b9c27787f2078a5",
+  "caseId": "case:golden:notice-fl-0046",
+  "decision": {
+    "entity": "notice:notice-fl-0046",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-09-30T00:00:00Z",
+    "knowledge": "2026-10-02T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "FL-NR-120",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fla. Stat. § 627.4133(2)(b)",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+      },
+      "priority": 100,
+      "effectiveFrom": "2016-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "NC-NR-01",
+      "version": "1.0.2",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 200,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "defeated": [
+        "NC-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-fl-0046",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "NC-NR-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:3576c6f6bee4f2af21731630948d35af0d69c0406ef1fbe4b3d1832672112f56"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:b7b35f5e8b25a6d42e8b3cb9806a72936f9ce7b31bf058d057fb6d13eed8c5c6"
+      },
+      {
+        "conclusion": {
+          "entity": "notice:notice-fl-0046",
+          "attribute": "nc:requiredMinimumNoticeDays",
+          "value": {
+            "kind": "decimal",
+            "value": "120"
+          }
+        },
+        "rule": "FL-NR-120",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:6c471780afae93d48dc1ab1c81b1f36d522a583148a0f6dd0dd9784ef9e85a51"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:ce845a4cd16090258421f2013508b53960f269d93afdf7a43ad30fe145ea30fe"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:3576c6f6bee4f2af21731630948d35af0d69c0406ef1fbe4b3d1832672112f56",
+      "contentHash": "3576c6f6bee4f2af21731630948d35af0d69c0406ef1fbe4b3d1832672112f56"
+    },
+    {
+      "id": "urn:duly:fact:sha256:b7b35f5e8b25a6d42e8b3cb9806a72936f9ce7b31bf058d057fb6d13eed8c5c6",
+      "contentHash": "b7b35f5e8b25a6d42e8b3cb9806a72936f9ce7b31bf058d057fb6d13eed8c5c6"
+    },
+    {
+      "id": "urn:duly:fact:sha256:6c471780afae93d48dc1ab1c81b1f36d522a583148a0f6dd0dd9784ef9e85a51",
+      "contentHash": "6c471780afae93d48dc1ab1c81b1f36d522a583148a0f6dd0dd9784ef9e85a51"
+    },
+    {
+      "id": "urn:duly:fact:sha256:ce845a4cd16090258421f2013508b53960f269d93afdf7a43ad30fe145ea30fe",
+      "contentHash": "ce845a4cd16090258421f2013508b53960f269d93afdf7a43ad30fe145ea30fe"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:2e0f4c3d9fc52cc0acf4e7a6f6797e52ed31cdb65b6b2c920de48a890cdcb8cc",
+  "contentHash": "2e0f4c3d9fc52cc0acf4e7a6f6797e52ed31cdb65b6b2c920de48a890cdcb8cc",
+  "caseId": "case:golden:trid-0015",
+  "entity": {
+    "id": "fee:transfer-tax:trid-0015",
+    "type": "trid:Fee"
+  },
+  "attribute": "trid:feeType",
+  "value": {
+    "kind": "code",
+    "value": "TransferTax",
+    "codeSystem": "duly-starter-trid/fee-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-03-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  }
+}

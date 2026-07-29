@@ -1,0 +1,5 @@
+id: notice-001-ny-late
+pack: kernel/tests/fixtures/ny-pack.yaml
+question: "Was this termination notice compliant?"
+asOfEffective: "2026-07-25T00:00:00Z"
+asOfKnowledge: "2026-07-30T16:00:00Z"

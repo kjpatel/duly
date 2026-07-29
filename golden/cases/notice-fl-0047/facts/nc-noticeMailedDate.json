@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:2f9de2a35b7406aa443c3d5a953fd558e2270e2ef09b7839791c2402f0b6c451",
+  "contentHash": "2f9de2a35b7406aa443c3d5a953fd558e2270e2ef09b7839791c2402f0b6c451",
+  "caseId": "case:golden:notice-fl-0047",
+  "entity": {
+    "id": "notice:notice-fl-0047",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeMailedDate",
+  "value": {
+    "kind": "date",
+    "value": "2025-05-14"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2025-05-14T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2025-05-14T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2025-05-14T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

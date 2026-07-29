@@ -7,6 +7,8 @@
 ╚═════╝  ╚═════╝ ╚══════╝╚═╝
 ```
 
+[![CI](https://github.com/kjpatel/duly/actions/workflows/ci.yml/badge.svg)](https://github.com/kjpatel/duly/actions/workflows/ci.yml)
+
 **Auditable document decisioning for regulated workflows.**
 
 *duly* — as in duly authorized, duly recorded, duly noted: in accordance with proper procedure. 
@@ -45,9 +47,9 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Starters](starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for both verticals | two shipped |
 | [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay | working |
 | Extraction adapters | Document AI providers (Docling, Azure DI, Google Document AI, Textract) emitting contract-conformant facts | scripted stub only |
-| Bitemporal fact store | As-of storage across effective and knowledge time | not started (M2) |
+| [Bitemporal fact store](store/) | Append-only events, as-of projections across effective and knowledge time, supersession chains (SQLite; Postgres-portable schema) | working |
 | Review queue | Abstention routing; human corrections re-enter as first-class facts | not started |
-| Assurance harness | Replay verifier, golden-set CI, rule-change impact analysis | seeds: spec validator + pack-expectation tests |
+| [Assurance harness](assurance/) | Replay verifier, 250-case [golden corpus](golden/), rule-change impact analysis with CI PR comments | working |
 
 ## Design choices and why
 
@@ -127,15 +129,16 @@ Sequencing principle: build nothing until its consumer exists. Each milestone en
 - [x] Audit report renderer: deterministic, layered Markdown + PDF ([example report](docs/example-audit-report.md)), with PII quote redaction
 - [x] Spec closeout: conflict-resolution policy (a lone human assertion outranks machine facts; all other conflicts abstain) and fact `sensitivity` field — both implemented and tested; batch envelopes deferred to M3
 
-### M2 — replay and regression (next)
-- [ ] Bitemporal fact store on Postgres (append-only events, as-of queries)
-- [ ] Replay verifier: re-run any receipt, assert byte-identical output
-- [ ] Golden-set runner; human corrections auto-become regression cases
-- [ ] Rule-change impact analysis in CI: a rule PR gets a comment — "this change flips N of M historical decisions, here are five before/after receipts"
-- [ ] Two or three additional state rule packs (different notice periods, grounds, and delivery requirements) to exercise jurisdictional variation and effective-dating
+### M2 — replay and regression (complete)
+- [x] Bitemporal fact store ([store/](store/)): append-only events on SQLite with a Postgres-portable schema; as-of projections across knowledge and effective time; supersession chains and knowledge-time travel ("what did we know in March") tested end to end
+- [x] Replay verifier: `python -m duly_assurance verify` re-adjudicates every golden case and asserts byte-identical receipts
+- [x] Golden corpus ([golden/](golden/)): 250 committed synthetic cases with receipts, seeded and deterministically regenerable, exercising every rule in every pack including effective-date boundaries and defeat chains
+- [x] Rule-change impact analysis in CI: PRs touching rulepacks/ get a sticky comment — "N of M decisions flip" — with before/after receipts and reasoning-only-change tracking ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+- [x] Florida and California rule packs, statutorily verified (Fla. Stat. § 627.4133; Cal. Ins. Code §§ 678, 677.4) with explicit scope comments and TODO(verify) markers; jurisdiction scoping validated by equality-guard disjointness in the pack validator
 
 ### M3 — extraction and review
 - [ ] Extraction adapter interface + Docling adapter + one commercial adapter (Azure DI or Google Document AI)
+- [ ] Human corrections auto-become golden regression cases (moved from M2; depends on the review queue)
 - [ ] Extraction-run batch envelope: signed manifest so a whole run can be verified or revoked at once (deferred from M0)
 - [ ] Calibration module (temperature/Platt/conformal) with abstention policy hooks
 - [ ] Review queue API: abstention routing, human facts re-entering the store
@@ -170,7 +173,8 @@ Pre-alpha; M0 and the core of M1 are complete. The contract is drafted, the refe
 
 ```bash
 uv sync
-uv run pytest kernel/tests demo/tests   # kernel, pack expectations, demo API
+uv run pytest kernel/tests demo/tests assurance/tests store/tests   # full suite
+uv run python -m duly_assurance verify  # replay all 250 golden receipts byte-for-byte
 uv run spec/validate.py                 # spec examples: schemas + hashes
 uv run uvicorn demo.app:app --port 8788 # the interactive demo
 ```

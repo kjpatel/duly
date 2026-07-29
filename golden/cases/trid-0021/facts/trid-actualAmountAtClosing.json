@@ -1,0 +1,39 @@
+{
+  "id": "urn:duly:fact:sha256:c5eb512187998ad6f7f1c6b1ab77e4bd86689314aec09fb06e22f9fb0d0e3586",
+  "contentHash": "c5eb512187998ad6f7f1c6b1ab77e4bd86689314aec09fb06e22f9fb0d0e3586",
+  "caseId": "case:golden:trid-0021",
+  "entity": {
+    "id": "fee:transfer-tax:trid-0021",
+    "type": "trid:Fee"
+  },
+  "attribute": "trid:actualAmountAtClosing",
+  "value": {
+    "kind": "money",
+    "amount": "2561.36",
+    "currency": "USD"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-03-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "id": "urn:duly:receipt:sha256:f0acba4b6fdd665ae4af633ed7fd372fc008208379ae7193539acf979f71c6d2",
+  "receiptSha256": "f0acba4b6fdd665ae4af633ed7fd372fc008208379ae7193539acf979f71c6d2",
+  "caseId": "case:golden:notice-ca-0035",
+  "decision": {
+    "entity": "notice:notice-ca-0035",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2025-10-08T00:00:00Z",
+    "knowledge": "2025-10-10T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "CA-NR-75",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Ins. Code § 678(c)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=678."
+      },
+      "priority": 100,
+      "effectiveFrom": "2020-07-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "NC-NR-01",
+      "version": "1.0.2",
+      "citation": {
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
+        "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+      },
+      "priority": 200,
+      "effectiveFrom": "1986-01-01T00:00:00Z",
+      "defeated": [
+        "NC-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-ca-0035",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "NC-NR-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:8f45a72d08c1713874fad9e7bf6e181051b83d7bfc14e8ea379da850199c9166"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:99c56ba49d413e1c2743415d5931bec8531579a4d6f1d68e2f72e6ed38eb1479"
+      },
+      {
+        "conclusion": {
+          "entity": "notice:notice-ca-0035",
+          "attribute": "nc:requiredMinimumNoticeDays",
+          "value": {
+            "kind": "decimal",
+            "value": "75"
+          }
+        },
+        "rule": "CA-NR-75",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:c0a51ab6ce7d366783a3e32034a3adb55c29861044978df32dd851608fe20559"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:d54d7b1a4901bec936d7f1a2a2bf444c797ce094e65267478fce6e32ad66d7fc"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:8f45a72d08c1713874fad9e7bf6e181051b83d7bfc14e8ea379da850199c9166",
+      "contentHash": "8f45a72d08c1713874fad9e7bf6e181051b83d7bfc14e8ea379da850199c9166"
+    },
+    {
+      "id": "urn:duly:fact:sha256:99c56ba49d413e1c2743415d5931bec8531579a4d6f1d68e2f72e6ed38eb1479",
+      "contentHash": "99c56ba49d413e1c2743415d5931bec8531579a4d6f1d68e2f72e6ed38eb1479"
+    },
+    {
+      "id": "urn:duly:fact:sha256:c0a51ab6ce7d366783a3e32034a3adb55c29861044978df32dd851608fe20559",
+      "contentHash": "c0a51ab6ce7d366783a3e32034a3adb55c29861044978df32dd851608fe20559"
+    },
+    {
+      "id": "urn:duly:fact:sha256:d54d7b1a4901bec936d7f1a2a2bf444c797ce094e65267478fce6e32ad66d7fc",
+      "contentHash": "d54d7b1a4901bec936d7f1a2a2bf444c797ce094e65267478fce6e32ad66d7fc"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

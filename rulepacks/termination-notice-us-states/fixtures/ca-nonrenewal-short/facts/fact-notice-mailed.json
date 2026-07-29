@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:33b4e29377f930e143e6277009070a5fdf969979e74ec5909d1c70969d158a21",
+  "contentHash": "33b4e29377f930e143e6277009070a5fdf969979e74ec5909d1c70969d158a21",
+  "caseId": "case:policy:HO-90210-CA",
+  "entity": {
+    "id": "notice:HO-90210-CA:2026-09-15",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeMailedDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-09-15"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-09-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-09-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-09-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

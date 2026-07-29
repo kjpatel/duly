@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run test suites
+        run: |
+          suites=""
+          for d in kernel/tests demo/tests assurance/tests store/tests; do
+            if [ -d "$d" ]; then
+              suites="$suites $d"
+            else
+              echo "skipping $d (not present)"
+            fi
+          done
+          uv run pytest $suites -q
+
+      - name: Validate spec examples
+        run: uv run spec/validate.py
+
+      - name: Verify golden corpus (replay determinism)
+        run: |
+          if [ -d golden/cases ]; then
+            uv run python -m duly_assurance verify
+          else
+            echo "golden/cases not present; skipping verify"
+          fi
+
+  rule-impact:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect rulepack changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            rulepacks:
+              - 'rulepacks/**'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.changes.outputs.rulepacks == 'true'
+
+      - name: Install dependencies
+        if: steps.changes.outputs.rulepacks == 'true'
+        run: uv sync
+
+      - name: Run impact analysis
+        if: steps.changes.outputs.rulepacks == 'true'
+        run: |
+          if [ -d golden/cases ]; then
+            uv run python -m duly_assurance impact --markdown impact.md
+          else
+            echo "golden/cases not present; skipping impact analysis"
+          fi
+
+      - name: Post sticky PR comment
+        if: steps.changes.outputs.rulepacks == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ ! -f impact.md ]; then
+            echo "no impact.md produced; nothing to post"
+            exit 0
+          fi
+          # impact.md starts with the "<!-- duly-impact -->" marker; find an
+          # existing comment carrying it and update in place, else create.
+          comment_id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | contains("<!-- duly-impact -->")) | .id' \
+            | head -n 1)
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$comment_id" \
+              -F body=@impact.md > /dev/null
+            echo "updated comment $comment_id"
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" \
+              -F body=@impact.md > /dev/null
+            echo "created new impact comment"
+          fi

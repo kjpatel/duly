@@ -72,7 +72,7 @@ Small, typed, deterministic. Used in `when` items and `then.value.expr`.
 Two mechanisms, both recorded on the receipt:
 
 1. **`overrides`** (explicit exceptions): if rule R is applicable and fires, every rule listed in `R.overrides` has its conclusions suppressed for this run, and R's receipt entry records `defeated: [those ids]`. This is the default-and-exception pattern: `NC-DEF-00` presumes compliance; `NC-NR-01` overrides it when the notice-period arithmetic fails.
-2. **Priority** (conflict tiebreak): if two applicable rules conclude the *same attribute for the same entity* and neither overrides the other, the higher `priority` wins and the receipt records the loser as defeated. Equal priority on a same-attribute conflict is a pack-validation error — packs must be unambiguous.
+2. **Priority** (conflict tiebreak): if two applicable rules conclude the *same attribute for the same entity* and neither overrides the other, the higher `priority` wins and the receipt records the loser as defeated. Equal priority on a same-attribute conflict is a pack-validation error — packs must be unambiguous. Exceptions, where the validator can *prove* the rules never both apply: disjoint effective windows (rule versioning), or contradictory equality guards on the same bound attribute (jurisdiction scoping — `state == "US-NY"` vs `state == "US-FL"`).
 
 ## Receipt mapping
 

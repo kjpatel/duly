@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:75e78577b46d031ea9f7ff80c6227ba58a9259688cdbc606510912418794eede",
+  "contentHash": "75e78577b46d031ea9f7ff80c6227ba58a9259688cdbc606510912418794eede",
+  "caseId": "case:policy:HO-10003-NY",
+  "entity": {
+    "id": "policy:HO-10003-NY",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-09-01"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:dec-page:HO-10003-NY:2025-09-01",
+    "documentSha256": "5c1e8a7b3d9f2c4e6a0b8d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c",
+    "rendition": {
+      "id": "rend:docling:2.15.0:5c1e8a7b",
+      "extractor": "docling",
+      "extractorVersion": "2.15.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 842,
+      "end": 881
+    },
+    "quote": "POLICY PERIOD: 09/01/2025 to 09/01/2026"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:05:41Z",
+    "extractor": {
+      "name": "duly-docling-adapter",
+      "version": "0.1.0",
+      "modelId": "docling-2.15.0",
+      "runId": "run:2026-07-28:003"
+    }
+  },
+  "confidence": {
+    "score": 0.99,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "effectiveFrom": "2025-09-01T00:00:00Z",
+  "recordedAt": "2026-07-28T14:05:41Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

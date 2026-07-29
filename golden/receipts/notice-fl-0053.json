@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:7f853202c3391b8d1b25550cb19c314729fdc2d1bda566d0c98d95312e8ffc3f",
+  "receiptSha256": "7f853202c3391b8d1b25550cb19c314729fdc2d1bda566d0c98d95312e8ffc3f",
+  "caseId": "case:golden:notice-fl-0053",
+  "decision": {
+    "entity": "notice:notice-fl-0053",
+    "attribute": "nc:noticeCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2025-07-02T00:00:00Z",
+    "knowledge": "2025-07-04T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "termination-notice-us-states",
+    "version": "2026.2.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NC-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "FL-NONPAY-10",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fla. Stat. § 627.4133(2)(b)1.",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+      },
+      "priority": 150,
+      "effectiveFrom": "2016-01-01T00:00:00Z",
+      "defeated": [
+        "FL-NR-120"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notice:notice-fl-0053",
+      "attribute": "nc:noticeCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "NC-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

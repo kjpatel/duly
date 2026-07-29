@@ -71,9 +71,12 @@ rules:
   # never becomes applicable against spec/examples. It exists to show the exception
   # structure of the pack (a higher-priority ground-specific minimum that overrides
   # the general nonrenewal minimums when a nonpayment ground is asserted).
+  # v1.1.0 adds the US-NY equality guard: with FL/CA nonpay exceptions now in the
+  # pack at the same priority, each state's exception must be jurisdiction-scoped
+  # (and NY's 15-day figure was never correct outside New York anyway).
   - id: NY-NR-NONPAY-15
     description: "When the ground for termination is nonpayment of premium, New York requires only 15 days advance notice, which supersedes the general nonrenewal minimums."
-    version: "1.0.0"
+    version: "1.1.0"
     priority: 150
     citation:
       text: "N.Y. Ins. Law § 3425(c)(1)(A)"
@@ -82,13 +85,139 @@ rules:
     given:
       notice:       { entityType: nc:TerminationNotice }
       cancelGround: { attribute: nc:terminationGround }
+      state:        { attribute: nc:governingState }
     when:
       - cancelGround == "Nonpayment"
+      - state == "US-NY"
     then:
       entity: notice
       attribute: nc:requiredMinimumNoticeDays
       value: { kind: decimal, expr: "15" }
     overrides: [NY-NR-45, NY-NR-45-LEGACY]
+
+  # SCOPE: Encodes the general 120-day minimum of s. 627.4133(2)(b) for personal
+  # lines / commercial residential property policies (homeowner, mobile home
+  # owner, farmowner, condominium, etc.). Not modeled, because the fact
+  # vocabulary has no line-of-business or claim-history attributes:
+  #   - s. 627.4133(1)(a): the 45-day minimum for non-residential lines
+  #     (workers' comp, general property/casualty);
+  #   - s. 627.4133(2)(b): the 20-day cancellation notice within the first 60
+  #     days of coverage, the restrictions on permissible grounds after 60 days,
+  #     the Citizens Property Insurance / receivership provisions, and the
+  #     hurricane- and wind-claim protections limiting when a policy with an
+  #     open claim may be nonrenewed.
+  # TODO(verify): effectiveFrom — the 120-day figure was enacted by s. 5,
+  # ch. 2015-135, Laws of Fla., and appears in every annual Florida Statutes
+  # edition from 2015 through 2025 (the 2014 edition still read 100 days);
+  # the exact commencement date of ch. 2015-135 was not confirmed from the
+  # session law, so 2016-01-01 is a defensible but unverified boundary.
+  - id: FL-NR-120
+    description: "Florida requires at least 120 days advance written notice of nonrenewal for a personal lines or commercial residential property insurance policy."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Fla. Stat. § 627.4133(2)(b)"
+      url: "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+    effectiveFrom: "2016-01-01"
+    given:
+      notice:     { entityType: nc:TerminationNotice }
+      noticeType: { attribute: nc:noticeType }
+      state:      { attribute: nc:governingState }
+    when:
+      - noticeType == "Nonrenewal"
+      - state == "US-FL"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "120" }
+
+  # SCOPE: Encodes only the nonpayment-of-premium proviso of s. 627.4133(2)(b)1.
+  # ("If cancellation is for nonpayment of premium, at least 10 days' written
+  # notice of cancellation accompanied by the reason therefor must be given").
+  # The neighboring 20-day first-60-days cancellation notice and the
+  # material-misstatement carve-outs are not modeled (no matching ground codes
+  # in the fact vocabulary).
+  - id: FL-NONPAY-10
+    description: "When cancellation of a Florida residential property policy is for nonpayment of premium, at least 10 days written notice suffices, which supersedes the general 120-day minimum."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "Fla. Stat. § 627.4133(2)(b)1."
+      url: "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
+    effectiveFrom: "2016-01-01"
+    given:
+      notice:       { entityType: nc:TerminationNotice }
+      cancelGround: { attribute: nc:terminationGround }
+      state:        { attribute: nc:governingState }
+    when:
+      - cancelGround == "Nonpayment"
+      - state == "US-FL"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "10" }
+    overrides: [FL-NR-120]
+
+  # SCOPE: Encodes the 75-day nonrenewal-notice minimum of Cal. Ins. Code
+  # § 678(c), which by § 678 applies to policies expiring on or after
+  # July 1, 2020 (hence effectiveFrom) and by § 678(g) only to the personal
+  # lines property policies specified in § 675. Not modeled:
+  #   - § 678(a): the separate 45-day timing for a renewal offer;
+  #   - § 678(b): the automatic-continuation remedy when notice is late (this
+  #     pack decides notice compliance, not the remedy);
+  #   - wildfire-emergency nonrenewal moratoria under Ins. Code § 675.1;
+  #   - the § 675 line-of-business scoping itself (the fact vocabulary has no
+  #     line-of-business attribute).
+  - id: CA-NR-75
+    description: "California requires the notice of nonrenewal of a personal lines property policy to be delivered or mailed at least 75 days before policy expiration."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Cal. Ins. Code § 678(c)"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=678."
+    effectiveFrom: "2020-07-01"
+    given:
+      notice:     { entityType: nc:TerminationNotice }
+      noticeType: { attribute: nc:noticeType }
+      state:      { attribute: nc:governingState }
+    when:
+      - noticeType == "Nonrenewal"
+      - state == "US-CA"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "75" }
+
+  # SCOPE: Encodes only the nonpayment-of-premium timing of Cal. Ins. Code
+  # § 677.4 ("in the case of a cancellation for nonpayment of premiums, or for
+  # fraud, the notice shall be given at least 10 calendar days prior to the
+  # effective date of the cancellation"). The section's default 20-calendar-day
+  # cancellation notice for other grounds, the fraud ground, and the
+  # CCP § 1013 mailing-time extension are not modeled.
+  # TODO(verify): effectiveFrom — 2023-01-01 is the effective date of the
+  # current text (Stats. 2022, ch. 424, § 7 (SB 1242)); the section existed
+  # before that amendment but its original enactment date was not confirmed
+  # from an official source.
+  - id: CA-NONPAY-10
+    description: "When cancellation of a California personal lines property policy is for nonpayment of premium, notice at least 10 calendar days before the effective date suffices, which supersedes the 75-day nonrenewal minimum."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "Cal. Ins. Code § 677.4"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=INS&sectionNum=677.4."
+    effectiveFrom: "2023-01-01"
+    given:
+      notice:       { entityType: nc:TerminationNotice }
+      cancelGround: { attribute: nc:terminationGround }
+      state:        { attribute: nc:governingState }
+    when:
+      - cancelGround == "Nonpayment"
+      - state == "US-CA"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "10" }
+    overrides: [CA-NR-75]
 
   - id: NC-NR-01
     description: "A notice mailed fewer than the required minimum days before the policy expiration is not compliant."

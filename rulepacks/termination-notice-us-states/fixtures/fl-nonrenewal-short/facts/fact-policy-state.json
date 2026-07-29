@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:0461b708386e285470d18d8a1c5b566e2592ec7738e44824d6f8fcd4ffb252d2",
+  "contentHash": "0461b708386e285470d18d8a1c5b566e2592ec7738e44824d6f8fcd4ffb252d2",
+  "caseId": "case:policy:HO-33019-FL",
+  "entity": {
+    "id": "policy:HO-33019-FL",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-FL",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-09-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-09-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-09-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

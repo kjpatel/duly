@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:39f33d4b9ba737afd53b585beb0b0bbd5a21441bc53f6fb0577c45bd26eb2f07",
+  "contentHash": "39f33d4b9ba737afd53b585beb0b0bbd5a21441bc53f6fb0577c45bd26eb2f07",
+  "caseId": "case:policy:HO-10002-NY",
+  "entity": {
+    "id": "notice:HO-10002-NY:2026-07-10",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeMailedDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-07-10"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:nonrenewal-notice:HO-10002-NY:2026-07-10",
+    "documentSha256": "9d4f2b6e8a0c3f5d7b9e1a4c6f8d0b2e5a7c9f1d3b6e8a0c2f4d7b9e1a3c5f8d",
+    "rendition": {
+      "id": "rend:docling:2.15.0:9d4f2b6e",
+      "extractor": "docling",
+      "extractorVersion": "2.15.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 205,
+      "end": 232
+    },
+    "quote": "Date of Mailing: 2026-07-10"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:06:02Z",
+    "extractor": {
+      "name": "duly-docling-adapter",
+      "version": "0.1.0",
+      "modelId": "docling-2.15.0",
+      "runId": "run:2026-07-28:003"
+    }
+  },
+  "confidence": {
+    "score": 0.99,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "effectiveFrom": "2026-07-10T00:00:00Z",
+  "recordedAt": "2026-07-28T14:06:02Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

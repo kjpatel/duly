@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:56fb1ff74e107c11d9e5fd599babb7c4ddacc3948f22a8fb136902b8dc3385e1",
+  "contentHash": "56fb1ff74e107c11d9e5fd599babb7c4ddacc3948f22a8fb136902b8dc3385e1",
+  "caseId": "case:policy:HO-90210-CA",
+  "entity": {
+    "id": "policy:HO-90210-CA",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-09-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-09-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-09-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

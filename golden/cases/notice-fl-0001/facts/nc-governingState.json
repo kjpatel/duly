@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:442794dd65c64037f92a0c9757cbbc3b8d7d87bfe1d7fad4e69295dffeca4da4",
+  "contentHash": "442794dd65c64037f92a0c9757cbbc3b8d7d87bfe1d7fad4e69295dffeca4da4",
+  "caseId": "case:golden:notice-fl-0001",
+  "entity": {
+    "id": "policy:notice-fl-0001",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-FL",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-04-14T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-04-14T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-04-14T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

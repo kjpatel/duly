@@ -1,0 +1,5 @@
+id: trid-0004
+pack: rulepacks/trid-fee-tolerance-us-federal/pack.yaml
+question: trid:toleranceCureAmount
+asOfEffective: "2026-03-15"
+asOfKnowledge: "2026-03-17T12:00:00Z"

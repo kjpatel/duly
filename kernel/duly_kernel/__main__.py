@@ -48,6 +48,18 @@ def main(argv: list[str] | None = None) -> int:
         help="Knowledge asOf (ISO date or datetime). Default: --asof at 23:59:59Z.",
     )
     parser.add_argument("--question", required=True, help="Decision attribute CURIE.")
+    parser.add_argument(
+        "--report",
+        default=None,
+        metavar="PATH",
+        help="Also write a Markdown audit report to PATH.",
+    )
+    parser.add_argument(
+        "--report-pdf",
+        default=None,
+        metavar="PATH",
+        help="Also write a PDF audit report to PATH.",
+    )
     args = parser.parse_args(argv)
 
     facts_dir = Path(args.facts)
@@ -66,6 +78,18 @@ def main(argv: list[str] | None = None) -> int:
     except (PackValidationError, AdjudicationError, ExprError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+
+    if args.report is not None or args.report_pdf is not None:
+        from .report import render_report_markdown, render_report_pdf  # noqa: PLC0415
+
+        if args.report is not None:
+            Path(args.report).write_text(
+                render_report_markdown(receipt, facts, pack), encoding="utf-8"
+            )
+        if args.report_pdf is not None:
+            Path(args.report_pdf).write_bytes(
+                render_report_pdf(receipt, facts, pack)
+            )
 
     json.dump(receipt, sys.stdout, indent=2, ensure_ascii=False)
     print()

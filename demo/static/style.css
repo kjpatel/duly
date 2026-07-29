@@ -400,6 +400,15 @@ main {
   padding: 0.12rem 0.55rem;
 }
 
+.download-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.download-row .download-btn { margin-top: 0; }
+
 .download-btn {
   margin-top: 1.5rem;
   font: inherit;

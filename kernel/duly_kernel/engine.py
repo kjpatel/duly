@@ -125,15 +125,23 @@ def evaluate_pack(
     live = _live_facts(facts, effective)
 
     # Fact conflicts: two live facts asserting the same attribute of the
-    # same entity. The attribute becomes unbindable and the run records an
-    # abstention with reason "conflict".
+    # same entity. Resolution policy (spec/grounded-facts.md, "conflict
+    # resolution"): if exactly one of the conflicting facts is human-asserted,
+    # it outranks the machine assertions and binds; otherwise the attribute
+    # becomes unbindable and the run records an abstention with reason
+    # "conflict".
     by_entity_attr: dict[tuple[str, str], list[dict]] = {}
     for fact in live:
         by_entity_attr.setdefault((fact["entity"]["id"], fact["attribute"]), []).append(fact)
     conflicts = []
     conflicted_attrs: set[str] = set()
+    outranked_ids: set[str] = set()
     for (entity_id, attribute), group in sorted(by_entity_attr.items(), key=lambda kv: (kv[0][1], kv[0][0])):
         if len(group) > 1:
+            human = [f for f in group if f["assertion"]["kind"] == "human"]
+            if len(human) == 1:
+                outranked_ids.update(f["id"] for f in group if f is not human[0])
+                continue
             conflicted_attrs.add(attribute)
             conflicts.append(
                 {
@@ -143,6 +151,8 @@ def evaluate_pack(
                     "facts": sorted(f["id"] for f in group),
                 }
             )
+    if outranked_ids:
+        live = [f for f in live if f["id"] not in outranked_ids]
 
     # Binding indexes (v0: one live fact per attribute, one entity per type).
     facts_by_attr: dict[str, list[dict]] = {}

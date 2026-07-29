@@ -32,6 +32,7 @@ rules:
 | `version` | yes | Semver of this rule. |
 | `priority` | yes | Integer; used for conflict resolution (higher wins). Defaults/presumptions sit low (0), specific rules higher. |
 | `citation` | yes | `{text, url?}` — legal source. Defaults may cite `"Default presumption"`. |
+| `description` | no | One plain-English sentence stating what the rule holds. Used verbatim by report renderers; write it for a compliance reader. |
 | `effectiveFrom` / `effectiveTo` | from: yes | ISO dates. The rule participates only when `asOf.effective` falls in `[effectiveFrom, effectiveTo)`. Omitted `effectiveTo` = open-ended. |
 | `given` | yes | Variable bindings (see below). |
 | `when` | no | List of boolean expressions, ANDed. Omitted/empty = always true (this is how default rules work). |

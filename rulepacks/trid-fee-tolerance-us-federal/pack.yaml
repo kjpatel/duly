@@ -12,6 +12,7 @@ decisions:
 
 rules:
   - id: TRID-DEF-00
+    description: "No tolerance cure is owed unless a specific rule computes one."
     version: "1.0.0"
     priority: 0
     citation: { text: "Default presumption" }
@@ -26,6 +27,7 @@ rules:
   # Categorization step: transfer taxes are a zero-tolerance charge under
   # 1026.19(e)(3)(i) — the amount disclosed at baseline may not increase at all.
   - id: TRID-CAT-02
+    description: "Transfer taxes are a zero-tolerance charge: the amount disclosed on the Loan Estimate may not increase at closing."
     version: "1.0.0"
     priority: 100
     citation:
@@ -49,6 +51,7 @@ rules:
   # Cure computation: for a zero-tolerance fee, any increase over the baseline
   # disclosure is a violation and the excess must be refunded (cured).
   - id: TRID-ZT-01
+    description: "When a zero-tolerance fee exceeds its disclosed baseline at closing, the lender owes the borrower the excess as a tolerance cure."
     version: "1.0.0"
     priority: 200
     citation:

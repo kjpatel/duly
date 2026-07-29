@@ -124,6 +124,10 @@
         "ontology": { "type": "string", "description": "Name or URI of the domain ontology (e.g. MISMO, project-local)." },
         "version": { "type": "string" }
       }
+    },
+    "sensitivity": {
+      "enum": ["public", "internal", "pii"],
+      "description": "Handling class for this fact's content. Renderers redact the quote of a 'pii' fact in human-facing output while preserving document reference, span, and hash. Absent = 'internal'."
     }
   },
   "$defs": {

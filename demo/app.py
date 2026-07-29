@@ -19,6 +19,7 @@ from typing import Any
 
 import yaml
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -539,13 +540,15 @@ def api_scenarios() -> list[dict[str, Any]]:
     return result
 
 
-@app.post("/api/adjudicate")
-def api_adjudicate(body: AdjudicateRequest) -> dict[str, Any]:
-    scenario = _get_scenario(body.scenarioId)
-    effective = _normalize_effective(body.asOfEffective)
-    knowledge = _now_knowledge()
+def _adjudicate_scenario(
+    scenario: dict[str, Any], attribute: str, effective: str, knowledge: str
+) -> tuple[dict[str, Any], str]:
+    """Run the shared adjudication path (live kernel, fixture fallback).
 
-    receipt, no_decision = _run_kernel(scenario, body.attribute, effective, knowledge)
+    Returns (receipt, engineMode); raises HTTPException on no-decision or
+    when neither the engine nor a fixture receipt is available.
+    """
+    receipt, no_decision = _run_kernel(scenario, attribute, effective, knowledge)
     if no_decision is not None:
         raise HTTPException(
             status_code=409,
@@ -554,19 +557,29 @@ def api_adjudicate(body: AdjudicateRequest) -> dict[str, Any]:
                 f"{_date_prefix(effective)}: {no_decision}"
             ),
         )
-    engine_mode = "live"
-    if receipt is None:
-        engine_mode = "fixture"
-        fixture_receipt = json.loads(FIXTURE_RECEIPT_PATH.read_text())
-        if scenario.get("caseId") != fixture_receipt.get("caseId"):
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Engine unavailable (duly_kernel.api.adjudicate not importable) "
-                    "and no committed fixture receipt exists for this scenario."
-                ),
-            )
-        receipt = fixture_receipt
+    if receipt is not None:
+        return receipt, "live"
+    fixture_receipt = json.loads(FIXTURE_RECEIPT_PATH.read_text())
+    if scenario.get("caseId") != fixture_receipt.get("caseId"):
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Engine unavailable (duly_kernel.api.adjudicate not importable) "
+                "and no committed fixture receipt exists for this scenario."
+            ),
+        )
+    return fixture_receipt, "fixture"
+
+
+@app.post("/api/adjudicate")
+def api_adjudicate(body: AdjudicateRequest) -> dict[str, Any]:
+    scenario = _get_scenario(body.scenarioId)
+    effective = _normalize_effective(body.asOfEffective)
+    knowledge = _now_knowledge()
+
+    receipt, engine_mode = _adjudicate_scenario(
+        scenario, body.attribute, effective, knowledge
+    )
 
     return {
         "receipt": receipt,
@@ -574,6 +587,52 @@ def api_adjudicate(body: AdjudicateRequest) -> dict[str, Any]:
         "factIndex": _build_fact_index(receipt, scenario),
         "engineMode": engine_mode,
     }
+
+
+@app.get("/api/report")
+def api_report(
+    scenarioId: str, attribute: str, asOfEffective: str, format: str = "md"
+) -> Response:
+    """Adjudicate (same path as /api/adjudicate) and return the rendered
+    audit report as a downloadable Markdown or PDF file."""
+    if format not in ("md", "pdf"):
+        raise HTTPException(
+            status_code=422, detail=f"format must be 'md' or 'pdf', got {format!r}"
+        )
+    scenario = _get_scenario(scenarioId)
+    effective = _normalize_effective(asOfEffective)
+    knowledge = _now_knowledge()
+
+    receipt, _engine_mode = _adjudicate_scenario(
+        scenario, attribute, effective, knowledge
+    )
+
+    try:
+        from duly_kernel.report import (  # noqa: PLC0415
+            render_report_markdown,
+            render_report_pdf,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Report renderer unavailable (duly_kernel.report not importable).",
+        )
+
+    facts = scenario["facts"]
+    pack = scenario.get("pack") if isinstance(scenario.get("pack"), dict) else None
+    if format == "md":
+        content: bytes = render_report_markdown(receipt, facts, pack).encode("utf-8")
+        media_type = "text/markdown; charset=utf-8"
+    else:
+        content = render_report_pdf(receipt, facts, pack)
+        media_type = "application/pdf"
+
+    filename = f"duly-audit-{scenarioId}-{_date_prefix(effective)}.{format}"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/api/document/{scenario_id}/{document_id}")

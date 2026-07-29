@@ -63,6 +63,8 @@ async function init() {
     if (state.scenario && state.activeAttribute) runAdjudication();
   });
   $("download-receipt").addEventListener("click", downloadReceipt);
+  $("download-report-md").addEventListener("click", () => downloadReport("md"));
+  $("download-report-pdf").addEventListener("click", () => downloadReport("pdf"));
 
   if (state.scenarios.length > 0) {
     select.value = state.scenarios[0].id;
@@ -83,7 +85,7 @@ async function selectScenario(id) {
   $("error-card").classList.add("hidden");
   $("derivation").replaceChildren();
   $("rules-fired").replaceChildren();
-  $("download-receipt").disabled = true;
+  setDownloadsEnabled(false);
 
   $("asof-input").value = scenario.defaultAsOf || "";
 
@@ -265,7 +267,13 @@ async function runAdjudication() {
   renderDerivation();
   renderRulesFired();
   renderDocument(); // re-highlight with the (possibly new) fact index
-  $("download-receipt").disabled = false;
+  setDownloadsEnabled(true);
+}
+
+function setDownloadsEnabled(enabled) {
+  for (const id of ["download-receipt", "download-report-md", "download-report-pdf"]) {
+    $(id).disabled = !enabled;
+  }
 }
 
 function renderAnswer(payload) {
@@ -441,6 +449,21 @@ function downloadReceipt() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+function downloadReport(format) {
+  if (!state.scenario || !state.activeAttribute) return;
+  const params = new URLSearchParams({
+    scenarioId: state.scenario.id,
+    attribute: state.activeAttribute,
+    asOfEffective: $("asof-input").value || state.scenario.defaultAsOf,
+    format,
+  });
+  const a = document.createElement("a");
+  a.href = "/api/report?" + params.toString();
+  document.body.append(a);
+  a.click();
+  a.remove();
 }
 
 init().catch((e) => {

@@ -12,6 +12,7 @@ decisions:
 
 rules:
   - id: NC-DEF-00
+    description: "A termination notice is presumed compliant unless a specific rule finds it deficient."
     version: "1.0.0"
     priority: 0
     citation: { text: "Default presumption" }
@@ -25,6 +26,7 @@ rules:
 
   # DEMO-SYNTHETIC effective window: the 30-day historical minimum is invented for demonstration of effective-dated replay; it is not real statutory history. Verify against the statute before any non-demo use.
   - id: NY-NR-45-LEGACY
+    description: "Before 2026 (demo-synthetic window), New York required at least 30 days advance notice for nonrenewal of a covered personal-lines policy."
     version: "1.0.0"
     priority: 100
     citation:
@@ -46,6 +48,7 @@ rules:
 
   # DEMO-SYNTHETIC effective window: the 30-day historical minimum is invented for demonstration of effective-dated replay; it is not real statutory history. Verify against the statute before any non-demo use.
   - id: NY-NR-45
+    description: "New York requires at least 45 days advance notice for nonrenewal of a covered personal-lines policy."
     version: "1.1.0"
     priority: 100
     citation:
@@ -69,6 +72,7 @@ rules:
   # structure of the pack (a higher-priority ground-specific minimum that overrides
   # the general nonrenewal minimums when a nonpayment ground is asserted).
   - id: NY-NR-NONPAY-15
+    description: "When the ground for termination is nonpayment of premium, New York requires only 15 days advance notice, which supersedes the general nonrenewal minimums."
     version: "1.0.0"
     priority: 150
     citation:
@@ -87,6 +91,7 @@ rules:
     overrides: [NY-NR-45, NY-NR-45-LEGACY]
 
   - id: NC-NR-01
+    description: "A notice mailed fewer than the required minimum days before the policy expiration is not compliant."
     version: "1.0.2"
     priority: 200
     citation:

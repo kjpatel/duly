@@ -104,9 +104,12 @@ Receipts are content-addressed the same way facts are (`receiptSha256`, JCS cano
 - **SHACL / LinkML** — the ontology conformance gate facts pass through before entering the store; LinkML is the intended source language so one definition yields JSON Schema, SHACL, and dataclasses.
 - **DMN** — a compliance-editable authoring surface that compiles to the same rule IR; receipts are identical regardless of authoring surface.
 
+## Resolved questions
+
+1. **Span encoding** — `charSpan` offsets are Unicode code points, end-exclusive, defined against the rendition text (see the schema). Friendlier to Python/JS consumers; a byte-offset representation can be added as an alternate locator if a backend needs it.
+2. **Conflict resolution** — conflicts (two live facts asserting the same entity/attribute) are detected by the kernel at evaluation time; the store accepts both writes (immutability, D7, means nothing is lost by admitting a conflict). Resolution policy: if **exactly one** of the conflicting facts is human-asserted, it outranks the machine assertions and binds — this is what makes the review-queue loop (D9) work without mutating history. Any other mix — machine vs. machine, or multiple humans — is unresolvable by rank and becomes an abstention with reason `conflict` on the receipt. Supersession (D7) remains the *durable* correction mechanism; outranking is the evaluation-time behavior when a correction and its target are both live.
+3. **PII sensitivity** — facts carry an optional `sensitivity` field (`public` | `internal` | `pii`). Renderers must redact the `quote` of a `pii` fact in human-facing output while preserving the document reference, span, and content hash — the evidence chain survives redaction. The default (absent field) is `internal`.
+
 ## Open questions
 
-1. **Span portability** — should `charSpan` offsets be defined in Unicode code points (chosen for now) or UTF-8 bytes? Code points are friendlier to Python/JS consumers; bytes are friendlier to Rust and hashing.
-2. **Conflict representation** — when two live facts assert different values for the same entity/attribute at the same effective time, is the conflict detected purely by the kernel, or should the store reject on write? Current lean: kernel-detected, surfaced as an abstention with reason `conflict`.
-3. **Fact-level access control** — closing packages contain PII; `quote` duplication (D3) makes redaction harder. Possibly a `sensitivity` tag per fact.
-4. **Batch envelope** — extractors emit many facts per document; a signed envelope (extraction run manifest) would let a whole run be verified or revoked at once.
+1. **Batch envelope** — extractors emit many facts per document; a signed envelope (extraction run manifest) would let a whole run be verified or revoked at once. Deferred to M3, where extraction adapters — the envelope's producer and consumer — actually exist.

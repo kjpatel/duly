@@ -1,6 +1,8 @@
+/* Geist 1.7.0, vendored so the demo makes no third-party request and renders the
+   same offline. SIL OFL 1.1 — see fonts/LICENSE.txt. */
 @font-face {
   font-family: "Geist";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+  src: url("/fonts/Geist-Variable.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -8,7 +10,7 @@
 
 @font-face {
   font-family: "Geist Mono";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+  src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -237,6 +239,25 @@ summary:focus-visible {
   background: var(--color-accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
   animation: status-pulse 1.1s ease-in-out infinite;
+}
+
+/* Fixture mode is not a computed decision. Tint the whole pill in the same amber
+   the engine badge uses, so it never reads as an authoritative result. */
+.header-status.fixture {
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+.header-status.fixture .status-dot {
+  background: var(--color-warning);
+  box-shadow: 0 0 0 3px var(--warning-soft);
+}
+
+.header-status.error {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
 }
 
 .header-status.error .status-dot {
@@ -764,6 +785,7 @@ summary:focus-visible {
 
 .answer-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -811,10 +833,14 @@ summary:focus-visible {
 }
 
 .answer-asof {
+  min-width: 0;
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   text-align: right;
+}
+
+.answer-asof span {
   white-space: nowrap;
 }
 

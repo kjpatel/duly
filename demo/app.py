@@ -393,18 +393,32 @@ def _format_value(value: Any) -> str:
     return str(value.get("value"))
 
 
-def _render_answer(
+TOLERANCE_CATEGORY_LABELS = {
+    "ZeroTolerance": "Zero tolerance",
+    "TenPercentCumulative": "10% cumulative tolerance",
+    "NoToleranceLimit": "No tolerance limit",
+}
+
+
+def _determination(
     receipt: dict[str, Any], scenario: dict[str, Any], effective: str
-) -> str:
+) -> dict[str, Any]:
+    """How a decision value is phrased: the single source of truth.
+
+    Returns ``verdict`` (the headline), ``detail`` (one supporting sentence, no
+    terminal period) and ``tone`` ("pos" | "neg" | "warn" | ""). The client
+    renders these verbatim, so no phrasing is duplicated in JavaScript. When no
+    branch recognises the attribute, ``generic`` is set and the caller falls back
+    to a raw ``attribute = value`` rendering.
+    """
     decision = receipt.get("decision", {})
     attribute = decision.get("attribute", "")
     value = decision.get("value", {})
-    as_of_day = _date_prefix(receipt.get("asOf", {}).get("effective")) or _date_prefix(
-        effective
-    )
 
     if attribute.endswith("noticeCompliant") and value.get("kind") == "boolean":
         compliant = bool(value.get("value"))
+        verdict = "Compliant" if compliant else "Not compliant"
+        tone = "pos" if compliant else "neg"
         mailed = _fact_value(scenario["facts"], "noticeMailedDate")
         expiration = _fact_value(scenario["facts"], "policyExpirationDate")
         min_days_value = _find_derived_value(
@@ -427,15 +441,12 @@ def _render_answer(
             except (TypeError, ValueError):
                 min_days = None
         if days_given is not None and min_days is not None:
-            if compliant:
-                return f"Compliant: {days_given} days notice given, {min_days} required."
-            return f"Not compliant: {days_given} days notice given, {min_days} required."
-        if compliant:
-            return (
-                f"Compliant: no applicable rule found the notice deficient "
-                f"as of {as_of_day}."
-            )
-        return f"Not compliant as of {as_of_day}."
+            detail = f"{days_given} days notice given, {min_days} required"
+        elif compliant:
+            detail = "No applicable rule found the notice deficient"
+        else:
+            detail = ""
+        return {"verdict": verdict, "detail": detail, "tone": tone}
 
     if attribute.endswith("toleranceCureAmount") and value.get("kind") == "money":
         amount = value.get("amount")
@@ -446,28 +457,65 @@ def _render_answer(
         except (TypeError, ValueError):
             cure_required = bool(amount)
         if cure_required:
-            return f"Cure required: {formatted} tolerance cure as of {as_of_day}."
-        return f"No cure required: {formatted} as of {as_of_day}."
+            return {
+                "verdict": "Cure required",
+                "detail": f"{formatted} tolerance cure",
+                "tone": "warn",
+            }
+        return {
+            "verdict": "No cure required",
+            "detail": formatted,
+            "tone": "pos",
+        }
 
     if attribute.endswith("requiredMinimumNoticeDays"):
-        days = _format_value(value)
-        return f"{days} days: Minimum advance notice required as of {as_of_day}."
+        return {
+            "verdict": f"{_format_value(value)} days",
+            "detail": "Minimum advance notice required",
+            "tone": "",
+        }
 
     if attribute.endswith("toleranceCategory"):
         raw_category = str(value.get("value", ""))
-        category = {
-            "ZeroTolerance": "Zero tolerance",
-            "TenPercentCumulative": "10% cumulative tolerance",
-            "NoToleranceLimit": "No tolerance limit",
-        }.get(raw_category, raw_category)
-        if raw_category == "ZeroTolerance":
-            return (
-                f"{category}: The disclosed amount may not increase at closing "
-                f"as of {as_of_day}."
-            )
-        return f"{category}: Fee tolerance category as of {as_of_day}."
+        category = TOLERANCE_CATEGORY_LABELS.get(raw_category, raw_category)
+        detail = (
+            "The disclosed amount may not increase at closing"
+            if raw_category == "ZeroTolerance"
+            else "Fee tolerance category"
+        )
+        return {"verdict": category, "detail": detail, "tone": ""}
 
-    return f"{attribute} = {_format_value(value)} as of {as_of_day}."
+    if value.get("kind") == "boolean":
+        affirmative = bool(value.get("value"))
+        return {
+            "verdict": "Yes" if affirmative else "No",
+            "detail": "",
+            "tone": "pos" if affirmative else "neg",
+        }
+
+    return {
+        "verdict": _format_value(value),
+        "detail": "",
+        "tone": "",
+        "generic": True,
+    }
+
+
+def _render_answer(
+    receipt: dict[str, Any], scenario: dict[str, Any], effective: str
+) -> str:
+    """Flatten the determination into one as-of-dated sentence."""
+    decision = receipt.get("decision", {})
+    as_of_day = _date_prefix(receipt.get("asOf", {}).get("effective")) or _date_prefix(
+        effective
+    )
+    found = _determination(receipt, scenario, effective)
+    if found.get("generic"):
+        attribute = decision.get("attribute", "")
+        return f"{attribute} = {found['verdict']} as of {as_of_day}."
+    if found["detail"]:
+        return f"{found['verdict']}: {found['detail']} as of {as_of_day}."
+    return f"{found['verdict']} as of {as_of_day}."
 
 
 def _example_fact_attributes() -> dict[str, str]:
@@ -598,6 +646,18 @@ def _adjudicate_scenario(
                 "and no committed fixture receipt exists for this scenario."
             ),
         )
+    # The fixture receipt answers exactly one attribute. Serving it for any other
+    # question would present an unrelated determination as if it were the answer.
+    fixture_attribute = fixture_receipt.get("decision", {}).get("attribute")
+    if fixture_attribute != attribute:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Engine unavailable (duly_kernel.api.adjudicate not importable). "
+                f"The committed fixture receipt only answers {fixture_attribute}, "
+                f"so {attribute} cannot be evaluated in fixture mode."
+            ),
+        )
     return fixture_receipt, "fixture"
 
 
@@ -614,6 +674,7 @@ def api_adjudicate(body: AdjudicateRequest) -> dict[str, Any]:
     return {
         "receipt": receipt,
         "answer": _render_answer(receipt, scenario, effective),
+        "determination": _determination(receipt, scenario, effective),
         "factIndex": _build_fact_index(receipt, scenario),
         "engineMode": engine_mode,
     }

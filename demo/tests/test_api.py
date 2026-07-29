@@ -20,7 +20,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demo.app import _render_answer, app  # noqa: E402
+from demo.app import _determination, _render_answer, app  # noqa: E402
 
 client = TestClient(app)
 
@@ -44,39 +44,49 @@ def test_scenarios_lists_fixture_scenario():
     assert scenario["defaultAsOf"]
 
 
-def test_starter_scenarios_offer_meaningful_derived_questions(monkeypatch):
+def test_every_offered_question_is_answerable_and_phrased_for_humans(monkeypatch):
+    """Whatever a pack advertises must adjudicate and render without CURIEs.
+
+    Derived from the packs rather than a hard-coded list, so adding a decision
+    extends the coverage instead of breaking the test.
+    """
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     res = client.get("/api/scenarios")
     assert res.status_code == 200
-    scenarios = {scenario["id"]: scenario for scenario in res.json()}
+    scenarios = res.json()
+    assert scenarios
 
-    expected = {
-        "notice-ny": {
-            "nc:noticeCompliant",
-            "nc:requiredMinimumNoticeDays",
-        },
-        "trid": {
-            "trid:toleranceCureAmount",
-            "trid:toleranceCategory",
-        },
-    }
-    for scenario_id, attributes in expected.items():
-        scenario = scenarios[scenario_id]
-        assert {question["attribute"] for question in scenario["questions"]} == attributes
-        for attribute in attributes:
+    for scenario in scenarios:
+        questions = scenario["questions"]
+        # The demo is meant to show the as-of flip *and* a derived intermediate,
+        # so every starter scenario should offer more than a single question.
+        assert len(questions) > 1, scenario["id"]
+        for question in questions:
+            attribute = question["attribute"]
+            assert question["question"]
             response = client.post(
                 "/api/adjudicate",
                 json={
-                    "scenarioId": scenario_id,
+                    "scenarioId": scenario["id"],
                     "attribute": attribute,
                     "asOfEffective": scenario["defaultAsOf"],
                 },
             )
-            assert response.status_code == 200
+            assert response.status_code == 200, (scenario["id"], attribute)
             payload = response.json()
             assert payload["receipt"]["decision"]["attribute"] == attribute
-            assert "nc:" not in payload["answer"]
-            assert "trid:" not in payload["answer"]
+
+            # A recognised attribute gets a verdict; the generic fallback would
+            # leak the raw CURIE into the rendered answer.
+            found = payload["determination"]
+            assert found["verdict"], attribute
+            assert not found.get("generic"), attribute
+            assert found["tone"] in {"pos", "neg", "warn", ""}
+
+            namespace = f"{attribute.split(':')[0]}:"
+            assert namespace not in payload["answer"], payload["answer"]
+            assert namespace not in found["verdict"]
+            assert namespace not in found["detail"]
 
 
 def test_adjudicate_returns_receipt_with_fact_index():
@@ -121,6 +131,81 @@ def test_render_answer_describes_tolerance_cure_as_a_determination():
     answer = _render_answer(receipt, {"facts": []}, "2026-07-29")
 
     assert answer == "Cure required: 250.00 USD tolerance cure as of 2026-07-29."
+    assert _determination(receipt, {"facts": []}, "2026-07-29") == {
+        "verdict": "Cure required",
+        "detail": "250.00 USD tolerance cure",
+        "tone": "warn",
+    }
+
+
+def test_determination_is_the_only_place_verdict_wording_lives():
+    """The client renders determination verbatim, so it must be self-sufficient."""
+    receipt = {
+        "decision": {
+            "attribute": "trid:toleranceCategory",
+            "value": {"kind": "code", "value": "ZeroTolerance"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+    }
+
+    found = _determination(receipt, {"facts": []}, "2026-07-29")
+
+    assert found["verdict"] == "Zero tolerance"
+    assert found["detail"] == "The disclosed amount may not increase at closing"
+    # No as-of date in the structured fields: the client renders that separately.
+    assert "2026-07-29" not in found["verdict"] + found["detail"]
+
+
+def test_unmapped_attributes_fall_back_without_claiming_a_verdict():
+    receipt = {
+        "decision": {
+            "attribute": "nc:someFutureAttribute",
+            "value": {"kind": "code", "value": "Whatever"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+    }
+
+    found = _determination(receipt, {"facts": []}, "2026-07-29")
+
+    assert found["generic"] is True
+    assert found["tone"] == ""
+    assert _render_answer(receipt, {"facts": []}, "2026-07-29") == (
+        "nc:someFutureAttribute = Whatever as of 2026-07-29."
+    )
+
+
+def test_fixture_mode_refuses_questions_the_fixture_receipt_cannot_answer(monkeypatch):
+    """The fixture receipt answers one attribute; the rest must fail loudly.
+
+    Serving it for another question would show an unrelated determination as if
+    it were the answer to the one that was asked.
+    """
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    monkeypatch.setattr("demo.app._run_kernel", lambda *args, **kwargs: (None, None))
+
+    served = client.post(
+        "/api/adjudicate",
+        json={
+            "scenarioId": "notice-ny",
+            "attribute": "nc:noticeCompliant",
+            "asOfEffective": "2026-07-29",
+        },
+    )
+    assert served.status_code == 200
+    assert served.json()["engineMode"] == "fixture"
+
+    refused = client.post(
+        "/api/adjudicate",
+        json={
+            "scenarioId": "notice-ny",
+            "attribute": "nc:requiredMinimumNoticeDays",
+            "asOfEffective": "2026-07-29",
+        },
+    )
+    assert refused.status_code == 503
+    detail = refused.json()["detail"]
+    assert "nc:requiredMinimumNoticeDays" in detail
+    assert "nc:noticeCompliant" in detail
 
 
 def test_fact_spans_slice_correctly_out_of_rendition_text():

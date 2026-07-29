@@ -3,60 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>duly — decision demo</title>
+<meta name="theme-color" content="#F4F3FA">
+<meta name="description" content="Interactive duly demo for auditable document decisioning.">
+<title>duly — decision workspace</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header>
-  <div class="brand">duly<span class="brand-sub">deterministic adjudication</span></div>
-  <div class="controls">
-    <label for="scenario-select">Scenario</label>
-    <select id="scenario-select"></select>
-    <label for="asof-input">As of</label>
-    <input type="date" id="asof-input">
+<header class="app-header">
+  <a class="brand" href="/" aria-label="duly home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+        <path d="M6.75 4.75h5.5a5 5 0 0 1 0 10h-5.5v-10Z" stroke="currentColor" stroke-width="2"/>
+        <path d="M6.75 9.25h5a5 5 0 0 1 0 10h-5v-10Z" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </span>
+    <span class="brand-copy">
+      <span class="brand-name">duly</span>
+      <span class="brand-sub">Decision workspace</span>
+    </span>
+  </a>
+
+  <div class="header-status" id="workspace-status" role="status" aria-live="polite">
+    <span class="status-dot" aria-hidden="true"></span>
+    <span id="workspace-status-text">Ready</span>
   </div>
 </header>
 
-<main>
-  <section class="pane" id="doc-pane">
-    <div class="pane-head">
-      <div class="tabs" id="doc-tabs"></div>
+<section class="workspace-toolbar" aria-labelledby="workspace-title">
+  <div class="workspace-intro">
+    <div class="eyebrow">Interactive adjudication demo</div>
+    <h1 id="workspace-title">Trace every decision to its source.</h1>
+    <p>Review the evidence, determination, and complete audit trail in one workspace.</p>
+  </div>
+
+  <div class="controls" aria-label="Demo controls">
+    <div class="control-field scenario-field">
+      <label for="scenario-select">Scenario</label>
+      <div class="control-input">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M14 2v6h6M8 13h8M8 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <select id="scenario-select" aria-describedby="scenario-help"></select>
+        <svg class="select-chevron" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+          <path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="sr-only" id="scenario-help">Choose a bundled decision scenario.</span>
     </div>
+
+    <div class="control-field date-field">
+      <label for="asof-input">Effective date</label>
+      <div class="control-input">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+          <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="date" id="asof-input">
+      </div>
+    </div>
+  </div>
+</section>
+
+<main id="workspace">
+  <section class="pane" id="doc-pane" aria-labelledby="source-title">
+    <div class="pane-head">
+      <div class="pane-heading">
+        <span class="pane-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="source-title">Source evidence</h2>
+          <p>Grounded document text</p>
+        </div>
+      </div>
+      <span class="pane-badge" id="source-count">0 documents</span>
+    </div>
+
     <div class="pane-body">
-      <div class="doc-text" id="doc-text"></div>
+      <div class="document-list" id="doc-tabs" aria-label="Source documents"></div>
+      <div class="document-meta">
+        <div class="document-active-copy">
+          <span class="field-label">Viewing</span>
+          <span id="document-title">Select a document</span>
+        </div>
+        <span id="doc-evidence-count">0 grounded facts</span>
+      </div>
+      <div class="doc-text" id="doc-text" role="tabpanel" aria-live="polite"></div>
     </div>
   </section>
 
-  <section class="pane" id="center-pane">
-    <div class="pane-head"><h2>Question</h2></div>
+  <section class="pane" id="center-pane" aria-labelledby="decision-title">
+    <div class="pane-head">
+      <div class="pane-heading">
+        <span class="pane-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M12 3v18M5 7h14M7.5 7 4 14h7L7.5 7ZM16.5 7 13 14h7l-3.5-7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="decision-title">Decision</h2>
+          <p>Evaluate a rule-pack question</p>
+        </div>
+      </div>
+      <span class="pane-badge" id="question-count">0 questions</span>
+    </div>
+
     <div class="pane-body">
-      <div class="chips" id="question-chips"></div>
-      <div class="answer-card hidden" id="answer-card">
-        <div class="answer-meta">
+      <div class="field-label">Question</div>
+      <div class="chips" id="question-chips" aria-label="Decision questions"></div>
+
+      <div class="answer-card hidden" id="answer-card" aria-live="polite">
+        <div class="answer-main">
+          <span class="determination-icon" id="determination-icon" aria-hidden="true"></span>
+          <div class="answer-copy">
+            <div class="verdict" id="verdict"></div>
+            <div class="answer-text" id="answer-text"></div>
+          </div>
+          <div class="fixture-note hidden" id="fixture-note">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Engine unavailable — showing the committed example receipt. The effective date has no effect in fixture mode.</span>
+          </div>
+        </div>
+        <div class="answer-footer">
           <span class="badge" id="engine-badge"></span>
           <span class="answer-asof" id="answer-asof"></span>
         </div>
-        <div class="verdict" id="verdict"></div>
-        <div class="answer-text" id="answer-text"></div>
-        <div class="fixture-note hidden" id="fixture-note">
-          Engine unavailable — showing the committed example receipt.
-          The as-of date has no effect in fixture mode.
-        </div>
       </div>
-      <div class="error-card hidden" id="error-card"></div>
+
+      <div class="error-card hidden" id="error-card" role="alert"></div>
     </div>
   </section>
 
-  <section class="pane" id="reason-pane">
-    <div class="pane-head"><h2>Reasoning</h2></div>
+  <section class="pane" id="reason-pane" aria-labelledby="audit-title">
+    <div class="pane-head">
+      <div class="pane-heading">
+        <span class="pane-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M5 4v16M5 7h6a3 3 0 0 1 3 3v0M14 10v4a3 3 0 0 0 3 3h2M16 7l-2 3-3-2M16 14l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="audit-title">Audit trail</h2>
+          <p>Derivation and rule provenance</p>
+        </div>
+      </div>
+      <span class="pane-badge" id="rules-count">0 rules</span>
+    </div>
+
     <div class="pane-body">
+      <div class="section-heading">
+        <div>
+          <div class="field-label">Derivation</div>
+          <p>Open a fact to trace it back to source text.</p>
+        </div>
+      </div>
       <div id="derivation" class="derivation"></div>
-      <h3 class="section-title" id="rules-title">Rules fired</h3>
+
+      <div class="section-heading rules-heading" id="rules-title">
+        <div>
+          <div class="field-label">Rules fired</div>
+          <p>Applicable rules in evaluation order.</p>
+        </div>
+      </div>
       <div id="rules-fired"></div>
-      <div class="download-row">
-        <button id="download-receipt" class="download-btn" disabled>Download receipt (JSON)</button>
-        <button id="download-report-md" class="download-btn" disabled>Audit report (Markdown)</button>
-        <button id="download-report-pdf" class="download-btn" disabled>Audit report (PDF)</button>
+
+      <div class="export-panel">
+        <div class="export-copy">
+          <div class="field-label">Export audit artifacts</div>
+          <p>Save the receipt or a human-readable report.</p>
+        </div>
+        <div class="download-row">
+          <button id="download-receipt" class="download-btn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+              <path d="M12 3v12M7 10l5 5 5-5M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Receipt JSON
+          </button>
+          <button id="download-report-md" class="download-btn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Markdown
+          </button>
+          <button id="download-report-pdf" class="download-btn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            PDF report
+          </button>
+        </div>
       </div>
     </div>
   </section>

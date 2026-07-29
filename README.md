@@ -43,7 +43,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Rule IR](spec/rule-ir.md) | Defeasible rules — priority, overrides, legal citation, effective window — in a YAML authoring format; Datalog/ASP compilation targets come later | v0 shipped |
 | [Reference kernel](kernel/) | Deterministic interpreter: typed expressions (decimal-only money), stratified evaluation, defeat semantics, effective-dated rule selection, receipt emission | working, tested |
 | [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered Markdown/PDF report for compliance and technical readers ([example](docs/example-audit-report.md)) | working |
-| [Rule packs](rulepacks/) | NY termination-notice pack and federal TRID fee-tolerance pack, each with declared expected outcomes run in CI | two shipped |
+| [Rule packs](rulepacks/) | Termination-notice pack covering NY, FL, and CA, plus federal TRID fee tolerance — each rule cited to its statute, with declared expected outcomes run in CI | two packs, four jurisdictions |
 | [Starters](starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for both verticals | two shipped |
 | [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay | working |
 | Extraction adapters | Document AI providers (Docling, Azure DI, Google Document AI, Textract) emitting contract-conformant facts | scripted stub only |
@@ -169,7 +169,7 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; M0 and the core of M1 are complete. The contract is drafted, the reference kernel adjudicates both shipped verticals deterministically, and the interactive demonstration runs end to end. Verify everything locally:
+Pre-alpha; M0, M1, and M2 are complete ([v0.2.0](https://github.com/kjpatel/duly/releases/tag/v0.2.0)). The contract and rule IR are drafted, the reference kernel adjudicates three state notice packs and federal TRID fee tolerance deterministically, the interactive demonstration runs end to end, and 250 golden decisions replay byte-for-byte on every push. M3 — real extraction adapters, calibration, and the review queue — is next. Verify everything locally:
 
 ```bash
 uv sync

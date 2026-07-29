@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#F4F3FA">
 <meta name="description" content="Interactive duly demo for auditable document decisioning.">
 <title>duly — decision workspace</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -37,7 +37,7 @@
     <p>Review the evidence, determination, and complete audit trail in one workspace.</p>
   </div>
 
-  <div class="controls" aria-label="Demo controls">
+  <div class="controls" role="group" aria-label="Demo controls">
     <div class="control-field scenario-field">
       <label for="scenario-select">Scenario</label>
       <div class="control-input">
@@ -83,7 +83,7 @@
     </div>
 
     <div class="pane-body">
-      <div class="document-list" id="doc-tabs" aria-label="Source documents"></div>
+      <div class="document-list" id="doc-tabs" role="group" aria-label="Source documents"></div>
       <div class="document-meta">
         <div class="document-active-copy">
           <span class="field-label">Viewing</span>
@@ -91,7 +91,7 @@
         </div>
         <span id="doc-evidence-count">0 grounded facts</span>
       </div>
-      <div class="doc-text" id="doc-text" role="tabpanel" aria-live="polite"></div>
+      <div class="doc-text" id="doc-text" aria-live="polite"></div>
     </div>
   </section>
 
@@ -113,7 +113,7 @@
 
     <div class="pane-body">
       <div class="field-label">Question</div>
-      <div class="chips" id="question-chips" aria-label="Decision questions"></div>
+      <div class="chips" id="question-chips" role="group" aria-label="Decision questions"></div>
 
       <div class="answer-card hidden" id="answer-card" aria-live="polite">
         <div class="answer-main">

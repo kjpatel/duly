@@ -29,6 +29,7 @@ function setWorkspaceStatus(text, mode = "ready") {
   const status = $("workspace-status");
   $("workspace-status-text").textContent = text;
   status.classList.toggle("loading", mode === "loading");
+  status.classList.toggle("fixture", mode === "fixture");
   status.classList.toggle("error", mode === "error");
 }
 
@@ -294,46 +295,9 @@ function highlightActiveQuestion() {
   }
 }
 
-function verdictFor(decision) {
-  const value = decision && decision.value;
-  const attribute = shortAttr(decision && decision.attribute).toLowerCase();
-  if (value && value.kind === "boolean" &&
-      attribute.includes("compliant")) {
-    return value.value
-      ? { text: "Compliant", cls: "pos" }
-      : { text: "Not compliant", cls: "neg" };
-  }
-  if (value && value.kind === "boolean") {
-    return value.value ? { text: "Yes", cls: "pos" } : { text: "No", cls: "neg" };
-  }
-  if (value && value.kind === "money" && attribute.includes("cureamount")) {
-    return Number(value.amount) > 0
-      ? { text: "Cure required", cls: "warn" }
-      : { text: "No cure required", cls: "pos" };
-  }
-  if (value && attribute.includes("requiredminimumnoticedays")) {
-    return { text: `${fmtValue(value)} days`, cls: "" };
-  }
-  if (value && value.kind === "code" && attribute.includes("tolerancecategory")) {
-    const labels = {
-      ZeroTolerance: "Zero tolerance",
-      TenPercentCumulative: "10% cumulative tolerance",
-      NoToleranceLimit: "No tolerance limit",
-    };
-    return { text: labels[value.value] || fmtValue(value), cls: "" };
-  }
-  return { text: fmtValue(value), cls: "" };
-}
-
-function supportingAnswer(answer, verdict) {
-  const text = String(answer || "").trim();
-  const prefix = `${verdict}:`;
-  let detail = text.toLowerCase().startsWith(prefix.toLowerCase())
-    ? text.slice(prefix.length).trim()
-    : text;
-  detail = detail.replace(/\s+as of \d{4}-\d{2}-\d{2}\.?$/i, "").trim();
-  return detail ? detail.charAt(0).toUpperCase() + detail.slice(1) : "";
-}
+/* How a decision reads is decided server-side and sent as `determination`, so
+ * verdict wording lives in exactly one place. See _determination in demo/app.py. */
+const TONE_ICONS = { pos: "✓", neg: "×", warn: "!" };
 
 async function runAdjudication() {
   const seq = ++state.requestSeq;
@@ -374,6 +338,13 @@ async function runAdjudication() {
     const card = $("error-card");
     card.textContent = errorText;
     card.classList.remove("hidden");
+    // Drop the superseded receipt: a stale derivation beside "Evaluation failed"
+    // reads as the audit trail for the question that just failed.
+    state.receipt = null;
+    state.factIndex = {};
+    $("derivation").replaceChildren();
+    renderRulesFired();
+    renderDocument();
     setDownloadsEnabled(false);
     setWorkspaceStatus("Evaluation failed", "error");
     return;
@@ -389,7 +360,11 @@ async function runAdjudication() {
   renderRulesFired();
   renderDocument(); // re-highlight with the (possibly new) fact index
   setDownloadsEnabled(true);
-  setWorkspaceStatus(payload.engineMode === "fixture" ? "Fixture receipt" : "Decision ready");
+  const isFixture = payload.engineMode === "fixture";
+  setWorkspaceStatus(
+    isFixture ? "Fixture receipt" : "Decision ready",
+    isFixture ? "fixture" : "ready"
+  );
 }
 
 function setDownloadsEnabled(enabled) {
@@ -409,20 +384,30 @@ function renderAnswer(payload) {
   $("fixture-note").classList.toggle("hidden", payload.engineMode !== "fixture");
 
   const asOf = state.receipt && state.receipt.asOf;
-  $("answer-asof").textContent = asOf
-    ? `effective ${fmtDay(asOf.effective)} · knowledge ${fmtDay(asOf.knowledge)}`
-    : "";
+  // Each half is its own nowrap span so a narrow footer wraps at the separator;
+  // a bare string would break inside a date at its hyphens.
+  const asofEl = $("answer-asof");
+  asofEl.replaceChildren();
+  if (asOf) {
+    const effective = document.createElement("span");
+    effective.textContent = `effective ${fmtDay(asOf.effective)} ·`;
+    const knowledge = document.createElement("span");
+    knowledge.textContent = `knowledge ${fmtDay(asOf.knowledge)}`;
+    asofEl.append(effective, document.createTextNode(" "), knowledge);
+  }
 
-  const v = verdictFor(state.receipt ? state.receipt.decision : null);
+  const found = payload.determination || {};
+  const tone = found.tone || "";
   card.classList.remove("pos", "neg", "warn");
-  if (v.cls) card.classList.add(v.cls);
-  $("determination-icon").textContent =
-    v.cls === "pos" ? "✓" : v.cls === "neg" ? "×" : v.cls === "warn" ? "!" : "→";
+  if (tone) card.classList.add(tone);
+  $("determination-icon").textContent = TONE_ICONS[tone] || "→";
 
   const verdictEl = $("verdict");
-  verdictEl.textContent = v.text;
-  verdictEl.className = "verdict" + (v.cls ? " " + v.cls : "");
-  $("answer-text").textContent = supportingAnswer(payload.answer, v.text);
+  verdictEl.textContent = found.verdict || "";
+  verdictEl.className = "verdict" + (tone ? " " + tone : "");
+  // `detail` is stored unpunctuated so the server can compose it into a longer
+  // sentence; it reads as a sentence on its own here.
+  $("answer-text").textContent = found.detail ? `${found.detail}.` : "";
 
   const key = JSON.stringify(state.receipt && state.receipt.decision && state.receipt.decision.value);
   if (state.lastVerdictKey !== null && state.lastVerdictKey !== key) {

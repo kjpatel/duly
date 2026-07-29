@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duly.dev/spec/v0/extraction-run.schema.json",
+  "title": "ExtractionRunEnvelope",
+  "description": "The manifest of one extraction run over one rendition: run id, adapter, source document hash, rendition hash, and the ordered, complete list of fact ids the run proposed. Content-addressed like facts, so a whole run can be verified or revoked at once. See spec/grounded-facts.md, resolved question 4.",
+  "type": "object",
+  "required": ["id", "contentHash", "runId", "adapter", "documentId", "documentSha256", "rendition", "createdAt", "factIds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^urn:duly:run:sha256:[0-9a-f]{64}$",
+      "description": "Content-derived id: urn:duly:run:sha256:<contentHash>."
+    },
+    "contentHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over RFC 8785 (JCS) canonical JSON of this object excluding 'id' and 'contentHash' — the same convention facts use. This is the run's integrity 'signature'; asymmetric signatures over the same canonical bytes are a documented future hook, not part of v0."
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The extractor's run identifier — the same value every fact in the run carries in assertion.extractor.runId, which is what makes run-level revocation possible from the run id alone."
+    },
+    "adapter": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "description": "The adapter that asserted the facts (matches assertion.extractor on each fact).",
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "modelId": { "type": "string" }
+      }
+    },
+    "documentId": { "type": "string", "minLength": 1 },
+    "documentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the source document bytes; must match every fact's grounding.documentSha256."
+    },
+    "rendition": {
+      "type": "object",
+      "required": ["id", "sha256"],
+      "additionalProperties": false,
+      "description": "The rendition this run produced and its facts' spans index into (spec D4).",
+      "properties": {
+        "id": { "type": "string", "description": "Must match every fact's grounding.rendition.id." },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the rendition text's UTF-8 bytes — the rendition's content address."
+        }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "factIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Ordered, complete list of the facts this run proposed. May be empty (a run that grounded nothing is still a verifiable, revocable run).",
+      "items": {
+        "type": "string",
+        "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$"
+      }
+    }
+  }
+}

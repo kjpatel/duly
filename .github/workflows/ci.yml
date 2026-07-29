@@ -22,7 +22,7 @@ jobs:
       - name: Run test suites
         run: |
           suites=""
-          for d in kernel/tests demo/tests assurance/tests store/tests; do
+          for d in kernel/tests demo/tests assurance/tests store/tests extraction/tests; do
             if [ -d "$d" ]; then
               suites="$suites $d"
             else

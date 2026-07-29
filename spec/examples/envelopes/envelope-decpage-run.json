@@ -1,0 +1,21 @@
+{
+  "id": "urn:duly:run:sha256:d5cd28e06e82ffd0991a194b6303da8be5abda75232b43f91512cc7a9322ffab",
+  "contentHash": "d5cd28e06e82ffd0991a194b6303da8be5abda75232b43f91512cc7a9322ffab",
+  "runId": "run:2026-07-28:003",
+  "adapter": {
+    "name": "duly-docling-adapter",
+    "version": "0.1.0",
+    "modelId": "docling-2.15.0"
+  },
+  "documentId": "doc:dec-page:HO-77401-NY:2025-09-01",
+  "documentSha256": "5c1e8a7b3d9f2c4e6a0b8d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c",
+  "rendition": {
+    "id": "rend:docling:2.15.0:5c1e8a7b",
+    "sha256": "8f3a1c5e7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a"
+  },
+  "createdAt": "2026-07-28T14:05:41Z",
+  "factIds": [
+    "urn:duly:fact:sha256:692e8e631175771126d6e59aa47d10c00b11a856cfd4e8e34e6a018126b65a8d",
+    "urn:duly:fact:sha256:6cf5e71b99495ce34fe4fade80aa2752d30248db63b43f76d03bc8b94bc883b0"
+  ]
+}

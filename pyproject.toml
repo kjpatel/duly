@@ -12,6 +12,14 @@ dependencies = [
     "reportlab>=4.0",
 ]
 
+[project.optional-dependencies]
+# Heavy (pulls torch et al.); the core suite never needs it. Install with
+# `uv sync --extra extraction` to run the live Docling adapter and its
+# @pytest.mark.docling tests.
+extraction = [
+    "docling>=2.0",
+]
+
 [dependency-groups]
 dev = [
     "jsonschema>=4.18",
@@ -24,7 +32,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration"]
+packages = ["kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration", "extraction/duly_extraction"]
 
 [tool.uv]
 package = true
+
+[tool.pytest.ini_options]
+markers = [
+    "docling: exercises the live Docling converter; requires `uv sync --extra extraction` (skipped when docling is not importable)",
+]

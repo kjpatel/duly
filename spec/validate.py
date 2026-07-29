@@ -20,7 +20,19 @@ except ImportError:
     sys.exit("Requires jsonschema>=4.18. Run `uv sync`, then `uv run spec/validate.py`.")
 
 SPEC = Path(__file__).parent
-HASH_FIELDS = {"GroundedFact": "contentHash", "DecisionReceipt": "receiptSha256"}
+HASH_FIELDS = {
+    "GroundedFact": "contentHash",
+    "DecisionReceipt": "receiptSha256",
+    "ExtractionRunEnvelope": "contentHash",
+}
+
+
+def classify(doc: dict) -> str:
+    if "receiptSha256" in doc:
+        return "DecisionReceipt"
+    if "factIds" in doc:
+        return "ExtractionRunEnvelope"
+    return "GroundedFact"
 
 
 def canonical(obj) -> bytes:
@@ -47,10 +59,13 @@ def main() -> int:
 
     failures = 0
     fact_ids = set()
-    examples = sorted((SPEC / "examples").glob("*.json"))
+    facts_by_id = {}
+    # Envelope examples live in examples/envelopes/ so that tooling globbing
+    # examples/*.json for facts (kernel/demo/store fixtures) is unaffected.
+    examples = sorted((SPEC / "examples").rglob("*.json"))
     for path in examples:
         doc = json.loads(path.read_text())
-        title = "DecisionReceipt" if "receiptSha256" in doc else "GroundedFact"
+        title = classify(doc)
         errors = list(validators[title].iter_errors(doc))
         for err in errors:
             print(f"FAIL  {path.name}: {'/'.join(map(str, err.absolute_path)) or '<root>'}: {err.message}")
@@ -67,11 +82,24 @@ def main() -> int:
 
         if title == "GroundedFact":
             fact_ids.add(doc["id"])
+            facts_by_id[doc["id"]] = doc
         if not errors:
             print(f"ok    {path.name} ({title})")
 
     for path in examples:
         doc = json.loads(path.read_text())
+        if classify(doc) == "ExtractionRunEnvelope":
+            for fid in doc["factIds"]:
+                fact = facts_by_id.get(fid)
+                if fact is None:
+                    print(f"FAIL  {path.name}: factIds references {fid[:40]}… which is not among the example facts")
+                    failures += 1
+                elif fact["grounding"].get("documentSha256") != doc["documentSha256"]:
+                    print(f"FAIL  {path.name}: fact {fid[:40]}… grounds in a different documentSha256 than the manifest")
+                    failures += 1
+                elif fact["grounding"].get("rendition", {}).get("id") != doc["rendition"]["id"]:
+                    print(f"FAIL  {path.name}: fact {fid[:40]}… grounds in a different rendition than the manifest")
+                    failures += 1
         if "receiptSha256" not in doc:
             continue
         input_ids = {f["id"] for f in doc["inputFacts"]}

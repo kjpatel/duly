@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:8efb2c51676a5150b01631bd19134ab384ea80c238f8b31e7eed6b51246384fe",
+  "contentHash": "8efb2c51676a5150b01631bd19134ab384ea80c238f8b31e7eed6b51246384fe",
+  "caseId": "case:loan:L-2026-0142",
+  "entity": {
+    "id": "fee:transfer-tax:L-2026-0142",
+    "type": "trid:Fee"
+  },
+  "attribute": "trid:feeType",
+  "value": {
+    "kind": "code",
+    "value": "TransferTax",
+    "codeSystem": "duly-starter-trid/fee-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:closing-disclosure:L-2026-0142:2026-03-15",
+    "documentSha256": "e599fc9a4340e325e807cf7b795aa83568fd56acb389fed69520096dab401bbf",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:e599fc9a",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 447,
+      "end": 473
+    },
+    "quote": "Transfer Taxes (to County)"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:12:38Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-28:008"
+    }
+  },
+  "confidence": {
+    "score": 0.968,
+    "method": "conformal",
+    "calibrationRef": "cal:trid-docs:2026-06"
+  },
+  "recordedAt": "2026-07-28T14:12:38Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:491710d4ceb800550d2999d260021f7135a07f56e7f0c1f2a926a0e8ba30d115",
+  "contentHash": "491710d4ceb800550d2999d260021f7135a07f56e7f0c1f2a926a0e8ba30d115",
+  "caseId": "case:policy:HO-77401-NY",
+  "entity": {
+    "id": "notice:HO-77401-NY:2026-07-25",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:noticeType",
+  "value": {
+    "kind": "code",
+    "value": "Nonrenewal",
+    "codeSystem": "duly-starter-notice/notice-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:nonrenewal-notice:HO-77401-NY:2026-07-25",
+    "documentSha256": "638dbca9307b198efc5b2e85e2bce3877628078f03ac8d5fda350f51d95d9fcd",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:638dbca9",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 35,
+      "end": 55
+    },
+    "quote": "NOTICE OF NONRENEWAL"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:06:02Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-28:007"
+    }
+  },
+  "confidence": {
+    "score": 0.972,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "recordedAt": "2026-07-28T14:06:02Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

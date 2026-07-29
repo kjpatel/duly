@@ -1,0 +1,31 @@
+{
+  "id": "trid",
+  "title": "TRID transfer-tax tolerance between Loan Estimate and Closing Disclosure",
+  "caseId": "case:loan:L-2026-0142",
+  "ontology": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:loan-estimate:L-2026-0142:2026-02-10",
+      "title": "Loan Estimate",
+      "pdf": "documents/loan-estimate.pdf",
+      "rendition": "renditions/loan-estimate.txt",
+      "sha256": "297a8b7f474f6ad08cd95b13f0853ed2b3e98ce53e96f4b53d6283d6cc1f100b"
+    },
+    {
+      "id": "doc:closing-disclosure:L-2026-0142:2026-03-15",
+      "title": "Closing Disclosure",
+      "pdf": "documents/closing-disclosure.pdf",
+      "rendition": "renditions/closing-disclosure.txt",
+      "sha256": "e599fc9a4340e325e807cf7b795aa83568fd56acb389fed69520096dab401bbf"
+    }
+  ],
+  "facts": [
+    "facts/fact-le-transfer-tax-baseline.json",
+    "facts/fact-cd-transfer-tax-actual.json",
+    "facts/fact-cd-fee-type.json"
+  ],
+  "rulePack": "rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
+}

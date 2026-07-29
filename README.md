@@ -37,13 +37,16 @@ Everything above the contract is probabilistic and replaceable; everything below
 
 | Piece | What it is | Status |
 |---|---|---|
-| [Grounded fact contract](spec/grounded-facts.md) | The interchange format: facts with provenance, confidence, and bitemporal fields; decision receipts with derivation trees | **drafting** |
-| Rule IR + compilers | Defeasible rules (priority + unless + citation + effective window) compiled to stratified Datalog | next up |
-| Adjudication kernel | Deterministic as-of evaluation over a bitemporal fact store, emitting receipts | not started |
-| Extraction adapters | Document AI providers (Docling, Azure DI, Google Document AI, Textract, VLM + constrained decoding) emitting contract-conformant facts | not started |
+| [Grounded fact contract](spec/grounded-facts.md) | The interchange format: facts with provenance, confidence, and bitemporal fields; decision receipts with derivation trees | v0 shipped |
+| [Rule IR](spec/rule-ir.md) | Defeasible rules — priority, overrides, legal citation, effective window — in a YAML authoring format; Datalog/ASP compilation targets come later | v0 shipped |
+| [Reference kernel](kernel/) | Deterministic interpreter: typed expressions (decimal-only money), stratified evaluation, defeat semantics, effective-dated rule selection, receipt emission | working, tested |
+| [Rule packs](rulepacks/) | NY termination-notice pack and federal TRID fee-tolerance pack, each with declared expected outcomes run in CI | two shipped |
+| [Starters](starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for both verticals | two shipped |
+| [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay | working |
+| Extraction adapters | Document AI providers (Docling, Azure DI, Google Document AI, Textract) emitting contract-conformant facts | scripted stub only |
+| Bitemporal fact store | As-of storage across effective and knowledge time | not started (M2) |
 | Review queue | Abstention routing; human corrections re-enter as first-class facts | not started |
-| Assurance harness | Replay verifier, golden-set CI, rule-change impact analysis | seed exists ([validate.py](spec/validate.py)) |
-| Starters | Complete vertical slices; first: cancellation/nonrenewal notice compliance for personal lines | example data exists |
+| Assurance harness | Replay verifier, golden-set CI, rule-change impact analysis | seeds: spec validator + pack-expectation tests |
 
 ## Design choices and why
 
@@ -82,7 +85,7 @@ duly ships no domain schema. MISMO, ACORD, FHIR, and FIBO already exist, and bui
 
 ### Why code-first
 
-Specifications that develop ahead of running code rarely get adopted. The contract is being developed against a real vertical slice (termination-notice compliance), and it will be stabilized only once that slice runs end to end. Until v1.0, breaking changes are expected.
+Specifications that develop ahead of running code rarely get adopted. The contract was developed against real vertical slices — termination-notice compliance and TRID fee tolerance, both now running end to end — and implementation promptly forced spec revisions (recorded in [spec/rule-ir.md](spec/rule-ir.md) under "Resolved in v0"), which is exactly the point. The spec stabilizes at v1.0; until then, breaking changes are expected.
 
 ### What duly deliberately is not
 
@@ -91,29 +94,39 @@ Specifications that develop ahead of running code rarely get adopted. The contra
 - **Not a UI product.** The review queue ships as an API with defined queue semantics; review interfaces vary too much across organizations to standardize, and are left to integrators.
 - **Not an extraction model.** Adapters wrap the extractors you already use; duly's job starts at the contract line.
 
-## The target demonstration
+## The demonstration
 
-The milestone that validates the architecture end to end: run a decision, change one rule's effective date, and replay. The outcome changes, and the receipt shows exactly why — which rule fired, which rule it defeated, and which clause of which document each input fact came from.
+The milestone that validates the architecture end to end now runs. Two scenarios ship with the repo — a New York homeowners nonrenewal notice and a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure:
+
+```bash
+uv sync
+uv run uvicorn demo.app:app --port 8788
+```
+
+Open http://localhost:8788, pick a scenario, and ask its question. The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON. Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide.
+
+Honest labels on the demo content: the documents are synthetic (generated by [starters/tools](starters/tools/), with facts span-verified against the actual PDF text); extraction is a scripted stub pending real adapters (M3); and the pre-2026 "30-day" historical rule version exists only to demonstrate effective-dated replay — it is marked `DEMO-SYNTHETIC` in the pack and is not real statutory history.
 
 ## Roadmap
 
 Sequencing principle: build nothing until its consumer exists. Each milestone ends in something demonstrable.
 
-### M0 — the contract (in progress)
+### M0 — the contract (complete)
 - [x] Grounded fact spec: ten design decisions with rationale ([spec/grounded-facts.md](spec/grounded-facts.md))
 - [x] JSON Schemas for `GroundedFact` and `DecisionReceipt`
 - [x] Worked example with real content hashes: New York nonrenewal notice-period check (N.Y. Ins. Law § 3425)
 - [x] Validator: schema + hash + referential-integrity checks
-- [ ] Resolve open questions: span encoding, conflict handling, PII sensitivity tags, batch envelopes
 
-### M1 — end-to-end vertical slice
-- [ ] Rule IR: defeasible rules with priority, unless, legal citation, and effective window
-- [ ] Reference interpreter (pure Python, optimized for derivation-trace quality, not speed)
-- [ ] Notice-compliance starter end to end, first state New York: sample dec page + termination notice → facts → adjudication → receipt
-- [ ] Receipt renderer: derivation tree → human-readable audit report
-- [ ] First end-to-end run of the target demonstration
+### M1 — end-to-end vertical slice (complete except the prose renderer)
+- [x] Rule IR: defeasible rules with priority, overrides, legal citation, and effective window ([spec/rule-ir.md](spec/rule-ir.md), including two design questions resolved during implementation)
+- [x] Reference interpreter (pure Python, optimized for derivation-trace quality, not speed)
+- [x] Two starters end to end — NY termination notice and federal TRID fee tolerance: sample documents → facts → adjudication → receipt
+- [x] Interactive demo UI: grounding-span highlighting, derivation tree, citations, defeated-rule badges, as-of replay
+- [x] First end-to-end run of the target demonstration (the as-of outcome flip)
+- [ ] Receipt renderer: derivation tree → standalone human-readable audit report (the demo UI renders the tree; a prose report for auditors is still open)
+- [ ] Remaining spec open questions: conflict-handling policy, PII sensitivity tags, batch envelopes
 
-### M2 — replay and regression
+### M2 — replay and regression (next)
 - [ ] Bitemporal fact store on Postgres (append-only events, as-of queries)
 - [ ] Replay verifier: re-run any receipt, assert byte-identical output
 - [ ] Golden-set runner; human corrections auto-become regression cases
@@ -151,14 +164,16 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha, M0. The [grounded fact contract](spec/grounded-facts.md) is drafted and its examples validate:
+Pre-alpha; M0 and the core of M1 are complete. The contract is drafted, the reference kernel adjudicates both shipped verticals deterministically, and the interactive demonstration runs end to end. Verify everything locally:
 
 ```bash
 uv sync
-uv run spec/validate.py
+uv run pytest kernel/tests demo/tests   # kernel, pack expectations, demo API
+uv run spec/validate.py                 # spec examples: schemas + hashes
+uv run uvicorn demo.app:app --port 8788 # the interactive demo
 ```
 
-Feedback on the spec's [open questions](spec/grounded-facts.md#open-questions) is the most useful contribution right now.
+Breaking changes remain expected until v1.0. Feedback on the spec's [open questions](spec/grounded-facts.md#open-questions) and the [rule IR](spec/rule-ir.md) is the most useful contribution right now.
 
 ## License
 

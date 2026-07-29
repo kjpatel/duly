@@ -1,0 +1,16 @@
+# Expected kernel outcomes for trid-fee-tolerance-us-federal.
+# The integrator runs these once the kernel lands; the case evaluates the pack
+# against the demo facts in factsFrom at the given asOf.effective date.
+cases:
+  # Transfer tax disclosed at $1,200.00 on the Loan Estimate, charged $1,450.00
+  # at closing. TRID-CAT-02 classifies transfer taxes as zero tolerance;
+  # TRID-ZT-01 computes the $250.00 excess as the required cure, defeating the
+  # no-cure default TRID-DEF-00.
+  - name: transfer-tax-zero-tolerance-cure
+    factsFrom: starters/trid/facts
+    asOfEffective: "2026-03-15"
+    question: trid:toleranceCureAmount
+    expectDecision: { kind: money, amount: "250.00", currency: "USD" }
+    expectRulesFired: [TRID-CAT-02, TRID-ZT-01]
+    expectDefeated:
+      TRID-ZT-01: [TRID-DEF-00]

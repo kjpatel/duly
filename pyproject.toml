@@ -5,14 +5,26 @@ description = "Auditable document decisioning for regulated workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "reportlab>=4.0",
+]
 
 [dependency-groups]
 dev = [
     "jsonschema>=4.18",
+    "pytest>=8.0",
+    "httpx>=0.27",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kernel/duly_kernel"]
+
 [tool.uv]
-# Spec-only for now: nothing importable to build or install. Flip to a uv
-# workspace with kernel/ and extractors/ as members once M1 adds real packages.
-package = false
+package = true

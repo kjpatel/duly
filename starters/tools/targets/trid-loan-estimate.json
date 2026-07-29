@@ -1,0 +1,32 @@
+{
+  "documentId": "doc:loan-estimate:L-2026-0142:2026-02-10",
+  "caseId": "case:loan:L-2026-0142",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-28T14:12:17Z",
+  "runId": "run:2026-07-28:008",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-le-transfer-tax-baseline.json",
+      "entity": {
+        "id": "fee:transfer-tax:L-2026-0142",
+        "type": "trid:Fee"
+      },
+      "attribute": "trid:disclosedAmountAtBaseline",
+      "value": {
+        "kind": "money",
+        "amount": "1200.00",
+        "currency": "USD"
+      },
+      "quote": "Transfer Taxes $1,200.00",
+      "confidence": {
+        "score": 0.991,
+        "method": "conformal",
+        "calibrationRef": "cal:trid-docs:2026-06"
+      }
+    }
+  ]
+}

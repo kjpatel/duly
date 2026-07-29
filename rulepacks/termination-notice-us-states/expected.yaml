@@ -1,0 +1,30 @@
+# Expected kernel outcomes for termination-notice-us-states.
+# The integrator runs these once the kernel lands; each case evaluates the pack
+# against the facts in factsFrom at the given asOf.effective date.
+cases:
+  # Notice mailed 2026-07-25 for a 2026-09-01 expiration = 38 days of notice.
+  # Under current law (NY-NR-45, effective 2026-01-01) the minimum is 45 days,
+  # so NC-NR-01 fires and defeats the compliance presumption.
+  - name: ny-nonrenewal-current-law-noncompliant
+    factsFrom: starters/notice-ny/facts
+    asOfEffective: "2026-07-25"
+    question: nc:noticeCompliant
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [NY-NR-45, NC-NR-01]
+    expectDefeated:
+      NC-NR-01: [NC-DEF-00]
+
+  # Effective-dated replay flip: at 2025-12-15 the DEMO-SYNTHETIC legacy rule
+  # NY-NR-45-LEGACY (30-day minimum, effective window 1986-01-01..2026-01-01)
+  # is in force instead of NY-NR-45. 38 days >= 30, so NC-NR-01 does not fire
+  # and the NC-DEF-00 presumption of compliance survives as the decision.
+  # Resolved (see spec/rule-ir.md "Resolved in v0"): event facts carry no
+  # effective window, so the asOf dial selects rule versions only. The demo
+  # facts in starters/ were regenerated without windows accordingly.
+  - name: ny-nonrenewal-legacy-window-compliant
+    factsFrom: starters/notice-ny/facts
+    asOfEffective: "2025-12-15"
+    question: nc:noticeCompliant
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [NC-DEF-00, NY-NR-45-LEGACY]
+    expectDefeated: {}

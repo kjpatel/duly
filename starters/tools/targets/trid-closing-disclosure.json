@@ -1,0 +1,52 @@
+{
+  "documentId": "doc:closing-disclosure:L-2026-0142:2026-03-15",
+  "caseId": "case:loan:L-2026-0142",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-28T14:12:38Z",
+  "runId": "run:2026-07-28:008",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-cd-transfer-tax-actual.json",
+      "entity": {
+        "id": "fee:transfer-tax:L-2026-0142",
+        "type": "trid:Fee"
+      },
+      "attribute": "trid:actualAmountAtClosing",
+      "value": {
+        "kind": "money",
+        "amount": "1450.00",
+        "currency": "USD"
+      },
+      "quote": "Transfer Taxes (to County) $1,450.00",
+      "confidence": {
+        "score": 0.987,
+        "method": "conformal",
+        "calibrationRef": "cal:trid-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-cd-fee-type.json",
+      "entity": {
+        "id": "fee:transfer-tax:L-2026-0142",
+        "type": "trid:Fee"
+      },
+      "attribute": "trid:feeType",
+      "value": {
+        "kind": "code",
+        "value": "TransferTax",
+        "codeSystem": "duly-starter-trid/fee-types",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "Transfer Taxes (to County)",
+      "confidence": {
+        "score": 0.968,
+        "method": "conformal",
+        "calibrationRef": "cal:trid-docs:2026-06"
+      }
+    }
+  ]
+}

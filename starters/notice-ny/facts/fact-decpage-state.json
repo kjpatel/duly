@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:87964b8702ed931b43879d0f3c2bbaadd8cdfdd800ebf0d981a15be9cb66ba76",
+  "contentHash": "87964b8702ed931b43879d0f3c2bbaadd8cdfdd800ebf0d981a15be9cb66ba76",
+  "caseId": "case:policy:HO-77401-NY",
+  "entity": {
+    "id": "policy:HO-77401-NY",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-NY",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:dec-page:HO-77401-NY:2025-09-01",
+    "documentSha256": "c846a006b29225bfd23fe8578a97f6d7d73683c40f48b63189ee01b7f596e040",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:c846a006",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 179,
+      "end": 213
+    },
+    "quote": "Insured Location: Albany, New York"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:05:41Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-28:007"
+    }
+  },
+  "confidence": {
+    "score": 0.998,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "recordedAt": "2026-07-28T14:05:41Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

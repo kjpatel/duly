@@ -1,0 +1,107 @@
+pack:
+  name: termination-notice-us-states
+  version: "2026.2.0"
+  ontology: duly-starter-notice
+  ontologyVersion: "0.1.0"
+  description: State-by-state cancellation/nonrenewal notice compliance.
+
+decisions:
+  - attribute: nc:noticeCompliant
+    entityType: nc:TerminationNotice
+    question: "Was this termination notice compliant?"
+
+rules:
+  - id: NC-DEF-00
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption" }
+    effectiveFrom: "1900-01-01"
+    given:
+      notice: { entityType: nc:TerminationNotice }
+    then:
+      entity: notice
+      attribute: nc:noticeCompliant
+      value: { kind: boolean, value: true }
+
+  # DEMO-SYNTHETIC effective window: the 30-day historical minimum is invented for demonstration of effective-dated replay; it is not real statutory history. Verify against the statute before any non-demo use.
+  - id: NY-NR-45-LEGACY
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "N.Y. Ins. Law § 3425(d)(1)"
+      url: "https://www.nysenate.gov/legislation/laws/ISC/3425"
+    effectiveFrom: "1986-01-01"
+    effectiveTo: "2026-01-01"
+    given:
+      notice:     { entityType: nc:TerminationNotice }
+      noticeType: { attribute: nc:noticeType }
+      state:      { attribute: nc:governingState }
+    when:
+      - noticeType == "Nonrenewal"
+      - state == "US-NY"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "30" }
+
+  # DEMO-SYNTHETIC effective window: the 30-day historical minimum is invented for demonstration of effective-dated replay; it is not real statutory history. Verify against the statute before any non-demo use.
+  - id: NY-NR-45
+    version: "1.1.0"
+    priority: 100
+    citation:
+      text: "N.Y. Ins. Law § 3425(d)(1)"
+      url: "https://www.nysenate.gov/legislation/laws/ISC/3425"
+    effectiveFrom: "2026-01-01"
+    given:
+      notice:     { entityType: nc:TerminationNotice }
+      noticeType: { attribute: nc:noticeType }
+      state:      { attribute: nc:governingState }
+    when:
+      - noticeType == "Nonrenewal"
+      - state == "US-NY"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "45" }
+
+  # Dormant by design: no fact in the demo asserts nc:terminationGround, so this rule
+  # never becomes applicable against spec/examples. It exists to show the exception
+  # structure of the pack (a higher-priority ground-specific minimum that overrides
+  # the general nonrenewal minimums when a nonpayment ground is asserted).
+  - id: NY-NR-NONPAY-15
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "N.Y. Ins. Law § 3425(c)(1)(A)"
+      url: "https://www.nysenate.gov/legislation/laws/ISC/3425"
+    effectiveFrom: "1986-01-01"
+    given:
+      notice:       { entityType: nc:TerminationNotice }
+      cancelGround: { attribute: nc:terminationGround }
+    when:
+      - cancelGround == "Nonpayment"
+    then:
+      entity: notice
+      attribute: nc:requiredMinimumNoticeDays
+      value: { kind: decimal, expr: "15" }
+    overrides: [NY-NR-45, NY-NR-45-LEGACY]
+
+  - id: NC-NR-01
+    version: "1.0.2"
+    priority: 200
+    citation:
+      text: "N.Y. Ins. Law § 3425(d)(1)"
+      url: "https://www.nysenate.gov/legislation/laws/ISC/3425"
+    effectiveFrom: "1986-01-01"
+    given:
+      notice:     { entityType: nc:TerminationNotice }
+      expiration: { attribute: nc:policyExpirationDate }
+      mailed:     { attribute: nc:noticeMailedDate }
+      minDays:    { derived: nc:requiredMinimumNoticeDays }
+    when:
+      - days_between(mailed, expiration) < minDays
+    then:
+      entity: notice
+      attribute: nc:noticeCompliant
+      value: { kind: boolean, value: false }
+    overrides: [NC-DEF-00]

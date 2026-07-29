@@ -1,0 +1,51 @@
+{
+  "documentId": "doc:nonrenewal-notice:HO-77401-NY:2026-07-25",
+  "caseId": "case:policy:HO-77401-NY",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-28T14:06:02Z",
+  "runId": "run:2026-07-28:007",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-notice-mailed.json",
+      "entity": {
+        "id": "notice:HO-77401-NY:2026-07-25",
+        "type": "nc:TerminationNotice"
+      },
+      "attribute": "nc:noticeMailedDate",
+      "value": {
+        "kind": "date",
+        "value": "2026-07-25"
+      },
+      "quote": "Date of Mailing: July 25, 2026",
+      "confidence": {
+        "score": 0.989,
+        "method": "conformal",
+        "calibrationRef": "cal:notice-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-notice-type.json",
+      "entity": {
+        "id": "notice:HO-77401-NY:2026-07-25",
+        "type": "nc:TerminationNotice"
+      },
+      "attribute": "nc:noticeType",
+      "value": {
+        "kind": "code",
+        "value": "Nonrenewal",
+        "codeSystem": "duly-starter-notice/notice-types",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "NOTICE OF NONRENEWAL",
+      "confidence": {
+        "score": 0.972,
+        "method": "conformal",
+        "calibrationRef": "cal:notice-docs:2026-06"
+      }
+    }
+  ]
+}

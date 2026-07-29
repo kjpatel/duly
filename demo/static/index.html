@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>duly — decision demo</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">duly<span class="brand-sub">deterministic adjudication</span></div>
+  <div class="controls">
+    <label for="scenario-select">Scenario</label>
+    <select id="scenario-select"></select>
+    <label for="asof-input">As of</label>
+    <input type="date" id="asof-input">
+  </div>
+</header>
+
+<main>
+  <section class="pane" id="doc-pane">
+    <div class="pane-head">
+      <div class="tabs" id="doc-tabs"></div>
+    </div>
+    <div class="pane-body">
+      <div class="doc-text" id="doc-text"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="center-pane">
+    <div class="pane-head"><h2>Question</h2></div>
+    <div class="pane-body">
+      <div class="chips" id="question-chips"></div>
+      <div class="answer-card hidden" id="answer-card">
+        <div class="answer-meta">
+          <span class="badge" id="engine-badge"></span>
+          <span class="answer-asof" id="answer-asof"></span>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <div class="answer-text" id="answer-text"></div>
+        <div class="fixture-note hidden" id="fixture-note">
+          Engine unavailable — showing the committed example receipt.
+          The as-of date has no effect in fixture mode.
+        </div>
+      </div>
+      <div class="error-card hidden" id="error-card"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="reason-pane">
+    <div class="pane-head"><h2>Reasoning</h2></div>
+    <div class="pane-body">
+      <div id="derivation" class="derivation"></div>
+      <h3 class="section-title" id="rules-title">Rules fired</h3>
+      <div id="rules-fired"></div>
+      <button id="download-receipt" class="download-btn" disabled>Download receipt (JSON)</button>
+    </div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

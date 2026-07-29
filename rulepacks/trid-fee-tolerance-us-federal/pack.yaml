@@ -1,0 +1,70 @@
+pack:
+  name: trid-fee-tolerance-us-federal
+  version: "2026.1.0"
+  ontology: duly-starter-trid
+  ontologyVersion: "0.1.0"
+  description: TRID (Reg Z) fee tolerance categorization and cure amounts.
+
+decisions:
+  - attribute: trid:toleranceCureAmount
+    entityType: trid:Fee
+    question: "Does this fee increase require a tolerance cure?"
+
+rules:
+  - id: TRID-DEF-00
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption" }
+    effectiveFrom: "2015-10-03"
+    given:
+      fee: { entityType: trid:Fee }
+    then:
+      entity: fee
+      attribute: trid:toleranceCureAmount
+      value: { kind: money, amount: "0.00", currency: "USD" }
+
+  # Categorization step: transfer taxes are a zero-tolerance charge under
+  # 1026.19(e)(3)(i) — the amount disclosed at baseline may not increase at all.
+  - id: TRID-CAT-02
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "12 CFR 1026.19(e)(3)(i)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+    effectiveFrom: "2015-10-03"
+    given:
+      fee:     { entityType: trid:Fee }
+      feeType: { attribute: trid:feeType }
+    when:
+      - feeType == "TransferTax"
+    then:
+      entity: fee
+      attribute: trid:toleranceCategory
+      value:
+        kind: code
+        value: "ZeroTolerance"
+        codeSystem: "duly-starter-trid/tolerance-categories"
+        codeSystemVersion: "0.1.0"
+
+  # Cure computation: for a zero-tolerance fee, any increase over the baseline
+  # disclosure is a violation and the excess must be refunded (cured).
+  - id: TRID-ZT-01
+    version: "1.0.0"
+    priority: 200
+    citation:
+      text: "12 CFR 1026.19(e)(3)(i)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+    effectiveFrom: "2015-10-03"
+    given:
+      fee:       { entityType: trid:Fee }
+      disclosed: { attribute: trid:disclosedAmountAtBaseline }
+      actual:    { attribute: trid:actualAmountAtClosing }
+      category:  { derived: trid:toleranceCategory }
+    when:
+      - category == "ZeroTolerance"
+      - actual > disclosed
+    then:
+      entity: fee
+      attribute: trid:toleranceCureAmount
+      value: { kind: money, currency: "USD", expr: "actual - disclosed" }
+    overrides: [TRID-DEF-00]

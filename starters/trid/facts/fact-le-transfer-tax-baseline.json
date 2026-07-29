@@ -1,0 +1,51 @@
+{
+  "id": "urn:duly:fact:sha256:dfd6cf20c2ab41628325cb2db846a7282768b6b10fe9f18a66dcd85b8369e91a",
+  "contentHash": "dfd6cf20c2ab41628325cb2db846a7282768b6b10fe9f18a66dcd85b8369e91a",
+  "caseId": "case:loan:L-2026-0142",
+  "entity": {
+    "id": "fee:transfer-tax:L-2026-0142",
+    "type": "trid:Fee"
+  },
+  "attribute": "trid:disclosedAmountAtBaseline",
+  "value": {
+    "kind": "money",
+    "amount": "1200.00",
+    "currency": "USD"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:loan-estimate:L-2026-0142:2026-02-10",
+    "documentSha256": "297a8b7f474f6ad08cd95b13f0853ed2b3e98ce53e96f4b53d6283d6cc1f100b",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:297a8b7f",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 430,
+      "end": 454
+    },
+    "quote": "Transfer Taxes $1,200.00"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:12:17Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-28:008"
+    }
+  },
+  "confidence": {
+    "score": 0.991,
+    "method": "conformal",
+    "calibrationRef": "cal:trid-docs:2026-06"
+  },
+  "recordedAt": "2026-07-28T14:12:17Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-trid",
+    "version": "0.1.0"
+  }
+}

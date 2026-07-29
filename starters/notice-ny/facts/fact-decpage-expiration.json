@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:3a1df6dedacccb8d2e5923d521f357522762d81aa2caddb7dc35f1112866fa90",
+  "contentHash": "3a1df6dedacccb8d2e5923d521f357522762d81aa2caddb7dc35f1112866fa90",
+  "caseId": "case:policy:HO-77401-NY",
+  "entity": {
+    "id": "policy:HO-77401-NY",
+    "type": "nc:Policy"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-09-01"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:dec-page:HO-77401-NY:2025-09-01",
+    "documentSha256": "c846a006b29225bfd23fe8578a97f6d7d73683c40f48b63189ee01b7f596e040",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:c846a006",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 215,
+      "end": 254
+    },
+    "quote": "POLICY PERIOD: 09/01/2025 to 09/01/2026"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-28T14:05:41Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-28:007"
+    }
+  },
+  "confidence": {
+    "score": 0.995,
+    "method": "conformal",
+    "calibrationRef": "cal:notice-docs:2026-06"
+  },
+  "recordedAt": "2026-07-28T14:05:41Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

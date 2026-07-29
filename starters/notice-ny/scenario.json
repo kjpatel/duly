@@ -1,0 +1,32 @@
+{
+  "id": "notice-ny",
+  "title": "New York homeowners nonrenewal notice timing",
+  "caseId": "case:policy:HO-77401-NY",
+  "ontology": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:dec-page:HO-77401-NY:2025-09-01",
+      "title": "Homeowners Policy Declarations",
+      "pdf": "documents/dec-page.pdf",
+      "rendition": "renditions/dec-page.txt",
+      "sha256": "c846a006b29225bfd23fe8578a97f6d7d73683c40f48b63189ee01b7f596e040"
+    },
+    {
+      "id": "doc:nonrenewal-notice:HO-77401-NY:2026-07-25",
+      "title": "Notice of Nonrenewal",
+      "pdf": "documents/nonrenewal-notice.pdf",
+      "rendition": "renditions/nonrenewal-notice.txt",
+      "sha256": "638dbca9307b198efc5b2e85e2bce3877628078f03ac8d5fda350f51d95d9fcd"
+    }
+  ],
+  "facts": [
+    "facts/fact-decpage-expiration.json",
+    "facts/fact-decpage-state.json",
+    "facts/fact-notice-mailed.json",
+    "facts/fact-notice-type.json"
+  ],
+  "rulePack": "rulepacks/termination-notice-us-states/pack.yaml"
+}

@@ -437,6 +437,36 @@ def _render_answer(
             )
         return f"Not compliant as of {as_of_day}."
 
+    if attribute.endswith("toleranceCureAmount") and value.get("kind") == "money":
+        amount = value.get("amount")
+        currency = value.get("currency")
+        formatted = " ".join(str(part) for part in (amount, currency) if part)
+        try:
+            cure_required = float(amount) > 0
+        except (TypeError, ValueError):
+            cure_required = bool(amount)
+        if cure_required:
+            return f"Cure required: {formatted} tolerance cure as of {as_of_day}."
+        return f"No cure required: {formatted} as of {as_of_day}."
+
+    if attribute.endswith("requiredMinimumNoticeDays"):
+        days = _format_value(value)
+        return f"{days} days: Minimum advance notice required as of {as_of_day}."
+
+    if attribute.endswith("toleranceCategory"):
+        raw_category = str(value.get("value", ""))
+        category = {
+            "ZeroTolerance": "Zero tolerance",
+            "TenPercentCumulative": "10% cumulative tolerance",
+            "NoToleranceLimit": "No tolerance limit",
+        }.get(raw_category, raw_category)
+        if raw_category == "ZeroTolerance":
+            return (
+                f"{category}: The disclosed amount may not increase at closing "
+                f"as of {as_of_day}."
+            )
+        return f"{category}: Fee tolerance category as of {as_of_day}."
+
     return f"{attribute} = {_format_value(value)} as of {as_of_day}."
 
 

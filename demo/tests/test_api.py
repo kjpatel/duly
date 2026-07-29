@@ -20,7 +20,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demo.app import app  # noqa: E402
+from demo.app import _render_answer, app  # noqa: E402
 
 client = TestClient(app)
 
@@ -42,6 +42,41 @@ def test_scenarios_lists_fixture_scenario():
     assert len(scenario["questions"]) >= 1
     assert scenario["questions"][0]["attribute"] == "nc:noticeCompliant"
     assert scenario["defaultAsOf"]
+
+
+def test_starter_scenarios_offer_meaningful_derived_questions(monkeypatch):
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    scenarios = {scenario["id"]: scenario for scenario in res.json()}
+
+    expected = {
+        "notice-ny": {
+            "nc:noticeCompliant",
+            "nc:requiredMinimumNoticeDays",
+        },
+        "trid": {
+            "trid:toleranceCureAmount",
+            "trid:toleranceCategory",
+        },
+    }
+    for scenario_id, attributes in expected.items():
+        scenario = scenarios[scenario_id]
+        assert {question["attribute"] for question in scenario["questions"]} == attributes
+        for attribute in attributes:
+            response = client.post(
+                "/api/adjudicate",
+                json={
+                    "scenarioId": scenario_id,
+                    "attribute": attribute,
+                    "asOfEffective": scenario["defaultAsOf"],
+                },
+            )
+            assert response.status_code == 200
+            payload = response.json()
+            assert payload["receipt"]["decision"]["attribute"] == attribute
+            assert "nc:" not in payload["answer"]
+            assert "trid:" not in payload["answer"]
 
 
 def test_adjudicate_returns_receipt_with_fact_index():
@@ -72,6 +107,20 @@ def test_adjudicate_returns_receipt_with_fact_index():
     for entry in fact_index.values():
         assert entry["attribute"]
         assert entry["value"]
+
+
+def test_render_answer_describes_tolerance_cure_as_a_determination():
+    receipt = {
+        "decision": {
+            "attribute": "trid:toleranceCureAmount",
+            "value": {"kind": "money", "amount": "250.00", "currency": "USD"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+    }
+
+    answer = _render_answer(receipt, {"facts": []}, "2026-07-29")
+
+    assert answer == "Cure required: 250.00 USD tolerance cure as of 2026-07-29."
 
 
 def test_fact_spans_slice_correctly_out_of_rendition_text():

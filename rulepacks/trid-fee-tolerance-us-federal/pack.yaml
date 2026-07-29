@@ -9,6 +9,9 @@ decisions:
   - attribute: trid:toleranceCureAmount
     entityType: trid:Fee
     question: "Does this fee increase require a tolerance cure?"
+  - attribute: trid:toleranceCategory
+    entityType: trid:Fee
+    question: "Which tolerance category applied to this fee?"
 
 rules:
   - id: TRID-DEF-00

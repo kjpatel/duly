@@ -21,6 +21,17 @@ const $ = (id) => document.getElementById(id);
 
 /* ---------- formatting helpers ---------- */
 
+function plural(count, singular, pluralForm = singular + "s") {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
+function setWorkspaceStatus(text, mode = "ready") {
+  const status = $("workspace-status");
+  $("workspace-status-text").textContent = text;
+  status.classList.toggle("loading", mode === "loading");
+  status.classList.toggle("error", mode === "error");
+}
+
 function shortAttr(curie) {
   if (typeof curie !== "string") return "";
   const i = curie.indexOf(":");
@@ -47,7 +58,9 @@ function markId(factId) {
 /* ---------- scenario loading ---------- */
 
 async function init() {
+  setWorkspaceStatus("Loading demo", "loading");
   const res = await fetch("/api/scenarios");
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   state.scenarios = await res.json();
 
   const select = $("scenario-select");
@@ -69,12 +82,15 @@ async function init() {
   if (state.scenarios.length > 0) {
     select.value = state.scenarios[0].id;
     await selectScenario(state.scenarios[0].id);
+  } else {
+    setWorkspaceStatus("No scenarios", "error");
   }
 }
 
 async function selectScenario(id) {
   const scenario = state.scenarios.find((s) => s.id === id);
   if (!scenario) return;
+  setWorkspaceStatus("Loading scenario", "loading");
   state.scenario = scenario;
   state.documents = new Map();
   state.activeDocId = null;
@@ -97,7 +113,7 @@ async function selectScenario(id) {
                                      : { title: d.title, renditionText: "" });
   }));
 
-  renderTabs();
+  renderDocumentList();
   if (scenario.documents.length > 0) activateDoc(scenario.documents[0].id);
   renderQuestions();
 
@@ -105,28 +121,84 @@ async function selectScenario(id) {
     state.activeAttribute = scenario.questions[0].attribute;
     highlightActiveQuestion();
     await runAdjudication();
+  } else {
+    setWorkspaceStatus("Scenario ready");
   }
 }
 
 /* ---------- document pane ---------- */
 
-function renderTabs() {
-  const tabs = $("doc-tabs");
-  tabs.replaceChildren();
+function documentFactCount(docId) {
+  return Object.values(state.factIndex).filter((fact) => fact.documentId === docId).length;
+}
+
+function fileIcon() {
+  const namespace = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(namespace, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "17");
+  svg.setAttribute("height", "17");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("aria-hidden", "true");
+
+  const outline = document.createElementNS(namespace, "path");
+  outline.setAttribute("d", "M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z");
+  outline.setAttribute("stroke", "currentColor");
+  outline.setAttribute("stroke-width", "2");
+  outline.setAttribute("stroke-linejoin", "round");
+
+  const detail = document.createElementNS(namespace, "path");
+  detail.setAttribute("d", "M14 2v6h6M8 13h8M8 17h5");
+  detail.setAttribute("stroke", "currentColor");
+  detail.setAttribute("stroke-width", "2");
+  detail.setAttribute("stroke-linecap", "round");
+
+  svg.append(outline, detail);
+  return svg;
+}
+
+function renderDocumentList() {
+  const list = $("doc-tabs");
+  list.replaceChildren();
   for (const d of state.scenario.documents) {
     const btn = document.createElement("button");
-    btn.className = "tab";
-    btn.textContent = d.title;
+    btn.className = "document-option";
+    btn.type = "button";
     btn.dataset.docId = d.id;
+    btn.setAttribute("aria-pressed", "false");
+
+    const icon = document.createElement("span");
+    icon.className = "document-option-icon";
+    icon.append(fileIcon());
+
+    const copy = document.createElement("span");
+    copy.className = "document-option-copy";
+    const title = document.createElement("span");
+    title.className = "document-option-title";
+    title.textContent = d.title;
+    const meta = document.createElement("span");
+    meta.className = "document-option-meta";
+    meta.textContent = plural(documentFactCount(d.id), "grounded fact");
+    copy.append(title, meta);
+
+    const arrow = document.createElement("span");
+    arrow.className = "document-option-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "→";
+
+    btn.append(icon, copy, arrow);
     btn.addEventListener("click", () => activateDoc(d.id));
-    tabs.append(btn);
+    list.append(btn);
   }
+  $("source-count").textContent = plural(state.scenario.documents.length, "document");
 }
 
 function activateDoc(docId) {
   state.activeDocId = docId;
-  for (const btn of $("doc-tabs").querySelectorAll(".tab")) {
-    btn.classList.toggle("active", btn.dataset.docId === docId);
+  for (const btn of $("doc-tabs").querySelectorAll(".document-option")) {
+    const active = btn.dataset.docId === docId;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
   }
   renderDocument();
 }
@@ -137,7 +209,12 @@ function renderDocument() {
   const container = $("doc-text");
   container.replaceChildren();
   const doc = state.documents.get(state.activeDocId);
-  if (!doc) return;
+  if (!doc) {
+    $("document-title").textContent = "Select a document";
+    $("doc-evidence-count").textContent = plural(0, "grounded fact");
+    return;
+  }
+  $("document-title").textContent = doc.title || state.activeDocId;
   const text = doc.renditionText || "";
 
   const spans = [];
@@ -149,6 +226,13 @@ function renderDocument() {
     spans.push({ start, end, factId, attribute: f.attribute });
   }
   spans.sort((a, b) => a.start - b.start || a.end - b.end);
+  $("doc-evidence-count").textContent = plural(spans.length, "grounded fact");
+  for (const btn of $("doc-tabs").querySelectorAll(".document-option")) {
+    const meta = btn.querySelector(".document-option-meta");
+    if (meta) {
+      meta.textContent = plural(documentFactCount(btn.dataset.docId), "grounded fact");
+    }
+  }
 
   const frag = document.createDocumentFragment();
   let cursor = 0;
@@ -189,6 +273,7 @@ function renderQuestions() {
   for (const q of state.scenario.questions) {
     const btn = document.createElement("button");
     btn.className = "chip";
+    btn.type = "button";
     btn.textContent = q.question;
     btn.dataset.attribute = q.attribute;
     btn.addEventListener("click", () => {
@@ -198,18 +283,22 @@ function renderQuestions() {
     });
     chips.append(btn);
   }
+  $("question-count").textContent = plural(state.scenario.questions.length, "question");
 }
 
 function highlightActiveQuestion() {
   for (const btn of $("question-chips").querySelectorAll(".chip")) {
-    btn.classList.toggle("active", btn.dataset.attribute === state.activeAttribute);
+    const active = btn.dataset.attribute === state.activeAttribute;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
   }
 }
 
 function verdictFor(decision) {
   const value = decision && decision.value;
+  const attribute = shortAttr(decision && decision.attribute).toLowerCase();
   if (value && value.kind === "boolean" &&
-      shortAttr(decision.attribute).toLowerCase().includes("compliant")) {
+      attribute.includes("compliant")) {
     return value.value
       ? { text: "Compliant", cls: "pos" }
       : { text: "Not compliant", cls: "neg" };
@@ -217,11 +306,41 @@ function verdictFor(decision) {
   if (value && value.kind === "boolean") {
     return value.value ? { text: "Yes", cls: "pos" } : { text: "No", cls: "neg" };
   }
+  if (value && value.kind === "money" && attribute.includes("cureamount")) {
+    return Number(value.amount) > 0
+      ? { text: "Cure required", cls: "warn" }
+      : { text: "No cure required", cls: "pos" };
+  }
+  if (value && attribute.includes("requiredminimumnoticedays")) {
+    return { text: `${fmtValue(value)} days`, cls: "" };
+  }
+  if (value && value.kind === "code" && attribute.includes("tolerancecategory")) {
+    const labels = {
+      ZeroTolerance: "Zero tolerance",
+      TenPercentCumulative: "10% cumulative tolerance",
+      NoToleranceLimit: "No tolerance limit",
+    };
+    return { text: labels[value.value] || fmtValue(value), cls: "" };
+  }
   return { text: fmtValue(value), cls: "" };
+}
+
+function supportingAnswer(answer, verdict) {
+  const text = String(answer || "").trim();
+  const prefix = `${verdict}:`;
+  let detail = text.toLowerCase().startsWith(prefix.toLowerCase())
+    ? text.slice(prefix.length).trim()
+    : text;
+  detail = detail.replace(/\s+as of \d{4}-\d{2}-\d{2}\.?$/i, "").trim();
+  return detail ? detail.charAt(0).toUpperCase() + detail.slice(1) : "";
 }
 
 async function runAdjudication() {
   const seq = ++state.requestSeq;
+  setWorkspaceStatus("Evaluating", "loading");
+  $("answer-card").classList.add("hidden");
+  $("answer-card").setAttribute("aria-busy", "true");
+  $("error-card").classList.add("hidden");
   const body = {
     scenarioId: state.scenario.id,
     attribute: state.activeAttribute,
@@ -251,10 +370,12 @@ async function runAdjudication() {
   if (seq !== state.requestSeq) return; // a newer request superseded this one
 
   if (errorText !== null) {
-    $("answer-card").classList.add("hidden");
+    $("answer-card").removeAttribute("aria-busy");
     const card = $("error-card");
     card.textContent = errorText;
     card.classList.remove("hidden");
+    setDownloadsEnabled(false);
+    setWorkspaceStatus("Evaluation failed", "error");
     return;
   }
   $("error-card").classList.add("hidden");
@@ -268,6 +389,7 @@ async function runAdjudication() {
   renderRulesFired();
   renderDocument(); // re-highlight with the (possibly new) fact index
   setDownloadsEnabled(true);
+  setWorkspaceStatus(payload.engineMode === "fixture" ? "Fixture receipt" : "Decision ready");
 }
 
 function setDownloadsEnabled(enabled) {
@@ -279,9 +401,10 @@ function setDownloadsEnabled(enabled) {
 function renderAnswer(payload) {
   const card = $("answer-card");
   card.classList.remove("hidden");
+  card.removeAttribute("aria-busy");
 
   const badge = $("engine-badge");
-  badge.textContent = payload.engineMode;
+  badge.textContent = payload.engineMode === "live" ? "Computed" : "Fixture";
   badge.className = "badge " + (payload.engineMode === "live" ? "live" : "fixture");
   $("fixture-note").classList.toggle("hidden", payload.engineMode !== "fixture");
 
@@ -291,10 +414,15 @@ function renderAnswer(payload) {
     : "";
 
   const v = verdictFor(state.receipt ? state.receipt.decision : null);
+  card.classList.remove("pos", "neg", "warn");
+  if (v.cls) card.classList.add(v.cls);
+  $("determination-icon").textContent =
+    v.cls === "pos" ? "✓" : v.cls === "neg" ? "×" : v.cls === "warn" ? "!" : "→";
+
   const verdictEl = $("verdict");
   verdictEl.textContent = v.text;
   verdictEl.className = "verdict" + (v.cls ? " " + v.cls : "");
-  $("answer-text").textContent = payload.answer || "";
+  $("answer-text").textContent = supportingAnswer(payload.answer, v.text);
 
   const key = JSON.stringify(state.receipt && state.receipt.decision && state.receipt.decision.value);
   if (state.lastVerdictKey !== null && state.lastVerdictKey !== key) {
@@ -432,6 +560,7 @@ function renderRulesFired() {
     container.append(card);
   }
   $("rules-title").style.display = rules.length ? "" : "none";
+  $("rules-count").textContent = plural(rules.length, "rule");
 }
 
 /* ---------- receipt download ---------- */
@@ -470,4 +599,5 @@ init().catch((e) => {
   const card = $("error-card");
   card.textContent = "Failed to load scenarios: " + String(e);
   card.classList.remove("hidden");
+  setWorkspaceStatus("Demo unavailable", "error");
 });

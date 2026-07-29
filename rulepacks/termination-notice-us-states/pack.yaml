@@ -9,6 +9,9 @@ decisions:
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
     question: "Was this termination notice compliant?"
+  - attribute: nc:requiredMinimumNoticeDays
+    entityType: nc:TerminationNotice
+    question: "What minimum notice period applied?"
 
 rules:
   - id: NC-DEF-00

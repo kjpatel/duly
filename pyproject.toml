@@ -19,11 +19,12 @@ dependencies = [
 extraction = [
     "docling>=2.0",
 ]
-# The Z3 static pack verifier (`python -m duly_assurance prove`). Optional
-# because it is a validation-time analysis tool: the kernel, the corpus, and
-# every receipt are produced without it. Install with `uv sync --extra prove`
-# or run ad hoc with `uv run --with z3-solver`; its @pytest.mark.z3 tests skip
-# when z3 is not importable.
+# The Z3 static pack verifier (`python -m duly_assurance prove`) and the
+# what-if solver (`python -m duly_whatif`). Optional because both are
+# validation-time analysis tools: the kernel, the corpus, and every receipt
+# are produced without them. Install with `uv sync --extra prove` or run ad
+# hoc with `uv run --with z3-solver`; their @pytest.mark.z3 tests skip when
+# z3 is not importable.
 prove = [
     "z3-solver>=4.12",
 ]
@@ -41,7 +42,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration", "extraction/duly_extraction", "review/duly_review", "conformance/duly_conformance", "dmn/duly_dmn"]
+packages = ["kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration", "extraction/duly_extraction", "review/duly_review", "conformance/duly_conformance", "dmn/duly_dmn", "whatif/duly_whatif"]
 
 [tool.uv]
 package = true

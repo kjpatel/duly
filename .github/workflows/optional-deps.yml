@@ -9,8 +9,9 @@ name: Optional dependency suites
 #            not merely acceptable to duly's own pure-Python subset validator.
 #            This is the one that rots silently: the hot-path validator would
 #            keep passing while the artifacts drifted out of spec.
-#   z3       the static pack verifier's encoding is sound, and no committed
-#            pack contains an unproven same-priority overlap.
+#   z3       the static pack verifier's encoding is sound, no committed pack
+#            contains an unproven same-priority overlap, and every what-if
+#            answer still agrees with what the kernel actually decides.
 #   docling  the live extraction adapter still emits contract-conformant facts
 #            with resolvable spans.
 #
@@ -29,6 +30,7 @@ on:
       - 'conformance/**'
       - 'ontologies/**'
       - 'assurance/**'
+      - 'whatif/**'
       - 'extraction/**'
       - 'spec/**'
       - 'pyproject.toml'
@@ -61,6 +63,11 @@ jobs:
       - run: uv sync --extra prove
       - name: Verifier test suite
         run: uv run pytest assurance/tests -q -m z3
+
+      # What-if reuses the verifier's encoding unmodified, so it belongs in
+      # the same job: a change to smt.py that broke one would break the other.
+      - name: What-if test suite
+        run: uv run pytest whatif/tests -q -m z3
 
       # Deliberately NOT a gate on rule-pack PRs, which is why `rulepacks/**`
       # is absent from the paths filter above. `validate_pack` already refuses

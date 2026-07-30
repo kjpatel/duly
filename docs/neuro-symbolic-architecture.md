@@ -521,6 +521,23 @@ relax the pack validator: anything that could change a decision must live
 inside the versioned, replayable artifact, and anything that merely *reasons
 about* decisions must be provably outside it.
 
+That dichotomy is not exhaustive, and the gap in it is instructive. A what-if
+answer is a claim about *one execution that did not happen* — as pointwise as a
+receipt, but with no run behind it to reproduce. It cannot be established by
+reasoning about the rulebase, because it is about a single point; and it cannot
+be established by replay, because there is nothing to replay. The only way to
+make it true is to make it a run: hand the proposed facts to the real kernel
+and keep the verdict.
+
+So [`whatif`](../spec/whatif.md) reaches back across the boundary that `prove`
+never crosses — it *calls the kernel*, repeatedly, on cases that do not exist —
+and stays outside all the same. The rule was never "a tool that reasons about
+decisions may not touch the kernel." It is that such a tool may not produce
+artifacts which enter the audit chain. `prove` honours it by never making a
+decision; `whatif` honours it by making many and keeping none. Both sit outside
+the versioned artifact; only one of them sits outside the executor, and the
+difference tells you which invariant was actually load-bearing.
+
 ## The gates
 
 The most dangerous transition in a neuro-symbolic system is where a
@@ -618,6 +635,7 @@ until a workload supplies acceptance criteria.
 | Model or document AI as fact proposer | Supported by the adapter contract; autonomous model-driven proposal is supplied by the adopter, not shipped as a duly model |
 | Symbolic layer as decision authority | Implemented |
 | Deterministic report rendering | Implemented |
+| Backward query over the rulebase ("what would have had to be true?") | Implemented as a validation-time tool reusing the verifier's encoding unmodified, with every answer re-adjudicated through the kernel before it is returned ([spec/whatif.md](../spec/whatif.md)). No artifact is produced and nothing reaches a receipt |
 | Static verification of the rulebase by a solver | Implemented as a validation-time tool over a documented fragment: booleans, decimals and money as reals (currency unmodeled), dates as bounded integers, strings and codes as finite domains resolved from the ontology, and the IR operators that encode faithfully ([spec/pack-verification.md](../spec/pack-verification.md)). Constructs outside it are refused by name rather than approximated. `z3-solver` is an optional extra; the kernel neither imports it nor depends on it, and no solver output reaches a receipt |
 | Business-editable decision tables compiled to the decision logic | Implemented for a deliberately narrow subset: DMN 1.3+ tables, S-FEEL cells, three of seven hit policies, mandatory per-row citation and effective date ([spec/dmn.md](../spec/dmn.md)). The compiler is an authoring surface, not a second engine — its output is an ordinary rule pack the same kernel executes |
 | Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
@@ -735,7 +753,7 @@ These are extension paths, not commitments or a second roadmap. The
 
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
-| Rule authors need safer tools | DMN-to-IR authoring and Z3 overlap/coverage analysis (**both shipped** — see below); still open: stable rule IDs | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
+| Rule authors need safer tools | DMN-to-IR authoring, Z3 overlap/coverage analysis, and backward what-if queries (**all shipped** — see below); still open: stable rule IDs | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
@@ -780,6 +798,8 @@ requirement without weakening replay.
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
   packs, and refuses the tables it cannot compile honestly.
+- [`whatif/duly_whatif`](../whatif/duly_whatif) solves a pack backwards for one
+  freed input and verifies every answer by re-running the kernel on it.
 - [`assurance/duly_assurance/prove.py`](../assurance/duly_assurance/prove.py)
   statically verifies a rule pack with a solver — disjointness, coverage, and
   equivalence between two packs — and names what it cannot encode instead of

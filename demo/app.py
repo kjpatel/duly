@@ -223,6 +223,23 @@ REVIEW_SCENARIO_ID = "notice-ny-review"
 REVIEW_SOURCE_SCENARIO = "notice-ny"
 REVIEW_CASE_ID = "case:policy:HO-77401-NY:review-demo"
 REVIEW_SCENARIO_TITLE = "NY nonrenewal — review arc (low-confidence extraction)"
+
+# Scenario domains group the picker by regulated vertical. The slug comes from
+# the starter manifest's optional `domain` field — presentation metadata only,
+# deliberately NOT part of the fact contract (the ontology CURIE is the
+# contract-level domain signal). Unknown slugs get a title-cased label, so a
+# future vertical needs one manifest field and zero code.
+DOMAIN_LABELS = {
+    "mortgage": "Mortgage closing",
+    "insurance": "Insurance",
+}
+DEFAULT_DOMAIN = "other"
+
+
+def _domain_fields(slug: str | None) -> dict[str, str]:
+    slug = (slug or DEFAULT_DOMAIN).strip().lower() or DEFAULT_DOMAIN
+    label = DOMAIN_LABELS.get(slug, slug.replace("-", " ").title())
+    return {"domain": slug, "domainLabel": label}
 REVIEW_MAILED_ATTRIBUTE = "nc:noticeMailedDate"
 # Mirrors golden/cases/review-0001: 0.62 sits below the notice pack 2026.3.0
 # per-attribute floor of 0.9, so the mailed date abstains with low_confidence.
@@ -525,6 +542,7 @@ def _build_fixture_scenario() -> dict[str, Any]:
     return {
         "id": "notice-ny",
         "title": "notice-ny (fixture)",
+        **_domain_fields("insurance"),
         "caseId": "case:policy:HO-77401-NY",
         "documents": documents,
         "facts": facts,
@@ -622,6 +640,7 @@ def _load_starter_scenario(scenario_dir: Path) -> dict[str, Any] | None:
     return {
         "id": manifest.get("id", scenario_dir.name),
         "title": manifest.get("title", scenario_dir.name),
+        **_domain_fields(manifest.get("domain")),
         "caseId": manifest.get("caseId", ""),
         "documents": documents,
         "facts": facts,
@@ -702,6 +721,7 @@ def _build_review_scenario(runtime: _DemoRuntime) -> dict[str, Any] | None:
     return {
         "id": REVIEW_SCENARIO_ID,
         "title": REVIEW_SCENARIO_TITLE,
+        **_domain_fields("insurance"),
         "caseId": REVIEW_CASE_ID,
         "documents": documents,
         "facts": runtime.store.as_of(REVIEW_CASE_ID, knowledge=_now_knowledge()),
@@ -1307,6 +1327,9 @@ def api_scenarios() -> list[dict[str, Any]]:
             {
                 "id": scenario["id"],
                 "title": scenario["title"],
+                "domain": scenario.get("domain", DEFAULT_DOMAIN),
+                "domainLabel": scenario.get("domainLabel")
+                or _domain_fields(scenario.get("domain"))["domainLabel"],
                 "caseId": scenario["caseId"],
                 "documents": [
                     {"id": d["id"], "title": d["title"]}

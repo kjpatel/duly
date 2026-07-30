@@ -431,6 +431,14 @@ def _ingest_starter_case(
     pack_path = manifest.get("rulePack")
     if not case_id or not pack_path:
         return None
+    # A manifest may pin the stub extractor ("demoExtractor": "stub") when its
+    # targets carry scripted confidences the scenario depends on — Docling
+    # measures its own confidence, which would silently overwrite a scripted
+    # below-floor value and skip the abstention arc the scenario exists to
+    # show. The UI's extraction label names whichever extractor actually ran,
+    # so the pin stays visible rather than pretending Docling measured 0.58.
+    if manifest.get("demoExtractor") == "stub":
+        docling_adapter = None
     meta: dict[str, Any] = {
         "caseId": case_id,
         "packPath": pack_path,

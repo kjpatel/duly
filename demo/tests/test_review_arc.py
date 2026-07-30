@@ -174,6 +174,35 @@ def test_other_scenarios_carry_no_abstentions(live_runtime):
     assert payload["determination"]["verdict"] == "Not compliant"
 
 
+def test_county_recording_abstains_regardless_of_installed_extractor(live_runtime):
+    """The recording scenario's 0.58 top-space confidence is scripted in its
+    targets file, which only the stub passes through — Docling measures its
+    own confidence and would sail over the floor, silently skipping the
+    abstention arc the scenario exists to show. The manifest pins the stub
+    (demoExtractor), so this must hold whether or not docling is importable."""
+    scenario = next(
+        s for s in client.get("/api/scenarios").json() if s["id"] == "county-recording"
+    )
+    payload = _adjudicate(
+        "county-recording", attribute="rec:recordable", as_of=scenario["defaultAsOf"]
+    )
+    assert payload["engineMode"] == "live"
+
+    found = payload["determination"]
+    assert found["verdict"] == "Recordable"
+    assert found["tone"] == "warn"
+    assert "0.58" in found["detail"] and "0.85" in found["detail"]
+
+    (entry,) = payload["abstentions"]
+    assert entry["reason"] == "low_confidence"
+    assert entry["attribute"] == "rec:firstPageTopSpaceInches"
+    assert entry["routedTo"] == "recording-review"
+
+    scenarios = {s["id"]: s for s in client.get("/api/scenarios").json()}
+    extractor = scenarios["county-recording"]["extraction"]["extractor"]
+    assert extractor["name"] == "duly-demo-extractor"
+
+
 # ---------------------------------------------------------------------------
 # The correction flow
 # ---------------------------------------------------------------------------

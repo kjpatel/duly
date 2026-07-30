@@ -231,6 +231,14 @@ The two receipts differ in exactly two places, and the test asserts the differen
 
 **Byte-identical receipts across the two packs are therefore impossible by construction.** That is the honest result, and it is stated here rather than engineered around: a `duly:priority` annotation column would let an author force the numbers to match, and would do it by hollowing out the hit-policy mapping into decoration.
 
+### What this equivalence does *not* prove
+
+It is equivalence **over the committed fixtures**, not equivalence of the rules. The distinction is not academic, and it was measured rather than assumed. Perturbing the DMN source from `> disclosed` to `>= disclosed` — a genuine semantic change — and recompiling leaves the whole equivalence suite green, because the two differ only when the actual and disclosed amounts are exactly equal, and no committed fixture hits that boundary. A perturbation the fixtures *can* see (retyping one input cell from `"TransferTax"` to `"RecordingFee"`) fails 10 of the 12 tests, so the suite is not inert — it is fixture-bounded.
+
+Two consequences worth stating plainly. A compiler bug confined to a boundary the fixtures miss would ship green. And `test_the_committed_compilation_is_what_the_dmn_compiles_to` is doing more work than it appears to: it is the only assertion that catches a source change whose effect the fixtures cannot observe, which is why the compiled pack is committed as an artifact rather than built on the fly.
+
+Closing this properly needs equivalence proved over the *input space* instead of a fixture list — which is a solver's job, not a test's. The [Z3 static pack verifier](../README.md#roadmap) is the natural home for it: the same machinery that proves two same-priority rules disjoint can prove two rule sets agree everywhere, and until it exists the claim above should be read exactly as narrowly as it is written.
+
 ## What this deliberately does not do
 
 - **Round-trip.** There is no `pack.yaml` → DMN direction, and no plan for one. The DMN file is the authored artifact and the pack is its compilation; a second authoring direction would create two sources of truth for one rulebase and an inevitable question about which one the receipt describes.

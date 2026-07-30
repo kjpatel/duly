@@ -20,6 +20,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `rulepacks/` | Six packs (insurance + mortgage closing), each `pack.yaml` + `expected.yaml` (+ `fixtures/`) |
 | `starters/` | Synthetic documents, renditions, span-verified facts, one demo scenario per vertical |
 | `golden/` | 351 committed cases + receipts — the replay/impact baseline |
+| `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) |
 | `demo/` | FastAPI + vanilla-JS decision workspace |
 
 ## Verify
@@ -46,6 +47,8 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 ## Gotchas that have actually bitten
 
+- **Only `attribute` bindings can prove disjointness — `derived` ones cannot.** Narrower than the boolean-guard gotcha below and less visible: `_equality_guards` inspects only `when` items whose variable resolves to an *attribute* binding, so `category == "ZeroTolerance"` on a `derived` binding proves nothing however string-equal it looks. Two same-priority rules separated only by a derived-value guard need an explicit `overrides`.
+- **Test filenames collide across suites.** Test dirs have no `__init__.py`, so pytest imports by basename: `dmn/tests/test_cli.py` broke collection against `kernel/tests/test_cli.py`. Before adding a suite, run `find . -name "test_*.py" | sed 's#.*/##' | sort | uniq -d`.
 - **Boolean guards don't prove disjointness.** The pack validator's same-priority check accepts only *quoted-string* equality guards (`state == "US-NY"`) as a disjointness proof. Two rules split by `x == true` / `x == false` need an explicit `overrides`, even though they look disjoint.
 - **`expected.yaml` is not the corpus.** Pack outcome declarations run in CI, but impact analysis runs *over `golden/`*. A pack without a generator template in `assurance/duly_assurance/generate.py` gets "0 decisions flip" for every edit. Both are required.
 - **Non-boolean decisions need demo phrasing.** A new decision attribute renders through `_determination()` in `demo/app.py` or leaks a raw CURIE (a demo test catches this — in `demo/tests`, where pack authors don't look). Booleans get a Yes/No fallback.

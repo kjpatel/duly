@@ -1,0 +1,89 @@
+name: Optional dependency suites
+
+# duly's kernel deliberately depends on none of these packages, so their tests
+# are marker-gated — and the main CI run therefore *skips* every one of them.
+# That means the claims they exist to prove would otherwise go unchecked after
+# merge:
+#
+#   linkml   the committed ontologies are genuine LinkML under real tooling,
+#            not merely acceptable to duly's own pure-Python subset validator.
+#            This is the one that rots silently: the hot-path validator would
+#            keep passing while the artifacts drifted out of spec.
+#   z3       the static pack verifier's encoding is sound, and no committed
+#            pack contains an unproven same-priority overlap.
+#   docling  the live extraction adapter still emits contract-conformant facts
+#            with resolvable spans.
+#
+# This is a separate workflow on purpose. It installs third-party packages the
+# kernel does not require, so it is allowed to be slower and flakier than the
+# main suite without blocking a rule-pack PR that cannot affect it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # Only for changes that could actually invalidate one of the claims above.
+    # A rule-pack-only PR does not trigger this and pays nothing for it.
+    paths:
+      - 'kernel/**'
+      - 'conformance/**'
+      - 'ontologies/**'
+      - 'assurance/**'
+      - 'extraction/**'
+      - 'spec/**'
+      - 'pyproject.toml'
+      - '.github/workflows/optional-deps.yml'
+  schedule:
+    # Rot does not wait for a merge. Mondays, 06:17 UTC.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linkml:
+    name: ontologies are genuine LinkML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Prove the committed ontologies with real LinkML + SHACL tooling
+        run: uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml
+
+  z3:
+    name: static pack verifier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra prove
+      - name: Verifier test suite
+        run: uv run pytest assurance/tests -q -m z3
+
+      # Deliberately NOT a gate on rule-pack PRs, which is why `rulepacks/**`
+      # is absent from the paths filter above. `validate_pack` already refuses
+      # any pack with an unproven same-priority overlap and no `overrides`, so
+      # a pack that loads cannot make this command fail. It can only fail if Z3
+      # refutes a proof `_equality_guards` accepted — a kernel soundness bug.
+      # That makes it a differential check between two proof systems, worth
+      # running whenever the validator changes (kernel/ is in paths) and on
+      # every merge to main, but pointless as a per-pack-PR checkbox.
+      - name: Differential check — Z3 against the validator's own proofs
+        run: uv run python -m duly_assurance prove rulepacks/*/pack.yaml
+
+  docling:
+    name: live Docling adapter
+    # Excluded from PRs and from main pushes: the extraction extra pulls torch,
+    # so this job costs minutes rather than seconds. Its claim also rots slowly
+    # — the adapter contract is stable — so a weekly run is proportionate.
+    # Run it on demand from the Actions tab before touching extraction/.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra extraction
+      - name: Live adapter emits contract-conformant facts
+        run: uv run pytest extraction/tests -q -m docling

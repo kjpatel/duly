@@ -27,7 +27,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests -q
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests -q
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
 uv run spec/validate.py                   # spec examples: schemas + hashes
@@ -35,6 +35,14 @@ uv run python3 starters/tools/check_facts.py   # starter facts: schema, hashes, 
 uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples   # every committed fact vs ontologies/
 uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml   # disjointness + coverage (optional dep)
 uv run uvicorn demo.app:app --port 8788   # the demo
+```
+
+The three marker-gated suites are **skipped** by the command above — they need optional dependencies the kernel deliberately does not require. They run in their own workflow ([.github/workflows/optional-deps.yml](.github/workflows/optional-deps.yml)); run them locally with:
+
+```bash
+uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml   # ontologies are real LinkML
+uv sync --extra prove  && uv run pytest assurance/tests  -q -m z3           # verifier encoding is sound
+uv sync --extra extraction && uv run pytest extraction/tests -q -m docling  # live adapter (heavy: pulls torch)
 ```
 
 Run the full suite, replay, and spec validation before any commit. A change that flips golden decisions is not necessarily wrong — but the flip must be intentional, explained, and visible (`impact` reports it; CI comments it on PRs touching `rulepacks/`).

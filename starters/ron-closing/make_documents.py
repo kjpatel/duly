@@ -96,7 +96,7 @@ def main() -> None:
         "id": "ron-closing",
         "title": "California remote online notarization eligibility for a closing",
         "caseId": "case:closing:ESC-4821-CA",
-        "ontology": {"ontology": "duly-starter-ron", "version": "0.1.0"},
+        "ontology": {"ontology": "duly-mortgage-closing", "version": "0.1.0"},
         "documents": [
             {
                 "id": "doc:notary-certificate:ESC-4821-CA:2026-03-12",

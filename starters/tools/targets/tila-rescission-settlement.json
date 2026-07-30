@@ -2,7 +2,7 @@
   "documentId": "doc:settlement:RF-2026-3117:2026-05-22",
   "caseId": "case:loan:RF-2026-3117",
   "schemaRef": {
-    "ontology": "duly-starter-resc",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "assertedAt": "2026-05-22T22:12:00Z",

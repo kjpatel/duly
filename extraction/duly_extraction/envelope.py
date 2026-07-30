@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 
+from duly_conformance import OntologyRegistry, check_fact
 from duly_store.store import FactStore, content_hash
 
 from .adapter import verify_fact_span
@@ -82,7 +83,12 @@ def build_envelope(
 
 # --- consumer -----------------------------------------------------------------
 
-def verify_envelope(envelope: dict, facts: list[dict], rendition_text: str) -> None:
+def verify_envelope(
+    envelope: dict,
+    facts: list[dict],
+    rendition_text: str,
+    registry: OntologyRegistry | None = None,
+) -> None:
     """Verify a whole run before it touches the store.
 
     Checks, in order: manifest content hash and id; rendition text against
@@ -92,6 +98,13 @@ def verify_envelope(envelope: dict, facts: list[dict], rendition_text: str) -> N
     id); every fact's span against the rendition. Raises
     EnvelopeVerificationError (or SpanVerificationError, a subclass of
     ExtractionError) on the first failure.
+
+    ``registry`` is the OPTIONAL ontology conformance gate
+    (spec/ontology-conformance.md): when supplied, every fact is also
+    checked against the ontology + version its ``schemaRef`` pins, and a
+    nonconforming fact fails the whole run with the gate's attribution
+    (fact id, ontology reference, what failed). When omitted, behavior is
+    exactly the pre-gate behavior — existing call sites change nothing.
     """
     expected = content_hash(envelope)
     if envelope.get("contentHash") != expected:
@@ -144,15 +157,28 @@ def verify_envelope(envelope: dict, facts: list[dict], rendition_text: str) -> N
             )
         verify_fact_span(fact, rendition_text)
 
+        if registry is not None:
+            issues = check_fact(fact, registry)
+            if issues:
+                detail = "; ".join(f"[{i.code}] {i.message}" for i in issues)
+                raise EnvelopeVerificationError(
+                    f"fact {fact['id']}: ontology conformance failed — {detail}"
+                )
+
 
 def ingest_envelope(
-    store: FactStore, envelope: dict, facts: list[dict], rendition_text: str
+    store: FactStore,
+    envelope: dict,
+    facts: list[dict],
+    rendition_text: str,
+    registry: OntologyRegistry | None = None,
 ) -> int:
     """Verify the whole run, then ingest its facts through the store's public
     API. Returns the number of facts newly inserted (idempotent re-ingest of
     an already-stored fact counts zero). Nothing is written if verification
-    fails — verification is all-or-nothing and happens first."""
-    verify_envelope(envelope, facts, rendition_text)
+    fails — verification is all-or-nothing and happens first. ``registry``
+    is passed through to verify_envelope's optional conformance gate."""
+    verify_envelope(envelope, facts, rendition_text, registry)
     inserted = 0
     for fact in facts:
         if store.ingest(fact):

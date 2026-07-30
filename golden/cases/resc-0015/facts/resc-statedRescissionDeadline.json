@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:d7e494db33fbd714c52dd416f42912aac7c0f269bfe1fbd1cd5cd67ef1226666",
-  "contentHash": "d7e494db33fbd714c52dd416f42912aac7c0f269bfe1fbd1cd5cd67ef1226666",
+  "id": "urn:duly:fact:sha256:01204953ec0b376c696edf9dcea86d468e35fc7f474e02ca41c65c0513837e3f",
+  "contentHash": "01204953ec0b376c696edf9dcea86d468e35fc7f474e02ca41c65c0513837e3f",
   "caseId": "case:golden:resc-0015",
   "entity": {
     "id": "loan:resc-0015",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-02-10T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-resc",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

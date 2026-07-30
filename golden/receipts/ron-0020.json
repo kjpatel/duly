@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:3ad0bc99d36e5d496ea80af7481b10cac728ae3f5d84bec1c2c04e180a5b3b51",
-  "receiptSha256": "3ad0bc99d36e5d496ea80af7481b10cac728ae3f5d84bec1c2c04e180a5b3b51",
+  "id": "urn:duly:receipt:sha256:f2e9ad0f82573950002328f0132865934680284dbc1dfb1a722ceca80a4f6c65",
+  "receiptSha256": "f2e9ad0f82573950002328f0132865934680284dbc1dfb1a722ceca80a4f6c65",
   "caseId": "case:golden:ron-0020",
   "decision": {
     "entity": "notarization:ron-0020",
@@ -59,7 +59,7 @@
       "attribute": "ron:notarizationMethod",
       "reason": "low_confidence",
       "facts": [
-        "urn:duly:fact:sha256:8e2642cce37ca1569a1c5917c62db75577371b17155510f665440d27aa34e914"
+        "urn:duly:fact:sha256:eed1e385980e70f0c3e7336ac3389e6ca0472cdc0155271e159f564a3c5c6ac6"
       ],
       "confidence": {
         "score": 0.62,

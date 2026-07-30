@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:822b5246285069df01cf5aa024dd76e195aa6ff01af2d7c6323c0c9d50afcd1d",
-  "contentHash": "822b5246285069df01cf5aa024dd76e195aa6ff01af2d7c6323c0c9d50afcd1d",
+  "id": "urn:duly:fact:sha256:dcb1f8d3bc5f9e23dfb9ca5e5d5c129dc8a6b0298883716e090f0e1d30fe8981",
+  "contentHash": "dcb1f8d3bc5f9e23dfb9ca5e5d5c129dc8a6b0298883716e090f0e1d30fe8981",
   "caseId": "case:closing-package:CP-2026-0305",
   "entity": {
     "id": "signing:CP-2026-0305:right-to-cancel",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-07-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-esign",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

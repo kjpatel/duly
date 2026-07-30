@@ -4,7 +4,7 @@
   "domain": "mortgage",
   "caseId": "case:closing:ESC-4821-CA",
   "ontology": {
-    "ontology": "duly-starter-ron",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "documents": [

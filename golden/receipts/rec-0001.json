@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:def88f4e2658d625ec697573070cbc79e356940ed05d468097a43ca9c1e082c6",
-  "receiptSha256": "def88f4e2658d625ec697573070cbc79e356940ed05d468097a43ca9c1e082c6",
+  "id": "urn:duly:receipt:sha256:aa1f234f9312bf9e102060369d0c41631bd3856c415c899422521cdae217058f",
+  "receiptSha256": "aa1f234f9312bf9e102060369d0c41631bd3856c415c899422521cdae217058f",
   "caseId": "case:golden:rec-0001",
   "decision": {
     "entity": "submission:rec-0001",
@@ -66,14 +66,14 @@
     "rule": "REC-DEF-CA",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:14aa020bee26053ab9ebd74d9c610068bc90248fa5deee2ad4dc87cf72df754e"
+        "factId": "urn:duly:fact:sha256:1892ef332fb13ff665e5d1f2c801091616b1547eb382ea8e8015d4909d4a853b"
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:14aa020bee26053ab9ebd74d9c610068bc90248fa5deee2ad4dc87cf72df754e",
-      "contentHash": "14aa020bee26053ab9ebd74d9c610068bc90248fa5deee2ad4dc87cf72df754e"
+      "id": "urn:duly:fact:sha256:1892ef332fb13ff665e5d1f2c801091616b1547eb382ea8e8015d4909d4a853b",
+      "contentHash": "1892ef332fb13ff665e5d1f2c801091616b1547eb382ea8e8015d4909d4a853b"
     }
   ],
   "abstentions": [],

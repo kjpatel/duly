@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:2a208394505dfef4beaf05cba757bc71061a02c7b50416deef421073c68f83f3",
-  "receiptSha256": "2a208394505dfef4beaf05cba757bc71061a02c7b50416deef421073c68f83f3",
+  "id": "urn:duly:receipt:sha256:6eb84441bd0b97e9d34eeffc454a408d5fd65d0b942163e9e3c9da91c1e568a4",
+  "receiptSha256": "6eb84441bd0b97e9d34eeffc454a408d5fd65d0b942163e9e3c9da91c1e568a4",
   "caseId": "case:golden:resc-0021",
   "decision": {
     "entity": "loan:resc-0021",
@@ -69,7 +69,7 @@
         "rule": "RESC-EXC-RMT",
         "premises": [
           {
-            "factId": "urn:duly:fact:sha256:89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b"
+            "factId": "urn:duly:fact:sha256:fa31138b84c29cf958d9cf6ecfda236c99f5b3cb13370ba41521c4344c1e0ba1"
           }
         ]
       }
@@ -77,8 +77,8 @@
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b",
-      "contentHash": "89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b"
+      "id": "urn:duly:fact:sha256:fa31138b84c29cf958d9cf6ecfda236c99f5b3cb13370ba41521c4344c1e0ba1",
+      "contentHash": "fa31138b84c29cf958d9cf6ecfda236c99f5b3cb13370ba41521c4344c1e0ba1"
     }
   ],
   "abstentions": [],

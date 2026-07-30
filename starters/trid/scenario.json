@@ -4,7 +4,7 @@
   "domain": "mortgage",
   "caseId": "case:loan:L-2026-0142",
   "ontology": {
-    "ontology": "duly-starter-trid",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "documents": [

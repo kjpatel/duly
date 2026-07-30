@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:4495035d87e121ddd1cf4f4210685a6be0be0ea738370ad71210a3e8f7bab048",
-  "contentHash": "4495035d87e121ddd1cf4f4210685a6be0be0ea738370ad71210a3e8f7bab048",
+  "id": "urn:duly:fact:sha256:37affe1135b2b20b7068d656ddff722386da02ba1055eef8044d43de6cd81570",
+  "contentHash": "37affe1135b2b20b7068d656ddff722386da02ba1055eef8044d43de6cd81570",
   "caseId": "case:golden:ron-0017",
   "entity": {
     "id": "notarization:ron-0017",
@@ -34,7 +34,7 @@
   "recordedAt": "2020-12-01T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-ron",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

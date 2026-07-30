@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:461a212f8ed7f05398fb8b7956e0ccb74a7b00fe75e64540f5724fb30b29b82e",
-  "contentHash": "461a212f8ed7f05398fb8b7956e0ccb74a7b00fe75e64540f5724fb30b29b82e",
+  "id": "urn:duly:fact:sha256:e7ce920bd825bf01e7809e5da8a32e47ea896f26359c14bf61925f7217ed27af",
+  "contentHash": "e7ce920bd825bf01e7809e5da8a32e47ea896f26359c14bf61925f7217ed27af",
   "caseId": "case:recording:FX-ca-dot-compliant",
   "entity": {
     "id": "recording:FX-ca-dot-compliant",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-08-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

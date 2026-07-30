@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:ffeea23d99a7e84934bc8da7263edefe3a5576cb4885129f55a0c7d5dd48b020",
-  "contentHash": "ffeea23d99a7e84934bc8da7263edefe3a5576cb4885129f55a0c7d5dd48b020",
+  "id": "urn:duly:fact:sha256:c2a86d9cd6822202d9ba776707e49ed1b088fa7159081d94f8bd4aacd2cabd68",
+  "contentHash": "c2a86d9cd6822202d9ba776707e49ed1b088fa7159081d94f8bd4aacd2cabd68",
   "caseId": "case:recording:FX-ca-topspace-short",
   "entity": {
     "id": "recording:FX-ca-topspace-short",
@@ -34,7 +34,7 @@
   "recordedAt": "2026-08-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

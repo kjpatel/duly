@@ -110,7 +110,7 @@ def main() -> None:
         "id": "county-recording",
         "title": "LA County deed of trust — recording readiness",
         "caseId": "case:recording:DOT-2026-081512",
-        "ontology": {"ontology": "duly-starter-recording", "version": "0.1.0"},
+        "ontology": {"ontology": "duly-mortgage-closing", "version": "0.1.0"},
         "documents": [
             {
                 "id": DEED_DOC_ID,

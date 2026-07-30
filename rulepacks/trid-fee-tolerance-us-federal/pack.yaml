@@ -1,7 +1,7 @@
 pack:
   name: trid-fee-tolerance-us-federal
   version: "2026.1.0"
-  ontology: duly-starter-trid
+  ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: TRID (Reg Z) fee tolerance categorization and cure amounts.
 

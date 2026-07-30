@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:0333fc95dcf117e042f302b8fb7b98354eb975a60f2dcdb3e243f90ba91ffd6b",
-  "receiptSha256": "0333fc95dcf117e042f302b8fb7b98354eb975a60f2dcdb3e243f90ba91ffd6b",
+  "id": "urn:duly:receipt:sha256:a4d53bfc69d1241bd39783005691308d00f45aaa1237fc8ccf93fe87c3f76d1f",
+  "receiptSha256": "a4d53bfc69d1241bd39783005691308d00f45aaa1237fc8ccf93fe87c3f76d1f",
   "caseId": "case:golden:esign-0013",
   "decision": {
     "entity": "task:esign-0013",
@@ -59,14 +59,14 @@
     "rule": "PKG-NOTE-30",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:3280c2b3387dccbf32487617cf01e0d142d9b13a0659c5332dc704822ab67cae"
+        "factId": "urn:duly:fact:sha256:bfd2352ecf05a8fd6bb1cedce993514aa030d7d32297cf61de018f54480bea86"
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:3280c2b3387dccbf32487617cf01e0d142d9b13a0659c5332dc704822ab67cae",
-      "contentHash": "3280c2b3387dccbf32487617cf01e0d142d9b13a0659c5332dc704822ab67cae"
+      "id": "urn:duly:fact:sha256:bfd2352ecf05a8fd6bb1cedce993514aa030d7d32297cf61de018f54480bea86",
+      "contentHash": "bfd2352ecf05a8fd6bb1cedce993514aa030d7d32297cf61de018f54480bea86"
     }
   ],
   "abstentions": [],

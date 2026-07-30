@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:237305706db6d0c19e3baa7fd599177960447d33e56c71371ef229f95824e666",
-  "contentHash": "237305706db6d0c19e3baa7fd599177960447d33e56c71371ef229f95824e666",
+  "id": "urn:duly:fact:sha256:15f1e01016e0a3d107cd3aec62ad3dd76fde752bdb9a244b45c18ae6623b1428",
+  "contentHash": "15f1e01016e0a3d107cd3aec62ad3dd76fde752bdb9a244b45c18ae6623b1428",
   "caseId": "case:closing:ESC-1107-VA",
   "entity": {
     "id": "notarization:ESC-1107-VA",
@@ -34,7 +34,7 @@
   "recordedAt": "2026-07-29T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-ron",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

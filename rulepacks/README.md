@@ -15,7 +15,7 @@ rulepacks/<pack-name>/
 
 Copy [termination-notice-us-states](termination-notice-us-states/) for a jurisdiction-scoped pack, or [trid-fee-tolerance-us-federal](trid-fee-tolerance-us-federal/) for a two-document computation. Neither is a toy; both are what shipped.
 
-## Most wiring is automatic. Three things are not.
+## Most wiring is automatic. Four things are not.
 
 This is the part worth internalizing, because it is where contributions silently come up short.
 
@@ -33,6 +33,7 @@ This is the part worth internalizing, because it is where contributions silently
 1. **Demo verdict phrasing.** A new decision attribute renders through `_determination()` in [demo/app.py](../demo/app.py) or it falls to a generic `attribute = value` string and leaks a raw CURIE into the UI. There is a test for this (`test_every_offered_question_is_answerable_and_phrased_for_humans`), so it will fail — but it fails in `demo/`, which pack authors do not expect to touch. Boolean decisions get a Yes/No fallback and pass without phrasing; code-, date-, and money-valued decisions do not.
 2. **Golden-corpus coverage.** [Impact analysis](../assurance/duly_assurance/impact.py) — the "this change flips N of M historical decisions" CI comment — runs *over the golden corpus*, not over `expected.yaml`. A pack with no generator template in [assurance/duly_assurance/generate.py](../assurance/duly_assurance/generate.py) gets a cheerful "0 of N decisions flip" for every edit, forever. `expected.yaml` catches breakage; only the corpus catches *drift*. Adding a template is a registry entry plus a fact builder — `STATE_TEMPLATES` is deliberately data, not code.
 3. **Extractor pinning for scripted confidences.** If a scenario depends on a specific confidence value — e.g. a below-floor fact that must abstain — set `"demoExtractor": "stub"` in its `scenario.json`. Docling measures its own confidence and will silently overwrite a scripted 0.58 with a passing 0.9, skipping the arc the scenario exists to demonstrate. This one has no failing test to warn you; it was found by looking at the running demo.
+4. **Ontology coverage.** Every attribute, entity type, and code value your pack or targets introduce must be declared in the ontology version the facts' `schemaRef` pins ([ontologies/](../ontologies/)). This one *does* fail loudly — `conformance/tests/test_repo_conformance.py` sweeps every committed fact — but it fails in `conformance/`, which pack authors do not expect to touch. New terms for an existing domain go in a **new version file** of that domain's ontology (committed versions are immutable; see [spec/ontology-conformance.md](../spec/ontology-conformance.md)), and the facts pin the new version.
 
 ## The path, in order
 

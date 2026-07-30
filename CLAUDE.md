@@ -20,7 +20,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `rulepacks/` | Six packs (insurance + mortgage closing), each `pack.yaml` + `expected.yaml` (+ `fixtures/`) |
 | `starters/` | Synthetic documents, renditions, span-verified facts, one demo scenario per vertical |
 | `golden/` | 351 committed cases + receipts — the replay/impact baseline |
-| `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) |
+| `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) — [dmn/README.md](dmn/README.md) |
 | `demo/` | FastAPI + vanilla-JS decision workspace |
 
 ## Verify
@@ -92,6 +92,8 @@ A feature is not shipped when the code merges. It is shipped when it is **docume
 
 - [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) — the platform-engineer mental model: architecture, trust boundaries, guarantees, and extension paths
 - [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
+- [docs/concepts.md](docs/concepts.md) — the vocabulary this repo uses precisely; read it before assuming a term means what it usually means
+- [docs/faq.md](docs/faq.md) — the objections a skeptical reader raises first, answered in one place
 - [rulepacks/README.md](rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
 - [spec/pack-verification.md](spec/pack-verification.md) — the static verifier's fragment, its per-operator encoding, and what a green `prove` run does and does not license
 - [ontologies/README.md](ontologies/README.md) / [spec/ontology-conformance.md](spec/ontology-conformance.md) — the ontology registry, the crosswalk rules (verify or omit), and the conformance gate's exact subset

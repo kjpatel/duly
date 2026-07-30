@@ -55,6 +55,18 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Assurance harness](assurance/) | Replay verifier, 351-case [golden corpus](golden/) (350 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
 | [PROV-O export](spec/prov-o.md) | External JSON-LD contexts + exporter: facts and receipts become W3C PROV for any RDF/SPARQL tool, stored bytes unchanged — lineage queries with off-the-shelf tooling ([SPARQL demo](spec/provo_sparql_demo.py), `GET /api/report?format=jsonld`) | shipped |
 
+## What you keep and what you replace
+
+duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is yours to import, the content is yours to author. Everything in this repo is one of three kinds, and confusing them is the fastest way to misread the project:
+
+| Kind | Directories | An adopting org… |
+|---|---|---|
+| **The toolkit** — the seam itself | `spec/`, `kernel/`, `store/`, `extraction/`, `calibration/`, `review/`, `assurance/` | imports and runs these unchanged; they contain zero domain knowledge |
+| **Example content** — what a *user* of the toolkit authors | `rulepacks/`, `starters/`, `golden/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
+| **Reference wiring** | `demo/` | treats it as a worked example of tying the pieces into a service, not as the product |
+
+The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M6 below; until it lands, [rulepacks/README.md](rulepacks/README.md) and the per-component READMEs cover each edge individually.
+
 ## Design choices and why
 
 ### Why neuro-symbolic at all
@@ -181,6 +193,15 @@ Deferred behind M4 on the project's own sequencing principle: Soufflé's justifi
 - [ ] Defeasible IR → stratified Datalog lowering: priority and `overrides` metadata mechanically compiled to strata, per the [Catala](https://catala-lang.org/) approach the IR follows
 - [ ] Soufflé backend, differentially verified against the reference interpreter across the full golden corpus — including reconstruction of the receipt's derivation tree from Soufflé provenance, which has a different shape
 - [ ] clingo backend for rule fragments that genuinely need answer-set semantics, if any emerge — no rule pack has needed it so far
+
+### M6 — the adopter's cut
+
+The audience for this milestone is an engineering team at an insurer or a closing platform cloning the repo to build a document-decisioning service — a component in a larger system, running *their* documents, *their* extractors, *their* ontology, *their* rules. The example content that teaches the machinery (six packs, seven scenarios, the synthetic corpus) is by then also the thing most likely to confuse them: it sits beside the toolkit as if it were the product. This milestone makes the toolkit/example boundary physical and the plug-in path procedural. Deliberately sequenced after the remaining feature work (M4's DMN and constraint solving, M5's backend) and immediately before v1.0: the restructure should happen once, after the feature surface stops moving.
+
+- [ ] **Adopter's guide** — the bring-your-own walkthrough for every edge, in one document: your documents through your extraction adapter (and what the contract demands of a trained extractor: renditions, spans, honest raw confidence), your ontology behind the conformance gate, your rule packs with `expected.yaml` in your CI, your golden corpus with replay and impact analysis over *your* decisions, calibration fitted on *your* review labels, and the review queue mounted in *your* workflow. The per-edge guides that exist today federate into this one path
+- [ ] **Example/toolkit separation** — relocate the teaching content (rule packs, starters, sample ontologies, demo scenarios, corpus generator templates) under an examples umbrella so toolkit directories contain zero example content and `git rm -r examples/` leaves a working, empty toolkit. Mechanical path migration; no behavior change; golden replay proves it
+- [ ] **Minimal integration example** — the seam in one screen of author-owned code: a three-fact ontology, a two-rule pack, a scripted extractor, one adjudication, one receipt. No starters, no demo — the "hello, decisioning" an adopter copies as the seed of their own service
+- [ ] **Installable distribution** — publish the toolkit packages (PyPI, or documented pip-from-git until then) so adopters import the seam rather than fork the repo; versioned in lockstep with the spec
 
 ### v1.0 — specification stability
 - [ ] Spec freeze with versioning policy

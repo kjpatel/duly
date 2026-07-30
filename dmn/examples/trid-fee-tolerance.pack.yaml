@@ -1,0 +1,74 @@
+# Compiled from DMN by `python -m duly_dmn compile` — do not hand-edit.
+# Source: dmn/examples/trid-fee-tolerance.dmn
+# The DMN decision table is the authored artifact; this file is its
+# compilation into the rule IR (spec/rule-ir.md, spec/dmn.md).
+
+pack:
+  name: trid-fee-tolerance-dmn
+  version: "2026.1.0"
+  ontology: duly-mortgage-closing
+  ontologyVersion: "0.1.0"
+  description: "TRID (Reg Z) fee tolerance categorization and cure amounts."
+
+decisions:
+  - attribute: trid:toleranceCategory
+    entityType: trid:Fee
+    question: "Which tolerance category applied to this fee?"
+  - attribute: trid:toleranceCureAmount
+    entityType: trid:Fee
+    question: "Does this fee increase require a tolerance cure?"
+
+rules:
+  - id: TRID-CAT-02
+    description: "Transfer taxes are a zero-tolerance charge: the amount disclosed on the Loan Estimate may not increase at closing."
+    version: "1.0.0"
+    priority: 0
+    citation:
+      text: "12 CFR 1026.19(e)(3)(i)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+    effectiveFrom: "2015-10-03"
+    given:
+      fee: { entityType: trid:Fee }
+      feeType: { attribute: trid:feeType }
+    when:
+      - 'feeType == "TransferTax"'
+    then:
+      entity: fee
+      attribute: trid:toleranceCategory
+      value:
+        kind: code
+        value: ZeroTolerance
+        codeSystem: duly-starter-trid/tolerance-categories
+        codeSystemVersion: "0.1.0"
+  - id: TRID-ZT-01
+    description: "When a zero-tolerance fee exceeds its disclosed baseline at closing, the lender owes the borrower the excess as a tolerance cure."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "12 CFR 1026.19(e)(3)(i)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)"
+    effectiveFrom: "2015-10-03"
+    given:
+      fee: { entityType: trid:Fee }
+      category: { derived: trid:toleranceCategory }
+      disclosed: { attribute: trid:disclosedAmountAtBaseline }
+      actual: { attribute: trid:actualAmountAtClosing }
+    when:
+      - 'category == "ZeroTolerance"'
+      - "actual > disclosed"
+    then:
+      entity: fee
+      attribute: trid:toleranceCureAmount
+      value: { kind: money, currency: USD, expr: "actual - disclosed" }
+  - id: TRID-DEF-00
+    description: "No tolerance cure is owed unless a specific rule computes one."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption" }
+    effectiveFrom: "2015-10-03"
+    given:
+      fee: { entityType: trid:Fee }
+    then:
+      entity: fee
+      attribute: trid:toleranceCureAmount
+      value: { kind: money, amount: "0.00", currency: USD }

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: UNIQUE rows whose disjointness cannot be proven.
+     The two rows look obviously exclusive to a human: a fee increase is
+     either at or under 10% or over it. The kernel's pack validator cannot
+     prove that, because the only disjointness proofs it accepts are
+     non-overlapping effective windows and contradictory QUOTED-STRING
+     equality guards on the same attribute binding. Numeric ranges are not a
+     proof.
+
+     The compiler refuses rather than quietly emitting pairwise `overrides`.
+     `overrides` would say "row 1 beats row 2", which is an ordering the
+     author did not write and which UNIQUE explicitly disclaims. If ordering
+     is what they meant, FIRST says so. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="unprovableUnique" name="unprovable UNIQUE"
+             namespace="urn:duly:example:refusal:unprovable-unique">
+  <extensionElements>
+    <duly:pack name="refusal-unprovable-unique" version="0.0.1"/>
+  </extensionElements>
+
+  <decision id="category" name="trid:toleranceCategory">
+    <question>Which tolerance category applied to this fee?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCategory"
+                     valueKind="code" codeSystem="duly-starter-trid/tolerance-categories"
+                     codeSystemVersion="0.1.0"/>
+    </extensionElements>
+    <decisionTable id="categoryTable" hitPolicy="UNIQUE">
+      <input id="pIncrease" label="increasePct">
+        <inputExpression typeRef="number"><text>trid:feeIncreasePercent</text></inputExpression>
+      </input>
+      <output id="pCategory" label="category" typeRef="string"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="pRow1">
+        <inputEntry><text>[0..10]</text></inputEntry>
+        <outputEntry><text>"TenPercentTolerance"</text></outputEntry>
+        <annotationEntry><text>REFUSE-UNIQ-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(ii)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+
+      <rule id="pRow2">
+        <inputEntry><text>&gt; 10</text></inputEntry>
+        <outputEntry><text>"ZeroTolerance"</text></outputEntry>
+        <annotationEntry><text>REFUSE-UNIQ-02</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

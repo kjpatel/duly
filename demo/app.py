@@ -1776,11 +1776,14 @@ def api_review_golden_case(itemId: str) -> Response:
 def api_report(
     scenarioId: str, attribute: str, asOfEffective: str, format: str = "md"
 ) -> Response:
-    """Adjudicate (same path as /api/adjudicate) and return the rendered
-    audit report as a downloadable Markdown or PDF file."""
-    if format not in ("md", "pdf"):
+    """Adjudicate (same path as /api/adjudicate) and return a downloadable
+    export: the audit report as Markdown or PDF, or the receipt as PROV-O
+    JSON-LD (format=jsonld — machine consumers only, deliberately no UI
+    button; see spec/prov-o.md)."""
+    if format not in ("md", "pdf", "jsonld"):
         raise HTTPException(
-            status_code=422, detail=f"format must be 'md' or 'pdf', got {format!r}"
+            status_code=422,
+            detail=f"format must be 'md', 'pdf', or 'jsonld', got {format!r}",
         )
     scenario = _get_scenario(scenarioId)
     effective = _normalize_effective(asOfEffective)
@@ -1789,6 +1792,21 @@ def api_report(
     receipt, _engine_mode = _adjudicate_scenario(
         scenario, attribute, effective, knowledge
     )
+
+    if format == "jsonld":
+        try:
+            from duly_kernel.provo import as_jsonld  # noqa: PLC0415
+        except Exception:
+            raise HTTPException(
+                status_code=503,
+                detail="PROV-O exporter unavailable (duly_kernel.provo not importable).",
+            )
+        filename = f"duly-receipt-{scenarioId}-{_date_prefix(effective)}.jsonld"
+        return Response(
+            content=json.dumps(as_jsonld(receipt, "receipt"), indent=2),
+            media_type="application/ld+json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     try:
         from duly_kernel.report import (  # noqa: PLC0415

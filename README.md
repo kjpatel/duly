@@ -29,7 +29,7 @@ The individual pieces of this architecture already exist as open source: Datalog
 
 duly is that seam.
 
-**New to this space?** Suggested reading path: this page's [problem](#the-problem) and [design choices](#design-choices-and-why) → the [demo tour](docs/demo_tour.md) → the [concepts glossary](docs/concepts.md) (the ~20 terms this repo uses precisely) → [follow one fact](docs/follow-one-fact.md) (the actual data, PDF text to receipt to human correction) → the [FAQ](docs/faq.md) → then the [specs](spec/grounded-facts.md), which argue every decision. Agents and contributors: start at [CLAUDE.md](CLAUDE.md).
+**New to this space?** Suggested reading path: this page's [problem](#the-problem) and [design choices](#design-choices-and-why) → the [demo tour](docs/demo_tour.md) (watch it run before reading about it) → the [neuro-symbolic architecture guide](docs/neuro-symbolic-architecture.md) (the system mental model, written for platform engineers) → the [concepts glossary](docs/concepts.md) (the ~20 terms this repo uses precisely) → [follow one fact](docs/follow-one-fact.md) (the actual data, PDF text to receipt to human correction) → the [FAQ](docs/faq.md) → then the [specs](spec/grounded-facts.md), which argue every decision. The [guiding PRD](docs/guiding-prd.md) states the project's users, product principles, success measures, and scope. Agents and contributors: start at [CLAUDE.md](CLAUDE.md).
 
 ## Architecture
 

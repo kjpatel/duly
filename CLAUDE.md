@@ -67,6 +67,8 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 ## Documentation map
 
+- [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) — the platform-engineer mental model: architecture, trust boundaries, guarantees, and extension paths
+- [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
 - [rulepacks/README.md](rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
 - [ontologies/README.md](ontologies/README.md) / [spec/ontology-conformance.md](spec/ontology-conformance.md) — the ontology registry, the crosswalk rules (verify or omit), and the conformance gate's exact subset
 - [starters/README.md](starters/README.md) — starter layout and shared tooling

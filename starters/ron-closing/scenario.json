@@ -1,0 +1,32 @@
+{
+  "id": "ron-closing",
+  "title": "California remote online notarization eligibility for a closing",
+  "domain": "mortgage",
+  "caseId": "case:closing:ESC-4821-CA",
+  "ontology": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:notary-certificate:ESC-4821-CA:2026-03-12",
+      "title": "Notary Acknowledgment (Deed of Trust)",
+      "pdf": "documents/notary-certificate.pdf",
+      "rendition": "renditions/notary-certificate.txt",
+      "sha256": "cbbf4eb1ce0d57b97b12eb7548b3c68d07562a6ad497639e39c05dba98386c07"
+    },
+    {
+      "id": "doc:closing-instructions:ESC-4821-CA:2026-03-05",
+      "title": "Escrow Closing Instructions",
+      "pdf": "documents/closing-instructions.pdf",
+      "rendition": "renditions/closing-instructions.txt",
+      "sha256": "a26b87a80f81a8b4b7e06497c06ac56ad1d3954b2063a33b8f011de974823e89"
+    }
+  ],
+  "facts": [
+    "facts/fact-cert-state.json",
+    "facts/fact-cert-method.json",
+    "facts/fact-instructions-closing-date.json"
+  ],
+  "rulePack": "rulepacks/notarization-ron-us-states/pack.yaml"
+}

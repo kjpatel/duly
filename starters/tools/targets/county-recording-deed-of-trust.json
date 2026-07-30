@@ -1,0 +1,93 @@
+{
+  "documentId": "doc:deed-of-trust:DOT-2026-081512:2026-07-24",
+  "caseId": "case:recording:DOT-2026-081512",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-29T17:41:12Z",
+  "runId": "run:2026-07-29:031",
+  "page": 1,
+  "notes": [
+    "Confidence scores in this file are scripted demo values (the stub adapter passes them through verbatim); they are not real calibration output.",
+    "rec:assessorParcelNumber is consumed by no rule in county-recording-us 2026.1.0 — the LA County APN requirement is TODO(verify) and scoped out of the pack; the fact demonstrates grounded extraction of the deed's APN block."
+  ],
+  "facts": [
+    {
+      "file": "fact-deed-instrument-type.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:instrumentType",
+      "value": {
+        "kind": "code",
+        "value": "DeedOfTrust",
+        "codeSystem": "duly-starter-recording/instrument-types",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "DEED OF TRUST",
+      "confidence": {
+        "score": 0.981,
+        "method": "conformal",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-deed-state.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:recordingState",
+      "value": {
+        "kind": "code",
+        "value": "US-CA",
+        "codeSystem": "iso-3166-2",
+        "codeSystemVersion": "2020"
+      },
+      "quote": "Recording jurisdiction: County of Los Angeles, State of California",
+      "confidence": {
+        "score": 0.968,
+        "method": "conformal",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-deed-apn.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:assessorParcelNumber",
+      "value": {
+        "kind": "string",
+        "value": "5551-002-013"
+      },
+      "quote": "APN: 5551-002-013",
+      "confidence": {
+        "score": 0.957,
+        "method": "conformal",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-deed-concurrent-taxed-transfer.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:concurrentWithTaxedTransfer",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "recorded concurrently with a Grant Deed on which documentary transfer tax is paid (R&T 11911).",
+      "confidence": {
+        "score": 0.912,
+        "method": "conformal",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    }
+  ]
+}

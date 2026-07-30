@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:2ce13ccb33d640c0e2b2ad89ebbda812f6b8bfb4fd03d28f2f30501ef252c310",
+  "contentHash": "2ce13ccb33d640c0e2b2ad89ebbda812f6b8bfb4fd03d28f2f30501ef252c310",
+  "caseId": "case:closing-package:CP-2026-0303",
+  "entity": {
+    "id": "signing:CP-2026-0303:promissory-note",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "PromissoryNote",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

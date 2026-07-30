@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:c178df4dd0ccbfc6d79ab79a45cb8f304a1dbee8ded6cfb06f1153940aeaa758",
+  "contentHash": "c178df4dd0ccbfc6d79ab79a45cb8f304a1dbee8ded6cfb06f1153940aeaa758",
+  "caseId": "case:closing:ESC-3308-FL",
+  "entity": {
+    "id": "notarization:ESC-3308-FL",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-FL",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

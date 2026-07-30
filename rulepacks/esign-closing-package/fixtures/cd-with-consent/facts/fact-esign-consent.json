@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:2b038308f9c825a9c03f36c5ee48cc45f23f5c490980438b3480007b4a0a346d",
+  "contentHash": "2b038308f9c825a9c03f36c5ee48cc45f23f5c490980438b3480007b4a0a346d",
+  "caseId": "case:closing-package:CP-2026-0301",
+  "entity": {
+    "id": "signing:CP-2026-0301:closing-disclosure",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:esignConsentObtained",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

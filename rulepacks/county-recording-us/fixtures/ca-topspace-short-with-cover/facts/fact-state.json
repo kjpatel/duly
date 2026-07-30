@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:f61e005427104eaa991621eac415f8f767a9b15865b00eb5c540d345bb7644e9",
+  "contentHash": "f61e005427104eaa991621eac415f8f767a9b15865b00eb5c540d345bb7644e9",
+  "caseId": "case:recording:FX-ca-topspace-short-with-cover",
+  "entity": {
+    "id": "recording:FX-ca-topspace-short-with-cover",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:recordingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

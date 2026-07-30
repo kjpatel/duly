@@ -69,11 +69,24 @@ async function init() {
 
   const select = $("scenario-select");
   select.replaceChildren();
+  // One <optgroup> per domain, labels from the server (domainLabel), groups in
+  // label order, scenarios in server order within each group.
+  const groups = new Map();
   for (const sc of state.scenarios) {
-    const opt = document.createElement("option");
-    opt.value = sc.id;
-    opt.textContent = sc.title;
-    select.append(opt);
+    const label = sc.domainLabel || "Other";
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(sc);
+  }
+  for (const label of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
+    const group = document.createElement("optgroup");
+    group.label = label;
+    for (const sc of groups.get(label)) {
+      const opt = document.createElement("option");
+      opt.value = sc.id;
+      opt.textContent = sc.title;
+      group.append(opt);
+    }
+    select.append(group);
   }
   select.addEventListener("change", () => selectScenario(select.value));
   $("asof-input").addEventListener("change", () => {
@@ -95,6 +108,9 @@ async function selectScenario(id) {
   const scenario = state.scenarios.find((s) => s.id === id);
   if (!scenario) return;
   setWorkspaceStatus("Loading scenario", "loading");
+  $("workspace-eyebrow").textContent = scenario.domainLabel
+    ? `Interactive adjudication demo · ${scenario.domainLabel}`
+    : "Interactive adjudication demo";
   state.scenario = scenario;
   state.documents = new Map();
   state.activeDocId = null;

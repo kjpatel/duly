@@ -1,0 +1,33 @@
+{
+  "documentId": "doc:promissory-note:CP-2026-0847:2026-07-12",
+  "caseId": "case:closing-package:CP-2026-0847",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-12T16:40:00Z",
+  "runId": "run:2026-07-12:011",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-note-document-type.json",
+      "entity": {
+        "id": "signing:CP-2026-0847:promissory-note",
+        "type": "pkg:SigningTask"
+      },
+      "attribute": "pkg:documentType",
+      "value": {
+        "kind": "code",
+        "value": "PromissoryNote",
+        "codeSystem": "duly-starter-esign/document-types",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "PROMISSORY NOTE",
+      "confidence": {
+        "score": 0.991,
+        "method": "conformal",
+        "calibrationRef": "cal:esign-docs:2026-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:61fd1f75d1b15092502ffdf1154abe4759d0c06dc487d0c7db6511f8ad09acc6",
+  "contentHash": "61fd1f75d1b15092502ffdf1154abe4759d0c06dc487d0c7db6511f8ad09acc6",
+  "caseId": "case:closing:ESC-5502-GA",
+  "entity": {
+    "id": "notarization:ESC-5502-GA",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-GA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

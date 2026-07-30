@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:83a67bb05c648e9434e1b56038a1996fb89b070c92fcf6a36e96994295f2d015",
+  "contentHash": "83a67bb05c648e9434e1b56038a1996fb89b070c92fcf6a36e96994295f2d015",
+  "caseId": "case:closing:ESC-6609-CA",
+  "entity": {
+    "id": "notarization:ESC-6609-CA",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

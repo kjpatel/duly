@@ -1,0 +1,144 @@
+# Expected kernel outcomes for tila-rescission-us-federal.
+# Auto-run by kernel/tests/test_rulepacks.py: each case evaluates the pack
+# against the facts in factsFrom at the given asOf.effective date.
+#
+# The starter scenario (starters/tila-rescission): a refinance of the
+# borrowers' principal dwelling consummated Friday 2026-05-22, with the notice
+# of the right to rescind and all material disclosures delivered the same day.
+# Under the PRECISE business-day definition (12 CFR 1026.2(a)(6): all calendar
+# days except Sundays and 5 U.S.C. 6103(a) holidays) the three business days
+# following 2026-05-22 are Sat 5/23, Tue 5/26, Wed 5/27 — Sunday 5/24 and
+# Memorial Day Monday 5/25 do not count, and Saturday DOES. The deadline is
+# midnight of Wednesday 2026-05-27; funds may first be disbursed on Thursday
+# 2026-05-28 (1026.23(c)).
+cases:
+  # Applicability: dwelling-secured refinance -> the right applies. RESC-DL-01
+  # and RESC-FUND-EXP also fire at this asOf (the receipt lists every
+  # surviving conclusion, not just the decision asked about).
+  - name: resc-refi-right-applies
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-28"
+    question: resc:rescissionApplies
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-EXP]
+    expectDefeated:
+      RESC-FUND-EXP: [RESC-FUND-DEF]
+
+  # Deadline: the stated date on the notice (2026-05-27) is certified because
+  # it clears the expressible necessary condition — at least 3 calendar days
+  # after the latest trigger (5 calendar days here, thanks to the Sunday and
+  # the holiday). The full business-day computation lives outside the IR; see
+  # the MODELING BOUNDARY comment in pack.yaml.
+  - name: resc-refi-deadline-certified
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-28"
+    question: resc:rescissionDeadline
+    expectDecision: { kind: date, value: "2026-05-27" }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-EXP]
+    expectDefeated:
+      RESC-FUND-EXP: [RESC-FUND-DEF]
+
+  # --- The funding flip: same facts, different asOf.effective -------------
+  # Naive 3-CALENDAR-day math would end the period at midnight 2026-05-25 and
+  # fund on 5/26. The next three cases prove the pack holds funding through
+  # 5/25 (the Memorial Day holiday), 5/26, and 5/27 (the true deadline day),
+  # because the extraction-derived in-force window embodies the Sunday +
+  # holiday extension of 1026.2(a)(6).
+
+  - name: resc-funding-blocked-on-holiday
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-25"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-STAY]
+    expectDefeated:
+      RESC-FUND-STAY: [RESC-FUND-DEF]
+
+  # 2026-05-26 is already 4 calendar days after consummation — a calendar-day
+  # (or weekday-only) implementation would disburse today, wrongly.
+  - name: resc-funding-blocked-day-after-naive-deadline
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-26"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-STAY]
+    expectDefeated:
+      RESC-FUND-STAY: [RESC-FUND-DEF]
+
+  # Boundary, near side: the period runs UNTIL MIDNIGHT OF the third business
+  # day (1026.23(a)(3)(i)), so the whole of the deadline day is still inside
+  # the rescission period.
+  - name: resc-funding-blocked-on-deadline-day
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-27"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-STAY]
+    expectDefeated:
+      RESC-FUND-STAY: [RESC-FUND-DEF]
+
+  # Boundary, far side: the day after the deadline the in-force window fact
+  # has lapsed, the expired fact is live, and disbursement is permitted.
+  - name: resc-funding-permitted-after-expiry
+    factsFrom: starters/tila-rescission/facts
+    asOfEffective: "2026-05-28"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [RESC-APP-01, RESC-DL-01, RESC-FUND-EXP]
+    expectDefeated:
+      RESC-FUND-EXP: [RESC-FUND-DEF]
+
+  # --- Purchase-money exclusion -------------------------------------------
+  # Secured by the principal dwelling, so RESC-APP-01 fires — but the
+  # transaction is a residential mortgage transaction (1026.2(a)(24)), which
+  # 1026.23(f)(1) exempts: RESC-EXC-RMT overrides. No rescission right means
+  # no 1026.23(c) funding delay, even the day after closing.
+  - name: resc-purchase-no-rescission-right
+    factsFrom: rulepacks/tila-rescission-us-federal/fixtures/purchase-money/facts
+    asOfEffective: "2026-05-28"
+    question: resc:rescissionApplies
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-EXC-RMT, RESC-FUND-NA]
+    expectDefeated:
+      RESC-EXC-RMT: [RESC-APP-01]
+      RESC-FUND-NA: [RESC-FUND-DEF]
+
+  - name: resc-purchase-funding-unrestricted
+    factsFrom: rulepacks/tila-rescission-us-federal/fixtures/purchase-money/facts
+    asOfEffective: "2026-05-23"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [RESC-EXC-RMT, RESC-FUND-NA]
+    expectDefeated:
+      RESC-EXC-RMT: [RESC-APP-01]
+      RESC-FUND-NA: [RESC-FUND-DEF]
+
+  # --- Missing notice-delivery fact: the protective default ----------------
+  # Extraction produced no resc:noticeDeliveredDate (and therefore no
+  # rescission-period window facts). Nothing can show the period expired —
+  # 1026.23(a)(3)(ii) would in fact extend the period up to three years when
+  # the notice is never delivered — so RESC-FUND-DEF holds funding blocked
+  # even well past the would-be deadline. (The deadline question would be a
+  # loud no-decision here: RESC-DL-01 cannot bind its trigger dates. That
+  # no-decision path raises AdjudicationError and is exercised by the demo,
+  # not expressible as an expected.yaml case.)
+  - name: resc-missing-notice-delivery-protective-default
+    factsFrom: rulepacks/tila-rescission-us-federal/fixtures/missing-notice-delivery/facts
+    asOfEffective: "2026-05-28"
+    question: resc:fundingPermitted
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-APP-01, RESC-FUND-DEF]
+    expectDefeated: {}
+
+  # --- Not the principal dwelling ------------------------------------------
+  # 1026.23(a)(1) reaches only transactions secured by the consumer's
+  # principal dwelling; an investment-property refinance is outside the right
+  # entirely, so funding is unrestricted by this pack.
+  - name: resc-investment-property-right-does-not-apply
+    factsFrom: rulepacks/tila-rescission-us-federal/fixtures/investment-property/facts
+    asOfEffective: "2026-05-28"
+    question: resc:rescissionApplies
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [RESC-APP-02, RESC-FUND-NA]
+    expectDefeated:
+      RESC-FUND-NA: [RESC-FUND-DEF]

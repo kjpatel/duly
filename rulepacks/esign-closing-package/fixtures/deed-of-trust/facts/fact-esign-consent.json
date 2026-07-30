@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:49b7e64b5e665f2dffeb736bdd48650c971f4e232046e2654760c2a982ea5d2a",
+  "contentHash": "49b7e64b5e665f2dffeb736bdd48650c971f4e232046e2654760c2a982ea5d2a",
+  "caseId": "case:closing-package:CP-2026-0304",
+  "entity": {
+    "id": "signing:CP-2026-0304:deed-of-trust",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:esignConsentObtained",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

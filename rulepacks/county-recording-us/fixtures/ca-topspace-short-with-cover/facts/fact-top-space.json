@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:b5ba7ddca7ef18e3bdbc0d349f97995e60f3ba4f374f4aba16b4a48239e7a0bf",
+  "contentHash": "b5ba7ddca7ef18e3bdbc0d349f97995e60f3ba4f374f4aba16b4a48239e7a0bf",
+  "caseId": "case:recording:FX-ca-topspace-short-with-cover",
+  "entity": {
+    "id": "recording:FX-ca-topspace-short-with-cover",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:firstPageTopSpaceInches",
+  "value": {
+    "kind": "decimal",
+    "value": "2.2"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 0.96,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

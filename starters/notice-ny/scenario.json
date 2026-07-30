@@ -1,6 +1,7 @@
 {
   "id": "notice-ny",
   "title": "New York homeowners nonrenewal notice timing",
+  "domain": "insurance",
   "caseId": "case:policy:HO-77401-NY",
   "ontology": {
     "ontology": "duly-starter-notice",

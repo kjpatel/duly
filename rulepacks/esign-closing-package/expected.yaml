@@ -1,0 +1,152 @@
+# Expected kernel outcomes for esign-closing-package.
+# Each case evaluates the pack against the facts in factsFrom at the given
+# asOf.effective date. Together the cases prove the routing matrix:
+#
+#   document type          consent  eNote reg.  eSignEligible  signingMethod
+#   ---------------------  -------  ----------  -------------  -------------
+#   ClosingDisclosure      yes      -           true           ESign
+#   ClosingDisclosure      no       -           false          WetInk
+#   RightToCancelNotice    yes      -           true           ESign
+#   PromissoryNote         -        yes         true           ENoteEVault
+#   PromissoryNote         -        no          false          WetInk
+#   DeedOfTrust            yes      -           false          WetInk
+#   (unknown type)         yes      -           false          WetInk
+#
+# Note: rulesFired on a receipt lists every surviving conclusion in the run
+# (both decision attributes), not just the questioned attribute's derivation.
+cases:
+  # Registered eNote (the starter scenario): PKG-NOTE-30 presumes wet ink for
+  # notes and defeats the package-wide default; PKG-NOTE-31 (MERS eRegistry
+  # registration confirmed) defeats PKG-NOTE-30 in turn and routes to the
+  # eNote/eVault channel. PKG-NOTE-32 establishes eligibility over PKG-DEF-01.
+  - name: note-registered-enote-routed-to-enote-channel
+    factsFrom: starters/esign-package/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "ENoteEVault"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-NOTE-31, PKG-NOTE-32]
+    expectDefeated:
+      PKG-NOTE-31: [PKG-NOTE-30]
+      PKG-NOTE-32: [PKG-DEF-01]
+
+  # Same facts, the eligibility question: a registered eNote satisfies the
+  # transferable-record control requirement, so electronic execution is
+  # permitted.
+  - name: note-registered-enote-esign-eligible
+    factsFrom: starters/esign-package/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:eSignEligible
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [PKG-NOTE-31, PKG-NOTE-32]
+    expectDefeated:
+      PKG-NOTE-31: [PKG-NOTE-30]
+      PKG-NOTE-32: [PKG-DEF-01]
+
+  # Promissory note WITHOUT MERS eRegistry registration: PKG-NOTE-31/32 are
+  # inapplicable (registration guard fails), so the note-specific wet-ink
+  # presumption PKG-NOTE-30 survives, defeating the package default; the
+  # eligibility default PKG-DEF-01 (not eligible) stands undefeated.
+  - name: note-unregistered-routed-to-wet-ink
+    factsFrom: rulepacks/esign-closing-package/fixtures/note-unregistered/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "WetInk"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-DEF-01, PKG-NOTE-30]
+    expectDefeated:
+      PKG-NOTE-30: [PKG-DEF-00]
+
+  # Closing Disclosure with ESIGN consumer consent on file: PKG-CD-10/11 fire
+  # and defeat both fail-safe defaults; the CD routes to eSign.
+  - name: cd-with-consent-routed-to-esign
+    factsFrom: rulepacks/esign-closing-package/fixtures/cd-with-consent/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "ESign"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-CD-10, PKG-CD-11]
+    expectDefeated:
+      PKG-CD-10: [PKG-DEF-01]
+      PKG-CD-11: [PKG-DEF-00]
+
+  # Closing Disclosure with consent NOT on file: the consent guard fails, no
+  # specific rule fires, and both fail-safe defaults stand (wet ink).
+  - name: cd-without-consent-fails-safe-to-wet-ink
+    factsFrom: rulepacks/esign-closing-package/fixtures/cd-without-consent/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "WetInk"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-DEF-00, PKG-DEF-01]
+    expectDefeated: {}
+
+  # Right-to-cancel notice with consent: e-deliverable under 12 CFR
+  # 1026.23(b)(1); PKG-RTC-20/21 defeat the defaults.
+  - name: right-to-cancel-with-consent-routed-to-esign
+    factsFrom: rulepacks/esign-closing-package/fixtures/right-to-cancel-with-consent/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "ESign"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-RTC-20, PKG-RTC-21]
+    expectDefeated:
+      PKG-RTC-20: [PKG-DEF-01]
+      PKG-RTC-21: [PKG-DEF-00]
+
+  # Deed of trust: borrower consent is on file but cannot rescue a recordable
+  # security instrument — PKG-DOT-40 routes it to wet ink (notarization and
+  # county recordability are the sibling recording pack's boundary), and the
+  # eligibility default stands.
+  - name: deed-of-trust-routed-to-wet-ink-despite-consent
+    factsFrom: rulepacks/esign-closing-package/fixtures/deed-of-trust/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "WetInk"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-DEF-01, PKG-DOT-40]
+    expectDefeated:
+      PKG-DOT-40: [PKG-DEF-00]
+
+  # Unknown document type ("EscrowInstructions" matches no routing rule):
+  # even with consent on file, the fail-safe defaults hold — unknown types
+  # are wet-signed because paper is valid for everything, while a wrong
+  # electronic route can break enforceability, recordability, or salability.
+  - name: unknown-document-type-fails-safe-to-wet-ink
+    factsFrom: rulepacks/esign-closing-package/fixtures/unknown-document-type/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:signingMethod
+    expectDecision:
+      kind: code
+      value: "WetInk"
+      codeSystem: "duly-starter-esign/signing-methods"
+      codeSystemVersion: "0.1.0"
+    expectRulesFired: [PKG-DEF-00, PKG-DEF-01]
+    expectDefeated: {}
+
+  # The eligibility question on the unknown type: not eligible.
+  - name: unknown-document-type-not-esign-eligible
+    factsFrom: rulepacks/esign-closing-package/fixtures/unknown-document-type/facts
+    asOfEffective: "2026-07-15"
+    question: pkg:eSignEligible
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [PKG-DEF-00, PKG-DEF-01]
+    expectDefeated: {}

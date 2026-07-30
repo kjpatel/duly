@@ -1,0 +1,287 @@
+# County recording readiness — will this deed / security instrument be accepted
+# for recording as submitted?
+#
+# This is the repo's long-tail thesis made concrete: you encode a county's
+# recording rule once instead of collecting three hundred labeled examples of
+# it. It is also, by nature, the most TODO(verify)-heavy pack in the repo —
+# recording requirements are state statutes filtered through county recorder
+# practice, and this pack refuses to present county practice as verified law.
+# Every rule below says exactly what was confirmed from a primary source and
+# what was not. An unknown jurisdiction gets NO recordability presumption at
+# all (see REC-DEF-CA): the run reaches no decision and fails closed, because
+# a recorder rejecting a package is cheaper than a false "recordable".
+pack:
+  name: county-recording-us
+  version: "2026.1.0"
+  ontology: duly-starter-recording
+  ontologyVersion: "0.1.0"
+  description: County recording readiness for deeds and security instruments.
+
+# Adjudication-time confidence policy (spec/rule-ir.md, "Abstention policy").
+# rec:firstPageTopSpaceInches is a MEASURED layout quantity — how many inches
+# of the first page are actually blank above the body text. Extractors are
+# genuinely unsure about measurements (a scanner crop or a stamped fax header
+# routinely fools them), so the attribute carries a floor well above the pack
+# default: below 0.85 the measurement abstains and routes to recording-review
+# instead of silently deciding recordability. Codes and booleans read straight
+# off the document face and keep the 0.75 default.
+abstentionPolicy:
+  minConfidence: 0.75
+  attributes:
+    rec:firstPageTopSpaceInches: 0.85
+  routeTo: recording-review
+
+decisions:
+  - attribute: rec:recordable
+    entityType: rec:RecordingSubmission
+    question: "Will this instrument be accepted for recording as submitted?"
+  - attribute: rec:requiredFirstPageTopSpaceInches
+    entityType: rec:RecordingSubmission
+    question: "How much first-page top space must be reserved for the recorder?"
+  - attribute: rec:sb2FeeDueUSD
+    entityType: rec:RecordingSubmission
+    question: "What Building Homes and Jobs Act (SB 2) fee is due at recording?"
+
+rules:
+  # FAIL-CLOSED DEFAULT, deliberately jurisdiction-scoped. The notice pack's
+  # NC-DEF-00 presumes compliance for every case; this pack does NOT. The
+  # presumption of recordability exists only for the jurisdictions whose
+  # requirements are actually encoded below (US-CA, US-AZ). A submission from
+  # any other state binds no default, no rule concludes rec:recordable, and
+  # the kernel raises "no surviving conclusion" — an abstention by absence,
+  # which is the correct posture for county long-tail: a false "recordable"
+  # costs a rejected package, re-execution, and a blown funding date.
+  - id: REC-DEF-CA
+    description: "A California recording package is presumed recordable unless a specific requirement finds it deficient."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption (California packages only)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+    when:
+      - state == "US-CA"
+    then:
+      entity: submission
+      attribute: rec:recordable
+      value: { kind: boolean, value: true }
+
+  - id: REC-DEF-AZ
+    description: "An Arizona recording package is presumed recordable unless a specific requirement finds it deficient."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption (Arizona packages only)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+    when:
+      - state == "US-AZ"
+    then:
+      entity: submission
+      attribute: rec:recordable
+      value: { kind: boolean, value: true }
+
+  # VERIFIED (statute text, via legislative sources 2026-07-29): Gov. Code
+  # § 27361.6 reserves "at least the top 2 1/2 inches of the first page or
+  # sheet" for recording information; the left 3 1/2 inches of that space is
+  # for the requesting party's name and the return address, and documents
+  # need a 1/2-inch margin on the two vertical sides. Modeled: only the
+  # 2.5-inch first-page top reservation, as a measured-inches minimum.
+  # Not modeled: the side margins (no side-margin fact in the vocabulary yet)
+  # and the § 27324 title requirement.
+  # TODO(verify): effectiveFrom — the section is decades old and the exact
+  # enactment/amendment history was not confirmed from the session laws;
+  # 1990-01-01 is a demo-safe boundary that predates every scenario in this
+  # repo, not a researched date.
+  # TODO(verify): Los Angeles County practice. This rule encodes the STATE
+  # code; LA County (like most CA counties) publishes its own submission
+  # checklist on top of it, which was not verified against the county's
+  # current published requirements.
+  - id: CA-TOPSPACE-25
+    description: "California reserves at least the top 2.5 inches of the first page of a recorded document for recording information."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Cal. Gov. Code § 27361.6"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+    effectiveFrom: "1990-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+    when:
+      - state == "US-CA"
+    then:
+      entity: submission
+      attribute: rec:requiredFirstPageTopSpaceInches
+      value: { kind: decimal, expr: "2.5" }
+
+  # VERIFIED (statute text, azleg.gov, 2026-07-29): A.R.S. § 11-480 requires
+  # each instrument to have a top margin of at least two inches on the first
+  # page, reserved for recording information, and at least a one-half inch
+  # margin on the other sides, for instruments dated and executed on or after
+  # January 1, 1991 (hence effectiveFrom — this one IS the statute's own
+  # boundary). The same section lets the submitter cure a noncompliant first
+  # page by attaching a separate sheet, which REC-TOPSPACE-01 models.
+  # TODO(verify): whether Maricopa County REJECTS noncompliant instruments in
+  # practice or accepts them with a nonstandard handling — § 11-480 also says
+  # a recorded instrument is not invalidated by a format defect, which cuts
+  # the other way. The rule takes the conservative reading (not recordable as
+  # submitted); a compliance engineer should confirm against the Maricopa
+  # County Recorder's current published requirements before relying on it.
+  - id: AZ-TOPMARGIN-20
+    description: "Arizona requires a top margin of at least 2 inches on the first page of a recorded instrument, reserved for recording information."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "A.R.S. § 11-480(B)"
+      url: "https://www.azleg.gov/ars/11/00480.htm"
+    effectiveFrom: "1991-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+    when:
+      - state == "US-AZ"
+    then:
+      entity: submission
+      attribute: rec:requiredFirstPageTopSpaceInches
+      value: { kind: decimal, expr: "2.0" }
+
+  # The shared deficiency check: measured first-page top space short of the
+  # jurisdiction's minimum, with no cover page attached to cure it. BOTH
+  # encoded statutes provide the same cure — Gov. Code § 27361.6 and A.R.S.
+  # § 11-480 each direct the submitting party to attach a separate compliant
+  # sheet when the first page falls short — so a package that is short AND
+  # has no cover page is the one the recorder bounces (or, in some counties,
+  # accepts with penalty handling; see the TODO(verify) notes on the
+  # per-state rules). The citation names the California section; a proper
+  # per-jurisdiction citation split is future work, mirroring how NC-NR-01
+  # in the notice pack cites the New York statute for a generic arithmetic
+  # check.
+  # NOTE on priority: this rule and CA-DTT-11933 both conclude
+  # rec:recordable and are not provably disjoint, so the kernel's ambiguity
+  # check requires distinct priorities. The transfer-tax bar sits higher
+  # (210): § 11933 is a statutory "shall not record", while the top-space
+  # defect is curable paperwork.
+  - id: REC-TOPSPACE-01
+    description: "An instrument whose measured first-page top space falls short of the recorder's required reservation, with no cover page attached to cure it, is not recordable as submitted."
+    version: "1.0.0"
+    priority: 200
+    citation:
+      text: "Cal. Gov. Code § 27361.6"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+    effectiveFrom: "1990-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      measured:   { attribute: rec:firstPageTopSpaceInches }
+      cover:      { attribute: rec:coverPageAttached }
+      required:   { derived: rec:requiredFirstPageTopSpaceInches }
+    when:
+      - measured < required
+      - cover == false
+    then:
+      entity: submission
+      attribute: rec:recordable
+      value: { kind: boolean, value: false }
+    overrides: [REC-DEF-CA, REC-DEF-AZ]
+
+  # VERIFIED (statute text, via legislative sources 2026-07-29): Rev. & Tax.
+  # Code § 11933 — where a county has imposed documentary transfer tax, "the
+  # recorder shall not record any deed, instrument, or writing subject to the
+  # tax" unless the tax is paid and a signed declaration of the amount due
+  # appears on the face of the document per § 11932. This is a true
+  # rejection ground, not a fee-handling nuisance.
+  # SCOPE / honest approximation: § 11932 applies to documents "subject to
+  # the tax". The fact vocabulary has no consideration/exemption attributes,
+  # so the rule approximates "subject to the tax" with
+  # instrumentType == "GrantDeed". Deeds of trust are outside the guard —
+  # they secure a debt rather than convey for consideration, so no transfer
+  # tax attaches (TODO(verify): the precise exemption basis; practitioners
+  # cite the Documentary Transfer Tax Act's scope in R&T § 11911 reaching
+  # only conveyances for consideration, but that reading was not confirmed
+  # against an authority for this pack).
+  # TODO(verify): effectiveFrom — 2015-01-01 is the operative date of the
+  # AB 1888 (2014) amendment that put the declaration on the face of the
+  # document (it could previously ride on a separate paper); the Documentary
+  # Transfer Tax Act itself is a 1967 enactment. The 2015 boundary is the
+  # defensible one for the face-declaration form this rule checks, but the
+  # session-law commencement was not confirmed.
+  - id: CA-DTT-11933
+    description: "A California grant deed subject to documentary transfer tax cannot be recorded without a signed transfer tax declaration on its face."
+    version: "1.0.0"
+    priority: 210
+    citation:
+      text: "Cal. Rev. & Tax. Code § 11933"
+      url: "https://law.justia.com/codes/california/code-rtc/division-2/part-6-7/chapter-4/section-11933/"
+    effectiveFrom: "2015-01-01"
+    given:
+      submission:  { entityType: rec:RecordingSubmission }
+      state:       { attribute: rec:recordingState }
+      itype:       { attribute: rec:instrumentType }
+      declaration: { attribute: rec:transferTaxDeclarationPresent }
+    when:
+      - state == "US-CA"
+      - itype == "GrantDeed"
+      - declaration == false
+    then:
+      entity: submission
+      attribute: rec:recordable
+      value: { kind: boolean, value: false }
+    overrides: [REC-DEF-CA]
+
+  # VERIFIED (statute text + multiple county recorder fee schedules,
+  # 2026-07-29): Gov. Code § 27388.1 (SB 2, Building Homes and Jobs Act,
+  # operative 2018-01-01) imposes a $75 fee "at the time of recording of
+  # every real estate instrument, paper, or notice", per transaction per
+  # parcel, capped at $225 per transaction.
+  # Not modeled: the $225 per-transaction cap and the owner-occupied
+  # residential exemption (no parcel-count or occupancy attributes in the
+  # fact vocabulary). The transfer-tax-connection exemption IS modeled, as
+  # CA-SB2-EXEMPT-DTT below.
+  - id: CA-SB2-75
+    description: "California charges a $75 Building Homes and Jobs Act fee at the time of recording of every real estate instrument."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Cal. Gov. Code § 27388.1(a)(1)"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+    effectiveFrom: "2018-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+    when:
+      - state == "US-CA"
+    then:
+      entity: submission
+      attribute: rec:sb2FeeDueUSD
+      value: { kind: money, amount: "75.00", currency: "USD" }
+
+  # VERIFIED (statute text + county fee schedules, 2026-07-29): § 27388.1
+  # exempts instruments "recorded in connection with a transfer subject to
+  # the imposition of a documentary transfer tax" (R&T § 11911) — the
+  # ordinary purchase-money case: the deed of trust rides with a taxed grant
+  # deed and pays no SB 2 fee.
+  # TODO(verify): the exact subdivision cite for the exemption sentence —
+  # § 27388.1(a)(2) is where county fee schedules place it, but the
+  # subdivision lettering was not confirmed against the current code text.
+  - id: CA-SB2-EXEMPT-DTT
+    description: "No Building Homes and Jobs Act fee is due on an instrument recorded in connection with a transfer subject to documentary transfer tax, which supersedes the $75 default."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "Cal. Gov. Code § 27388.1(a)(2)"
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+    effectiveFrom: "2018-01-01"
+    given:
+      submission: { entityType: rec:RecordingSubmission }
+      state:      { attribute: rec:recordingState }
+      concurrent: { attribute: rec:concurrentWithTaxedTransfer }
+    when:
+      - state == "US-CA"
+      - concurrent == true
+    then:
+      entity: submission
+      attribute: rec:sb2FeeDueUSD
+      value: { kind: money, amount: "0.00", currency: "USD" }
+    overrides: [CA-SB2-75]

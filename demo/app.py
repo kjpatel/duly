@@ -223,6 +223,23 @@ REVIEW_SCENARIO_ID = "notice-ny-review"
 REVIEW_SOURCE_SCENARIO = "notice-ny"
 REVIEW_CASE_ID = "case:policy:HO-77401-NY:review-demo"
 REVIEW_SCENARIO_TITLE = "NY nonrenewal — review arc (low-confidence extraction)"
+
+# Scenario domains group the picker by regulated vertical. The slug comes from
+# the starter manifest's optional `domain` field — presentation metadata only,
+# deliberately NOT part of the fact contract (the ontology CURIE is the
+# contract-level domain signal). Unknown slugs get a title-cased label, so a
+# future vertical needs one manifest field and zero code.
+DOMAIN_LABELS = {
+    "mortgage": "Mortgage closing",
+    "insurance": "Insurance",
+}
+DEFAULT_DOMAIN = "other"
+
+
+def _domain_fields(slug: str | None) -> dict[str, str]:
+    slug = (slug or DEFAULT_DOMAIN).strip().lower() or DEFAULT_DOMAIN
+    label = DOMAIN_LABELS.get(slug, slug.replace("-", " ").title())
+    return {"domain": slug, "domainLabel": label}
 REVIEW_MAILED_ATTRIBUTE = "nc:noticeMailedDate"
 # Mirrors golden/cases/review-0001: 0.62 sits below the notice pack 2026.3.0
 # per-attribute floor of 0.9, so the mailed date abstains with low_confidence.
@@ -414,6 +431,14 @@ def _ingest_starter_case(
     pack_path = manifest.get("rulePack")
     if not case_id or not pack_path:
         return None
+    # A manifest may pin the stub extractor ("demoExtractor": "stub") when its
+    # targets carry scripted confidences the scenario depends on — Docling
+    # measures its own confidence, which would silently overwrite a scripted
+    # below-floor value and skip the abstention arc the scenario exists to
+    # show. The UI's extraction label names whichever extractor actually ran,
+    # so the pin stays visible rather than pretending Docling measured 0.58.
+    if manifest.get("demoExtractor") == "stub":
+        docling_adapter = None
     meta: dict[str, Any] = {
         "caseId": case_id,
         "packPath": pack_path,
@@ -525,6 +550,7 @@ def _build_fixture_scenario() -> dict[str, Any]:
     return {
         "id": "notice-ny",
         "title": "notice-ny (fixture)",
+        **_domain_fields("insurance"),
         "caseId": "case:policy:HO-77401-NY",
         "documents": documents,
         "facts": facts,
@@ -622,6 +648,7 @@ def _load_starter_scenario(scenario_dir: Path) -> dict[str, Any] | None:
     return {
         "id": manifest.get("id", scenario_dir.name),
         "title": manifest.get("title", scenario_dir.name),
+        **_domain_fields(manifest.get("domain")),
         "caseId": manifest.get("caseId", ""),
         "documents": documents,
         "facts": facts,
@@ -702,6 +729,7 @@ def _build_review_scenario(runtime: _DemoRuntime) -> dict[str, Any] | None:
     return {
         "id": REVIEW_SCENARIO_ID,
         "title": REVIEW_SCENARIO_TITLE,
+        **_domain_fields("insurance"),
         "caseId": REVIEW_CASE_ID,
         "documents": documents,
         "facts": runtime.store.as_of(REVIEW_CASE_ID, knowledge=_now_knowledge()),
@@ -815,6 +843,54 @@ TOLERANCE_CATEGORY_LABELS = {
     "NoToleranceLimit": "No tolerance limit",
 }
 
+SIGNING_METHOD_ROUTES = {
+    "ESign": {
+        "verdict": "Route to eSign",
+        "detail": "Electronic signing with ESIGN consumer consent on file",
+        "tone": "pos",
+    },
+    "ENoteEVault": {
+        "verdict": "Route to eNote",
+        "detail": (
+            "Electronic note registered on the MERS eRegistry, "
+            "authoritative copy in the eVault"
+        ),
+        "tone": "pos",
+    },
+    "WetInk": {
+        "verdict": "Route to wet ink",
+        "detail": "Ink signature on paper required",
+        "tone": "warn",
+    },
+}
+
+
+def _low_confidence_caveat(receipt: dict[str, Any]) -> str | None:
+    """A "Presumption only — …" detail when the verdict stands only because a
+    below-floor fact was excluded, else None. Shared by every decision whose
+    presumption can mask an unevaluated deficiency."""
+    low_confidence = [
+        a
+        for a in receipt.get("abstentions") or []
+        if isinstance(a, dict) and a.get("reason") == "low_confidence"
+    ]
+    if not low_confidence:
+        return None
+    parts = []
+    for entry in low_confidence:
+        attr = _short_attr(entry.get("attribute", ""))
+        confidence = entry.get("confidence") or {}
+        threshold = entry.get("threshold") or {}
+        if confidence.get("score") is not None and threshold.get("minConfidence") is not None:
+            parts.append(
+                f"{attr} excluded at confidence "
+                f"{_fmt_score(confidence['score'])}, below the "
+                f"{_fmt_score(threshold['minConfidence'])} floor"
+            )
+        else:
+            parts.append(f"{attr} excluded below the confidence floor")
+    return "Presumption only — " + "; ".join(parts)
+
 
 def _determination(
     receipt: dict[str, Any], scenario: dict[str, Any], effective: str
@@ -835,33 +911,12 @@ def _determination(
         compliant = bool(value.get("value"))
         verdict = "Compliant" if compliant else "Not compliant"
         tone = "pos" if compliant else "neg"
-        low_confidence = [
-            a
-            for a in receipt.get("abstentions") or []
-            if isinstance(a, dict) and a.get("reason") == "low_confidence"
-        ]
-        if compliant and low_confidence:
+        caveat = _low_confidence_caveat(receipt) if compliant else None
+        if caveat:
             # Compliant only because the deficiency arithmetic could not run:
             # a below-floor fact was excluded and the presumption stands. Say
             # so instead of presenting the presumption as a clean verdict.
-            parts = []
-            for entry in low_confidence:
-                attr = _short_attr(entry.get("attribute", ""))
-                confidence = entry.get("confidence") or {}
-                threshold = entry.get("threshold") or {}
-                if confidence.get("score") is not None and threshold.get("minConfidence") is not None:
-                    parts.append(
-                        f"{attr} excluded at confidence "
-                        f"{_fmt_score(confidence['score'])}, below the "
-                        f"{_fmt_score(threshold['minConfidence'])} floor"
-                    )
-                else:
-                    parts.append(f"{attr} excluded below the confidence floor")
-            return {
-                "verdict": verdict,
-                "detail": "Presumption only — " + "; ".join(parts),
-                "tone": "warn",
-            }
+            return {"verdict": verdict, "detail": caveat, "tone": "warn"}
         mailed = _fact_value(scenario["facts"], "noticeMailedDate")
         expiration = _fact_value(scenario["facts"], "policyExpirationDate")
         min_days_value = _find_derived_value(
@@ -927,6 +982,154 @@ def _determination(
             else "Fee tolerance category"
         )
         return {"verdict": category, "detail": detail, "tone": ""}
+
+    # --- RON notarization (rulepacks/notarization-ron-us-states) ---
+
+    if attribute.endswith("ronPermitted") and value.get("kind") == "boolean":
+        permitted = bool(value.get("value"))
+        return {
+            "verdict": "RON permitted" if permitted else "RON not permitted",
+            "detail": (
+                "A statute in force authorizes remote online notarization in this state"
+                if permitted
+                else "No statute in force authorizes remote online notarization in this state"
+            ),
+            "tone": "pos" if permitted else "neg",
+        }
+
+    if attribute.endswith("notarizationCompliant") and value.get("kind") == "boolean":
+        compliant = bool(value.get("value"))
+        if compliant:
+            method = _fact_value(scenario["facts"], "notarizationMethod")
+            detail = (
+                "Remote online notarization was authorized at this date"
+                if method == "RemoteOnline"
+                else "In-person notarization — the RON authorization question does not arise"
+            )
+            return {"verdict": "Compliant", "detail": detail, "tone": "pos"}
+        return {
+            "verdict": "Not compliant",
+            "detail": "Notarized by remote online audio-visual means where RON was not permitted",
+            "tone": "neg",
+        }
+
+    # --- eSign routing (rulepacks/esign-closing-package) ---
+
+    if attribute.endswith("eSignEligible") and value.get("kind") == "boolean":
+        eligible = bool(value.get("value"))
+        return {
+            "verdict": "eSign permitted" if eligible else "eSign not permitted",
+            "detail": (
+                "This document may be signed electronically"
+                if eligible
+                else "Route this document to wet-ink signing"
+            ),
+            "tone": "pos" if eligible else "neg",
+        }
+
+    if attribute.endswith("signingMethod"):
+        route = SIGNING_METHOD_ROUTES.get(str(value.get("value", "")))
+        if route:
+            return dict(route)
+        return {"verdict": _format_value(value), "detail": "Signing route", "tone": ""}
+
+    # --- TILA rescission (rulepacks/tila-rescission-us-federal) ---
+
+    if attribute.endswith("rescissionApplies") and value.get("kind") == "boolean":
+        applies = bool(value.get("value"))
+        if applies:
+            return {
+                "verdict": "Rescission applies",
+                "detail": (
+                    "Dwelling-secured, non-purchase — three-business-day right "
+                    "under 12 CFR 1026.23"
+                ),
+                "tone": "warn",
+            }
+        return {
+            "verdict": "No rescission right",
+            "detail": "Residential mortgage transaction or not the principal dwelling",
+            "tone": "pos",
+        }
+
+    if attribute.endswith("rescissionDeadline"):
+        day = _date_prefix(str(value.get("value", ""))) or _format_value(value)
+        return {
+            "verdict": f"Midnight of {day}",
+            "detail": (
+                "Third precise business day after the latest trigger — "
+                "Saturdays count, Sundays and federal holidays do not"
+            ),
+            "tone": "",
+        }
+
+    if attribute.endswith("fundingPermitted") and value.get("kind") == "boolean":
+        permitted = bool(value.get("value"))
+        if permitted:
+            return {
+                "verdict": "Clear to fund",
+                "detail": "The rescission period has expired (or no rescission right applies)",
+                "tone": "pos",
+            }
+        return {
+            "verdict": "Funding hold",
+            "detail": (
+                "Rescission period not shown expired — no disbursement "
+                "under 12 CFR 1026.23(c)"
+            ),
+            "tone": "neg",
+        }
+
+    # --- County recording (rulepacks/county-recording-us) ---
+
+    if attribute.endswith("recordable") and value.get("kind") == "boolean":
+        recordable = bool(value.get("value"))
+        if recordable:
+            caveat = _low_confidence_caveat(receipt)
+            if caveat:
+                return {"verdict": "Recordable", "detail": caveat, "tone": "warn"}
+            return {
+                "verdict": "Recordable",
+                "detail": "No encoded requirement found the package deficient",
+                "tone": "pos",
+            }
+        return {
+            "verdict": "Not recordable as submitted",
+            "detail": (
+                "An encoded county requirement found the package deficient — "
+                "see the rules fired"
+            ),
+            "tone": "neg",
+        }
+
+    if attribute.endswith("requiredFirstPageTopSpaceInches"):
+        return {
+            "verdict": f"{_format_value(value)} inches",
+            "detail": "First-page top space reserved for the recorder",
+            "tone": "",
+        }
+
+    if attribute.endswith("sb2FeeDueUSD") and value.get("kind") == "money":
+        amount = value.get("amount")
+        formatted = " ".join(str(part) for part in (amount, value.get("currency")) if part)
+        try:
+            fee_due = float(amount) > 0
+        except (TypeError, ValueError):
+            fee_due = bool(amount)
+        if fee_due:
+            return {
+                "verdict": f"{formatted} SB 2 fee due",
+                "detail": "Building Homes and Jobs Act fee at recording",
+                "tone": "warn",
+            }
+        return {
+            "verdict": "No SB 2 fee",
+            "detail": (
+                "Exempt — recorded in connection with a transfer subject to "
+                "documentary transfer tax"
+            ),
+            "tone": "pos",
+        }
 
     if value.get("kind") == "boolean":
         affirmative = bool(value.get("value"))
@@ -1307,6 +1510,9 @@ def api_scenarios() -> list[dict[str, Any]]:
             {
                 "id": scenario["id"],
                 "title": scenario["title"],
+                "domain": scenario.get("domain", DEFAULT_DOMAIN),
+                "domainLabel": scenario.get("domainLabel")
+                or _domain_fields(scenario.get("domain"))["domainLabel"],
                 "caseId": scenario["caseId"],
                 "documents": [
                     {"id": d["id"], "title": d["title"]}

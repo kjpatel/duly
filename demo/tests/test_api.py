@@ -44,6 +44,35 @@ def test_scenarios_lists_fixture_scenario():
     assert scenario["defaultAsOf"]
 
 
+def test_every_scenario_carries_a_domain(monkeypatch):
+    """Domains group the picker by regulated vertical; a scenario without one
+    falls into the "other" group rather than erroring (manifest field is
+    optional — presentation metadata, not contract)."""
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    scenarios = res.json()
+    assert scenarios
+    for scenario in scenarios:
+        assert scenario["domain"], scenario["id"]
+        assert scenario["domainLabel"], scenario["id"]
+
+    by_id = {s["id"]: s for s in scenarios}
+    assert by_id["notice-ny"]["domain"] == "insurance"
+    assert by_id["notice-ny"]["domainLabel"] == "Insurance"
+    for scenario_id in (
+        "trid",
+        "ron-closing",
+        "esign-package",
+        "tila-rescission",
+        "county-recording",
+    ):
+        assert by_id[scenario_id]["domain"] == "mortgage", scenario_id
+        assert by_id[scenario_id]["domainLabel"] == "Mortgage closing", scenario_id
+    if "notice-ny-review" in by_id:
+        assert by_id["notice-ny-review"]["domain"] == "insurance"
+
+
 def test_every_offered_question_is_answerable_and_phrased_for_humans(monkeypatch):
     """Whatever a pack advertises must adjudicate and render without CURIEs.
 

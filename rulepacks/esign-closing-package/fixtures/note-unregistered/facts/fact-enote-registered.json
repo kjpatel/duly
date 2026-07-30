@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:cd06e0ec765b57ffdecb4c4cef435f43788311d58eb76c3865fb239c51472aec",
+  "contentHash": "cd06e0ec765b57ffdecb4c4cef435f43788311d58eb76c3865fb239c51472aec",
+  "caseId": "case:closing-package:CP-2026-0303",
+  "entity": {
+    "id": "signing:CP-2026-0303:promissory-note",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:eNoteRegistered",
+  "value": {
+    "kind": "boolean",
+    "value": false
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

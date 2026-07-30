@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:f6f02738971cc13681d10d75da2a78f3351f598f7f2e5aff319696867d9e3b07",
+  "contentHash": "f6f02738971cc13681d10d75da2a78f3351f598f7f2e5aff319696867d9e3b07",
+  "caseId": "case:recording:FX-ca-topspace-short-with-cover",
+  "entity": {
+    "id": "recording:FX-ca-topspace-short-with-cover",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:instrumentType",
+  "value": {
+    "kind": "code",
+    "value": "DeedOfTrust",
+    "codeSystem": "duly-starter-recording/instrument-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

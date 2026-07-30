@@ -1,0 +1,53 @@
+{
+  "documentId": "doc:transmittal:DOT-2026-081512:2026-07-27",
+  "caseId": "case:recording:DOT-2026-081512",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-29T17:41:31Z",
+  "runId": "run:2026-07-29:031",
+  "page": 1,
+  "notes": [
+    "Confidence scores in this file are scripted demo values (the stub adapter passes them through verbatim); they are not real calibration output.",
+    "SCRIPTED BELOW-FLOOR CONFIDENCE, on purpose: rec:firstPageTopSpaceInches carries 0.58, below the 0.85 per-attribute floor in county-recording-us's abstentionPolicy, so adjudicating this scenario abstains on the measurement and routes it to review. This drives the demo's abstain -> human corrects -> decision resolves arc for this scenario, mirroring the notice pack's review sibling. A measuring extractor would emit its own honest score here; 0.58 is a story value, not calibration output."
+  ],
+  "facts": [
+    {
+      "file": "fact-transmittal-top-space.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:firstPageTopSpaceInches",
+      "value": {
+        "kind": "decimal",
+        "value": "2.1"
+      },
+      "quote": "First-page top recording space (measured): 2.1 inches",
+      "confidence": {
+        "score": 0.58,
+        "method": "platt",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-transmittal-cover-page.json",
+      "entity": {
+        "id": "recording:DOT-2026-081512",
+        "type": "rec:RecordingSubmission"
+      },
+      "attribute": "rec:coverPageAttached",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      },
+      "quote": "Gov. Code 27361.6 cover page attached: NO",
+      "confidence": {
+        "score": 0.941,
+        "method": "conformal",
+        "calibrationRef": "cal:recording-docs:2026-06"
+      }
+    }
+  ]
+}

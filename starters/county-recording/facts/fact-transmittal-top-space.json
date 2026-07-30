@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:d3d9698e418e8d6fd306069e80e2c1615fe3c5fb930ce1aeb44569846ee4c0a7",
+  "contentHash": "d3d9698e418e8d6fd306069e80e2c1615fe3c5fb930ce1aeb44569846ee4c0a7",
+  "caseId": "case:recording:DOT-2026-081512",
+  "entity": {
+    "id": "recording:DOT-2026-081512",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:firstPageTopSpaceInches",
+  "value": {
+    "kind": "decimal",
+    "value": "2.1"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:transmittal:DOT-2026-081512:2026-07-27",
+    "documentSha256": "447c76fcd917685f07c4a89828491c6bab9682db28d7f00088373edc2ed4cd36",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:447c76fc",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 419,
+      "end": 472
+    },
+    "quote": "First-page top recording space (measured): 2.1 inches"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T17:41:31Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-29:031"
+    }
+  },
+  "confidence": {
+    "score": 0.58,
+    "method": "platt",
+    "calibrationRef": "cal:recording-docs:2026-06"
+  },
+  "recordedAt": "2026-07-29T17:41:31Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

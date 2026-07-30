@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:34528d22f79361e648d84b790685e4a61cc2a6984bf3fe5034bbe372ed470c09",
+  "contentHash": "34528d22f79361e648d84b790685e4a61cc2a6984bf3fe5034bbe372ed470c09",
+  "caseId": "case:recording:FX-ca-grantdeed-no-dtt-declaration",
+  "entity": {
+    "id": "recording:FX-ca-grantdeed-no-dtt-declaration",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:recordingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

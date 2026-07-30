@@ -1,6 +1,7 @@
 {
   "id": "trid",
   "title": "TRID transfer-tax tolerance between Loan Estimate and Closing Disclosure",
+  "domain": "mortgage",
   "caseId": "case:loan:L-2026-0142",
   "ontology": {
     "ontology": "duly-starter-trid",

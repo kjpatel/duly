@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:98b1a7b5904ba68ebefa8a2bb7ce0e5b738b6c6156338ff8ec878d8a87f448a1",
+  "contentHash": "98b1a7b5904ba68ebefa8a2bb7ce0e5b738b6c6156338ff8ec878d8a87f448a1",
+  "caseId": "case:recording:FX-ca-dot-compliant",
+  "entity": {
+    "id": "recording:FX-ca-dot-compliant",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:recordingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

@@ -241,8 +241,11 @@ def test_receipt_abstention_links_considered_fact():
     node = _expand_stored(receipt, "receipt")
     (abstention,) = node[DULY + "abstention"]
     assert _values(abstention, DULY + "reason") == ["low_confidence"]
+    # Pinned to the committed corpus: this is rec-0015's below-floor
+    # measurement fact (its hash moved with the M4 duly-mortgage-closing
+    # schemaRef consolidation — schemaRef is inside the fact hash).
     assert _ids(abstention, DULY + "consideredFact") == {
-        "urn:duly:fact:sha256:53f5a3dc45a0565aa475bb54a217f279a1546c2d752799a0f5eefccc8976efe4"
+        "urn:duly:fact:sha256:0742db5923d2a989e2bb66cae18a1d4230b9522c169119819e3952293467c52b"
     }
     (threshold,) = abstention[DULY + "threshold"]
     assert _values(threshold, DULY + "minConfidence") == [0.85]

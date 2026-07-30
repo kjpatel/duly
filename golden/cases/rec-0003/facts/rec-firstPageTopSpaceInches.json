@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:ab1906aff5805ffe3c82090782df9a87d1ac36beaf2093b8a5e331a858377f4d",
-  "contentHash": "ab1906aff5805ffe3c82090782df9a87d1ac36beaf2093b8a5e331a858377f4d",
+  "id": "urn:duly:fact:sha256:2709ea811bc19c3187cc34a112898829548c31102ec6c8ce61afee9e7bbd47c6",
+  "contentHash": "2709ea811bc19c3187cc34a112898829548c31102ec6c8ce61afee9e7bbd47c6",
   "caseId": "case:golden:rec-0003",
   "entity": {
     "id": "submission:rec-0003",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-10-04T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

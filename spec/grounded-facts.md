@@ -81,7 +81,7 @@ No fact is ever edited. A correction is a new fact with `supersedes: <old fact i
 
 ## D10. Ontology by reference
 
-Every fact carries `schemaRef: {ontology, version}` and its `attribute` / entity `type` are CURIEs resolved against that ontology (MISMO, ACORD, FHIR, or project-local). duly validates conformance (SHACL/LinkML gate, planned) but defines no domain terms.
+Every fact carries `schemaRef: {ontology, version}` and its `attribute` / entity `type` are CURIEs resolved against that ontology (MISMO, ACORD, FHIR, or project-local). duly validates conformance — the reference resolves against a versioned LinkML artifact and the fact's entity type, attribute, value kind, and code values are checked against it ([ontology-conformance.md](ontology-conformance.md), gate in `conformance/duly_conformance`) — but defines no domain terms.
 
 ---
 
@@ -102,7 +102,7 @@ Receipts are content-addressed the same way facts are (`receiptSha256`, JCS cano
 ## Relationship to standards
 
 - **PROV-O** — a JSON-LD context mapping facts and receipts onto `prov:Entity` / `prov:Activity` / `prov:wasQuotedFrom` and friends is specified in [prov-o.md](prov-o.md) and shipped in [contexts/](contexts/). The mapping is deliberately partial, not lossless: bitemporal effective time, confidence, and abstentions have no faithful PROV equivalent and stay in the `duly:` namespace (prov-o.md, P8).
-- **SHACL / LinkML** — the ontology conformance gate facts pass through before entering the store; LinkML is the intended source language so one definition yields JSON Schema, SHACL, and dataclasses.
+- **SHACL / LinkML** — the ontology conformance gate at the ingestion seam, specified in [ontology-conformance.md](ontology-conformance.md) and shipped in `conformance/duly_conformance` with sample artifacts in `ontologies/`. LinkML is the source language — one definition yields SHACL (via LinkML's generator, exercised in marker-gated tests) while the enforcing validator interprets a documented pure-Python subset.
 - **DMN** — a compliance-editable authoring surface that compiles to the same rule IR; receipts are identical regardless of authoring surface.
 
 ## Resolved questions

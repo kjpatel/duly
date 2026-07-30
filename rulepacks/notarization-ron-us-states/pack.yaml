@@ -1,7 +1,7 @@
 pack:
   name: notarization-ron-us-states
   version: "2026.1.0"
-  ontology: duly-starter-ron
+  ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: State-by-state remote online notarization (RON) authorization, effective-dated.
 

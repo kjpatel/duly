@@ -13,7 +13,7 @@
 pack:
   name: county-recording-us
   version: "2026.1.0"
-  ontology: duly-starter-recording
+  ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: County recording readiness for deeds and security instruments.
 

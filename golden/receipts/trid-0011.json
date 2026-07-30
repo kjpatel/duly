@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:ed016b0a619048084f05161ad80867a836a11ed9a75be5040a01f6739580cadf",
-  "receiptSha256": "ed016b0a619048084f05161ad80867a836a11ed9a75be5040a01f6739580cadf",
+  "id": "urn:duly:receipt:sha256:ff7bac321b3d261ec461bd98ba25f6e3b22823a76992c96472a9a5c53d48896a",
+  "receiptSha256": "ff7bac321b3d261ec461bd98ba25f6e3b22823a76992c96472a9a5c53d48896a",
   "caseId": "case:golden:trid-0011",
   "decision": {
     "entity": "fee:transfer-tax:trid-0011",
@@ -58,10 +58,10 @@
     "rule": "TRID-ZT-01",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:6dc88596d3665b15eb4b658d77243fdf6b2f98dd0e21fc45d809c502f7e3d7ab"
+        "factId": "urn:duly:fact:sha256:af7e92bc86e1c752d738af127080f96bf55b6492174dde333b3a20a059865deb"
       },
       {
-        "factId": "urn:duly:fact:sha256:e4ddb1cfbdc6cb7d83c550c438d79e48c63a09077d7cd7f822b3350daa04ffa2"
+        "factId": "urn:duly:fact:sha256:b10681309028dbfa6047d6a42b36563cb790e053bdaf5dff10b7343e95b3896e"
       },
       {
         "conclusion": {
@@ -77,7 +77,7 @@
         "rule": "TRID-CAT-02",
         "premises": [
           {
-            "factId": "urn:duly:fact:sha256:04b8bd9d93fc522e8612f59db5c1028fbbfbf990d5709990459a198a76ff3b9a"
+            "factId": "urn:duly:fact:sha256:47c29ee60c6ff9f38b676af50ff6a934d78b81e8f16e92d021ab510dc180b015"
           }
         ]
       }
@@ -85,16 +85,16 @@
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:6dc88596d3665b15eb4b658d77243fdf6b2f98dd0e21fc45d809c502f7e3d7ab",
-      "contentHash": "6dc88596d3665b15eb4b658d77243fdf6b2f98dd0e21fc45d809c502f7e3d7ab"
+      "id": "urn:duly:fact:sha256:af7e92bc86e1c752d738af127080f96bf55b6492174dde333b3a20a059865deb",
+      "contentHash": "af7e92bc86e1c752d738af127080f96bf55b6492174dde333b3a20a059865deb"
     },
     {
-      "id": "urn:duly:fact:sha256:e4ddb1cfbdc6cb7d83c550c438d79e48c63a09077d7cd7f822b3350daa04ffa2",
-      "contentHash": "e4ddb1cfbdc6cb7d83c550c438d79e48c63a09077d7cd7f822b3350daa04ffa2"
+      "id": "urn:duly:fact:sha256:b10681309028dbfa6047d6a42b36563cb790e053bdaf5dff10b7343e95b3896e",
+      "contentHash": "b10681309028dbfa6047d6a42b36563cb790e053bdaf5dff10b7343e95b3896e"
     },
     {
-      "id": "urn:duly:fact:sha256:04b8bd9d93fc522e8612f59db5c1028fbbfbf990d5709990459a198a76ff3b9a",
-      "contentHash": "04b8bd9d93fc522e8612f59db5c1028fbbfbf990d5709990459a198a76ff3b9a"
+      "id": "urn:duly:fact:sha256:47c29ee60c6ff9f38b676af50ff6a934d78b81e8f16e92d021ab510dc180b015",
+      "contentHash": "47c29ee60c6ff9f38b676af50ff6a934d78b81e8f16e92d021ab510dc180b015"
     }
   ],
   "abstentions": [],

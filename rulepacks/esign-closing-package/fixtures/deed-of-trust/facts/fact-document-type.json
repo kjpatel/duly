@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:8c7ffc9653fc133c1b0ce6efa5789773b10cebf3eb8f06354b57f8d0322477ff",
-  "contentHash": "8c7ffc9653fc133c1b0ce6efa5789773b10cebf3eb8f06354b57f8d0322477ff",
+  "id": "urn:duly:fact:sha256:29476e0dcce9d0812bc29579f44ba5e307f0c1226933f7b7ecb73c09e1dbb8a9",
+  "contentHash": "29476e0dcce9d0812bc29579f44ba5e307f0c1226933f7b7ecb73c09e1dbb8a9",
   "caseId": "case:closing-package:CP-2026-0304",
   "entity": {
     "id": "signing:CP-2026-0304:deed-of-trust",
@@ -34,7 +34,7 @@
   "recordedAt": "2026-07-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-esign",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

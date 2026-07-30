@@ -102,7 +102,7 @@ def main() -> None:
         "id": SCENARIO,
         "title": "eSign routing: closing-package promissory note as a registered eNote",
         "caseId": CASE_ID,
-        "ontology": {"ontology": "duly-starter-esign", "version": "0.1.0"},
+        "ontology": {"ontology": "duly-mortgage-closing", "version": "0.1.0"},
         "documents": [
             {
                 "id": "doc:closing-manifest:CP-2026-0847:2026-07-12",

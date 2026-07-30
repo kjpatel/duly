@@ -236,7 +236,7 @@ def main() -> None:
         "id": "trid",
         "title": "TRID transfer-tax tolerance between Loan Estimate and Closing Disclosure",
         "caseId": "case:loan:L-2026-0142",
-        "ontology": {"ontology": "duly-starter-trid", "version": "0.1.0"},
+        "ontology": {"ontology": "duly-mortgage-closing", "version": "0.1.0"},
         "documents": [
             {
                 "id": "doc:loan-estimate:L-2026-0142:2026-02-10",

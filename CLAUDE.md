@@ -15,6 +15,8 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `calibration/` | Temperature/Platt/conformal math — deliberately unfitted; labels come from review |
 | `review/` | Review queue: abstention routing, human corrections, golden-case export, calibration pairs |
 | `assurance/` | Golden-corpus generator, replay verifier, rule-change impact analysis |
+| `conformance/` | Ontology conformance gate: pure-Python LinkML-subset validator, registry, CLI (`python -m duly_conformance`) |
+| `ontologies/` | Versioned, immutable LinkML ontology artifacts (`<name>/<version>.yaml`) the facts' `schemaRef`s pin — read `ontologies/README.md` before touching |
 | `rulepacks/` | Six packs (insurance + mortgage closing), each `pack.yaml` + `expected.yaml` (+ `fixtures/`) |
 | `starters/` | Synthetic documents, renditions, span-verified facts, one demo scenario per vertical |
 | `golden/` | 351 committed cases + receipts — the replay/impact baseline |
@@ -24,11 +26,12 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests -q
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
 uv run spec/validate.py                   # spec examples: schemas + hashes
 uv run python3 starters/tools/check_facts.py   # starter facts: schema, hashes, quote spans
+uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples   # every committed fact vs ontologies/
 uv run uvicorn demo.app:app --port 8788   # the demo
 ```
 
@@ -50,6 +53,7 @@ Run the full suite, replay, and spec validation before any commit. A change that
 - **One entity per `entityType` per case; one live fact per attribute.** Per-document decisions mean one case per document, or the document type as an attribute of a single entity. Two live facts on one attribute is a conflict (lone human outranks; anything else abstains).
 - **`engine.backend` is inside the receipt hash.** A second evaluation backend cannot produce byte-identical receipts by construction; cross-backend equivalence is an open M5 spec decision. Don't design around an assumption either way.
 - **Kernel abstention policy is pack-versioned.** Adding `abstentionPolicy` to a pack changes receipts (bump the pack version, expect corpus churn for that pack). Packs without one must stay byte-identical — there is a pinned-hash test proving the pre-policy kernel's output.
+- **`schemaRef` is inside the fact hash — renaming an ontology is corpus churn.** A fact's `schemaRef` sits in its content-hashed bytes, so re-pointing facts at a different ontology name changes fact hashes, receipt `inputFacts`, and therefore every affected golden receipt. The M4 consolidation (five `duly-starter-*` mortgage names → `duly-mortgage-closing`) touched 555 golden files while flipping 0 of 351 decisions; do it that way — targets + fixtures + generator templates updated together, `impact` run before accepting regeneration, `notice-*`/`review-*` proven byte-untouched. This is also why `duly-starter-notice` keeps its awkward name forever: `review-0001` is preserved-forever and pins it.
 
 ## Conventions
 
@@ -63,6 +67,7 @@ Run the full suite, replay, and spec validation before any commit. A change that
 ## Documentation map
 
 - [rulepacks/README.md](rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
+- [ontologies/README.md](ontologies/README.md) / [spec/ontology-conformance.md](spec/ontology-conformance.md) — the ontology registry, the crosswalk rules (verify or omit), and the conformance gate's exact subset
 - [starters/README.md](starters/README.md) — starter layout and shared tooling
 - [golden/README.md](golden/README.md) — corpus contract, case-id series, regeneration rules
 - [spec/grounded-facts.md](spec/grounded-facts.md) / [spec/rule-ir.md](spec/rule-ir.md) — the contract, with open questions at the bottom (check them before "fixing" something deliberate)

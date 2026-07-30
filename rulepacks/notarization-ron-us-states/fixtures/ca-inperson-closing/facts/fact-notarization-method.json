@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:5327e8ecae863305f72d34f36ee0554c3b2b6a4a3fce6ac97ed6584723453c30",
-  "contentHash": "5327e8ecae863305f72d34f36ee0554c3b2b6a4a3fce6ac97ed6584723453c30",
+  "id": "urn:duly:fact:sha256:f4dfacd6a8aeadc532910617028be469379c840f0f1ea9edea15a7baa7a2abde",
+  "contentHash": "f4dfacd6a8aeadc532910617028be469379c840f0f1ea9edea15a7baa7a2abde",
   "caseId": "case:closing:ESC-6609-CA",
   "entity": {
     "id": "notarization:ESC-6609-CA",
@@ -34,7 +34,7 @@
   "recordedAt": "2026-07-29T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-ron",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

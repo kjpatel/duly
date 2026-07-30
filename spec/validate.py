@@ -19,6 +19,11 @@ try:
 except ImportError:
     sys.exit("Requires jsonschema>=4.18. Run `uv sync`, then `uv run spec/validate.py`.")
 
+try:
+    from duly_conformance import check_fact, load_repo_registry
+except ImportError:
+    check_fact = load_repo_registry = None  # validated additively below when available
+
 SPEC = Path(__file__).parent
 HASH_FIELDS = {
     "GroundedFact": "contentHash",
@@ -124,6 +129,12 @@ def main() -> int:
         for title, schema in schemas.items()
     }
 
+    # Ontology conformance gate (spec/ontology-conformance.md), additive:
+    # committed example facts must conform to the committed ontologies.
+    ontology_registry = None
+    if load_repo_registry is not None and (SPEC.parent / "ontologies").is_dir():
+        ontology_registry = load_repo_registry(SPEC.parent / "ontologies")
+
     failures = 0
     fact_ids = set()
     facts_by_id = {}
@@ -150,6 +161,11 @@ def main() -> int:
         if title == "GroundedFact":
             fact_ids.add(doc["id"])
             facts_by_id[doc["id"]] = doc
+            if ontology_registry is not None:
+                for issue in check_fact(doc, ontology_registry):
+                    print(f"FAIL  {path.name}: conformance [{issue.code}] {issue.message}")
+                    failures += 1
+                    errors = True
         if not errors:
             print(f"ok    {path.name} ({title})")
 
@@ -191,7 +207,12 @@ def main() -> int:
     if failures:
         print(f"\n{failures} failure(s)")
         return 1
-    print("\nAll examples valid, hashes verified, contexts well-formed.")
+    conformance = (
+        f", facts conform to ontologies ({', '.join(ontology_registry.refs())})"
+        if ontology_registry is not None
+        else ""
+    )
+    print(f"\nAll examples valid, hashes verified, contexts well-formed{conformance}.")
     return 0
 
 

@@ -1,11 +1,11 @@
 {
   "id": "county-recording",
-  "title": "LA County deed of trust \u2014 recording readiness",
+  "title": "LA County deed of trust — recording readiness",
   "domain": "mortgage",
   "demoExtractor": "stub",
   "caseId": "case:recording:DOT-2026-081512",
   "ontology": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "documents": [

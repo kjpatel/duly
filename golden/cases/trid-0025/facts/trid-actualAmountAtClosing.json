@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:e903099b1186cfcbed958ce4b00d8559608f4f9605fef2ac54dca6a9eccb91fc",
-  "contentHash": "e903099b1186cfcbed958ce4b00d8559608f4f9605fef2ac54dca6a9eccb91fc",
+  "id": "urn:duly:fact:sha256:8ff277e94fcf070e995bf5e87565da8072f8ba9bde03a4cfded0d85db1d1bdd9",
+  "contentHash": "8ff277e94fcf070e995bf5e87565da8072f8ba9bde03a4cfded0d85db1d1bdd9",
   "caseId": "case:golden:trid-0025",
   "entity": {
     "id": "fee:transfer-tax:trid-0025",
@@ -33,7 +33,7 @@
   "recordedAt": "2026-03-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-trid",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:5f344fe407638e5950f6ecd8a0db8d47e04aa7ece91548a189f65edb955d895a",
-  "receiptSha256": "5f344fe407638e5950f6ecd8a0db8d47e04aa7ece91548a189f65edb955d895a",
+  "id": "urn:duly:receipt:sha256:693607a9e6b7a223bb0c72eda918a748a66d494bbe2d3e763b40337fcf72669c",
+  "receiptSha256": "693607a9e6b7a223bb0c72eda918a748a66d494bbe2d3e763b40337fcf72669c",
   "caseId": "case:golden:resc-0004",
   "decision": {
     "entity": "loan:resc-0004",
@@ -67,7 +67,7 @@
     "rule": "RESC-FUND-EXP",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98"
+        "factId": "urn:duly:fact:sha256:a38313c25478683a612dcf52cf0b3e820deea3f43291ade4768e7783d977700a"
       },
       {
         "conclusion": {
@@ -81,7 +81,7 @@
         "rule": "RESC-APP-01",
         "premises": [
           {
-            "factId": "urn:duly:fact:sha256:7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8"
+            "factId": "urn:duly:fact:sha256:b94dd98ca6cbba404ea11dc94446476b5344d3d16be9270e3e9a3a7e37605ab8"
           }
         ]
       }
@@ -89,12 +89,12 @@
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98",
-      "contentHash": "a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98"
+      "id": "urn:duly:fact:sha256:a38313c25478683a612dcf52cf0b3e820deea3f43291ade4768e7783d977700a",
+      "contentHash": "a38313c25478683a612dcf52cf0b3e820deea3f43291ade4768e7783d977700a"
     },
     {
-      "id": "urn:duly:fact:sha256:7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8",
-      "contentHash": "7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8"
+      "id": "urn:duly:fact:sha256:b94dd98ca6cbba404ea11dc94446476b5344d3d16be9270e3e9a3a7e37605ab8",
+      "contentHash": "b94dd98ca6cbba404ea11dc94446476b5344d3d16be9270e3e9a3a7e37605ab8"
     }
   ],
   "abstentions": [],

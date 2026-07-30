@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:8340e4af07037c5ea04965604d0c40d598096f55bfb1fc987fc5249845389807",
-  "contentHash": "8340e4af07037c5ea04965604d0c40d598096f55bfb1fc987fc5249845389807",
+  "id": "urn:duly:fact:sha256:8207a3d660c172c5911bb7dea28c3a81b75fb7be37a30619b16de36cccf9c18c",
+  "contentHash": "8207a3d660c172c5911bb7dea28c3a81b75fb7be37a30619b16de36cccf9c18c",
   "caseId": "case:recording:FX-az-topmargin-short",
   "entity": {
     "id": "recording:FX-az-topmargin-short",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-08-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

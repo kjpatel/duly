@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:f73bd1dfa3beab6a1544d510eacce49febf410fab0605988f43f3d57733dc3b4",
-  "contentHash": "f73bd1dfa3beab6a1544d510eacce49febf410fab0605988f43f3d57733dc3b4",
+  "id": "urn:duly:fact:sha256:f8b3d660d2e5f3d5bb8b65a06af26a14508afa857f46d799d4d17821f43588ac",
+  "contentHash": "f8b3d660d2e5f3d5bb8b65a06af26a14508afa857f46d799d4d17821f43588ac",
   "caseId": "case:golden:esign-0005",
   "entity": {
     "id": "task:esign-0005",
@@ -34,7 +34,7 @@
   "recordedAt": "2026-08-14T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-esign",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

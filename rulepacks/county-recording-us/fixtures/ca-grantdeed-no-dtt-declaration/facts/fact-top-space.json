@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:c4c64104a5443b74645d498eed34d961e9c268674491db984caa537e4c176754",
-  "contentHash": "c4c64104a5443b74645d498eed34d961e9c268674491db984caa537e4c176754",
+  "id": "urn:duly:fact:sha256:d473bcb0360ce296867210969d92f28ce4f325598ce78dc8c1e97780481ea3a6",
+  "contentHash": "d473bcb0360ce296867210969d92f28ce4f325598ce78dc8c1e97780481ea3a6",
   "caseId": "case:recording:FX-ca-grantdeed-no-dtt-declaration",
   "entity": {
     "id": "recording:FX-ca-grantdeed-no-dtt-declaration",
@@ -32,7 +32,7 @@
   "recordedAt": "2026-08-15T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   }
 }

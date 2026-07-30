@@ -4,7 +4,7 @@
   "domain": "mortgage",
   "caseId": "case:loan:RF-2026-3117",
   "ontology": {
-    "ontology": "duly-starter-resc",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "documents": [

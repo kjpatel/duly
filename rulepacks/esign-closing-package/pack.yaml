@@ -1,7 +1,7 @@
 pack:
   name: esign-closing-package
   version: "2026.1.0"
-  ontology: duly-starter-esign
+  ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: eSign eligibility and signing-method routing for closing-package documents.
 

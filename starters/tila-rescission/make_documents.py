@@ -140,7 +140,7 @@ def main() -> None:
         "id": "tila-rescission",
         "title": "TILA right of rescission: refinance funding timing",
         "caseId": CASE_ID,
-        "ontology": {"ontology": "duly-starter-resc", "version": "0.1.0"},
+        "ontology": {"ontology": "duly-mortgage-closing", "version": "0.1.0"},
         "documents": [
             {
                 "id": f"doc:cancel-notice:{LOAN_ID}:2026-05-22",

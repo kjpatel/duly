@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:9b90e61441e187cee136e12888fa9a9b4112910f850b8b5370cbedab12696731",
-  "receiptSha256": "9b90e61441e187cee136e12888fa9a9b4112910f850b8b5370cbedab12696731",
+  "id": "urn:duly:receipt:sha256:4aaf059f268d72b5f5a9aa0b2d16f291ee8c29c677aaaf733a92d8f47c6a2096",
+  "receiptSha256": "4aaf059f268d72b5f5a9aa0b2d16f291ee8c29c677aaaf733a92d8f47c6a2096",
   "caseId": "case:golden:rec-0008",
   "decision": {
     "entity": "submission:rec-0008",
@@ -66,14 +66,14 @@
     "rule": "CA-TOPSPACE-25",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:f6a039fcb11727c089663dfb7305b6334b9caa03b5271d94bfc777418bb75d9a"
+        "factId": "urn:duly:fact:sha256:e74f2072e7e8b681507bf85b9b143d92a0fab274a39760899af846703c19b744"
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:f6a039fcb11727c089663dfb7305b6334b9caa03b5271d94bfc777418bb75d9a",
-      "contentHash": "f6a039fcb11727c089663dfb7305b6334b9caa03b5271d94bfc777418bb75d9a"
+      "id": "urn:duly:fact:sha256:e74f2072e7e8b681507bf85b9b143d92a0fab274a39760899af846703c19b744",
+      "contentHash": "e74f2072e7e8b681507bf85b9b143d92a0fab274a39760899af846703c19b744"
     }
   ],
   "abstentions": [],

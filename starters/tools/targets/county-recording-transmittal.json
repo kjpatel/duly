@@ -2,7 +2,7 @@
   "documentId": "doc:transmittal:DOT-2026-081512:2026-07-27",
   "caseId": "case:recording:DOT-2026-081512",
   "schemaRef": {
-    "ontology": "duly-starter-recording",
+    "ontology": "duly-mortgage-closing",
     "version": "0.1.0"
   },
   "assertedAt": "2026-07-29T17:41:31Z",

@@ -1,0 +1,456 @@
+# duly-mortgage-closing 0.1.0 — the mortgage-closing domain model the five
+# mortgage starter scenarios cite.
+#
+# HONEST LABELING: this is the ontology a *user of the starters* brought to
+# duly, not one duly defines — duly ships no domain terms (README, "Why
+# bring-your-own ontology"). One artifact spans the whole domain — TRID fee
+# tolerance (trid:), remote online notarization (ron:), eSign/eNote package
+# routing (pkg:), TILA rescission (resc:), and county recording (rec:) —
+# because that is how real organizations model it: MISMO's reference model
+# spans all of mortgage closing, and the five namespaces here are facets of
+# one closing, not five domains. The earlier one-name-per-starter schemaRefs
+# (duly-starter-trid, -ron, -esign, -resc, -recording) were an artifact of
+# how the starters were authored, consolidated deliberately in the commit
+# that introduced this file.
+#
+# STANDARDS CROSSWALK, not vendored standards: MISMO's reference model is
+# distributed under license terms that do not permit redistribution, so no
+# MISMO-derived schema content is committed here. Instead, slots carry the
+# NAME of the corresponding MISMO v3.4 data point in an `annotations.mismo`
+# tag ("CONTAINER.DataPointName") — name-only references, used because
+# MISMO publishes no public term IRIs a LinkML mapping slot could carry.
+# Where a FIBO concept (MIT-licensed, public IRIs) genuinely fits, it is
+# referenced in close_mappings by real IRI. Every MISMO name and FIBO IRI
+# below was verified against public sources before committing (GSE UCD
+# documentation and the published FIBO Turtle files); terms with no
+# verified counterpart carry no reference at all — sparse and real over
+# complete and invented. See ontologies/README.md for the verification
+# notes.
+#
+# This file is genuine LinkML (proven by the marker-gated tests in
+# conformance/tests/test_real_linkml.py). The enforcing validator,
+# duly_conformance, interprets the constrained subset documented in
+# spec/ontology-conformance.md; mappings and mismo annotations are
+# documentation the gate deliberately ignores.
+#
+# IMMUTABLE once committed, like a rule-pack version: a fact citing 0.1.0
+# validates against 0.1.0 forever. Changes go in a new version file.
+id: https://duly.dev/ontologies/duly-mortgage-closing/0.1.0
+name: duly-mortgage-closing
+version: 0.1.0
+description: >-
+  A residential mortgage closing: disclosed and actual fees (TRID), the
+  notarization act, the signing route for each closing-package document,
+  the borrower's right of rescission, and the instrument's readiness for
+  county recording. Derived decision attributes concluded by the five
+  mortgage rule packs are declared here too, marked derived, so receipts
+  are covered by the same vocabulary as inputs.
+license: https://www.apache.org/licenses/LICENSE-2.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  duly: https://duly.dev/spec/v0/vocab#
+  trid: https://duly.dev/ontologies/duly-mortgage-closing/trid#
+  ron: https://duly.dev/ontologies/duly-mortgage-closing/ron#
+  pkg: https://duly.dev/ontologies/duly-mortgage-closing/pkg#
+  resc: https://duly.dev/ontologies/duly-mortgage-closing/resc#
+  rec: https://duly.dev/ontologies/duly-mortgage-closing/rec#
+  dmc: https://duly.dev/ontologies/duly-mortgage-closing/
+  fibo-loan-lg: https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansGeneral/Loans/
+  fibo-loan-re: https://spec.edmcouncil.org/fibo/ontology/LOAN/RealEstateLoans/Mortgages/
+  fibo-fnd-cur: https://spec.edmcouncil.org/fibo/ontology/FND/Accounting/CurrencyAmount/
+default_prefix: dmc
+default_range: string
+
+imports:
+  - linkml:types
+
+types:
+  Money:
+    typeof: string
+    uri: duly:money
+    description: >-
+      duly's `money` value kind: a decimal-string amount plus an ISO 4217
+      currency (spec/grounded-facts.md D2). Declared as a named type so a
+      slot's range can say "money" and the conformance gate can hold the
+      fact's value.kind to it.
+    close_mappings:
+      - fibo-fnd-cur:MonetaryAmount
+
+enums:
+  StateOrSubdivisionCode:
+    description: >-
+      ISO 3166-2 country subdivisions (e.g. US-CA). An OPEN code set: the
+      standard is external and its membership is not vendored here, so the
+      conformance gate checks the code system identity but not membership.
+    code_set: urn:iso:std:iso:3166:-2
+    annotations:
+      codeSystem: iso-3166-2
+      openCodeSet: true
+
+  FeeType:
+    description: >-
+      The kind of closing fee under tolerance comparison. Only the values
+      the starter corpus and the TRID pack use are enumerated.
+    annotations:
+      codeSystem: duly-starter-trid/fee-types
+      mismo: FEE_DETAIL.FeeType
+    permissible_values:
+      TransferTax:
+        description: Government transfer tax on the conveyance.
+
+  ToleranceCategory:
+    description: >-
+      DERIVED code set — which 12 CFR 1026.19(e)(3) tolerance bucket the
+      fee fell into, concluded by the TRID pack.
+    annotations:
+      codeSystem: duly-starter-trid/tolerance-categories
+    permissible_values:
+      ZeroTolerance:
+        description: A 1026.19(e)(3)(i) zero-tolerance charge.
+
+  NotarizationMethod:
+    description: How the notarial act was performed.
+    annotations:
+      codeSystem: duly-starter-ron/notarization-methods
+    permissible_values:
+      InPerson:
+        description: Traditional physical-presence notarization.
+      RemoteOnline:
+        description: Remote online notarization by audio-visual technology.
+
+  ClosingDocumentType:
+    description: >-
+      The closing-package document being routed to a signing channel. No
+      verified MISMO enumeration reference: MISMO's DocumentType value set
+      is part of the licensed model, so its values are not mirrored here.
+    annotations:
+      codeSystem: duly-starter-esign/document-types
+    permissible_values:
+      ClosingDisclosure:
+        description: The TRID Closing Disclosure.
+      DeedOfTrust:
+        description: The security instrument.
+      EscrowInstructions:
+        description: Instructions to the settlement/escrow agent.
+      PromissoryNote:
+        description: The borrower's note.
+      RightToCancelNotice:
+        description: The TILA notice of the right to rescind.
+
+  SigningMethod:
+    description: >-
+      DERIVED code set — the signing channel the eSign pack routes a
+      document to.
+    annotations:
+      codeSystem: duly-starter-esign/signing-methods
+    permissible_values:
+      WetInk:
+        description: Physical signature required.
+      ESign:
+        description: Standard electronic signature (ESIGN/UETA).
+      ENoteEVault:
+        description: eNote signed into an eVault with MERS eRegistry control.
+
+  TransactionType:
+    description: The purpose of the credit transaction, for rescission scope.
+    annotations:
+      codeSystem: duly-starter-resc/transaction-types
+      mismo: TERMS_OF_LOAN.LoanPurposeType
+    permissible_values:
+      Purchase:
+        description: Purchase-money (residential mortgage transaction).
+      Refinance:
+        description: Refinance of an existing obligation.
+
+  InstrumentType:
+    description: The instrument submitted for recording.
+    annotations:
+      codeSystem: duly-starter-recording/instrument-types
+      mismo: DOCUMENT_CLASS.RecordingJurisdictionDocumentCode
+    permissible_values:
+      DeedOfTrust:
+        description: Security instrument.
+      GrantDeed:
+        description: Conveyance deed.
+
+classes:
+  Fee:
+    class_uri: trid:Fee
+    description: >-
+      One closing fee tracked across the Loan Estimate baseline and the
+      Closing Disclosure, for TRID tolerance comparison.
+    attributes:
+      feeType:
+        slot_uri: trid:feeType
+        range: FeeType
+        description: The fee's category.
+        annotations:
+          mismo: FEE_DETAIL.FeeType
+      disclosedAmountAtBaseline:
+        slot_uri: trid:disclosedAmountAtBaseline
+        range: Money
+        description: >-
+          The amount disclosed on the baseline Loan Estimate.
+        annotations:
+          mismo: FEE_DETAIL.FeeEstimatedTotalAmount
+      actualAmountAtClosing:
+        slot_uri: trid:actualAmountAtClosing
+        range: Money
+        description: The amount actually charged on the Closing Disclosure.
+        annotations:
+          mismo: FEE_DETAIL.FeeActualTotalAmount
+      toleranceCategory:
+        slot_uri: trid:toleranceCategory
+        range: ToleranceCategory
+        description: >-
+          DERIVED — which tolerance bucket applied, concluded by
+          rulepacks/trid-fee-tolerance-us-federal.
+        annotations:
+          derived: true
+      toleranceCureAmount:
+        slot_uri: trid:toleranceCureAmount
+        range: Money
+        description: >-
+          DERIVED — the lender cure owed for a tolerance violation.
+        annotations:
+          derived: true
+
+  Notarization:
+    class_uri: ron:Notarization
+    description: One notarial act performed at (or for) the closing.
+    attributes:
+      governingState:
+        slot_uri: ron:governingState
+        range: StateOrSubdivisionCode
+        description: >-
+          The state whose notarial law governs the act.
+        annotations:
+          mismo: NOTARY_CERTIFICATE_DETAIL.NotaryCertificateSigningStateName
+      notarizationMethod:
+        slot_uri: ron:notarizationMethod
+        range: NotarizationMethod
+        description: >-
+          How the act was performed. No verified MISMO v3.4 reference: the
+          public 3.4 model predates remote-online-notarization data points,
+          and later versions were not verifiable from public sources.
+      ronPermitted:
+        slot_uri: ron:ronPermitted
+        range: boolean
+        description: >-
+          DERIVED — whether remote online notarization was authorized in
+          the governing state on the closing date, concluded by
+          rulepacks/notarization-ron-us-states.
+        annotations:
+          derived: true
+      notarizationCompliant:
+        slot_uri: ron:notarizationCompliant
+        range: boolean
+        description: >-
+          DERIVED — whether the act as performed was compliant.
+        annotations:
+          derived: true
+
+  Closing:
+    class_uri: ron:Closing
+    description: The closing event itself.
+    attributes:
+      closingDate:
+        slot_uri: ron:closingDate
+        range: date
+        description: The scheduled or actual closing date.
+        annotations:
+          mismo: CLOSING_INFORMATION_DETAIL.ClosingDate
+
+  SigningTask:
+    class_uri: pkg:SigningTask
+    description: >-
+      One closing-package document awaiting signature, with the document's
+      type carried as an attribute (one entity per case; see the rule-IR v0
+      one-entity-per-type constraint).
+    attributes:
+      documentType:
+        slot_uri: pkg:documentType
+        range: ClosingDocumentType
+        description: Which document this signing task covers.
+        annotations:
+          mismo: DOCUMENT_CLASS.DocumentType
+      esignConsentObtained:
+        slot_uri: pkg:esignConsentObtained
+        range: boolean
+        description: >-
+          Whether ESIGN §101(c) consumer consent to electronic records was
+          obtained. No verified MISMO reference.
+      eNoteRegistered:
+        slot_uri: pkg:eNoteRegistered
+        range: boolean
+        description: >-
+          Whether the eNote is registered with the MERS eRegistry.
+        annotations:
+          mismo: MERS_REGISTRATION.MERSRegistrationType
+      eSignEligible:
+        slot_uri: pkg:eSignEligible
+        range: boolean
+        description: >-
+          DERIVED — whether the document may be signed electronically,
+          concluded by rulepacks/esign-closing-package.
+        annotations:
+          derived: true
+      signingMethod:
+        slot_uri: pkg:signingMethod
+        range: SigningMethod
+        description: DERIVED — the signing channel the document routes to.
+        annotations:
+          derived: true
+
+  Loan:
+    class_uri: resc:Loan
+    description: >-
+      The consumer-credit transaction whose right of rescission is under
+      adjudication.
+    close_mappings:
+      - fibo-loan-lg:Loan
+      - fibo-loan-re:LoanSecuredByRealEstate
+    attributes:
+      consummationDate:
+        slot_uri: resc:consummationDate
+        range: date
+        description: >-
+          The date the consumer became contractually obligated (12 CFR
+          1026.2(a)(13)).
+        annotations:
+          mismo: CLOSING_INFORMATION_DETAIL.ClosingDate
+      transactionType:
+        slot_uri: resc:transactionType
+        range: TransactionType
+        description: Purchase or refinance, for the 1026.23 exemption.
+        annotations:
+          mismo: TERMS_OF_LOAN.LoanPurposeType
+      securedByPrincipalDwelling:
+        slot_uri: resc:securedByPrincipalDwelling
+        range: boolean
+        description: >-
+          Whether the security interest is in the consumer's principal
+          dwelling (1026.23(a)(1) scope). No verified MISMO reference.
+      noticeDeliveredDate:
+        slot_uri: resc:noticeDeliveredDate
+        range: date
+        description: >-
+          When the notice of the right to rescind (H-8) was delivered.
+      materialDisclosuresDeliveredDate:
+        slot_uri: resc:materialDisclosuresDeliveredDate
+        range: date
+        description: When the material disclosures were delivered.
+      statedRescissionDeadline:
+        slot_uri: resc:statedRescissionDeadline
+        range: date
+        description: >-
+          The "final date to cancel" printed in the H-8 notice blank — an
+          EXTRACTED fact, per the tila-rescission pack's MODELING BOUNDARY.
+        annotations:
+          mismo: CLOSING_INFORMATION_DETAIL.RescissionDate
+      rescissionPeriodInForce:
+        slot_uri: resc:rescissionPeriodInForce
+        range: boolean
+        description: >-
+          Effective-dated window fact — true over [consummation, first
+          fundable day).
+      rescissionPeriodExpired:
+        slot_uri: resc:rescissionPeriodExpired
+        range: boolean
+        description: >-
+          Effective-dated window fact — true from the first fundable day on.
+      rescissionApplies:
+        slot_uri: resc:rescissionApplies
+        range: boolean
+        description: >-
+          DERIVED — whether the right of rescission applies at all,
+          concluded by rulepacks/tila-rescission-us-federal.
+        annotations:
+          derived: true
+      rescissionDeadline:
+        slot_uri: resc:rescissionDeadline
+        range: date
+        description: >-
+          DERIVED — the certified rescission deadline (the pack refuses to
+          certify an impossible printed date rather than computing one).
+        annotations:
+          derived: true
+          mismo: CLOSING_INFORMATION_DETAIL.RescissionDate
+      fundingPermitted:
+        slot_uri: resc:fundingPermitted
+        range: boolean
+        description: DERIVED — whether the lender may disburse.
+        annotations:
+          derived: true
+
+  RecordingSubmission:
+    class_uri: rec:RecordingSubmission
+    description: >-
+      One instrument as submitted to a county recorder, with the format
+      and tax-declaration attributes the recording packs check.
+    attributes:
+      recordingState:
+        slot_uri: rec:recordingState
+        range: StateOrSubdivisionCode
+        description: The state of the recording jurisdiction.
+      instrumentType:
+        slot_uri: rec:instrumentType
+        range: InstrumentType
+        description: What kind of instrument is being recorded.
+        annotations:
+          mismo: DOCUMENT_CLASS.RecordingJurisdictionDocumentCode
+      firstPageTopSpaceInches:
+        slot_uri: rec:firstPageTopSpaceInches
+        range: decimal
+        description: >-
+          The measured blank space at the top of the first page, in inches
+          — the one measured quantity in the recording scenario, and the
+          one that carries a calibrated confidence. No verified MISMO
+          reference (page-format measurements are recorder requirements,
+          not loan-file data points).
+      coverPageAttached:
+        slot_uri: rec:coverPageAttached
+        range: boolean
+        description: Whether a separate cover/first page was attached.
+      concurrentWithTaxedTransfer:
+        slot_uri: rec:concurrentWithTaxedTransfer
+        range: boolean
+        description: >-
+          Whether the instrument records concurrently with a transfer
+          subject to documentary transfer tax (the SB 2 fee exemption).
+      transferTaxDeclarationPresent:
+        slot_uri: rec:transferTaxDeclarationPresent
+        range: boolean
+        description: >-
+          Whether the documentary-transfer-tax declaration appears on the
+          instrument face (Cal. Rev. & Tax. Code § 11933).
+      assessorParcelNumber:
+        slot_uri: rec:assessorParcelNumber
+        range: string
+        description: The assessor's parcel number, as printed.
+        annotations:
+          mismo: PARCEL_IDENTIFICATION.ParcelIdentifier
+      recordable:
+        slot_uri: rec:recordable
+        range: boolean
+        description: >-
+          DERIVED — whether the instrument will be accepted for recording
+          as submitted, concluded by rulepacks/county-recording-us.
+        annotations:
+          derived: true
+      requiredFirstPageTopSpaceInches:
+        slot_uri: rec:requiredFirstPageTopSpaceInches
+        range: decimal
+        description: >-
+          DERIVED — the first-page reservation the jurisdiction requires.
+        annotations:
+          derived: true
+      sb2FeeDueUSD:
+        slot_uri: rec:sb2FeeDueUSD
+        range: Money
+        description: >-
+          DERIVED — the Building Homes and Jobs Act (SB 2) fee due at
+          recording.
+        annotations:
+          derived: true

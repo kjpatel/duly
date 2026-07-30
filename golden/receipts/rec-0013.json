@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:e287df2d807c3d1cf50c53bb2a064388b3ae0d850555815bdfbd5cbcbf50a424",
-  "receiptSha256": "e287df2d807c3d1cf50c53bb2a064388b3ae0d850555815bdfbd5cbcbf50a424",
+  "id": "urn:duly:receipt:sha256:cee33f6dba55ca5f642fc9b762635e10db84d991a31b48f54ac629ce8a4ddc09",
+  "receiptSha256": "cee33f6dba55ca5f642fc9b762635e10db84d991a31b48f54ac629ce8a4ddc09",
   "caseId": "case:golden:rec-0013",
   "decision": {
     "entity": "submission:rec-0013",
@@ -68,21 +68,21 @@
     "rule": "CA-SB2-EXEMPT-DTT",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:14fa01c7e28834efab697765b4f479cd26e72d5170e1114df990ec10e881c5f9"
+        "factId": "urn:duly:fact:sha256:bd37505d8f66e02aeb7b761a66d8459242eb3a68ba5efbc1d50a1354d00d97c8"
       },
       {
-        "factId": "urn:duly:fact:sha256:97e3fab79f6299d7dd714570bcbcdecb68dd97cf0f83bbeef2d0104826525f97"
+        "factId": "urn:duly:fact:sha256:f6b396d9ccfe682148c268ea4b5d226376e9cd75bdc10a1d5a0106a04c904377"
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:14fa01c7e28834efab697765b4f479cd26e72d5170e1114df990ec10e881c5f9",
-      "contentHash": "14fa01c7e28834efab697765b4f479cd26e72d5170e1114df990ec10e881c5f9"
+      "id": "urn:duly:fact:sha256:bd37505d8f66e02aeb7b761a66d8459242eb3a68ba5efbc1d50a1354d00d97c8",
+      "contentHash": "bd37505d8f66e02aeb7b761a66d8459242eb3a68ba5efbc1d50a1354d00d97c8"
     },
     {
-      "id": "urn:duly:fact:sha256:97e3fab79f6299d7dd714570bcbcdecb68dd97cf0f83bbeef2d0104826525f97",
-      "contentHash": "97e3fab79f6299d7dd714570bcbcdecb68dd97cf0f83bbeef2d0104826525f97"
+      "id": "urn:duly:fact:sha256:f6b396d9ccfe682148c268ea4b5d226376e9cd75bdc10a1d5a0106a04c904377",
+      "contentHash": "f6b396d9ccfe682148c268ea4b5d226376e9cd75bdc10a1d5a0106a04c904377"
     }
   ],
   "abstentions": [],

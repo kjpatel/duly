@@ -62,8 +62,8 @@ duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is 
 
 | Kind | Directories | An adopting org… |
 |---|---|---|
-| **The toolkit** — the seam itself | `spec/`, `kernel/`, `store/`, `extraction/`, `calibration/`, `review/`, `assurance/` | imports and runs these unchanged; they contain zero domain knowledge |
-| **Example content** — what a *user* of the toolkit authors | `rulepacks/`, `starters/`, `golden/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
+| **The toolkit** — the seam itself | `spec/`, `kernel/`, `store/`, `extraction/`, `conformance/`, `calibration/`, `review/`, `assurance/` | imports and runs these unchanged; they contain zero domain knowledge |
+| **Example content** — what a *user* of the toolkit authors | `rulepacks/`, `starters/`, `ontologies/`, `golden/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
 | **Reference wiring** | `demo/` | treats it as a worked example of tying the pieces into a service, not as the product |
 
 The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M6 below; until it lands, [rulepacks/README.md](rulepacks/README.md) and the per-component READMEs cover each edge individually.
@@ -229,7 +229,7 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; **M0 through M3 are complete** — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway — PROV-O export and the ontology conformance gate shipped; DMN and constraint solving remain; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
+Pre-alpha; **M0 through M3 are complete** ([v0.3.0](https://github.com/kjpatel/duly/releases/tag/v0.3.0)) — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway — PROV-O export and the ontology conformance gate shipped; DMN and constraint solving remain; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
 
 ```bash
 uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)

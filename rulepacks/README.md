@@ -1,0 +1,83 @@
+# Authoring a rule pack
+
+A rule pack is versioned, cited, effective-dated domain knowledge — the contribution surface where legal and operational expertise matters more than familiarity with the kernel. This guide is the path from "I know a rule" to "the rule is adjudicated, demonstrated, and protected by regression tests."
+
+Read [spec/rule-ir.md](../spec/rule-ir.md) for what the IR *means*. This document is about the mechanics around it.
+
+## A pack is three things
+
+```
+rulepacks/<pack-name>/
+  pack.yaml        # metadata, decisions, rules, optional abstentionPolicy
+  expected.yaml    # declared adjudication outcomes — the pack's own test suite
+  fixtures/<case>/facts/*.json   # optional: fact sets for expected.yaml cases
+```
+
+Copy [termination-notice-us-states](termination-notice-us-states/) for a jurisdiction-scoped pack, or [trid-fee-tolerance-us-federal](trid-fee-tolerance-us-federal/) for a two-document computation. Neither is a toy; both are what shipped.
+
+## Most wiring is automatic. Three things are not.
+
+This is the part worth internalizing, because it is where contributions silently come up short.
+
+**Automatic** — add the file and it works, no registration anywhere:
+
+| You add | It is picked up by |
+|---|---|
+| `rulepacks/<name>/expected.yaml` | `kernel/tests/test_rulepacks.py`, which globs `rulepacks/*/expected.yaml` |
+| `starters/<name>/scenario.json` | the demo, which iterates `starters/*/` at startup |
+| `starters/<name>/facts/*.json` | `starters/tools/check_facts.py` (schema, hashes, spans) |
+| a new test directory | CI, which runs all suites listed in `.github/workflows/ci.yml` |
+
+**Not automatic** — nothing fails loudly if you skip these, which is exactly why they get skipped:
+
+1. **Demo verdict phrasing.** A new decision attribute renders through `_determination()` in [demo/app.py](../demo/app.py) or it falls to a generic `attribute = value` string and leaks a raw CURIE into the UI. There is a test for this (`test_every_offered_question_is_answerable_and_phrased_for_humans`), so it will fail — but it fails in `demo/`, which pack authors do not expect to touch. Boolean decisions get a Yes/No fallback and pass without phrasing; code-, date-, and money-valued decisions do not.
+2. **Golden-corpus coverage.** [Impact analysis](../assurance/duly_assurance/impact.py) — the "this change flips N of M historical decisions" CI comment — runs *over the golden corpus*, not over `expected.yaml`. A pack with no generator template in [assurance/duly_assurance/generate.py](../assurance/duly_assurance/generate.py) gets a cheerful "0 of N decisions flip" for every edit, forever. `expected.yaml` catches breakage; only the corpus catches *drift*. Adding a template is a registry entry plus a fact builder — `STATE_TEMPLATES` is deliberately data, not code.
+3. **Extractor pinning for scripted confidences.** If a scenario depends on a specific confidence value — e.g. a below-floor fact that must abstain — set `"demoExtractor": "stub"` in its `scenario.json`. Docling measures its own confidence and will silently overwrite a scripted 0.58 with a passing 0.9, skipping the arc the scenario exists to demonstrate. This one has no failing test to warn you; it was found by looking at the running demo.
+
+## The path, in order
+
+1. **Write `pack.yaml`.** Decisions first (each with `attribute`, `entityType`, and the human `question` the demo shows), then rules: `priority`, `citation`, `effectiveFrom`, `given`/`when`/`then`, and `overrides` where a rule defeats a default.
+2. **Write `expected.yaml`** covering every rule and every defeat chain, plus both sides of each effective-date boundary. `factsFrom` points at a starter's facts or at `fixtures/`. This is what CI runs, so under-covering here is invisible until something breaks in production.
+3. **Build a starter** — synthetic documents so the pack is demonstrable. Write `starters/<name>/make_documents.py` importing the shared helpers from [starters/tools/make_documents.py](../starters/tools/make_documents.py) (import them; do not edit the shared file), commit the PDFs and renditions, and pin each document's `sha256` in `scenario.json`.
+4. **Declare fact targets and extract.** One `starters/tools/targets/<name>-<doc>.json` per document, then `starters/tools/extract.py` to emit span-verified facts, then `check_facts.py` to prove every quote matches `rendition[start:end]`.
+5. **Set `domain` in `scenario.json`** (`"mortgage"`, `"insurance"`, …) so the demo groups the scenario. Unknown slugs get a title-cased label and a missing field lands in "Other" — graceful, but unlabeled.
+6. **Add `_determination` phrasing** for each decision: `{verdict, detail, tone}`, where `tone` is `pos`/`neg`/`warn`/`""`. Wording lives server-side only — never in `app.js`.
+7. **Add a generator template** so the corpus and impact analysis cover the pack. Draw parameters that straddle every boundary the rules encode, the way the notice templates' margin ranges cross each state's threshold in both directions.
+
+## Constraints that will bite you
+
+All verified against the kernel, not folklore:
+
+- **One entity per `entityType` per case, one live fact per attribute.** Per-document decisions therefore need either one case per document or the document type modelled as an attribute of a single entity. Two live facts for one attribute is a *conflict*, not an overwrite ([spec/rule-ir.md](../spec/rule-ir.md)).
+- **Same-priority rules concluding the same attribute must be provably disjoint**, or the pack validator rejects it. The proofs it accepts: non-overlapping effective windows, contradictory equality guards, or an explicit `overrides`. The guard check (`_equality_guards` in [kernel/duly_kernel/ir.py](../kernel/duly_kernel/ir.py)) matches only `var == "quoted string"` — **boolean guards do not count**, so two rules distinguished solely by `x == true` / `x == false` need an explicit `overrides` even though they look disjoint to a human.
+- **The IR has no calendar arithmetic.** Expressions cover boolean logic, `min`/`max`, `abs`, `days_between`, comparisons, and typed literals — there is no date-plus-N, no day-of-week, no holiday calendar. If your rule needs business-day math, model the honestly expressible slice and document the boundary, as [tila-rescission](tila-rescission-us-federal/pack.yaml) does in its `MODELING BOUNDARY` header. A documented limitation is a contribution; a silent approximation is a defect.
+- **Changing a pack changes receipts.** Bump the pack version, and expect the impact-analysis CI comment to tell you how many historical decisions moved. Adding an `abstentionPolicy` where there was none excludes below-floor facts and will shift outcomes.
+
+## Honesty conventions
+
+The repo's culture here is not negotiable, because the entire value proposition is that a decision is defensible.
+
+- **Every rule carries a real citation**, or a `TODO(verify)` marker saying precisely what was not confirmed. Never present an unverified requirement as verified.
+- **Scope comments** state what a rule does and does not cover — jurisdictions, transaction types, edge cases deliberately excluded.
+- **Never invent statutory history.** If you need an effective-date change to demonstrate replay, use the real dates ([notarization-ron-us-states](notarization-ron-us-states/pack.yaml) is built entirely on real state authorization dates). Where a synthetic version is unavoidable, mark it `DEMO-SYNTHETIC` and say so in the top-level README's honest-labels paragraph.
+- **Label scripted values.** A confidence chosen to make a demo reproducible is scripted, and its comment says so.
+- **Fail safe, and say which way is safe.** Unknown jurisdictions and document types should resolve to the conservative outcome, with the asymmetry argued in the pack: [esign-closing-package](esign-closing-package/pack.yaml) explains why unknown document types route to wet ink (paper costs convenience; a wrong eSign risks enforceability), while [notarization-ron-us-states](notarization-ron-us-states/pack.yaml) explains why an unauthorized state is a *decision*, not an abstention (RON exists only by affirmative authorization).
+
+## Verifying your pack
+
+```bash
+uv run pytest kernel/tests -q                       # your expected.yaml runs here
+uv run python3 starters/tools/check_facts.py         # schema, hashes, quote spans
+uv run python -m duly_assurance verify               # every golden case still replays
+uv run python -m duly_assurance impact               # what your change moved
+uv run spec/validate.py                              # spec examples and schemas
+uv run uvicorn demo.app:app --port 8788              # see it adjudicate
+```
+
+Then the full suite, because a pack touches more than it looks like it touches:
+
+```bash
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
+```
+
+A useful final check that no test performs: perturb one of your rules, run `impact`, and confirm it reports the flips you expect. If it reports zero, your pack has no corpus coverage — see item 2 above.

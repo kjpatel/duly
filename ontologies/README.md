@@ -21,12 +21,21 @@ them. A real deployment replaces them (see the swap walkthrough below).
 | [`duly-starter-notice/0.1.0.yaml`](duly-starter-notice/0.1.0.yaml) | insurance | `nc:` — the policy and the termination notice. Keeps the exact name the committed insurance facts (including the preserved-forever `golden/cases/review-0001`) already pin inside their content hashes. |
 | [`duly-mortgage-closing/0.1.0.yaml`](duly-mortgage-closing/0.1.0.yaml) | mortgage closing | `trid:`, `ron:`, `pkg:`, `resc:`, `rec:` — one artifact for the whole domain, the way MISMO's model spans all of mortgage closing. Carries the standards crosswalk. |
 
-Both files are genuine LinkML. Prove it with real tooling (marker-gated,
-skipped when the tooling is absent — the docling pattern):
+Both files are genuine LinkML — not merely acceptable to duly's own
+pure-Python subset validator. Real LinkML tooling proves it, and
+[CI runs that proof](../.github/workflows/optional-deps.yml) on every change
+under `ontologies/`, on every merge to `main`, and weekly. Run it yourself the
+same way (marker-gated, skipped when the tooling is absent — the docling
+pattern):
 
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -m linkml
 ```
+
+This matters more than it looks. The hot-path gate deliberately does not import
+linkml-runtime, so it would keep passing on a file that had stopped being valid
+LinkML. This suite is the only thing standing between "duly's validator accepts
+it" and "it is what we say it is".
 
 ## Useful commands
 

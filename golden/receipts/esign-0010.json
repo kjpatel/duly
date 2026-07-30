@@ -1,0 +1,78 @@
+{
+  "id": "urn:duly:receipt:sha256:b32a515cac44125ec0e25a70765f5b20b059e9b118ff7f67e879478319785324",
+  "receiptSha256": "b32a515cac44125ec0e25a70765f5b20b059e9b118ff7f67e879478319785324",
+  "caseId": "case:golden:esign-0010",
+  "decision": {
+    "entity": "task:esign-0010",
+    "attribute": "pkg:signingMethod",
+    "value": {
+      "kind": "code",
+      "value": "WetInk",
+      "codeSystem": "duly-starter-esign/signing-methods",
+      "codeSystemVersion": "0.1.0"
+    }
+  },
+  "asOf": {
+    "effective": "2023-12-12T00:00:00Z",
+    "knowledge": "2023-12-14T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-DEF-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail-safe to wet ink)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "PKG-NOTE-30",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021(b)-(d) (transferable records; control requirement)",
+        "url": "https://www.law.cornell.edu/uscode/text/15/7021"
+      },
+      "priority": 150,
+      "effectiveFrom": "2000-10-01T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0010",
+      "attribute": "pkg:signingMethod",
+      "value": {
+        "kind": "code",
+        "value": "WetInk",
+        "codeSystem": "duly-starter-esign/signing-methods",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    "rule": "PKG-NOTE-30",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:5dfdcb43abd98c1de6d53ff9cd2f5398abb23022c31e75bd71833d5c4df35d30"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:5dfdcb43abd98c1de6d53ff9cd2f5398abb23022c31e75bd71833d5c4df35d30",
+      "contentHash": "5dfdcb43abd98c1de6d53ff9cd2f5398abb23022c31e75bd71833d5c4df35d30"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

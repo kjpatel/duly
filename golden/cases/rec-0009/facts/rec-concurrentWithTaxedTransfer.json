@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:f1e145d7ecf93fcf20c3ba0d458b2f3cc998c27131ac2ff09dd11abd57e7c6d9",
+  "contentHash": "f1e145d7ecf93fcf20c3ba0d458b2f3cc998c27131ac2ff09dd11abd57e7c6d9",
+  "caseId": "case:golden:rec-0009",
+  "entity": {
+    "id": "submission:rec-0009",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:concurrentWithTaxedTransfer",
+  "value": {
+    "kind": "boolean",
+    "value": false
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-10-04T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-10-04T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-10-04T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

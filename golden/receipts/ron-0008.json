@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:35128b14a59492596e465690bebf28422590da7b23901f02e6e511ac8c98e200",
+  "receiptSha256": "35128b14a59492596e465690bebf28422590da7b23901f02e6e511ac8c98e200",
+  "caseId": "case:golden:ron-0008",
+  "decision": {
+    "entity": "notarization:ron-0008",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2020-01-01T00:00:00Z",
+    "knowledge": "2020-01-03T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "FL-RON-2020",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fla. Stat. § 117.209 (s. 7, ch. 2019-71, Laws of Fla., eff. Jan. 1, 2020)",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0100-0199/0117/Sections/0117.209.html"
+      },
+      "priority": 100,
+      "effectiveFrom": "2020-01-01T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0008",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RON-COMP-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

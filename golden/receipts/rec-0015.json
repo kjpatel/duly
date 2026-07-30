@@ -1,0 +1,105 @@
+{
+  "id": "urn:duly:receipt:sha256:b88c5f39f7c6d7de6af81f5c1c9bb08bc8f3e3ccd668b273d4bcfff8b650eb6c",
+  "receiptSha256": "b88c5f39f7c6d7de6af81f5c1c9bb08bc8f3e3ccd668b273d4bcfff8b650eb6c",
+  "caseId": "case:golden:rec-0015",
+  "decision": {
+    "entity": "submission:rec-0015",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-10-04T00:00:00Z",
+    "knowledge": "2026-10-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-CA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (California packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-TOPSPACE-25",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 100,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-SB2-EXEMPT-DTT",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27388.1(a)(2)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+      },
+      "priority": 150,
+      "effectiveFrom": "2018-01-01T00:00:00Z",
+      "defeated": [
+        "CA-SB2-75"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0015",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "REC-DEF-CA",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:a7fa7c01321592f8806a91f4a151dce209d0f80682586dd557cfd0c4281e3719"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:a7fa7c01321592f8806a91f4a151dce209d0f80682586dd557cfd0c4281e3719",
+      "contentHash": "a7fa7c01321592f8806a91f4a151dce209d0f80682586dd557cfd0c4281e3719"
+    }
+  ],
+  "abstentions": [
+    {
+      "entity": "submission:rec-0015",
+      "attribute": "rec:firstPageTopSpaceInches",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:53f5a3dc45a0565aa475bb54a217f279a1546c2d752799a0f5eefccc8976efe4"
+      ],
+      "confidence": {
+        "score": 0.8,
+        "method": "conformal"
+      },
+      "threshold": {
+        "minConfidence": 0.85,
+        "source": "attribute",
+        "pack": "county-recording-us",
+        "packVersion": "2026.1.0"
+      },
+      "routedTo": "recording-review"
+    }
+  ],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "id": "urn:duly:receipt:sha256:1212f30dd01c7238d951e6efa964b0c043f4bd061c90e044d0fe4f2268724b95",
+  "receiptSha256": "1212f30dd01c7238d951e6efa964b0c043f4bd061c90e044d0fe4f2268724b95",
+  "caseId": "case:golden:rec-0009",
+  "decision": {
+    "entity": "submission:rec-0009",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-10-04T00:00:00Z",
+    "knowledge": "2026-10-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "CA-TOPSPACE-25",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 100,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-DTT-11933",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Rev. & Tax. Code § 11933",
+        "url": "https://law.justia.com/codes/california/code-rtc/division-2/part-6-7/chapter-4/section-11933/"
+      },
+      "priority": 210,
+      "effectiveFrom": "2015-01-01T00:00:00Z",
+      "defeated": [
+        "REC-DEF-CA"
+      ]
+    },
+    {
+      "ruleId": "CA-SB2-75",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27388.1(a)(1)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+      },
+      "priority": 100,
+      "effectiveFrom": "2018-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0009",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "CA-DTT-11933",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:68c27027bc55be3b29c6fa028ce14f75b5a493885bd4830b283f558956c01332"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:8daee2fd1b8e56a61c0057c41bcbac878a0e6b3afe122d8970224a93a7dbace9"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:f22e766ef056a68342380a239e5e74efed40bb6b79dec6090c234c95a42e4a64"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:68c27027bc55be3b29c6fa028ce14f75b5a493885bd4830b283f558956c01332",
+      "contentHash": "68c27027bc55be3b29c6fa028ce14f75b5a493885bd4830b283f558956c01332"
+    },
+    {
+      "id": "urn:duly:fact:sha256:8daee2fd1b8e56a61c0057c41bcbac878a0e6b3afe122d8970224a93a7dbace9",
+      "contentHash": "8daee2fd1b8e56a61c0057c41bcbac878a0e6b3afe122d8970224a93a7dbace9"
+    },
+    {
+      "id": "urn:duly:fact:sha256:f22e766ef056a68342380a239e5e74efed40bb6b79dec6090c234c95a42e4a64",
+      "contentHash": "f22e766ef056a68342380a239e5e74efed40bb6b79dec6090c234c95a42e4a64"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "urn:duly:receipt:sha256:61144a1fbf10526e7e63d8d1034b400f421eaecb7959e10824d294599e33a285",
+  "receiptSha256": "61144a1fbf10526e7e63d8d1034b400f421eaecb7959e10824d294599e33a285",
+  "caseId": "case:golden:esign-0011",
+  "decision": {
+    "entity": "task:esign-0011",
+    "attribute": "pkg:signingMethod",
+    "value": {
+      "kind": "code",
+      "value": "ENoteEVault",
+      "codeSystem": "duly-starter-esign/signing-methods",
+      "codeSystemVersion": "0.1.0"
+    }
+  },
+  "asOf": {
+    "effective": "2023-12-13T00:00:00Z",
+    "knowledge": "2023-12-15T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-NOTE-31",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021; Fannie Mae Selling Guide B8-8-02 (12/13/2023); Freddie Mac Seller/Servicer Guide ch. 1402",
+        "url": "https://selling-guide.fanniemae.com/sel/b8-8-02/requirements-creating-closing-and-correcting-enotes"
+      },
+      "priority": 150,
+      "effectiveFrom": "2023-12-13T00:00:00Z",
+      "defeated": [
+        "PKG-NOTE-30"
+      ]
+    },
+    {
+      "ruleId": "PKG-NOTE-32",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021(b), (d); Fannie Mae Selling Guide B8-8-02 (12/13/2023)",
+        "url": "https://www.law.cornell.edu/uscode/text/15/7021"
+      },
+      "priority": 150,
+      "effectiveFrom": "2023-12-13T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-01"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0011",
+      "attribute": "pkg:signingMethod",
+      "value": {
+        "kind": "code",
+        "value": "ENoteEVault",
+        "codeSystem": "duly-starter-esign/signing-methods",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    "rule": "PKG-NOTE-31",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:9b136b4770344bc4386070f7485b680d8cfc740764f3ba45e4cf8e753caa66e4"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:a850a9b25928234b1562c68238d6366d2dd1ca1c23b247102bcf46c2b4802261"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:9b136b4770344bc4386070f7485b680d8cfc740764f3ba45e4cf8e753caa66e4",
+      "contentHash": "9b136b4770344bc4386070f7485b680d8cfc740764f3ba45e4cf8e753caa66e4"
+    },
+    {
+      "id": "urn:duly:fact:sha256:a850a9b25928234b1562c68238d6366d2dd1ca1c23b247102bcf46c2b4802261",
+      "contentHash": "a850a9b25928234b1562c68238d6366d2dd1ca1c23b247102bcf46c2b4802261"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

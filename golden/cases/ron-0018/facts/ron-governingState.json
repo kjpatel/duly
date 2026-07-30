@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:5dcc75b0f94e9681b5c76156432f6584170cf42aa8f76a5bfa8182c620bbc923",
+  "contentHash": "5dcc75b0f94e9681b5c76156432f6584170cf42aa8f76a5bfa8182c620bbc923",
+  "caseId": "case:golden:ron-0018",
+  "entity": {
+    "id": "notarization:ron-0018",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-GA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2021-02-01T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2021-02-01T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2021-02-01T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

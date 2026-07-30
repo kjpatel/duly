@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:79e61e540201d45db123d8b20d5b9421524d642364e9bddd6e309929aa849668",
+  "contentHash": "79e61e540201d45db123d8b20d5b9421524d642364e9bddd6e309929aa849668",
+  "caseId": "case:golden:ron-0023",
+  "entity": {
+    "id": "notarization:ron-0023",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-VA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2012-07-01T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2012-07-01T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2012-07-01T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

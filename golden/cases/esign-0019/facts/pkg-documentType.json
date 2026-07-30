@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:d20f652237fc15e5148a848d18bce85d03fa65dfd82fbaf7f0d39ca305e4ff18",
+  "contentHash": "d20f652237fc15e5148a848d18bce85d03fa65dfd82fbaf7f0d39ca305e4ff18",
+  "caseId": "case:golden:esign-0019",
+  "entity": {
+    "id": "task:esign-0019",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "DeedOfTrust",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-07-16T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-16T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-16T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

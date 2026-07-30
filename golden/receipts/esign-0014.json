@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:a81c4942ded453231b9d978608fc9d536c367df1ced23fcdc491c9d9061097f2",
+  "receiptSha256": "a81c4942ded453231b9d978608fc9d536c367df1ced23fcdc491c9d9061097f2",
+  "caseId": "case:golden:esign-0014",
+  "decision": {
+    "entity": "task:esign-0014",
+    "attribute": "pkg:eSignEligible",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2028-12-31T00:00:00Z",
+    "knowledge": "2029-01-02T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-DEF-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail-safe to wet ink)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "PKG-NOTE-30",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021(b)-(d) (transferable records; control requirement)",
+        "url": "https://www.law.cornell.edu/uscode/text/15/7021"
+      },
+      "priority": 150,
+      "effectiveFrom": "2000-10-01T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0014",
+      "attribute": "pkg:eSignEligible",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "PKG-DEF-01",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

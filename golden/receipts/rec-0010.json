@@ -1,0 +1,83 @@
+{
+  "id": "urn:duly:receipt:sha256:7048c74c531136a2b03d433544e2a5eda862f83ad352de62f3cced9e6f70e302",
+  "receiptSha256": "7048c74c531136a2b03d433544e2a5eda862f83ad352de62f3cced9e6f70e302",
+  "caseId": "case:golden:rec-0010",
+  "decision": {
+    "entity": "submission:rec-0010",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-10-04T00:00:00Z",
+    "knowledge": "2026-10-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-CA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (California packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-TOPSPACE-25",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 100,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-SB2-75",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27388.1(a)(1)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+      },
+      "priority": 100,
+      "effectiveFrom": "2018-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0010",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "REC-DEF-CA",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:f75baf9cce34752ef7d00c0552c5fc9f163994d292334565f66694a2f2c15e12"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:f75baf9cce34752ef7d00c0552c5fc9f163994d292334565f66694a2f2c15e12",
+      "contentHash": "f75baf9cce34752ef7d00c0552c5fc9f163994d292334565f66694a2f2c15e12"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "urn:duly:receipt:sha256:20901ce52ac3ed975a2ba52f7177115cd4b827f99730edb7633fb23c75addd25",
+  "receiptSha256": "20901ce52ac3ed975a2ba52f7177115cd4b827f99730edb7633fb23c75addd25",
+  "caseId": "case:golden:rec-0022",
+  "decision": {
+    "entity": "submission:rec-0022",
+    "attribute": "rec:requiredFirstPageTopSpaceInches",
+    "value": {
+      "kind": "decimal",
+      "value": "2.0"
+    }
+  },
+  "asOf": {
+    "effective": "2027-09-24T00:00:00Z",
+    "knowledge": "2027-09-26T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-AZ",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (Arizona packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "AZ-TOPMARGIN-20",
+      "version": "1.0.0",
+      "citation": {
+        "text": "A.R.S. § 11-480(B)",
+        "url": "https://www.azleg.gov/ars/11/00480.htm"
+      },
+      "priority": 100,
+      "effectiveFrom": "1991-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0022",
+      "attribute": "rec:requiredFirstPageTopSpaceInches",
+      "value": {
+        "kind": "decimal",
+        "value": "2.0"
+      }
+    },
+    "rule": "AZ-TOPMARGIN-20",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:99f5bb3d835eb518b70f6ab5802f748b41ecb61758673f07830149602942d0da"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:99f5bb3d835eb518b70f6ab5802f748b41ecb61758673f07830149602942d0da",
+      "contentHash": "99f5bb3d835eb518b70f6ab5802f748b41ecb61758673f07830149602942d0da"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

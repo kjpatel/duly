@@ -1,0 +1,94 @@
+{
+  "id": "urn:duly:receipt:sha256:175d10c6e9776dd515b83eec78262603e099818ea6a8ae4bdc204eda8c7e8b8f",
+  "receiptSha256": "175d10c6e9776dd515b83eec78262603e099818ea6a8ae4bdc204eda8c7e8b8f",
+  "caseId": "case:golden:rec-0005",
+  "decision": {
+    "entity": "submission:rec-0005",
+    "attribute": "rec:sb2FeeDueUSD",
+    "value": {
+      "kind": "money",
+      "amount": "0.00",
+      "currency": "USD"
+    }
+  },
+  "asOf": {
+    "effective": "2027-09-24T00:00:00Z",
+    "knowledge": "2027-09-26T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-CA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (California packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-TOPSPACE-25",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 100,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-SB2-EXEMPT-DTT",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27388.1(a)(2)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27388.1."
+      },
+      "priority": 150,
+      "effectiveFrom": "2018-01-01T00:00:00Z",
+      "defeated": [
+        "CA-SB2-75"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0005",
+      "attribute": "rec:sb2FeeDueUSD",
+      "value": {
+        "kind": "money",
+        "amount": "0.00",
+        "currency": "USD"
+      }
+    },
+    "rule": "CA-SB2-EXEMPT-DTT",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:6ac91c7fe51ba831cc1b95f410f95873517a600d01abe55341205521798b6637"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:d519e9837e942603714c26f21a4e4631f8b5a552eeb64d2a045f444003f4b915"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:6ac91c7fe51ba831cc1b95f410f95873517a600d01abe55341205521798b6637",
+      "contentHash": "6ac91c7fe51ba831cc1b95f410f95873517a600d01abe55341205521798b6637"
+    },
+    {
+      "id": "urn:duly:fact:sha256:d519e9837e942603714c26f21a4e4631f8b5a552eeb64d2a045f444003f4b915",
+      "contentHash": "d519e9837e942603714c26f21a4e4631f8b5a552eeb64d2a045f444003f4b915"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

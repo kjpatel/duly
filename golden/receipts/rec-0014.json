@@ -1,0 +1,72 @@
+{
+  "id": "urn:duly:receipt:sha256:f798513c6d68556824e2dec01edf1c2a9c1d2e1fa22669df8ecc094028ce3347",
+  "receiptSha256": "f798513c6d68556824e2dec01edf1c2a9c1d2e1fa22669df8ecc094028ce3347",
+  "caseId": "case:golden:rec-0014",
+  "decision": {
+    "entity": "submission:rec-0014",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2017-11-17T00:00:00Z",
+    "knowledge": "2017-11-19T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-CA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (California packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "CA-TOPSPACE-25",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 100,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0014",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "REC-DEF-CA",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:bace11ab8bc10c345bbe882b20665616448b85c24f208223d930e212baac5c3f"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:bace11ab8bc10c345bbe882b20665616448b85c24f208223d930e212baac5c3f",
+      "contentHash": "bace11ab8bc10c345bbe882b20665616448b85c24f208223d930e212baac5c3f"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

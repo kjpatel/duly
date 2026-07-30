@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:522ebdf5f58867ead0ae80197b58af1d9011526a1fe515a12fb61c7da9aedc99",
+  "contentHash": "522ebdf5f58867ead0ae80197b58af1d9011526a1fe515a12fb61c7da9aedc99",
+  "caseId": "case:golden:ron-0012",
+  "entity": {
+    "id": "notarization:ron-0012",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-NY",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2023-03-03T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2023-03-03T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2023-03-03T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

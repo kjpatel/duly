@@ -1,0 +1,84 @@
+{
+  "id": "urn:duly:receipt:sha256:2cec0a10fe3d8d0aa3e96391cb9d30d5eb28e41f4b84e25a2857eb1a95b36723",
+  "receiptSha256": "2cec0a10fe3d8d0aa3e96391cb9d30d5eb28e41f4b84e25a2857eb1a95b36723",
+  "caseId": "case:golden:esign-0008",
+  "decision": {
+    "entity": "task:esign-0008",
+    "attribute": "pkg:eSignEligible",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2028-12-31T00:00:00Z",
+    "knowledge": "2029-01-02T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-RTC-20",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7001(c); 12 CFR § 1026.23(b)(1)",
+        "url": "https://www.law.cornell.edu/cfr/text/12/1026.23"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-01"
+      ]
+    },
+    {
+      "ruleId": "PKG-RTC-21",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7001(c); 12 CFR § 1026.23(b)(1)",
+        "url": "https://www.law.cornell.edu/cfr/text/12/1026.23"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0008",
+      "attribute": "pkg:eSignEligible",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "PKG-RTC-20",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:66d35b54d636f0093aecea6ed7ee7e8f9f12fd8386e6384f7e23545b26f028c7"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:c30dfbaa73c283cf0e97eb228b7d000bad7dc7e2e65fda281e35d3db11018309"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:66d35b54d636f0093aecea6ed7ee7e8f9f12fd8386e6384f7e23545b26f028c7",
+      "contentHash": "66d35b54d636f0093aecea6ed7ee7e8f9f12fd8386e6384f7e23545b26f028c7"
+    },
+    {
+      "id": "urn:duly:fact:sha256:c30dfbaa73c283cf0e97eb228b7d000bad7dc7e2e65fda281e35d3db11018309",
+      "contentHash": "c30dfbaa73c283cf0e97eb228b7d000bad7dc7e2e65fda281e35d3db11018309"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

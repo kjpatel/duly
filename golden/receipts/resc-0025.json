@@ -1,0 +1,75 @@
+{
+  "id": "urn:duly:receipt:sha256:234dd252578b37b6cd2394a8774011013cb8c4004c599a4eb941e04a065a7655",
+  "receiptSha256": "234dd252578b37b6cd2394a8774011013cb8c4004c599a4eb941e04a065a7655",
+  "caseId": "case:golden:resc-0025",
+  "decision": {
+    "entity": "loan:resc-0025",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-05-23T00:00:00Z",
+    "knowledge": "2026-05-25T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-STAY",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(c)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 150,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0025",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RESC-FUND-STAY",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:28ed05bc92261175871e89c6605da952dd3e1d693c205bac2f23432032843d28"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:28ed05bc92261175871e89c6605da952dd3e1d693c205bac2f23432032843d28",
+      "contentHash": "28ed05bc92261175871e89c6605da952dd3e1d693c205bac2f23432032843d28"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

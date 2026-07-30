@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:7af720fe2f4b4b17ce090f89eacafa74cba7a2b947e7fc1a5ff0f7e07435bb85",
+  "contentHash": "7af720fe2f4b4b17ce090f89eacafa74cba7a2b947e7fc1a5ff0f7e07435bb85",
+  "caseId": "case:golden:resc-0019",
+  "entity": {
+    "id": "loan:resc-0019",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:transactionType",
+  "value": {
+    "kind": "code",
+    "value": "Purchase",
+    "codeSystem": "duly-starter-resc/transaction-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-03-24T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-24T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-24T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

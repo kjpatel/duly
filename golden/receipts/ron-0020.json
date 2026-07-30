@@ -1,0 +1,81 @@
+{
+  "id": "urn:duly:receipt:sha256:3ad0bc99d36e5d496ea80af7481b10cac728ae3f5d84bec1c2c04e180a5b3b51",
+  "receiptSha256": "3ad0bc99d36e5d496ea80af7481b10cac728ae3f5d84bec1c2c04e180a5b3b51",
+  "caseId": "case:golden:ron-0020",
+  "decision": {
+    "entity": "notarization:ron-0020",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2018-12-31T00:00:00Z",
+    "knowledge": "2019-01-02T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RON-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail closed: RON exists only by statutory authorization)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0020",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RON-COMP-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [
+    {
+      "entity": "notarization:ron-0020",
+      "attribute": "ron:notarizationMethod",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:8e2642cce37ca1569a1c5917c62db75577371b17155510f665440d27aa34e914"
+      ],
+      "confidence": {
+        "score": 0.62,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "notarization-ron-us-states",
+        "packVersion": "2026.1.0"
+      }
+    }
+  ],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": "urn:duly:receipt:sha256:45556ad783266685845f948fb7ea10f82773447c3f7baaa2ac7c21a8520367c2",
+  "receiptSha256": "45556ad783266685845f948fb7ea10f82773447c3f7baaa2ac7c21a8520367c2",
+  "caseId": "case:golden:ron-0009",
+  "decision": {
+    "entity": "notarization:ron-0009",
+    "attribute": "ron:ronPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2020-01-02T00:00:00Z",
+    "knowledge": "2020-01-04T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "FL-RON-2020",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fla. Stat. § 117.209 (s. 7, ch. 2019-71, Laws of Fla., eff. Jan. 1, 2020)",
+        "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0100-0199/0117/Sections/0117.209.html"
+      },
+      "priority": 100,
+      "effectiveFrom": "2020-01-01T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0009",
+      "attribute": "ron:ronPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "FL-RON-2020",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:6d111f350772a6a68127b5742c41cfc544f1a9b09261f3798812a8412453cf0d"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:6d111f350772a6a68127b5742c41cfc544f1a9b09261f3798812a8412453cf0d",
+      "contentHash": "6d111f350772a6a68127b5742c41cfc544f1a9b09261f3798812a8412453cf0d"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

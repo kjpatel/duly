@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:d4eb9f4f07837d87eafb80d1a2e3d979c8771e3228f440136bfaaf0c007ed651",
+  "contentHash": "d4eb9f4f07837d87eafb80d1a2e3d979c8771e3228f440136bfaaf0c007ed651",
+  "caseId": "case:golden:esign-0024",
+  "entity": {
+    "id": "task:esign-0024",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "ClosingDisclosure",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2015-10-03T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2015-10-03T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2015-10-03T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:6a279ce5b009aa48386bfcd41f6cb08e85f36244228e57ec5dd1c949c2eea089",
+  "contentHash": "6a279ce5b009aa48386bfcd41f6cb08e85f36244228e57ec5dd1c949c2eea089",
+  "caseId": "case:golden:ron-0023",
+  "entity": {
+    "id": "notarization:ron-0023",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:notarizationMethod",
+  "value": {
+    "kind": "code",
+    "value": "RemoteOnline",
+    "codeSystem": "duly-starter-ron/notarization-methods",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2012-07-01T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2012-07-01T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2012-07-01T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

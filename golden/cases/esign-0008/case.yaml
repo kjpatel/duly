@@ -1,0 +1,5 @@
+id: esign-0008
+pack: rulepacks/esign-closing-package/pack.yaml
+question: pkg:eSignEligible
+asOfEffective: "2028-12-31"
+asOfKnowledge: "2029-01-02T12:00:00Z"

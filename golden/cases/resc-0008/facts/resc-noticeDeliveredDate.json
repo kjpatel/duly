@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:35611f3ab172842525960d2cf3284078628bdaafa5798d6cb90e00bf3efdf640",
+  "contentHash": "35611f3ab172842525960d2cf3284078628bdaafa5798d6cb90e00bf3efdf640",
+  "caseId": "case:golden:resc-0008",
+  "entity": {
+    "id": "loan:resc-0008",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:noticeDeliveredDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-02-26"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-02-26T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-02-26T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-02-26T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

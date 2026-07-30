@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:963a70f22a418f16ed35a127ec69acb159a792d499d2bce711a7f47e546f6bbb",
+  "contentHash": "963a70f22a418f16ed35a127ec69acb159a792d499d2bce711a7f47e546f6bbb",
+  "caseId": "case:golden:esign-0015",
+  "entity": {
+    "id": "task:esign-0015",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "PromissoryNote",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-08-14T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-14T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-14T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

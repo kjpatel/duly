@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:e5b6fe082b325464d7f643278f42704a6382f83ecbd36911e0e1dfa00b4d0f37",
+  "contentHash": "e5b6fe082b325464d7f643278f42704a6382f83ecbd36911e0e1dfa00b4d0f37",
+  "caseId": "case:golden:esign-0006",
+  "entity": {
+    "id": "task:esign-0006",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "RightToCancelNotice",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2011-12-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2011-12-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2011-12-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

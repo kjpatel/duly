@@ -1,0 +1,66 @@
+{
+  "id": "urn:duly:receipt:sha256:dcd8d9046d820cde34072d727de8da423f47872a1bd08613fafa9be7c26f3eb0",
+  "receiptSha256": "dcd8d9046d820cde34072d727de8da423f47872a1bd08613fafa9be7c26f3eb0",
+  "caseId": "case:golden:esign-0023",
+  "decision": {
+    "entity": "task:esign-0023",
+    "attribute": "pkg:signingMethod",
+    "value": {
+      "kind": "code",
+      "value": "WetInk",
+      "codeSystem": "duly-starter-esign/signing-methods",
+      "codeSystemVersion": "0.1.0"
+    }
+  },
+  "asOf": {
+    "effective": "2015-03-17T00:00:00Z",
+    "knowledge": "2015-03-19T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail-safe to wet ink)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "PKG-DEF-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail-safe to wet ink)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0023",
+      "attribute": "pkg:signingMethod",
+      "value": {
+        "kind": "code",
+        "value": "WetInk",
+        "codeSystem": "duly-starter-esign/signing-methods",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    "rule": "PKG-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:68ff76468b813a575fd146657c5e3235f22eaa072d7bebc339d273da318be549",
+  "contentHash": "68ff76468b813a575fd146657c5e3235f22eaa072d7bebc339d273da318be549",
+  "caseId": "case:golden:rec-0024",
+  "entity": {
+    "id": "submission:rec-0024",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:instrumentType",
+  "value": {
+    "kind": "code",
+    "value": "GrantDeed",
+    "codeSystem": "duly-starter-recording/instrument-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2027-09-24T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2027-09-24T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2027-09-24T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

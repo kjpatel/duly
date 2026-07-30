@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:e72d22b24841166b4230020ee72787578bf03ec6d0071a167a9cb77766f344d6",
+  "contentHash": "e72d22b24841166b4230020ee72787578bf03ec6d0071a167a9cb77766f344d6",
+  "caseId": "case:golden:rec-0016",
+  "entity": {
+    "id": "submission:rec-0016",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:firstPageTopSpaceInches",
+  "value": {
+    "kind": "decimal",
+    "value": "1.6"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2027-09-24T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2027-09-24T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 0.85,
+    "method": "conformal"
+  },
+  "recordedAt": "2027-09-24T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

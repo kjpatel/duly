@@ -1,0 +1,102 @@
+{
+  "id": "urn:duly:receipt:sha256:2c156a0626314718e7cc521f1f2ec6e1d0f48a5c9e655c4ce4b981dfaa3a9284",
+  "receiptSha256": "2c156a0626314718e7cc521f1f2ec6e1d0f48a5c9e655c4ce4b981dfaa3a9284",
+  "caseId": "case:golden:rec-0020",
+  "decision": {
+    "entity": "submission:rec-0020",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-10-04T00:00:00Z",
+    "knowledge": "2026-10-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "AZ-TOPMARGIN-20",
+      "version": "1.0.0",
+      "citation": {
+        "text": "A.R.S. § 11-480(B)",
+        "url": "https://www.azleg.gov/ars/11/00480.htm"
+      },
+      "priority": 100,
+      "effectiveFrom": "1991-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "REC-TOPSPACE-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov. Code § 27361.6",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=27361.6."
+      },
+      "priority": 200,
+      "effectiveFrom": "1990-01-01T00:00:00Z",
+      "defeated": [
+        "REC-DEF-AZ"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0020",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "REC-TOPSPACE-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:0f43e501dbc2f173b6fe7b7ff906bb93fea55237e1c50b5cf86446c80f78d5a2"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:fcdec7db4342e95b6f00c4a8e0e4e0a75b85d1a532918cea2cdb50a2a9e42b44"
+      },
+      {
+        "conclusion": {
+          "entity": "submission:rec-0020",
+          "attribute": "rec:requiredFirstPageTopSpaceInches",
+          "value": {
+            "kind": "decimal",
+            "value": "2.0"
+          }
+        },
+        "rule": "AZ-TOPMARGIN-20",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:e65f8216347f19b7831defaddfe707501c6a1b4576b404b59b726cfaf02478b4"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:0f43e501dbc2f173b6fe7b7ff906bb93fea55237e1c50b5cf86446c80f78d5a2",
+      "contentHash": "0f43e501dbc2f173b6fe7b7ff906bb93fea55237e1c50b5cf86446c80f78d5a2"
+    },
+    {
+      "id": "urn:duly:fact:sha256:fcdec7db4342e95b6f00c4a8e0e4e0a75b85d1a532918cea2cdb50a2a9e42b44",
+      "contentHash": "fcdec7db4342e95b6f00c4a8e0e4e0a75b85d1a532918cea2cdb50a2a9e42b44"
+    },
+    {
+      "id": "urn:duly:fact:sha256:e65f8216347f19b7831defaddfe707501c6a1b4576b404b59b726cfaf02478b4",
+      "contentHash": "e65f8216347f19b7831defaddfe707501c6a1b4576b404b59b726cfaf02478b4"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "urn:duly:receipt:sha256:a2c1fb09919519bd3f8b0f470a960a56322387f3f14eb6c9d87636477b0e2ed3",
+  "receiptSha256": "a2c1fb09919519bd3f8b0f470a960a56322387f3f14eb6c9d87636477b0e2ed3",
+  "caseId": "case:golden:rec-0025",
+  "decision": {
+    "entity": "submission:rec-0025",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "1989-11-27T00:00:00Z",
+    "knowledge": "1989-11-29T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-AZ",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (Arizona packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0025",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "REC-DEF-AZ",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:8f10454267b204889aa56a8a6b7262847f286f9af7ef1ed204c3358ee536cb9b"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:8f10454267b204889aa56a8a6b7262847f286f9af7ef1ed204c3358ee536cb9b",
+      "contentHash": "8f10454267b204889aa56a8a6b7262847f286f9af7ef1ed204c3358ee536cb9b"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

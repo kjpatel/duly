@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:7ee42de0dbdd86f8a24e2fabf9bcf83178b49d8476edc87d6bdd0cb07e819c7a",
+  "receiptSha256": "7ee42de0dbdd86f8a24e2fabf9bcf83178b49d8476edc87d6bdd0cb07e819c7a",
+  "caseId": "case:golden:ron-0012",
+  "decision": {
+    "entity": "notarization:ron-0012",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2023-03-03T00:00:00Z",
+    "knowledge": "2023-03-05T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "NY-RON-2023",
+      "version": "1.0.0",
+      "citation": {
+        "text": "N.Y. Exec. Law § 135-c (ch. 767, L. 2021, as amended by ch. 104, L. 2022)",
+        "url": "https://www.nysenate.gov/legislation/laws/EXC/135-C"
+      },
+      "priority": 100,
+      "effectiveFrom": "2023-01-31T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0012",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RON-COMP-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

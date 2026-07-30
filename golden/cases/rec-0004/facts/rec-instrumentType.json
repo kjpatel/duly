@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:7ce8f0b6f37cd9f2b5fa09d4bb6cac468e7d220b01e973aeed901eaa76405983",
+  "contentHash": "7ce8f0b6f37cd9f2b5fa09d4bb6cac468e7d220b01e973aeed901eaa76405983",
+  "caseId": "case:golden:rec-0004",
+  "entity": {
+    "id": "submission:rec-0004",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:instrumentType",
+  "value": {
+    "kind": "code",
+    "value": "DeedOfTrust",
+    "codeSystem": "duly-starter-recording/instrument-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-10-04T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-10-04T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-10-04T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

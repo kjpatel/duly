@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:4e2eb627ae35b147e54ae04375e606a1b907d9c2a489766086971cb81b39faa0",
+  "contentHash": "4e2eb627ae35b147e54ae04375e606a1b907d9c2a489766086971cb81b39faa0",
+  "caseId": "case:golden:esign-0022",
+  "entity": {
+    "id": "task:esign-0022",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "EscrowInstructions",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2028-12-31T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2028-12-31T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2028-12-31T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

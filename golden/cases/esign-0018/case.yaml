@@ -1,0 +1,5 @@
+id: esign-0018
+pack: rulepacks/esign-closing-package/pack.yaml
+question: pkg:signingMethod
+asOfEffective: "2000-09-01"
+asOfKnowledge: "2000-09-03T12:00:00Z"

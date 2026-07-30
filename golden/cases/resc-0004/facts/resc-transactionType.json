@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:15d5c210f117ea207bb05b5728f50ca68e196a49aa936dcef6492abec7fb806d",
+  "contentHash": "15d5c210f117ea207bb05b5728f50ca68e196a49aa936dcef6492abec7fb806d",
+  "caseId": "case:golden:resc-0004",
+  "entity": {
+    "id": "loan:resc-0004",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:transactionType",
+  "value": {
+    "kind": "code",
+    "value": "Refinance",
+    "codeSystem": "duly-starter-resc/transaction-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-01-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-01-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-01-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

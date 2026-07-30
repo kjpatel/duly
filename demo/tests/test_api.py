@@ -288,3 +288,43 @@ def test_index_html_served():
     res = client.get("/")
     assert res.status_code == 200
     assert "duly" in res.text
+
+
+def test_report_endpoint_exports_receipt_as_prov_o_jsonld(monkeypatch):
+    """format=jsonld on the export endpoint serves the receipt wrapped for
+    RDF consumers — deliberately endpoint-only, no UI button (a demo viewer
+    wants the receipt; a lineage stack wants an HTTP path, not a button)."""
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    scenario = _first_scenario()
+    res = client.get(
+        "/api/report",
+        params={
+            "scenarioId": scenario["id"],
+            "attribute": scenario["questions"][0]["attribute"],
+            "asOfEffective": scenario["defaultAsOf"],
+            "format": "jsonld",
+        },
+    )
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/ld+json")
+    assert ".jsonld" in res.headers["content-disposition"]
+    doc = res.json()
+    assert doc["@context"].endswith("decision-receipt.context.jsonld")
+    assert doc["@id"].startswith("urn:duly:receipt:sha256:")
+    # The stored receipt rides inside unchanged: same decision, same hash field.
+    assert doc["receiptSha256"] == doc["@id"].rsplit(":", 1)[-1]
+    assert doc["decision"]["attribute"] == scenario["questions"][0]["attribute"]
+
+
+def test_report_endpoint_rejects_unknown_format():
+    scenario = _first_scenario()
+    res = client.get(
+        "/api/report",
+        params={
+            "scenarioId": scenario["id"],
+            "attribute": scenario["questions"][0]["attribute"],
+            "asOfEffective": scenario["defaultAsOf"],
+            "format": "xml",
+        },
+    )
+    assert res.status_code == 422

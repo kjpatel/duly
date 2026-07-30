@@ -111,3 +111,10 @@ One known coarseness, accepted with eyes open: `actor.role` lands as `duly:role`
 ## Versioning
 
 The contexts are JSON-LD 1.1 (`"@version": 1.1` — required: nest terms, scoped contexts, and `@json` literals are all 1.1 features) and live under the same `v0` path as the schemas they mirror: `https://duly.dev/spec/v0/contexts/<name>.context.jsonld`. A breaking change to a schema is a breaking change to its context; they version together. Term additions (new optional schema fields) are non-breaking. The vendored `prov:`/`xsd:` prefix bindings mean no consumer or test ever needs to dereference w3.org.
+
+## Seeing it work
+
+Two consumption paths, both artifact-level (deliberately no demo-UI button — a demo viewer wants the receipt; a lineage stack wants an HTTP path):
+
+- **[`spec/provo_sparql_demo.py`](provo_sparql_demo.py)** — adjudicates the two span-grounded starters live, adds the committed human-correction case, and answers three auditor questions in standard SPARQL: *which decisions used a fact grounded in this document*, *which decisions relied on a human-asserted fact and what did it supersede*, *under which rule-pack version was each decision made*. Run from the repo root: `uv run --with rdflib python spec/provo_sparql_demo.py` (rdflib deliberately stands in for "the RDF tooling you already run" and is not a project dependency). Note the grounding caveat in the script header: attestation-grounded facts — the whole synthetic corpus — correctly return no document-lineage rows.
+- **`GET /api/report?format=jsonld`** on the demo server — the same export as the Markdown/PDF audit report endpoint, returning the adjudicated receipt wrapped as PROV-O JSON-LD (`application/ld+json`).

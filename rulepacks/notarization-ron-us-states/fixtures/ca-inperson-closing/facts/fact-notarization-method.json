@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:5327e8ecae863305f72d34f36ee0554c3b2b6a4a3fce6ac97ed6584723453c30",
+  "contentHash": "5327e8ecae863305f72d34f36ee0554c3b2b6a4a3fce6ac97ed6584723453c30",
+  "caseId": "case:closing:ESC-6609-CA",
+  "entity": {
+    "id": "notarization:ESC-6609-CA",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:notarizationMethod",
+  "value": {
+    "kind": "code",
+    "value": "InPerson",
+    "codeSystem": "duly-starter-ron/notarization-methods",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

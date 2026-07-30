@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:51d5fd5eec0ac044baebf76d734fb3721817d7136d2aa5dc99a340901826adcb",
+  "contentHash": "51d5fd5eec0ac044baebf76d734fb3721817d7136d2aa5dc99a340901826adcb",
+  "caseId": "case:closing:ESC-4406-NY",
+  "entity": {
+    "id": "notarization:ESC-4406-NY",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:governingState",
+  "value": {
+    "kind": "code",
+    "value": "US-NY",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

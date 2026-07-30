@@ -1,0 +1,235 @@
+pack:
+  name: notarization-ron-us-states
+  version: "2026.1.0"
+  ontology: duly-starter-ron
+  ontologyVersion: "0.1.0"
+  description: State-by-state remote online notarization (RON) authorization, effective-dated.
+
+# Adjudication-time confidence policy (spec/rule-ir.md, "Abstention policy"):
+# the notarization method is the single fact that decides whether the RON
+# authorization question matters at all — a misread method flips the
+# compliance verdict in both directions — so it carries a tighter floor than
+# the pack default. No routeTo: this pack has no dedicated review queue yet,
+# and an unrouted abstention is still enqueueable (rule-ir.md, "Routing").
+abstentionPolicy:
+  minConfidence: 0.75
+  attributes:
+    ron:notarizationMethod: 0.9
+
+decisions:
+  - attribute: ron:ronPermitted
+    entityType: ron:Notarization
+    question: "Was remote online notarization permitted for this closing?"
+  - attribute: ron:notarizationCompliant
+    entityType: ron:Notarization
+    question: "Given the method used, was this notarization compliant?"
+
+rules:
+  # FAIL CLOSED, not abstain: notarization is a creature of statute, and a
+  # notary may perform a remote online act only where an enactment
+  # affirmatively authorizes it. Absence of an authorization rule for a state
+  # therefore *is* the answer (not permitted), unlike a missing fact, which
+  # would be an abstention. States with no rule in this pack (and authorized
+  # states evaluated before their authorization date) resolve to false here.
+  - id: RON-DEF-00
+    description: "Remote online notarization is presumed not permitted unless a statute in force affirmatively authorizes it."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption (fail closed: RON exists only by statutory authorization)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: false }
+
+  # SCOPE: Encodes only the fact of authorization: since July 1, 2012 a signer
+  # may appear before a Virginia electronic notary by two-way audio-video
+  # communication (the first state to permit this). Va. Code § 47.1-2 defines
+  # "remote online notarization" and admits video/audio conference technology
+  # as satisfactory evidence of identity; the RON amendments are 2011 Acts of
+  # Assembly cc. 731, 834 (HB 2318 / SB 827), with a delayed commencement of
+  # July 1, 2012. Not modeled: the separate electronic-notary registration
+  # requirement (§ 47.1-7), journal/recording duties, and the identity-
+  # proofing standards — the fact vocabulary carries no commission or
+  # credential attributes.
+  - id: VA-RON-2012
+    description: "Virginia authorizes remote online notarization by audio-visual communication technology, effective July 1, 2012 — the first state to do so."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Va. Code § 47.1-2 (2011 Acts cc. 731, 834, eff. July 1, 2012)"
+      url: "https://law.lis.virginia.gov/vacode/title47.1/section47.1-2/"
+    effectiveFrom: "2012-07-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+      state:        { attribute: ron:governingState }
+    when:
+      - state == "US-VA"
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RON-DEF-00]
+
+  # SCOPE: Encodes the authorization of online notarization by a Texas online
+  # notary public using two-way audio-video communication. Subchapter C of
+  # Gov't Code ch. 406 (§§ 406.101–406.113) was added by HB 1217, 85th Leg.
+  # (2017); the enrolled bill's own clause reads "This Act takes effect
+  # July 1, 2018." Not modeled: the separate online-notary commission
+  # (§ 406.105), credential analysis / identity proofing (§ 406.110), and the
+  # electronic-record retention duties (§ 406.108).
+  - id: TX-RON-2018
+    description: "Texas authorizes online notarization by an online notary public using two-way audio-video communication, effective July 1, 2018."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Tex. Gov't Code §§ 406.101–406.113 (HB 1217, 85th Leg., eff. July 1, 2018)"
+      url: "https://statutes.capitol.texas.gov/Docs/GV/htm/GV.406.htm"
+    effectiveFrom: "2018-07-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+      state:        { attribute: ron:governingState }
+    when:
+      - state == "US-TX"
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RON-DEF-00]
+
+  # SCOPE: Encodes § 117.209(1): "An online notary public may perform any of
+  # the functions authorized under part I of this chapter as an online
+  # notarization" (excluding solemnizing marriage). Part II of ch. 117 was
+  # created by s. 7, ch. 2019-71, Laws of Fla. (HB 409), effective
+  # January 1, 2020 (the e-wills provisions of the same act commenced
+  # July 1, 2020 and are out of scope here). Not modeled: online-notary
+  # registration (§ 117.225), RON service-provider requirements, and the
+  # audio-video retention rules (§ 117.245).
+  - id: FL-RON-2020
+    description: "Florida authorizes online notarization by a registered online notary public using audio-video communication technology, effective January 1, 2020."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Fla. Stat. § 117.209 (s. 7, ch. 2019-71, Laws of Fla., eff. Jan. 1, 2020)"
+      url: "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0100-0199/0117/Sections/0117.209.html"
+    effectiveFrom: "2020-01-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+      state:        { attribute: ron:governingState }
+    when:
+      - state == "US-FL"
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RON-DEF-00]
+
+  # SCOPE: Encodes Exec. Law § 135-c(2): a registered notary "is hereby
+  # authorized to perform an electronic notarial act by utilizing audio-video
+  # communication technology". New York's permanent electronic (remote online)
+  # notarization statute replaced the pandemic-era remote-ink regime, which
+  # ended January 31, 2023. Not modeled: electronic-notary registration with
+  # the Department of State, the recording/retention conditions of § 135-c,
+  # and the temporary 2020 executive-order RIN window (an executive order is
+  # not the statute this pack encodes).
+  # TODO(verify): effectiveFrom — secondary sources split between
+  # January 31, 2023 (the date remote-ink notarization ended and the
+  # replacement § 135-c text is dated from) and February 1, 2023 (the day the
+  # Department of State opened electronic-notary registration). The session
+  # law's own commencement clause (ch. 104, Laws of 2022) was not confirmed
+  # from an official source; 2023-01-31 is used as the earlier defensible
+  # boundary.
+  - id: NY-RON-2023
+    description: "New York authorizes electronic notarization by audio-video communication technology under its permanent statute, effective January 31, 2023."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "N.Y. Exec. Law § 135-c (ch. 767, L. 2021, as amended by ch. 104, L. 2022)"
+      url: "https://www.nysenate.gov/legislation/laws/EXC/135-C"
+    effectiveFrom: "2023-01-31"
+    given:
+      notarization: { entityType: ron:Notarization }
+      state:        { attribute: ron:governingState }
+    when:
+      - state == "US-NY"
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RON-DEF-00]
+
+  # SCOPE: California's Online Notarization Act (SB 696, Stats. 2023,
+  # ch. 291; Gov't Code § 8231.1 et seq.) is SIGNED LAW whose online-
+  # notarization provisions are NOT YET OPERATIVE: they commence when the
+  # Secretary of State certifies completion of the implementing technology
+  # project, or on January 1, 2030, whichever is earlier. As of July 2026 the
+  # Secretary of State has not certified, so this rule encodes the statutory
+  # outside date — a California RON evaluated today fails closed under
+  # RON-DEF-00, and the same facts evaluated at 2030-01-01 flip.
+  # TODO(verify): effectiveFrom — if the Secretary of State certifies before
+  # 2030, the operative date moves earlier and this rule's effectiveFrom must
+  # be amended to the certification date (a pack version bump that replays).
+  # Not modeled: the § 8232-series enrollment provisions already operative
+  # since January 1, 2024, and out-of-state RON of California documents under
+  # other states' law.
+  - id: CA-RON-2030
+    description: "California's Online Notarization Act authorizes online notarization using audio-visual communication no later than January 1, 2030, its statutory outside operative date."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "Cal. Gov't Code § 8231.1 et seq. (SB 696, Stats. 2023, ch. 291; operative upon Secretary of State certification or Jan. 1, 2030, whichever is earlier)"
+      url: "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202320240SB696"
+    effectiveFrom: "2030-01-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+      state:        { attribute: ron:governingState }
+    when:
+      - state == "US-CA"
+    then:
+      entity: notarization
+      attribute: ron:ronPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RON-DEF-00]
+
+  # Compliance presumption: a notarization is presumed compliant unless a
+  # specific rule finds the method used impermissible. An in-person
+  # notarization never trips RON-COMP-01, so it stays compliant regardless of
+  # the RON question — which is why ron:ronPermitted and
+  # ron:notarizationCompliant are separate decisions.
+  - id: RON-COMP-00
+    description: "A notarization is presumed compliant unless a specific rule finds the method used impermissible."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption" }
+    effectiveFrom: "1900-01-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+    then:
+      entity: notarization
+      attribute: ron:notarizationCompliant
+      value: { kind: boolean, value: true }
+
+  # The deficiency rule: performing the act by remote online audio-visual
+  # means where (or when) no statute authorizes it makes the notarization
+  # noncompliant. `permitted` binds the surviving ron:ronPermitted conclusion,
+  # so this rule inherits the effective-dated state analysis above.
+  - id: RON-COMP-01
+    description: "A notarization performed by remote online audio-visual means where remote online notarization was not permitted is not compliant."
+    version: "1.0.0"
+    priority: 200
+    citation: { text: "Derived: the state authorization rules of this pack, applied to the method used" }
+    effectiveFrom: "1900-01-01"
+    given:
+      notarization: { entityType: ron:Notarization }
+      method:       { attribute: ron:notarizationMethod }
+      permitted:    { derived: ron:ronPermitted }
+    when:
+      - method == "RemoteOnline"
+      - not permitted
+    then:
+      entity: notarization
+      attribute: ron:notarizationCompliant
+      value: { kind: boolean, value: false }
+    overrides: [RON-COMP-00]

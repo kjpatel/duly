@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:d7e1bb4dc355690bd6c10bf5a542290d0f45ff190eede9183bae0438c721869d",
+  "contentHash": "d7e1bb4dc355690bd6c10bf5a542290d0f45ff190eede9183bae0438c721869d",
+  "caseId": "case:closing:ESC-4406-NY",
+  "entity": {
+    "id": "notarization:ESC-4406-NY",
+    "type": "ron:Notarization"
+  },
+  "attribute": "ron:notarizationMethod",
+  "value": {
+    "kind": "code",
+    "value": "RemoteOnline",
+    "codeSystem": "duly-starter-ron/notarization-methods",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-29T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-29T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

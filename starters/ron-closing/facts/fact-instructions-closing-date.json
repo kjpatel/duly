@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:0b04d623cc07b4b6bd2fe9545e55ab3fa1bd577594cfc9da04412f3c097dbe0e",
+  "contentHash": "0b04d623cc07b4b6bd2fe9545e55ab3fa1bd577594cfc9da04412f3c097dbe0e",
+  "caseId": "case:closing:ESC-4821-CA",
+  "entity": {
+    "id": "closing:ESC-4821-CA",
+    "type": "ron:Closing"
+  },
+  "attribute": "ron:closingDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-03-12"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:closing-instructions:ESC-4821-CA:2026-03-05",
+    "documentSha256": "a26b87a80f81a8b4b7e06497c06ac56ad1d3954b2063a33b8f011de974823e89",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:a26b87a8",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 247,
+      "end": 297
+    },
+    "quote": "Scheduled signing and closing date: March 12, 2026"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T15:12:03Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-29:012"
+    }
+  },
+  "confidence": {
+    "score": 0.995,
+    "method": "conformal",
+    "calibrationRef": "cal:ron-docs:2026-06"
+  },
+  "recordedAt": "2026-07-29T15:12:03Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  }
+}

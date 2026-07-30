@@ -1,0 +1,53 @@
+{
+  "documentId": "doc:notary-certificate:ESC-4821-CA:2026-03-12",
+  "caseId": "case:closing:ESC-4821-CA",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-29T15:12:03Z",
+  "runId": "run:2026-07-29:012",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-cert-state.json",
+      "entity": {
+        "id": "notarization:ESC-4821-CA:2026-03-12",
+        "type": "ron:Notarization"
+      },
+      "attribute": "ron:governingState",
+      "value": {
+        "kind": "code",
+        "value": "US-CA",
+        "codeSystem": "iso-3166-2",
+        "codeSystemVersion": "2020"
+      },
+      "quote": "State of California",
+      "confidence": {
+        "score": 0.997,
+        "method": "conformal",
+        "calibrationRef": "cal:ron-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-cert-method.json",
+      "entity": {
+        "id": "notarization:ESC-4821-CA:2026-03-12",
+        "type": "ron:Notarization"
+      },
+      "attribute": "ron:notarizationMethod",
+      "value": {
+        "kind": "code",
+        "value": "RemoteOnline",
+        "codeSystem": "duly-starter-ron/notarization-methods",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "Method of appearance: remote online notarization — the signer appeared",
+      "confidence": {
+        "score": 0.992,
+        "method": "conformal",
+        "calibrationRef": "cal:ron-docs:2026-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "documentId": "doc:closing-instructions:ESC-4821-CA:2026-03-05",
+  "caseId": "case:closing:ESC-4821-CA",
+  "schemaRef": {
+    "ontology": "duly-starter-ron",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-29T15:12:03Z",
+  "runId": "run:2026-07-29:012",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-instructions-closing-date.json",
+      "entity": {
+        "id": "closing:ESC-4821-CA",
+        "type": "ron:Closing"
+      },
+      "attribute": "ron:closingDate",
+      "value": {
+        "kind": "date",
+        "value": "2026-03-12"
+      },
+      "quote": "Scheduled signing and closing date: March 12, 2026",
+      "confidence": {
+        "score": 0.995,
+        "method": "conformal",
+        "calibrationRef": "cal:ron-docs:2026-06"
+      }
+    }
+  ]
+}

@@ -66,7 +66,7 @@ duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is 
 | **Example content** — what a *user* of the toolkit authors | `rulepacks/`, `starters/`, `ontologies/`, `golden/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
 | **Reference wiring** | `demo/` | treats it as a worked example of tying the pieces into a service, not as the product |
 
-The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M6 below; until it lands, [rulepacks/README.md](rulepacks/README.md) and the per-component READMEs cover each edge individually.
+The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M5 below; until it lands, [rulepacks/README.md](rulepacks/README.md) and the per-component READMEs cover each edge individually.
 
 ## Design choices and why
 
@@ -176,46 +176,69 @@ Sequencing principle: build nothing until its consumer exists — where a consum
 - [x] Review queue API: abstention routing (pack-level `abstentionPolicy.routeTo` → receipt `routedTo`), human facts re-entering the store through its public API, dedup'd append-only queue with FastAPI surface ([review/](review/)), and calibration label export (with its censored-sample caveat stated where the labels come out)
 - [x] Demo integration — the review arc in the browser ([demo tour §9](docs/demo_tour.md)): startup extraction into a per-process fact store, a below-floor fact abstaining to the presumption, an inline human correction that supersedes it and flips the decision, and one-click export of the resolution as a golden-case bundle
 
-### M4 — standards alignment and constraint solving
+### M4 — standards, authoring, and static assurance
 
-Ordered by consumer readiness rather than by ambition. The first item closes a regression gap the mortgage-closing packs opened. The next three are additive, carry no risk to replay determinism, and strengthen the interchange story the whole project rests on. The constraint-solving items were re-scoped after the calendar work revealed the original bullet conflated a function with a solver: deterministic date math went into the evaluator, and the solver's real jobs — static proof, inverse queries, and downstream scheduling — each got their own item with the examples as first consumer.
+The standards work strengthens the interchange contract; the remaining work makes rule changes safe and practical for their authors. None of these additions changes the kernel's runtime trust boundary: authoring tools and solvers may assist, but the deterministic kernel remains the only receipt producer.
 
-- [x] Golden-corpus coverage for the four mortgage-closing packs (carried forward from M2, which predates them): 25 boundary-stratified cases per pack — every real RON authorization date straddled both sides, every eSign routing cell, rescission windows with and without Sunday/holiday extensions, recording violations and cures including committed receipts carrying `low_confidence` abstentions. Verified by perturbation: a deliberately broken rule in each pack now reports flips in [impact analysis](assurance/duly_assurance/impact.py) instead of "0 of N decisions flip"
-- [x] PROV-O JSON-LD context for facts, receipts, and run envelopes ([spec/prov-o.md](spec/prov-o.md), [spec/contexts/](spec/contexts/), exporter in [provo.py](kernel/duly_kernel/provo.py)). *What it bought:* duly's provenance chain — fact ← rendition ← document, decision ← rule-pack version — is readable by any RDF/SPARQL tool via external context files, with stored documents byte-unchanged (tested). For an enterprise whose data-governance stack already speaks W3C PROV, "apply this context" replaces "write an importer". The mapping is deliberately partial and says so: bitemporal effective time, confidence, and abstentions have no faithful PROV equivalent and stay in the `duly:` namespace — the "deliberately not mapped" list (prov-o.md P8) is a precise statement of where duly is novel versus standard, including the finding that PROV can say a decision *used* a fact but has no way to say it *deliberately declined* one
-- [x] SHACL/LinkML ontology conformance gate ([spec/ontology-conformance.md](spec/ontology-conformance.md), [ontologies/](ontologies/), gate in [conformance/](conformance/duly_conformance/)). *What it bought:* the enforcement half of bring-your-own-ontology. Facts always referenced the user's ontology by CURIE + version, but nothing checked conformance — an adapter emitting a misspelled attribute or the wrong value kind sailed through ingestion and surfaced only as a rule that silently fails to bind, the quiet cousin of confident wrongness. Now: two committed LinkML ontology artifacts (insurance; one consolidated mortgage-closing domain model carrying a name-verified MISMO/FIBO crosswalk — the standards referenced, never vendored, their licenses being the reason), a pure-Python subset validator with zero new runtime dependencies, an optional registry argument on envelope verification (a nonconforming fact rejects the whole run, loudly and attributably), and marker-gated tests proving the artifacts are genuine LinkML — loaded by linkml-runtime, compiled to SHACL, instance data validated with pyshacl. All 1514 committed facts conform; a [runnable demo](spec/conformance_gate_demo.py) shows the misspelled-attribute failure killed. duly still ships no domain schema of its own — the samples are what a starter user brought, and the [swap walkthrough](ontologies/README.md) shows how a deployment brings its own
-- [ ] DMN decision-table authoring surface compiling to the same IR. *What it buys:* rule packs are meant to be written by compliance analysts and lawyers, and those people already work in decision tables — DMN is the OMG standard their tooling speaks, not YAML in a code review. Compiling DMN to the same IR (rather than adding a second engine) means a compliance edit needs no deploy and no Python literacy, while receipts, defeat semantics, and replay stay byte-for-byte identical to hand-authored rules. This is the difference between "domain experts can contribute in principle" and "domain experts can contribute with the tools they already use"
-- [x] Calendar arithmetic in the rule IR ([spec/rule-ir.md](spec/rule-ir.md) "Calendars", demo: [spec/calendar_demo.py](spec/calendar_demo.py)). *What it bought:* `add_business_days` over pack-embedded, receipt-pinned calendars — business-day definitions are legal content carried as versioned data inside the pack, not engine code. The [TILA pack](rulepacks/tila-rescission-us-federal/pack.yaml) (2026.2.0) now **computes** the § 1026.23 deadline it previously only certified from an extracted date: the wrong-printed-deadline failure class is gone (the printed date is now a cross-check that warns on mismatch), 0 of 351 golden decisions flipped, and the `MODELING BOUNDARY` header was rewritten, not removed — the boundary moved (state-law variants and observance shifting remain out). Deliberately *not* a solver: computing a deadline is a function, and functions belong in the deterministic evaluator
-- [ ] Z3 static pack verifier. *What it buys:* proofs the syntactic validator cannot make — same-priority rules split by boolean or numeric guards are today unprovable-disjoint and need manual `overrides` (a documented gotcha); a solver proves them properly, produces a concrete overlap witness when they aren't, and checks decision coverage. Validation-time only, zero receipt involvement, so solver nondeterminism can never touch replay
-- [ ] Z3 what-if queries — the examples as consumer. *What it buys:* rules define constraints, so a solver can run them backwards: *the latest mailing date that keeps this notice compliant; the maximum fee increase before a cure; which corrected fact would flip this decision.* The trust contract: the solver proposes, the deterministic kernel verifies every answer before it is reported
-- [ ] OR-Tools scheduling example — reference wiring for duly inside a larger system: adjudications produce the permissibility windows (clear-to-fund, RON-permitted dates, recordable), an optimizer chooses among permissible options, and no compliance rule is ever re-encoded in the scheduler
+- [x] Golden-corpus coverage for the four mortgage-closing packs, verified by perturbation so every pack contributes observable impact-analysis flips
+- [x] PROV-O JSON-LD export for facts, receipts, and run envelopes, without changing stored bytes ([spec/prov-o.md](spec/prov-o.md))
+- [x] LinkML/SHACL ontology conformance at the contract line ([spec/ontology-conformance.md](spec/ontology-conformance.md))
+- [x] Pack-embedded, receipt-pinned calendar arithmetic in the deterministic evaluator ([spec/calendar_demo.py](spec/calendar_demo.py))
+- [ ] DMN decision-table authoring that compiles to the existing IR. A DMN-authored pack must produce the same decision and receipt as its IR equivalent.
+- [ ] Z3 static pack verifier: prove rule disjointness where the syntactic validator cannot, produce overlap witnesses, and report missing decision coverage. It is validation-time only; solver output never participates in a receipt.
+- [ ] Pack-owned decision phrasing, so non-boolean decisions do not require a core or demo code change.
+- [ ] Rule-ID convention and contribution checks before further packs entrench incompatible conventions.
 
-### M5 — alternate evaluation backend
+**Exit:** a domain author can create, validate, test, review, and impact-assess a rule change without modifying the kernel.
 
-Deferred behind M4 on the project's own sequencing principle: Soufflé's justification is large fact volumes, and no fact volume yet exists that the reference interpreter cannot handle. This milestone is a *second implementation of the evaluation semantics* rather than an addition at the edges, so it is scoped separately from the additive work above.
+### M5 — adoption and v1.0
 
-- [ ] Cross-backend receipt equivalence — a spec decision that must land before any backend code. `engine.backend` sits inside the hashed body (`content_hash` excludes only `id` and `receiptSha256`), so a second backend reaching an identical decision produces a *different* receipt hash by construction. Define equivalence as identical-modulo-the-engine-block and give the replay verifier a differential mode, or move the `engine` block out of the hash and regenerate the corpus
-- [ ] Defeasible IR → stratified Datalog lowering: priority and `overrides` metadata mechanically compiled to strata, per the [Catala](https://catala-lang.org/) approach the IR follows
-- [ ] Soufflé backend, differentially verified against the reference interpreter across the full golden corpus — including reconstruction of the receipt's derivation tree from Soufflé provenance, which has a different shape
-- [ ] clingo backend for rule fragments that genuinely need answer-set semantics, if any emerge — no rule pack has needed it so far
+The next consumer is an adopting engineering team. Make Duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples; do this before implementing a second execution backend.
 
-### M6 — the adopter's cut
+- [ ] **Adopter's guide** — one end-to-end bring-your-own walkthrough: documents, extraction adapter, grounded facts, ontology conformance, rule packs, golden corpus, review queue, and calibration labels.
+- [ ] **Minimal integration example** — three facts, two rules, one adjudication, and one receipt in author-owned code.
+- [ ] **Example/toolkit separation** — relocate teaching content under an examples umbrella so the toolkit is usable without it. Golden replay proves the migration is behavior-preserving.
+- [ ] **Installable distribution** — publish versioned toolkit packages so adopters import the seam rather than fork the repository.
+- [ ] **Specification stability** — freeze the fact, receipt, and IR contracts; publish compatibility and deprecation policy.
+- [ ] **Contribution path** — complete the rule-pack authoring guide and contribution checks across packs, ontologies, starters, and golden-corpus coverage.
+- [ ] **Claims starter, if needed to expose a semantic gap** — a grant → exclusion → exception chain validates generality, but does not delay v1.0 merely to add a second demonstration vertical.
 
-The audience for this milestone is an engineering team at an insurer or a closing platform cloning the repo to build a document-decisioning service — a component in a larger system, running *their* documents, *their* extractors, *their* ontology, *their* rules. The example content that teaches the machinery (six packs, seven scenarios, the synthetic corpus) is by then also the thing most likely to confuse them: it sits beside the toolkit as if it were the product. This milestone makes the toolkit/example boundary physical and the plug-in path procedural. Deliberately sequenced after the remaining feature work (M4's DMN and constraint solving, M5's backend) and immediately before v1.0: the restructure should happen once, after the feature surface stops moving.
+**v1.0 exit:** an independent engineering team can install Duly, integrate its own document and extractor, author a pack, and reproduce its own receipt without a repository fork or maintainer assistance.
 
-- [ ] **Adopter's guide** — the bring-your-own walkthrough for every edge, in one document: your documents through your extraction adapter (and what the contract demands of a trained extractor: renditions, spans, honest raw confidence), your ontology behind the conformance gate, your rule packs with `expected.yaml` in your CI, your golden corpus with replay and impact analysis over *your* decisions, calibration fitted on *your* review labels, and the review queue mounted in *your* workflow. The per-edge guides that exist today federate into this one path
-- [ ] **Example/toolkit separation** — relocate the teaching content (rule packs, starters, sample ontologies, demo scenarios, corpus generator templates) under an examples umbrella so toolkit directories contain zero example content and `git rm -r examples/` leaves a working, empty toolkit. Mechanical path migration; no behavior change; golden replay proves it
-- [ ] **Minimal integration example** — the seam in one screen of author-owned code: a three-fact ontology, a two-rule pack, a scripted extractor, one adjudication, one receipt. No starters, no demo — the "hello, decisioning" an adopter copies as the seed of their own service
-- [ ] **Installable distribution** — publish the toolkit packages (PyPI, or documented pip-from-git until then) so adopters import the seam rather than fork the repo; versioned in lockstep with the spec
+### v1.1 — durable deployment and extraction evaluation
 
-### v1.0 — specification stability
-- [ ] Spec freeze with versioning policy
-- [ ] Second starter vertical: claims coverage determination against a synthetic manuscript — grant → exclusion → exception chains as a full defeasible-reasoning showcase
-- [ ] Rule-pack authoring guide and contribution pipeline. The guide shipped early ([rulepacks/README.md](rulepacks/README.md)), written from direct evidence — four packs authored in one day from the existing packs as templates, which surfaced exactly what the pipeline still owes:
-  - **Decision phrasing as pack data.** A pack whose decisions carry non-boolean values (codes, dates, money) currently needs a `_determination` edit in [demo/app.py](demo/app.py) — a core file — before its verdicts render as anything better than a raw CURIE. That breaks the contribution model's promise that pack authors never touch the core. Fix: an optional `phrasing` block per decision in pack.yaml (`{verdict, detail, tone}`, tone ∈ pos/neg/warn), consumed generically by the demo. Wording stays server-side, which is the demo's design principle; the edges decouple fully, which is this project's
-  - **A rule-id naming convention.** Today's six packs mix pack-prefix-first (`PKG-CD-10`), jurisdiction-first (`VA-RON-2012`, `CA-DTT-11933`), and function-first (`RON-DEF-00`) ids — each inherited from a different aspect of the earliest packs' precedent. Rule ids appear on receipts, in audit reports, and in defeat chains, so the convention belongs in the guide before pack seven exists
+Make the toolkit dependable inside a long-running service and measure the quality of the probabilistic edge it admits.
 
-### v1.1 — ecosystem breadth
-- [ ] One commercial extraction adapter (Azure DI or Google Document AI) — deferred out of M3: Docling proved the adapter interface against a real converter, and a second provider adds credential handling and recorded-response fixtures without changing the contract it plugs into. The point of the seam is that this is someone else's contribution to make ([contribution model](#contribution-model))
+- [ ] A Postgres implementation with migrations, transaction/concurrency behavior, and semantic parity tests against SQLite.
+- [ ] Persistent review-queue and calibration-artifact storage.
+- [ ] Deployment reference: configuration, health checks, structured logs, metrics/tracing hooks, backup/restore, and operational runbook.
+- [ ] A second production extraction-provider adapter, chosen by a real workload, with credential handling, recorded-response fixtures, and contract conformance tests.
+- [ ] Extraction evaluation harness: field-level accuracy, abstention/review rate, latency, and drift segmented by adapter and model version.
+
+**Exit:** a deployment can preserve and replay decisions across processes and upgrades, while measuring extraction and review quality on its own corpus.
+
+### v1.2 — governed operation and decision support
+
+Add the controls and analysis that regulated deployments need, without moving them into the decision semantics.
+
+- [ ] Identity, role-based access control, tenant isolation, secrets/configuration guidance, and evidence-retention controls for service deployments.
+- [ ] Optional asymmetric signatures for extraction-run envelopes, adding producer authenticity to the existing integrity hashes.
+- [ ] Rule-pack lifecycle guidance and reference APIs: draft, test, approval, promotion, rollback, and auditable change history.
+- [ ] Z3 what-if queries: propose permissible changes or boundaries, then verify every answer through the deterministic kernel before reporting it.
+- [ ] Customer-corpus impact analysis surfaced through a service/API integration.
+
+**Exit:** operators can explain who changed a rule, what historical decisions it affected, and why a particular decision was made.
+
+### v1.3+ — integration and scale by demonstrated need
+
+Build integrations and alternate execution only when a consumer supplies the workload and acceptance criteria. The reference interpreter remains authoritative for semantics and receipt shape.
+
+- [ ] Scheduling/optimization reference integration: adjudications produce permissible windows; an optimizer chooses among them without re-encoding compliance rules.
+- [ ] Define cross-backend receipt equivalence before backend code. A second backend must be comparable despite the receipt's `engine.backend` field being hashed.
+- [ ] Lower the defeasible IR to stratified Datalog and implement a Soufflé backend, differentially verified against the complete golden corpus and its derivation traces.
+- [ ] Consider clingo only for a demonstrated rule fragment that genuinely requires answer-set semantics.
+
+**Exit:** every integration preserves the kernel's decision authority, and every alternate backend has proven equivalent decision semantics and trace fidelity on a real workload.
 
 ## Contribution model
 
@@ -232,7 +255,7 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; **M0 through M3 are complete** ([v0.3.0](https://github.com/kjpatel/duly/releases/tag/v0.3.0)) — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway — PROV-O export, the ontology conformance gate, and IR calendar arithmetic shipped; DMN, the pack verifier, what-if queries, and the scheduling example remain; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
+Pre-alpha; **M0 through M3 are complete** ([v0.3.0](https://github.com/kjpatel/duly/releases/tag/v0.3.0)) — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway: PROV-O export, ontology conformance, and calendar arithmetic have shipped; the remaining work focuses on rule authoring and static verification. M5 then makes the toolkit straightforward to adopt before later releases add durable deployment, decision support, and alternate execution when real workloads justify them. Verify everything locally:
 
 ```bash
 uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)

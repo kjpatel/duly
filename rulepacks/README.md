@@ -38,6 +38,14 @@ This is the part worth internalizing, because it is where contributions silently
 ## The path, in order
 
 1. **Write `pack.yaml`.** Decisions first (each with `attribute`, `entityType`, and the human `question` the demo shows), then rules: `priority`, `citation`, `effectiveFrom`, `given`/`when`/`then`, and `overrides` where a rule defeats a default.
+
+   *Or author this step as a decision table.* If your organization already reviews rules as DMN — business analysts with a modeller, an existing table your compliance team maintains — you can write the rules as a DMN 1.3+ decision table and compile it:
+
+   ```bash
+   uv run python -m duly_dmn compile my-rules.dmn -o rulepacks/my-pack/pack.yaml
+   ```
+
+   The output is an ordinary pack; the kernel cannot tell. **This replaces step 1 and nothing else** — steps 2–7 below are the same either way. Worth knowing before you choose: every row needs `duly:ruleId`, `duly:citation`, and `duly:effectiveFrom` annotation columns, because the compiler will not invent an id, a citation, or a date on your behalf; and only `UNIQUE`, `FIRST`, and `PRIORITY` compile, since the others return lists and a duly decision is one value for one attribute. If you are writing rules from scratch and have no DMN tooling, YAML is the shorter path. See [spec/dmn.md](../spec/dmn.md).
 2. **Write `expected.yaml`** covering every rule and every defeat chain, plus both sides of each effective-date boundary. `factsFrom` points at a starter's facts or at `fixtures/`. This is what CI runs, so under-covering here is invisible until something breaks in production.
 3. **Build a starter** — synthetic documents so the pack is demonstrable. Write `starters/<name>/make_documents.py` importing the shared helpers from [starters/tools/make_documents.py](../starters/tools/make_documents.py) (import them; do not edit the shared file), commit the PDFs and renditions, and pin each document's `sha256` in `scenario.json`.
 4. **Declare fact targets and extract.** One `starters/tools/targets/<name>-<doc>.json` per document, then `starters/tools/extract.py` to emit span-verified facts, then `check_facts.py` to prove every quote matches `rendition[start:end]`.

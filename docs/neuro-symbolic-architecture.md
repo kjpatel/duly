@@ -478,7 +478,7 @@ are not current behavior.
 | Content addressing | Mutation of facts, envelopes, renditions, or receipts is detectable | Producer identity, authorization, or an adversarially immutable database |
 | Ontology conformance | With the registry enabled, vocabulary, attachment, value kinds, and codes conform to a pinned version | Record completeness, cross-fact consistency, or domain truth |
 | Confidence policy | Low-confidence machine facts can be excluded under versioned pack policy | A calibrated error rate unless representative labels and the calibrator's assumptions hold |
-| Defeasible rules | Defaults, exceptions, priorities, and derivations are explicit and replayable | That the encoded policy is complete, current, or legally correct |
+| Defeasible rules | Defaults, exceptions, priorities, and derivations are explicit and replayable — and, where the [verifier's fragment](../spec/pack-verification.md) reaches, mechanically checkable: same-priority rules can be *proved* mutually exclusive, and the input regions where no rule concludes a decision can be enumerated with witnesses | That the encoded policy is current or legally correct. "Complete" acquires a narrow, checkable meaning here and keeps a wide unchecked one: the verifier proves a pack reaches *some* conclusion over its inputs, never that the conclusion is the right one, that the rules encode the whole of the law, or that the facts the rules need were extracted |
 | Bitemporal replay | The store can reconstruct facts known at a prior knowledge point and valid at an effective point | Correct replay if a caller bypasses the as-of projection |
 | Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples |
 | Impact analysis | A rule change's flips and reasoning changes are visible on the corpus | Automatic approval or rejection of the change |
@@ -492,6 +492,34 @@ The compact version is:
 Correctness still depends on extraction quality, evidence coverage, ontology
 fitness, rule quality, temporal selection, implementation correctness, and
 human governance.
+
+That sentence has an unexamined middle, and the static verifier occupies it.
+Between *reproducible* and *true* sits **internally consistent**, and until a
+solver could speak about a rulebase, duly had no way to make that claim: the
+pack validator could only report "I cannot prove these disjoint," which an
+author correctly reads as a statement about the validator rather than about the
+rules. The verifier separates the two. A green `prove` run licenses exactly
+three beliefs — no two same-priority rules can both fire, the named decision
+attributes have no unintended input gaps, and (against a second pack) the two
+decide and defeat alike everywhere. It licenses nothing about whether the
+encoded rule is the rule the statute states, whether the statute has since
+changed, or whether the case file contained the evidence the rules needed.
+
+The generalization is worth stating on its own, because it explains several
+otherwise-unrelated design choices at once:
+
+> **A proof about the rulebase is a different kind of claim from a proof about
+> a run.** Determinism, content addressing, and golden replay are all claims
+> about *one execution* and its reproducibility. Disjointness and coverage are
+> claims about *the space of all executions*, established before any execution
+> happens, by a tool that is not permitted to participate in one.
+
+That separation is not an accident of packaging. It is the same reason the DMN
+compiler is an authoring surface rather than a second engine, the reason
+`engine.backend` sits inside the receipt hash, and the reason `prove` does not
+relax the pack validator: anything that could change a decision must live
+inside the versioned, replayable artifact, and anything that merely *reasons
+about* decisions must be provably outside it.
 
 ## The gates
 
@@ -590,6 +618,7 @@ until a workload supplies acceptance criteria.
 | Model or document AI as fact proposer | Supported by the adapter contract; autonomous model-driven proposal is supplied by the adopter, not shipped as a duly model |
 | Symbolic layer as decision authority | Implemented |
 | Deterministic report rendering | Implemented |
+| Static verification of the rulebase by a solver | Implemented as a validation-time tool over a documented fragment: booleans, decimals and money as reals (currency unmodeled), dates as bounded integers, strings and codes as finite domains resolved from the ontology, and the IR operators that encode faithfully ([spec/pack-verification.md](../spec/pack-verification.md)). Constructs outside it are refused by name rather than approximated. `z3-solver` is an optional extra; the kernel neither imports it nor depends on it, and no solver output reaches a receipt |
 | Business-editable decision tables compiled to the decision logic | Implemented for a deliberately narrow subset: DMN 1.3+ tables, S-FEEL cells, three of seven hit policies, mandatory per-row citation and effective date ([spec/dmn.md](../spec/dmn.md)). The compiler is an authoring surface, not a second engine — its output is an ordinary rule pack the same kernel executes |
 | Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
 | Natural-language-to-formal-query interface | Possible extension; not current behavior |
@@ -626,8 +655,15 @@ use static authoring tools to find overlap and unreachable coverage. The
 [DMN compiler](../spec/dmn.md) addresses part of this at authoring time — a
 `UNIQUE` decision table whose rows cannot be proven disjoint is a compile
 error naming the row pairs, rather than a table whose overlap surfaces later
-as an adjudication conflict. It does not address unreachable coverage, which
-needs a solver.
+as an adjudication conflict. The [static pack verifier](../spec/pack-verification.md)
+addresses the rest: `python -m duly_assurance prove` reports, for every pair of
+same-priority rules concluding one attribute, either a proof that they cannot
+both fire or a concrete assignment under which they do, and separately reports
+the input regions where *no* rule concludes a declared decision attribute. Both
+answers are witnessed — the coverage gap in `county-recording-us` for a
+jurisdiction the pack does not encode is found without being told to look for
+it. Neither answer changes a decision; the tool runs at validation time and its
+output never enters a receipt.
 
 ### False confidence in integrity controls
 
@@ -699,7 +735,7 @@ These are extension paths, not commitments or a second roadmap. The
 
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
-| Rule authors need safer tools | DMN-to-IR authoring (**shipped** — see below); still open: stable rule IDs, Z3 overlap and coverage analysis | Authoring tools assist; only the deterministic kernel emits receipts |
+| Rule authors need safer tools | DMN-to-IR authoring and Z3 overlap/coverage analysis (**both shipped** — see below); still open: stable rule IDs | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
@@ -744,5 +780,9 @@ requirement without weakening replay.
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
   packs, and refuses the tables it cannot compile honestly.
+- [`assurance/duly_assurance/prove.py`](../assurance/duly_assurance/prove.py)
+  statically verifies a rule pack with a solver — disjointness, coverage, and
+  equivalence between two packs — and names what it cannot encode instead of
+  guessing.
 - [`assurance/duly_assurance`](../assurance/duly_assurance) contains golden
   replay and rule-change impact analysis.

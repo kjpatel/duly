@@ -19,6 +19,14 @@ dependencies = [
 extraction = [
     "docling>=2.0",
 ]
+# The Z3 static pack verifier (`python -m duly_assurance prove`). Optional
+# because it is a validation-time analysis tool: the kernel, the corpus, and
+# every receipt are produced without it. Install with `uv sync --extra prove`
+# or run ad hoc with `uv run --with z3-solver`; its @pytest.mark.z3 tests skip
+# when z3 is not importable.
+prove = [
+    "z3-solver>=4.12",
+]
 
 [dependency-groups]
 dev = [
@@ -42,4 +50,5 @@ package = true
 markers = [
     "docling: exercises the live Docling converter; requires `uv sync --extra extraction` (skipped when docling is not importable)",
     "linkml: proves the committed ontologies are genuine LinkML with real tooling; run via `uv run --with linkml --with pyshacl pytest conformance/tests -m linkml` (skipped when linkml is not importable)",
+    "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests -m z3` (skipped when z3 is not importable)",
 ]

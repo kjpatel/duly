@@ -51,6 +51,14 @@ All verified against the kernel, not folklore:
 
 - **One entity per `entityType` per case, one live fact per attribute.** Per-document decisions therefore need either one case per document or the document type modelled as an attribute of a single entity. Two live facts for one attribute is a *conflict*, not an overwrite ([spec/rule-ir.md](../spec/rule-ir.md)).
 - **Same-priority rules concluding the same attribute must be provably disjoint**, or the pack validator rejects it. The proofs it accepts: non-overlapping effective windows, contradictory equality guards, or an explicit `overrides`. The guard check (`_equality_guards` in [kernel/duly_kernel/ir.py](../kernel/duly_kernel/ir.py)) matches only `var == "quoted string"` — **boolean guards do not count**, so two rules distinguished solely by `x == true` / `x == false` need an explicit `overrides` even though they look disjoint to a human.
+
+  Before you reach for that `overrides`, run the static verifier — it answers the question the validator cannot:
+
+  ```bash
+  uv run --with z3-solver python -m duly_assurance prove rulepacks/your-pack/pack.yaml
+  ```
+
+  If the pair comes back `PROVED-DISJOINT`, your rules genuinely never overlap and the `overrides` is a workaround for the validator's narrow proof set — say so in a comment on the rule, so the next author knows which kind it is. If it comes back `NOT-PROVED`, you get the exact input assignment under which both rules fire, and the `overrides` is a real legal exception. The same run reports which input regions your rules leave with no conclusion at all. See [spec/pack-verification.md](../spec/pack-verification.md).
 - **The IR has no calendar arithmetic.** Expressions cover boolean logic, `min`/`max`, `abs`, `days_between`, comparisons, and typed literals — there is no date-plus-N, no day-of-week, no holiday calendar. If your rule needs business-day math, model the honestly expressible slice and document the boundary, as [tila-rescission](tila-rescission-us-federal/pack.yaml) does in its `MODELING BOUNDARY` header. A documented limitation is a contribution; a silent approximation is a defect.
 - **Changing a pack changes receipts.** Bump the pack version, and expect the impact-analysis CI comment to tell you how many historical decisions moved. Adding an `abstentionPolicy` where there was none excludes below-floor facts and will shift outcomes.
 

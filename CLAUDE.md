@@ -14,7 +14,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `extraction/` | Adapter protocol, Docling adapter, scripted stub, run envelopes (verify/ingest/revoke) |
 | `calibration/` | Temperature/Platt/conformal math — deliberately unfitted; labels come from review |
 | `review/` | Review queue: abstention routing, human corrections, golden-case export, calibration pairs |
-| `assurance/` | Golden-corpus generator, replay verifier, rule-change impact analysis |
+| `assurance/` | Golden-corpus generator, replay verifier, rule-change impact analysis, static pack verifier (`prove`, optional z3) |
 | `conformance/` | Ontology conformance gate: pure-Python LinkML-subset validator, registry, CLI (`python -m duly_conformance`) |
 | `ontologies/` | Versioned, immutable LinkML ontology artifacts (`<name>/<version>.yaml`) the facts' `schemaRef`s pin — read `ontologies/README.md` before touching |
 | `rulepacks/` | Six packs (insurance + mortgage closing), each `pack.yaml` + `expected.yaml` (+ `fixtures/`) |
@@ -33,6 +33,7 @@ uv run python -m duly_assurance impact    # what your change flips vs the commit
 uv run spec/validate.py                   # spec examples: schemas + hashes
 uv run python3 starters/tools/check_facts.py   # starter facts: schema, hashes, quote spans
 uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples   # every committed fact vs ontologies/
+uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml   # disjointness + coverage (optional dep)
 uv run uvicorn demo.app:app --port 8788   # the demo
 ```
 
@@ -47,6 +48,8 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 ## Gotchas that have actually bitten
 
+- **`prove` only ever sees packs the kernel already blessed.** `validate_pack` refuses any same-priority pair concluding one attribute unless it can prove disjointness syntactically or the author wrote an `overrides` — so a pack with an *unproven* same-priority overlap cannot load, and `python -m duly_assurance prove` cannot meet one in a committed pack. Its non-zero exit is a **differential check between two proof systems**, not a routine gate: it firing would mean Z3 refuted a proof `_equality_guards` accepted. Don't write a test that reaches it through `load_pack` — build the pack dict and call `analyze_pack` directly.
+- **An `overrides` can mean two different things, and only a solver tells them apart.** `PKG-NOTE-31 overrides PKG-NOTE-30` is an authored legal exception over rules that genuinely overlap (a registered eNote *is* a promissory note); TILA's manufactured priority gap is a workaround for a proof the validator cannot perform. Both look identical in the pack. Run `prove` before adding either — if the pair comes back PROVED-DISJOINT you were working around the validator, and the comment saying so belongs on the rule.
 - **Only `attribute` bindings can prove disjointness — `derived` ones cannot.** Narrower than the boolean-guard gotcha below and less visible: `_equality_guards` inspects only `when` items whose variable resolves to an *attribute* binding, so `category == "ZeroTolerance"` on a `derived` binding proves nothing however string-equal it looks. Two same-priority rules separated only by a derived-value guard need an explicit `overrides`.
 - **Test filenames collide across suites.** Test dirs have no `__init__.py`, so pytest imports by basename: `dmn/tests/test_cli.py` broke collection against `kernel/tests/test_cli.py`. Before adding a suite, run `find . -name "test_*.py" | sed 's#.*/##' | sort | uniq -d`.
 - **Boolean guards don't prove disjointness.** The pack validator's same-priority check accepts only *quoted-string* equality guards (`state == "US-NY"`) as a disjointness proof. Two rules split by `x == true` / `x == false` need an explicit `overrides`, even though they look disjoint.
@@ -58,6 +61,15 @@ Run the full suite, replay, and spec validation before any commit. A change that
 - **Calendars are pack data and coverage is a wall.** `add_business_days` walks only the pack's `calendars:` block; a walk touching any day outside the calendar's `coverage` window raises rather than guessing. The TILA calendar reconciles by test with the corpus generator's 6103(a) derivation — edit either and the suite tells you.
 - **Kernel abstention policy is pack-versioned.** Adding `abstentionPolicy` to a pack changes receipts (bump the pack version, expect corpus churn for that pack). Packs without one must stay byte-identical — there is a pinned-hash test proving the pre-policy kernel's output.
 - **`schemaRef` is inside the fact hash — renaming an ontology is corpus churn.** A fact's `schemaRef` sits in its content-hashed bytes, so re-pointing facts at a different ontology name changes fact hashes, receipt `inputFacts`, and therefore every affected golden receipt. The M4 consolidation (five `duly-starter-*` mortgage names → `duly-mortgage-closing`) touched 555 golden files while flipping 0 of 351 decisions; do it that way — targets + fixtures + generator templates updated together, `impact` run before accepting regeneration, `notice-*`/`review-*` proven byte-untouched. This is also why `duly-starter-notice` keeps its awkward name forever: `review-0001` is preserved-forever and pins it.
+
+## Definition of done
+
+A feature is not shipped when the code merges. It is shipped when it is **documented, discoverable, demoable, and reconciled** — all four in the PR that introduces it, not in follow-ups.
+
+- **Documented** — spec/README coverage in house style, including the honest "deliberately does not do" boundaries.
+- **Discoverable** — audit the newcomer entry points and update the ones that should now lead here: README components table and roadmap bullet, `docs/concepts.md` glossary, `docs/faq.md` if a skeptic would ask, this file's gotchas if agents will trip on it, and the component README a practitioner actually reads (`rulepacks/README.md` for anything touching pack authoring).
+- **Demoable** — something runnable that shows the benefit, executed before you claim it works.
+- **Reconciled** — [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) is the system mental model, and a mental model describing a shipped capability as "a possible extension" is worse than one omitting it. Check five places: the *how the architecture can grow* table, the *adjacent patterns* table, the *artifacts that carry meaning* table, the reading/code map, and — the one that carries real content — **whether the work sharpened a claim the doc already makes**. The DMN track turned "a receipt identifies its pack by name and version" into *pack identity is inside the hashed body, so two packs are two identities*; the verifier track located the unexamined middle between "reproducible" and "true" and named it *internally consistent*. Those paragraphs were each worth more than the factual corrections around them.
 
 ## Conventions
 
@@ -73,6 +85,7 @@ Run the full suite, replay, and spec validation before any commit. A change that
 - [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) — the platform-engineer mental model: architecture, trust boundaries, guarantees, and extension paths
 - [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
 - [rulepacks/README.md](rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
+- [spec/pack-verification.md](spec/pack-verification.md) — the static verifier's fragment, its per-operator encoding, and what a green `prove` run does and does not license
 - [ontologies/README.md](ontologies/README.md) / [spec/ontology-conformance.md](spec/ontology-conformance.md) — the ontology registry, the crosswalk rules (verify or omit), and the conformance gate's exact subset
 - [starters/README.md](starters/README.md) — starter layout and shared tooling
 - [golden/README.md](golden/README.md) — corpus contract, case-id series, regeneration rules

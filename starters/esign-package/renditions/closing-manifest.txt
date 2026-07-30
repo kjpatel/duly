@@ -1,0 +1,23 @@
+COBALT TITLE & SETTLEMENT — CLOSING PACKAGE MANIFEST
+
+Closing Package: CP-2026-0847
+Loan Number: BL-2026-11402
+Borrower: Alexis Nguyen
+Property: 2214 Saguaro Vista Drive, Phoenix, AZ 85018
+Lender: Bluestone Home Lending, LLC
+Scheduled Closing Date: 07/17/2026
+
+ELECTRONIC SIGNING STATUS
+eSign Consent Status: OBTAINED (07/10/2026, borrower portal)
+Consent covers electronic records and disclosures under 15 U.S.C. § 7001(c).
+MERS eRegistry Registration: CONFIRMED (MIN 1000990-0726000847-5)
+Authoritative copy custody: Bluestone eVault (vault ID EV-2214-0847)
+
+DOCUMENTS IN THIS PACKAGE
+1. Promissory Note (eNote) — routed for signing by this manifest
+2. Deed of Trust — routed separately (county recording workflow)
+3. Closing Disclosure — routed separately
+4. Notice of Right to Cancel — routed separately
+
+Document under review in this package: Promissory Note
+Prepared by: Cobalt Title & Settlement, 400 N Central Ave, Phoenix, AZ 85004

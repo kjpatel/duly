@@ -1,0 +1,49 @@
+{
+  "documentId": "doc:closing-manifest:CP-2026-0847:2026-07-12",
+  "caseId": "case:closing-package:CP-2026-0847",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-07-12T16:40:00Z",
+  "runId": "run:2026-07-12:011",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-manifest-esign-consent.json",
+      "entity": {
+        "id": "signing:CP-2026-0847:promissory-note",
+        "type": "pkg:SigningTask"
+      },
+      "attribute": "pkg:esignConsentObtained",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "eSign Consent Status: OBTAINED",
+      "confidence": {
+        "score": 0.981,
+        "method": "conformal",
+        "calibrationRef": "cal:esign-docs:2026-06"
+      }
+    },
+    {
+      "file": "fact-manifest-enote-registered.json",
+      "entity": {
+        "id": "signing:CP-2026-0847:promissory-note",
+        "type": "pkg:SigningTask"
+      },
+      "attribute": "pkg:eNoteRegistered",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "MERS eRegistry Registration: CONFIRMED",
+      "confidence": {
+        "score": 0.974,
+        "method": "conformal",
+        "calibrationRef": "cal:esign-docs:2026-06"
+      }
+    }
+  ]
+}

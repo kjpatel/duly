@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:1f5047b5feb5fa5776f2d96a20e04690cf2cb3c0bf02ba33a5364b62fd023f3b",
+  "contentHash": "1f5047b5feb5fa5776f2d96a20e04690cf2cb3c0bf02ba33a5364b62fd023f3b",
+  "caseId": "case:closing-package:CP-2026-0847",
+  "entity": {
+    "id": "signing:CP-2026-0847:promissory-note",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:eNoteRegistered",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:closing-manifest:CP-2026-0847:2026-07-12",
+    "documentSha256": "6df415d5b98511d8f58d59099cbd4f2f9e0c4429a7a1d1b9aeb0339e5b78a959",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:6df415d5",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 425,
+      "end": 463
+    },
+    "quote": "MERS eRegistry Registration: CONFIRMED"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-12T16:40:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-12:011"
+    }
+  },
+  "confidence": {
+    "score": 0.974,
+    "method": "conformal",
+    "calibrationRef": "cal:esign-docs:2026-06"
+  },
+  "recordedAt": "2026-07-12T16:40:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

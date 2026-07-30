@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:97c466cf9dddb1f251044cddd19e5b0f40009e3fdfb2537188dffc201c016a6d",
+  "contentHash": "97c466cf9dddb1f251044cddd19e5b0f40009e3fdfb2537188dffc201c016a6d",
+  "caseId": "case:closing-package:CP-2026-0847",
+  "entity": {
+    "id": "signing:CP-2026-0847:promissory-note",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "PromissoryNote",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:promissory-note:CP-2026-0847:2026-07-12",
+    "documentSha256": "57b2a993d07ff7cd634f435d053a4c11474291eed2f732898a276ecee80c7996",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:57b2a993",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 0,
+      "end": 15
+    },
+    "quote": "PROMISSORY NOTE"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-12T16:40:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-12:011"
+    }
+  },
+  "confidence": {
+    "score": 0.991,
+    "method": "conformal",
+    "calibrationRef": "cal:esign-docs:2026-06"
+  },
+  "recordedAt": "2026-07-12T16:40:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

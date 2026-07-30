@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:01749096c2614852b60845546062d447f16e6cf127b1df850288e4b8c7484b2e",
+  "contentHash": "01749096c2614852b60845546062d447f16e6cf127b1df850288e4b8c7484b2e",
+  "caseId": "case:closing-package:CP-2026-0305",
+  "entity": {
+    "id": "signing:CP-2026-0305:right-to-cancel",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "RightToCancelNotice",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

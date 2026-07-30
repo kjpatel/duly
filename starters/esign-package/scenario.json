@@ -1,0 +1,31 @@
+{
+  "id": "esign-package",
+  "title": "eSign routing: closing-package promissory note as a registered eNote",
+  "caseId": "case:closing-package:CP-2026-0847",
+  "ontology": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:closing-manifest:CP-2026-0847:2026-07-12",
+      "title": "Closing Package Manifest",
+      "pdf": "documents/closing-manifest.pdf",
+      "rendition": "renditions/closing-manifest.txt",
+      "sha256": "6df415d5b98511d8f58d59099cbd4f2f9e0c4429a7a1d1b9aeb0339e5b78a959"
+    },
+    {
+      "id": "doc:promissory-note:CP-2026-0847:2026-07-12",
+      "title": "Promissory Note (first page)",
+      "pdf": "documents/promissory-note.pdf",
+      "rendition": "renditions/promissory-note.txt",
+      "sha256": "57b2a993d07ff7cd634f435d053a4c11474291eed2f732898a276ecee80c7996"
+    }
+  ],
+  "facts": [
+    "facts/fact-note-document-type.json",
+    "facts/fact-manifest-esign-consent.json",
+    "facts/fact-manifest-enote-registered.json"
+  ],
+  "rulePack": "rulepacks/esign-closing-package/pack.yaml"
+}

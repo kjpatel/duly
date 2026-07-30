@@ -1,0 +1,309 @@
+pack:
+  name: esign-closing-package
+  version: "2026.1.0"
+  ontology: duly-starter-esign
+  ontologyVersion: "0.1.0"
+  description: eSign eligibility and signing-method routing for closing-package documents.
+
+# SCOPE: This pack routes one closing-package document (modeled as a single
+# pkg:SigningTask entity per case — see the v0 kernel constraint in
+# spec/rule-ir.md: at most one entity per entityType, so per-document
+# decisions are one case per document, with the document's type carried as a
+# fact attribute) to a signing channel:
+#   ESign        — electronic signature under ESIGN/UETA, consumer consent on file
+#   WetInk       — ink signature on paper
+#   ENoteEVault  — electronic promissory note (transferable record) registered
+#                  on the MERS eRegistry with the authoritative copy in an eVault
+# Out of scope, by design (boundaries stated on the rules below):
+#   - County recordability of security instruments (deed of trust / mortgage):
+#     whether a county accepts e-recording under a state URPERA adoption is a
+#     separate determination covered by a sibling recording pack. This pack
+#     fails safe: recordable security instruments route to wet ink.
+#   - Notarization / remote online notarization (RON) validity — same boundary.
+#   - State UETA variations (e.g. New York's ESRA instead of UETA). The
+#     federal floor (15 U.S.C. § 7001) is what this pack encodes.
+# Citations verified against the sources linked below on 2026-07-29.
+
+decisions:
+  - attribute: pkg:eSignEligible
+    entityType: pkg:SigningTask
+    question: "May this document be signed electronically?"
+  - attribute: pkg:signingMethod
+    entityType: pkg:SigningTask
+    question: "Which signing channel should this document be routed to?"
+
+rules:
+  # FAIL-SAFE DEFAULT: unknown or unmatched document types route to wet ink.
+  # "Fail safe" here means wet, not electronic: a wet-ink signature is valid
+  # for every document type in a closing package, so misrouting an unknown
+  # document to paper costs only convenience. Misrouting to eSign can produce
+  # a note that is unenforceable as a transferable record, a security
+  # instrument the county rejects, or a disclosure delivered without the
+  # ESIGN consumer consent it required — all of which put the closing or the
+  # loan's salability at risk. The safe error is paper.
+  - id: PKG-DEF-00
+    description: "A closing-package document is routed to wet-ink signing unless a specific rule authorizes an electronic channel."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption (fail-safe to wet ink)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      task: { entityType: pkg:SigningTask }
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "WetInk"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+
+  - id: PKG-DEF-01
+    description: "A closing-package document is presumed not eligible for electronic signature unless a specific rule establishes eligibility."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Default presumption (fail-safe to wet ink)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      task: { entityType: pkg:SigningTask }
+    then:
+      entity: task
+      attribute: pkg:eSignEligible
+      value: { kind: boolean, value: false }
+
+  # Closing Disclosure: ESIGN's general validity rule (15 U.S.C. § 7001(a))
+  # plus its consumer-consent conditions (§ 7001(c)(1): a writing requirement
+  # owed to a consumer is satisfied electronically only if the consumer has
+  # affirmatively consented after the required disclosures). Regulation Z
+  # says so expressly for the Closing Disclosure: "The disclosures required
+  # by this section may be provided to the consumer in electronic form,
+  # subject to compliance with the consumer consent and other applicable
+  # provisions of the Electronic Signatures in Global and National Commerce
+  # Act" — 12 CFR § 1026.38(t)(3)(iii). effectiveFrom is the TRID effective
+  # date (2015-10-03): the Closing Disclosure as a document type exists from
+  # then. Without consent on file, no rule fires and PKG-DEF-00/01 stand.
+  - id: PKG-CD-10
+    description: "A Closing Disclosure may be signed and delivered electronically when the borrower's ESIGN consumer consent is on file."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "15 U.S.C. § 7001(a), (c); 12 CFR § 1026.38(t)(3)(iii)"
+      url: "https://www.law.cornell.edu/uscode/text/15/7001"
+    effectiveFrom: "2015-10-03"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+      consent: { attribute: pkg:esignConsentObtained }
+    when:
+      - docType == "ClosingDisclosure"
+      - consent == true
+    then:
+      entity: task
+      attribute: pkg:eSignEligible
+      value: { kind: boolean, value: true }
+    overrides: [PKG-DEF-01]
+
+  - id: PKG-CD-11
+    description: "A Closing Disclosure with the borrower's ESIGN consumer consent on file is routed to the eSign channel."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "15 U.S.C. § 7001(a), (c); 12 CFR § 1026.38(t)(3)(iii)"
+      url: "https://www.law.cornell.edu/uscode/text/15/7001"
+    effectiveFrom: "2015-10-03"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+      consent: { attribute: pkg:esignConsentObtained }
+    when:
+      - docType == "ClosingDisclosure"
+      - consent == true
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "ESign"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+    overrides: [PKG-DEF-00]
+
+  # Right-to-cancel (rescission) notice: Regulation Z permits electronic
+  # delivery under the ESIGN consumer-consent provisions — 12 CFR
+  # § 1026.23(b)(1) ("one copy to each if the notice is delivered in
+  # electronic form in accordance with the consumer consent and other
+  # applicable provisions of the E-Sign Act").
+  # TODO(verify): effectiveFrom — 2011-12-30 is the date Regulation Z was
+  # recodified at 12 CFR Part 1026 (CFPB). The e-delivery sentence predates
+  # the recodification under the Board's 12 CFR 226.23, but the date it first
+  # entered Regulation Z was not confirmed from an official source.
+  - id: PKG-RTC-20
+    description: "A notice of the right to rescind may be delivered and acknowledged electronically when the borrower's ESIGN consumer consent is on file."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "15 U.S.C. § 7001(c); 12 CFR § 1026.23(b)(1)"
+      url: "https://www.law.cornell.edu/cfr/text/12/1026.23"
+    effectiveFrom: "2011-12-30"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+      consent: { attribute: pkg:esignConsentObtained }
+    when:
+      - docType == "RightToCancelNotice"
+      - consent == true
+    then:
+      entity: task
+      attribute: pkg:eSignEligible
+      value: { kind: boolean, value: true }
+    overrides: [PKG-DEF-01]
+
+  - id: PKG-RTC-21
+    description: "A notice of the right to rescind with the borrower's ESIGN consumer consent on file is routed to the eSign channel."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "15 U.S.C. § 7001(c); 12 CFR § 1026.23(b)(1)"
+      url: "https://www.law.cornell.edu/cfr/text/12/1026.23"
+    effectiveFrom: "2011-12-30"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+      consent: { attribute: pkg:esignConsentObtained }
+    when:
+      - docType == "RightToCancelNotice"
+      - consent == true
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "ESign"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+    overrides: [PKG-DEF-00]
+
+  # Promissory notes are special: general eSign consent is NOT enough. A note
+  # is negotiable paper; it can only be electronic as a "transferable record"
+  # under 15 U.S.C. § 7021 (and UETA § 16), which requires a system that
+  # "reliably establishes [the controlling] person as the person to which the
+  # transferable record was issued or transferred" — i.e. a registry/eVault
+  # control infrastructure, not a signature pad. A note signed electronically
+  # outside that infrastructure risks being neither enforceable as a holder's
+  # instrument nor salable. So the note-specific presumption is wet ink; the
+  # registered-eNote rule below carves out the exception.
+  - id: PKG-NOTE-30
+    description: "A promissory note is routed to wet-ink signing, because an electronic note is enforceable as a transferable record only within a control system, which general eSign consent does not provide."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "15 U.S.C. § 7021(b)-(d) (transferable records; control requirement)"
+      url: "https://www.law.cornell.edu/uscode/text/15/7021"
+    effectiveFrom: "2000-10-01"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+    when:
+      - docType == "PromissoryNote"
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "WetInk"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+    overrides: [PKG-DEF-00]
+
+  # Investor overlay: to be salable to the GSEs, an electronic note must be
+  # an eNote registered on the MERS eRegistry with its authoritative copy in
+  # an eVault. Fannie Mae Selling Guide B8-8-02 (Requirements for Creating,
+  # Closing, and Correcting eNotes, updated 12/13/2023): "Lenders must have
+  # process controls in place to ensure eNotes are registered in the MERS
+  # eRegistry as soon as possible after the tamper-evident seal has been
+  # applied, but no later than one business day after signing." Freddie Mac
+  # Single-Family Seller/Servicer Guide ch. 1402 requires eMortgage
+  # sellers/servicers to be MERS eRegistry participants with a Freddie
+  # Mac-reviewed eNote vault. Verified against both guides 2026-07-29.
+  # TODO(verify): effectiveFrom — 2023-12-13 is the last-updated date of the
+  # Fannie Mae guide section actually verified; both GSEs accepted eNotes on
+  # materially similar terms earlier, but that history was not confirmed from
+  # dated guide editions, so the boundary is the verified edition's date.
+  - id: PKG-NOTE-31
+    description: "A promissory note executed as an eNote registered on the MERS eRegistry, with the authoritative copy held in an eVault, is routed to the eNote channel, which supersedes the wet-ink presumption for notes."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "15 U.S.C. § 7021; Fannie Mae Selling Guide B8-8-02 (12/13/2023); Freddie Mac Seller/Servicer Guide ch. 1402"
+      url: "https://selling-guide.fanniemae.com/sel/b8-8-02/requirements-creating-closing-and-correcting-enotes"
+    effectiveFrom: "2023-12-13"
+    given:
+      task:       { entityType: pkg:SigningTask }
+      docType:    { attribute: pkg:documentType }
+      registered: { attribute: pkg:eNoteRegistered }
+    when:
+      - docType == "PromissoryNote"
+      - registered == true
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "ENoteEVault"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+    overrides: [PKG-NOTE-30]
+
+  - id: PKG-NOTE-32
+    description: "A promissory note may be signed electronically when it is executed as an eNote registered on the MERS eRegistry, satisfying the transferable-record control requirement."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "15 U.S.C. § 7021(b), (d); Fannie Mae Selling Guide B8-8-02 (12/13/2023)"
+      url: "https://www.law.cornell.edu/uscode/text/15/7021"
+    effectiveFrom: "2023-12-13"
+    given:
+      task:       { entityType: pkg:SigningTask }
+      docType:    { attribute: pkg:documentType }
+      registered: { attribute: pkg:eNoteRegistered }
+    when:
+      - docType == "PromissoryNote"
+      - registered == true
+    then:
+      entity: task
+      attribute: pkg:eSignEligible
+      value: { kind: boolean, value: true }
+    overrides: [PKG-DEF-01]
+
+  # Recordable security instrument: the deed of trust / mortgage must satisfy
+  # state acknowledgment (notarization) law and be accepted by the county
+  # recorder. ESIGN's writing-requirement override does not reach those
+  # prerequisites in practice: § 7001(b) preserves non-writing requirements,
+  # and whether a given county accepts electronic documents for recording is
+  # governed by state e-recording law (URPERA adoptions) county by county.
+  # BOUNDARY: county e-recording eligibility (which could permit an
+  # e-signed, remotely notarized security instrument) is out of this pack's
+  # scope and is adjudicated by a sibling recording pack; until that pack
+  # concludes otherwise, this pack fails safe to wet ink with notarization.
+  - id: PKG-DOT-40
+    description: "A deed of trust or mortgage is routed to wet-ink signing with notarization, because recordability is governed by state acknowledgment and county recording law that this pack does not adjudicate."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "15 U.S.C. § 7001(b); state acknowledgment and county recording law (e-recording boundary: sibling recording pack)"
+      url: "https://www.law.cornell.edu/uscode/text/15/7001"
+    effectiveFrom: "2000-10-01"
+    given:
+      task:    { entityType: pkg:SigningTask }
+      docType: { attribute: pkg:documentType }
+    when:
+      - docType == "DeedOfTrust"
+    then:
+      entity: task
+      attribute: pkg:signingMethod
+      value:
+        kind: code
+        value: "WetInk"
+        codeSystem: "duly-starter-esign/signing-methods"
+        codeSystemVersion: "0.1.0"
+    overrides: [PKG-DEF-00]

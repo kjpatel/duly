@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:5a2bc2feab56d300faebffc579c8bb7b0faba63f8bdc75a2db43d35f390c61b7",
+  "contentHash": "5a2bc2feab56d300faebffc579c8bb7b0faba63f8bdc75a2db43d35f390c61b7",
+  "caseId": "case:closing-package:CP-2026-0306",
+  "entity": {
+    "id": "signing:CP-2026-0306:escrow-instructions",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:documentType",
+  "value": {
+    "kind": "code",
+    "value": "EscrowInstructions",
+    "codeSystem": "duly-starter-esign/document-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-07-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-07-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

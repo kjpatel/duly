@@ -53,6 +53,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Review queue](review/) | Abstention routing; human corrections re-enter as first-class facts and auto-become golden cases; calibration label export | working (API + library) |
 | [Calibration](calibration/) | Temperature/Platt/conformal calibrators and abstention math, consuming the review queue's labeled pairs | working |
 | [Assurance harness](assurance/) | Replay verifier, 351-case [golden corpus](golden/) (350 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
+| [PROV-O export](spec/prov-o.md) | External JSON-LD contexts + exporter: facts and receipts become W3C PROV for any RDF/SPARQL tool, stored bytes unchanged — lineage queries with off-the-shelf tooling ([SPARQL demo](spec/provo_sparql_demo.py), `GET /api/report?format=jsonld`) | shipped |
 
 ## Design choices and why
 
@@ -206,7 +207,7 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; **M0 through M3 are complete** — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 — standards alignment (PROV-O, SHACL/LinkML, DMN) and constraint solving — is next; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
+Pre-alpha; **M0 through M3 are complete** — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway — PROV-O export shipped; SHACL/LinkML, DMN, and constraint solving remain; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
 
 ```bash
 uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)

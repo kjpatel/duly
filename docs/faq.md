@@ -30,6 +30,10 @@ The defining query of regulated replay is: *evaluate a March file under March ru
 
 Rule packs are YAML: each rule carries a legal citation, a priority, an effective window, and explicit exception relationships — designed for compliance analysts and domain experts, with a [step-by-step authoring guide](../rulepacks/README.md). When a regulation changes, you add a new rule version with its own effective date; nothing retrains, old decisions still replay under the old rule, and CI reports exactly which historical decisions the change would flip. (A decision-table authoring surface for analysts who prefer DMN to YAML is on the [roadmap](../README.md#roadmap).)
 
+## Can our existing data-governance or lineage tooling read duly's audit trail?
+
+If it speaks RDF, yes — without a duly-specific importer. duly ships [PROV-O JSON-LD contexts](../spec/prov-o.md): external mapping files under which stored facts and receipts (bytes unchanged — they are content-addressed) expand to standard W3C PROV triples. Load them into any triple store and questions like *which decisions ever used a fact from this document?* or *which decisions relied on a human correction, and what did it supersede?* become ordinary SPARQL — there is a [runnable demonstration](../spec/provo_sparql_demo.py) answering exactly those, and the demo server exports any receipt as JSON-LD via `GET /api/report?format=jsonld`. One honest boundary: the mapping is deliberately partial — bitemporal effective time, confidence, and abstentions have no faithful PROV equivalent and stay in duly's own namespace, documented term by term.
+
 ## Is this a product I can deploy?
 
 Not yet — it is a pre-alpha specification with a working reference implementation. What runs today: six rule packs across two domains, an interactive demo of the full extract → decide → abstain → correct loop, and a 351-case corpus that replays byte-for-byte on every push. Breaking changes are expected until v1.0. The most useful thing an early adopter can do is pressure-test the [contract's open questions](../spec/grounded-facts.md#open-questions) against a real workflow.

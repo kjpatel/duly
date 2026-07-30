@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:e17006eb51ae180850d881a5c23af4183227cb4bea5a38ec2861219e8c1a3076",
-  "receiptSha256": "e17006eb51ae180850d881a5c23af4183227cb4bea5a38ec2861219e8c1a3076",
+  "id": "urn:duly:receipt:sha256:3b4129ee28db3c2784cede81c3621ee4853fe5296c0c352cf672d5b434f44dfb",
+  "receiptSha256": "3b4129ee28db3c2784cede81c3621ee4853fe5296c0c352cf672d5b434f44dfb",
   "caseId": "case:golden:resc-0009",
   "decision": {
     "entity": "loan:resc-0009",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "ruleId": "RESC-DL-01",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
@@ -43,7 +43,7 @@
     },
     {
       "ruleId": "RESC-FUND-EXP",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
@@ -76,9 +76,6 @@
         "factId": "urn:duly:fact:sha256:9d8a39f0462cb818bb94ab874c75a6b672c534c612b345a0b039cde1cfb643d5"
       },
       {
-        "factId": "urn:duly:fact:sha256:dd5fce476a98976a3e58dd38a63cae38a16aa5394e0cb848baa6e87a49309a6c"
-      },
-      {
         "conclusion": {
           "entity": "loan:resc-0009",
           "attribute": "resc:rescissionApplies",
@@ -108,10 +105,6 @@
     {
       "id": "urn:duly:fact:sha256:9d8a39f0462cb818bb94ab874c75a6b672c534c612b345a0b039cde1cfb643d5",
       "contentHash": "9d8a39f0462cb818bb94ab874c75a6b672c534c612b345a0b039cde1cfb643d5"
-    },
-    {
-      "id": "urn:duly:fact:sha256:dd5fce476a98976a3e58dd38a63cae38a16aa5394e0cb848baa6e87a49309a6c",
-      "contentHash": "dd5fce476a98976a3e58dd38a63cae38a16aa5394e0cb848baa6e87a49309a6c"
     },
     {
       "id": "urn:duly:fact:sha256:ee4d0e5d60c710a072e5fcc64237dc435c4d05eaffc27c7588e999ca330b1bc5",

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:b455859449b6a6e24200cb38628d4dcb989ce6cc1b4d5b6dbbed70e5c748dfd9",
-  "receiptSha256": "b455859449b6a6e24200cb38628d4dcb989ce6cc1b4d5b6dbbed70e5c748dfd9",
+  "id": "urn:duly:receipt:sha256:1d132a59b14c63faf5e70ab12bb1fc0480d08404717fd2daf1b6e3f6a5a17bf1",
+  "receiptSha256": "1d132a59b14c63faf5e70ab12bb1fc0480d08404717fd2daf1b6e3f6a5a17bf1",
   "caseId": "case:golden:resc-0019",
   "decision": {
     "entity": "loan:resc-0019",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {

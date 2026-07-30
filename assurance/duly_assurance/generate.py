@@ -286,16 +286,19 @@ RESC_STRATA: tuple[dict, ...] = (
     # Not the consumer's principal dwelling: outside 1026.23(a)(1) entirely.
     {"calendar": "neither", "trigger": "same_day", "as_of": "after_deadline",
      "dwelling": False, "notice": False, "question": "resc:rescissionApplies"},
-    # Same, but with the rescission-period windows present: RESC-FUND-NA
-    # (priority 200) must beat RESC-FUND-STAY (150) on an in-force day.
+    # Same, but evaluated inside the would-be window: rescission does not
+    # apply, so no deadline is derived, RESC-FUND-STAY cannot bind, and
+    # RESC-FUND-NA answers even on a day the hold would otherwise cover.
     {"calendar": "both", "trigger": "same_day", "as_of": "in_window", "dwelling": False},
-    # The protective default: no notice-delivery fact, so nothing can show
-    # the period expired even long past the would-be deadline.
+    # The protective default: no notice-delivery fact, so no deadline can be
+    # computed and nothing can show the period expired even long past the
+    # would-be deadline.
     {"calendar": "both", "trigger": "same_day", "as_of": "well_after", "notice": False,
      "disclosures": True},
-    # An impossible printed deadline (2 calendar days after the latest
-    # trigger): RESC-DL-01 refuses to certify it, so no deadline is concluded
-    # while the funding question still answers from the window facts.
+    # A misprinted notice (printed date 2 calendar days after the latest
+    # trigger — impossible under any business-day calendar): the pack
+    # computes the deadline itself, so the misprint changes nothing; the
+    # printed-date fact rides along unconsumed.
     {"calendar": "both", "trigger": "same_day", "as_of": "in_window",
      "stated_deadline": "impossible"},
 )
@@ -928,19 +931,23 @@ def build_resc_facts(
 ) -> tuple[list[dict], str, str]:
     """Facts + asOf points for one TILA rescission case.
 
-    Faithful to the pack's MODELING BOUNDARY: the deadline is an EXTRACTED
-    fact (resc:statedRescissionDeadline — the date printed in the H-8 notice's
-    "final date to cancel" blank), not something a rule computes. The
-    business-day arithmetic that produced it lives here, in the generator,
-    which is where the extraction pipeline sits in the real system.
+    Since pack 2026.2.0 the deadline is COMPUTED by RESC-DL-01 over the
+    pack-embedded `tila-precise` calendar, and the funding flip compares the
+    computed deadline against the asOf date (an `asOf: effective` binding) —
+    so the case carries only the trigger-date facts, not the old
+    extraction-derived rescission-period window facts.
 
-    The funding flip rides effective-dated window facts derived from that same
-    printed date: resc:rescissionPeriodInForce is true over
-    [consummation, deadline + 1 day) and resc:rescissionPeriodExpired from
-    deadline + 1 day on, so the identical fact set answers differently as
-    asOf.effective moves. Both windows are emitted only when there is a
-    printed deadline to derive them from — a case with no delivered notice
-    carries neither, which is exactly what makes the protective default hold.
+    resc:statedRescissionDeadline — the date printed in the H-8 notice's
+    "final date to cancel" blank — is still emitted when a notice was
+    delivered: it mirrors what a real extraction run reads off the document,
+    and the `stated_deadline: impossible` stratum uses it to prove a
+    misprinted notice can no longer mislead the deadline decision (no rule
+    consumes the printed date; receipts never list it as an input fact).
+
+    The business-day arithmetic in this module (add_business_days /
+    federal_holidays) stays deliberately independent of the kernel's: it
+    seeds the draws and cross-checks the pack's embedded calendar in
+    assurance/tests/test_generate.py.
     """
     ts = f"{consummation.isoformat()}T12:00:00Z"
     case_ref = f"case:golden:{case_id}"
@@ -975,26 +982,10 @@ def build_resc_facts(
             )
         )
     if stated_deadline is not None:
-        first_fundable = stated_deadline + _dt.timedelta(days=1)
         facts.append(
             make_fact(
                 case_ref, loan_id, "resc:Loan", "resc:statedRescissionDeadline",
                 {"kind": "date", "value": stated_deadline.isoformat()}, ontology, ts,
-            )
-        )
-        facts.append(
-            make_fact(
-                case_ref, loan_id, "resc:Loan", "resc:rescissionPeriodInForce",
-                {"kind": "boolean", "value": True}, ontology, ts,
-                effective_from=f"{consummation.isoformat()}T00:00:00Z",
-                effective_to=f"{first_fundable.isoformat()}T00:00:00Z",
-            )
-        )
-        facts.append(
-            make_fact(
-                case_ref, loan_id, "resc:Loan", "resc:rescissionPeriodExpired",
-                {"kind": "boolean", "value": True}, ontology, ts,
-                effective_from=f"{first_fundable.isoformat()}T00:00:00Z",
             )
         )
     eff, kn = _as_of_points(as_of)
@@ -1023,18 +1014,22 @@ def draw_resc_params(template: dict, rng: random.Random, index: int) -> dict:
     if not stratum.get("disclosures", has_notice):
         disclosures_delivered = None
     if stratum.get("stated_deadline") == "impossible":
-        # Two calendar days after the latest trigger: no business-day calendar
-        # could produce this, so RESC-DL-01 refuses to certify it.
+        # Two calendar days after the latest trigger: no business-day
+        # calendar could print this lawfully. The pack computes the deadline
+        # itself, so the misprint must not change any decision — the case
+        # proves the printed date is out of the loop.
         stated_deadline = latest + _dt.timedelta(days=2)
     else:
         stated_deadline = add_business_days(latest, 3)
     if not has_notice:
-        # No notice delivered means no printed deadline and therefore no
-        # window facts (the extraction pipeline has nothing to read).
+        # No notice delivered means no printed deadline to extract (and the
+        # pack cannot compute one: RESC-DL-01 cannot bind its trigger dates).
         notice_delivered = None
         stated_deadline = None
 
-    base = stated_deadline if stated_deadline is not None else latest
+    # asOf placement is relative to the TRUE deadline the pack computes —
+    # not the printed date, which may deliberately be a misprint.
+    base = add_business_days(latest, 3) if has_notice else latest
     mode = stratum["as_of"]
     span = rng.choice(RESC_WELL_AFTER_SPANS)
     if mode == "consummation":

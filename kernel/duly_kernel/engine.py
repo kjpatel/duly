@@ -14,11 +14,14 @@ from dataclasses import dataclass, field
 from . import ir as _ir
 from .expr import (
     BoolV,
+    Calendar,
+    DateV,
     EntityRefV,
     ExprTypeError,
     Value,
     evaluate,
     parse,
+    parse_calendars,
     parse_datetime,
     value_from_fact,
     value_to_fact,
@@ -249,6 +252,10 @@ def evaluate_pack(
         if _window_contains(effective, r.get("effectiveFrom"), r.get("effectiveTo"))
     ]
 
+    # Pack-embedded business-day calendars (spec/rule-ir.md, "Calendars"):
+    # parsed once per run, versioned with the pack like the rules are.
+    calendars = parse_calendars(pack.get("calendars"))
+
     # Evaluate in dependency strata so every producer of a derived attribute
     # is settled before any consumer binds it.
     strata = _ir.rule_strata(pack["rules"])
@@ -258,7 +265,10 @@ def evaluate_pack(
         for rule in rules:
             if strata[rule["id"]] != level:
                 continue
-            firing = _try_fire(rule, facts_by_attr, entities_by_type, conflicted_attrs, firings, pack_order)
+            firing = _try_fire(
+                rule, facts_by_attr, entities_by_type, conflicted_attrs,
+                firings, pack_order, effective, calendars,
+            )
             if firing is not None:
                 firings[rule["id"]] = firing
 
@@ -313,6 +323,8 @@ def _try_fire(
     conflicted_attrs: set[str],
     firings: dict[str, Firing],
     pack_order: dict[str, int],
+    effective: _dt.datetime,
+    calendars: dict[str, Calendar],
 ) -> Firing | None:
     env: dict[str, Value] = {}
     entity_vars: dict[str, str] = {}
@@ -341,11 +353,16 @@ def _try_fire(
                 return None
             env[name] = producer.value
             premises.append(("derived", ref, producer.rule_id))
+        elif kind == "asOf":
+            # The evaluation point itself (spec/rule-ir.md, "given"): the
+            # calendar date of asOf.effective in UTC. No premise is recorded —
+            # the receipt's top-level `asOf` already pins it.
+            env[name] = DateV(effective.date())
         else:  # pragma: no cover - validation rejects unknown kinds
             return None
 
     for cond in rule.get("when") or []:
-        result = evaluate(parse(cond), env)
+        result = evaluate(parse(cond), env, calendars)
         if not isinstance(result, BoolV):
             raise ExprTypeError(
                 f"rule {rule['id']!r}: 'when' expression {cond!r} is not boolean"
@@ -358,7 +375,7 @@ def _try_fire(
         raise AdjudicationError(
             f"rule {rule['id']!r}: then.entity {entity_var!r} is not an entityType binding"
         )
-    value = _conclude_value(rule, env)
+    value = _conclude_value(rule, env, calendars)
     return Firing(
         rule=rule,
         entity_id=entity_vars[entity_var],
@@ -368,11 +385,11 @@ def _try_fire(
     )
 
 
-def _conclude_value(rule: dict, env: dict[str, Value]) -> Value:
+def _conclude_value(rule: dict, env: dict[str, Value], calendars: dict[str, Calendar]) -> Value:
     spec = rule["then"]["value"]
     declared = spec["kind"]
     if "expr" in spec:
-        result = evaluate(parse(spec["expr"]), env)
+        result = evaluate(parse(spec["expr"]), env, calendars)
         actual = value_to_fact(result)["kind"]
         if actual != declared:
             raise ExprTypeError(

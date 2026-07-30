@@ -19,6 +19,12 @@ abstentionPolicy:     # optional; confidence floors for machine-asserted facts (
   attributes:
     nc:noticeMailedDate: 0.9
 
+calendars:            # optional; named business-day calendars for date arithmetic (see "Calendars")
+  tila-precise:
+    excludedWeekdays: [Sunday]
+    coverage: { from: "2026-01-01", to: "2028-01-01" }
+    holidays: ["2026-05-25", "2026-07-04"]
+
 decisions:            # the questions this pack can answer (consumed by UIs)
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
@@ -53,7 +59,12 @@ given:
   mailed:   { attribute: nc:noticeMailedDate }        # value of the asserted fact with this attribute
   minDays:  { derived: nc:requiredMinimumNoticeDays } # value concluded by another rule in this run
   notice:   { entityType: nc:TerminationNotice }      # the entity id itself (for use in then.entity)
+  today:    { asOf: effective }                       # the evaluation date itself (see below)
 ```
+
+**The `asOf` binding** binds the calendar date (UTC) of the run's `asOf.effective` point as a `date` value, so a rule can compare a computed date against "now as evaluated" — e.g. a funding rule that holds until a computed deadline passes: `today > deadline`. `effective` is the only dial exposed in v0 (`knowledge` says what was *known*, not what was *true*; no rule semantics need it yet). The binding always resolves, records **no premise** on the receipt — the receipt's top-level `asOf` already pins the value — and is exactly as replayable as everything else: same `asOf`, same answer.
+
+**Rejected:** *a `now()` expression function.* A function call looks like it might read a clock; a binding makes the data flow visible in `given`, where every other input to the rule is declared. There is deliberately no wall-clock anything — the value comes from the caller-supplied evaluation point, never the machine.
 
 Resolution semantics (v0 simplifications, deliberate):
 
@@ -67,10 +78,40 @@ Small, typed, deterministic. Used in `when` items and `then.value.expr`.
 
 - Literals: integers and decimals (`45`, `0.1`), strings in double quotes (`"US-NY"`), `true`, `false`, dates via `date("2026-09-01")`.
 - Operators: `+ - * /`, comparisons `== != < <= > >=`, boolean `and or not`, parentheses.
-- Functions: `days_between(a, b)` → decimal days from date a to date b; `abs(x)`, `min(a,b)`, `max(a,b)`.
+- Functions: `days_between(a, b)` → decimal days from date a to date b; `abs(x)`, `min(a,b)`, `max(a,b)`; `add_business_days(d, n, "cal")` → the `n`-th business day after date `d` under the pack calendar named `"cal"` (see "Calendars" below).
 - Typing follows fact value kinds: `date`, `decimal`, `money`, `boolean`, `string`, `code`. Money arithmetic requires matching currencies (`money - money → money`; `money * decimal → money`). Comparing a `code` var to a string compares the code's `value` field. No implicit conversions; type errors fail the run loudly.
 
 `then.value` is either a literal fact value (`{kind: boolean, value: false}`) or a computed one (`{kind: money, currency: USD, expr: "actual - disclosed"}`).
+
+## Calendars
+
+A pack that does business-day arithmetic carries its calendar as **pack-embedded data**:
+
+```yaml
+calendars:
+  tila-precise:                    # referenced by name from expressions
+    description: >-
+      12 CFR 1026.2(a)(6) precise business days: Sundays and 5 U.S.C.
+      6103(a) holidays out; Saturdays count.
+    excludedWeekdays: [Sunday]     # weekday names, Monday..Sunday
+    coverage: { from: "2026-01-01", to: "2028-01-01" }   # [from, to)
+    holidays:                      # explicit DATES, with source comments
+      - "2026-05-25"  # Memorial Day (last Monday in May)
+      - "2026-07-04"  # Independence Day (Saturday — no observance shift)
+      # ...
+```
+
+`add_business_days(d, n, "tila-precise")` steps forward from `d` one calendar day at a time, counting every day whose weekday is not in `excludedWeekdays` and whose date is not in `holidays`; the `n`-th counted day is the result. `d` itself never counts ("following" semantics), `n = 0` returns `d`, and negative or fractional `n` is a type error. **The function hardcodes no convention** — whether Saturdays count, which holidays exist, and whether observed-holiday shifting applies are entirely the calendar's data. The calendar name must be a quoted string literal naming a declared calendar; pack validation checks this statically (unknown calendar, non-literal name, or wrong arity is a `PackValidationError`), and validation also checks the block itself (weekday names, ISO dates, holidays inside coverage).
+
+**Coverage is a hard boundary, not a hint.** Every day the walk examines — start date included — must fall inside the half-open `coverage` window. A computation that touches an uncovered day fails the run loudly (`ExprCalendarError`) rather than silently treating an unlisted holiday as a business day: a calendar that only lists 2026's holidays must not quietly compute wrong answers for 2031. Extending coverage means adding dates and bumping the pack version.
+
+**Why pack-embedded:** everything that can change a decision must be versioned with the rulebase (the same argument as abstention floors). The calendar is inside the pack file, so it is inside `rulePack.version` on every receipt, replays byte-for-byte forever, and needs no new registry machinery, no external artifact, and no fetch at evaluation time. The accepted trade: two packs using the same jurisdiction's calendar duplicate the dates. A shared *versioned* calendar registry (referenced by name + version, pinned on the receipt like `schemaRef` pins ontologies) is the future-work shape when duplication starts to hurt; the block syntax was chosen so packs can migrate mechanically.
+
+**Rejected:**
+
+- *Computing holidays from formulas in the kernel* (e.g. "last Monday in May"). The formula set is jurisdiction- and era-specific (Juneteenth exists only from 2021; observance shifting applies to some regimes and expressly not to others) — encoding it in engine code makes legal content invisible to `rulePack.version`. Dates-as-data with source comments keep the legal claim reviewable where the rules are reviewed.
+- *Engine or deployment calendar configuration.* Same objection as engine-config abstention floors: two byte-identical replays could disagree because an ops file changed.
+- *Silently clamping or wrapping out-of-coverage walks.* A wrong deadline with a plausible shape is the worst failure mode this system exists to prevent; the loud error is the feature.
 
 ## Defeasibility semantics
 

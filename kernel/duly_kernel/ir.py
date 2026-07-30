@@ -22,7 +22,8 @@ class PackValidationError(Exception):
 
 
 _VALUE_KINDS = {"string", "decimal", "money", "date", "datetime", "boolean", "code", "entityRef"}
-_BINDING_KINDS = {"attribute", "derived", "entityType"}
+_BINDING_KINDS = {"attribute", "derived", "entityType", "asOf"}
+_AS_OF_DIALS = {"effective"}
 
 
 def load_pack(path: str | Path) -> dict:
@@ -54,13 +55,18 @@ def validate_pack(pack: dict) -> None:
 
     _validate_abstention_policy(pack.get("abstentionPolicy"))
 
+    try:
+        calendars = _expr.parse_calendars(pack.get("calendars"))
+    except _expr.ExprCalendarError as e:
+        raise PackValidationError(str(e)) from None
+
     rules = pack.get("rules")
     if not isinstance(rules, list) or not rules:
         raise PackValidationError("'rules' must be a non-empty list")
 
     seen_ids: set[str] = set()
     for i, rule in enumerate(rules):
-        _validate_rule(rule, i, seen_ids)
+        _validate_rule(rule, i, seen_ids, calendars)
 
     ids = {r["id"] for r in rules}
     for rule in rules:
@@ -112,7 +118,12 @@ def _validate_confidence_floor(v: object, where: str) -> None:
         raise PackValidationError(f"{where} must be within [0, 1]")
 
 
-def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:
+def _validate_rule(
+    rule: object,
+    index: int,
+    seen_ids: set[str],
+    calendars: dict[str, _expr.Calendar],
+) -> None:
     where = f"rules[{index}]"
     if not isinstance(rule, dict):
         raise PackValidationError(f"{where} must be a mapping")
@@ -151,6 +162,10 @@ def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:
             raise PackValidationError(f"{where}: given.{name} has unknown binding kind {kind!r}")
         if not isinstance(ref, str) or not ref:
             raise PackValidationError(f"{where}: given.{name}.{kind} must be a non-empty string")
+        if kind == "asOf" and ref not in _AS_OF_DIALS:
+            raise PackValidationError(
+                f"{where}: given.{name}.asOf must be one of {sorted(_AS_OF_DIALS)}, got {ref!r}"
+            )
 
     when = rule.get("when", [])
     if when is None:
@@ -161,9 +176,10 @@ def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:
         if not isinstance(cond, str):
             raise PackValidationError(f"{where}: when[{j}] must be an expression string")
         try:
-            _expr.parse(cond)
+            node = _expr.parse(cond)
         except _expr.ExprError as e:
             raise PackValidationError(f"{where}: when[{j}] does not parse: {e}") from None
+        _validate_calendar_calls(node, calendars, f"{where}: when[{j}]")
 
     then = rule.get("then")
     if not isinstance(then, dict):
@@ -174,7 +190,7 @@ def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:
         )
     if not isinstance(then.get("attribute"), str) or not then["attribute"]:
         raise PackValidationError(f"{where}: then.attribute is required")
-    _validate_then_value(then.get("value"), where)
+    _validate_then_value(then.get("value"), where, calendars)
 
     overrides = rule.get("overrides", [])
     if overrides is None:
@@ -185,7 +201,9 @@ def _validate_rule(rule: object, index: int, seen_ids: set[str]) -> None:
         raise PackValidationError(f"{where}: a rule cannot override itself")
 
 
-def _validate_then_value(value: object, where: str) -> None:
+def _validate_then_value(
+    value: object, where: str, calendars: dict[str, _expr.Calendar]
+) -> None:
     if not isinstance(value, dict):
         raise PackValidationError(f"{where}: then.value must be a mapping")
     kind = value.get("kind")
@@ -196,9 +214,10 @@ def _validate_then_value(value: object, where: str) -> None:
         if not isinstance(value["expr"], str):
             raise PackValidationError(f"{where}: then.value.expr must be a string")
         try:
-            _expr.parse(value["expr"])
+            node = _expr.parse(value["expr"])
         except _expr.ExprError as e:
             raise PackValidationError(f"{where}: then.value.expr does not parse: {e}") from None
+        _validate_calendar_calls(node, calendars, f"{where}: then.value.expr")
         if kind == "money" and not isinstance(value.get("currency"), str):
             raise PackValidationError(f"{where}: computed money value requires 'currency'")
     else:
@@ -207,6 +226,33 @@ def _validate_then_value(value: object, where: str) -> None:
                 raise PackValidationError(f"{where}: literal money value requires amount and currency")
         elif "value" not in value:
             raise PackValidationError(f"{where}: then.value requires 'value' or 'expr'")
+
+
+def _validate_calendar_calls(
+    node: "_expr.Node", calendars: dict[str, _expr.Calendar], where: str
+) -> None:
+    """Statically check every add_business_days() call: three arguments, and
+    a calendar argument that is a string literal naming a declared calendar.
+    Requiring a literal (not a variable) keeps calendar references auditable
+    without evaluating anything."""
+    for call in _expr.calendar_calls(node):
+        if len(call.args) != 3:
+            raise PackValidationError(
+                f"{where}: add_business_days() takes exactly three arguments "
+                f"(date, count, calendar name), got {len(call.args)}"
+            )
+        cal_arg = call.args[2]
+        if not (isinstance(cal_arg, _expr.Lit) and isinstance(cal_arg.value, _expr.StringV)):
+            raise PackValidationError(
+                f"{where}: add_business_days() calendar argument must be a "
+                f"quoted calendar name literal"
+            )
+        name = cal_arg.value.value
+        if name not in calendars:
+            raise PackValidationError(
+                f"{where}: add_business_days() references unknown calendar {name!r} "
+                f"(pack declares: {', '.join(sorted(calendars)) or 'none'})"
+            )
 
 
 def _validate_iso_date(v: object, where: str, *, required: bool) -> None:

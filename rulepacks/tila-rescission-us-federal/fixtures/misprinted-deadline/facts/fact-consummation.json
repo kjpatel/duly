@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:fbb0e9890ba7b7af2b10c4413ea2e593f9a9b6e03f968f172c9fddf7949ed769",
+  "contentHash": "fbb0e9890ba7b7af2b10c4413ea2e593f9a9b6e03f968f172c9fddf7949ed769",
+  "caseId": "case:loan:MP-2026-5501",
+  "entity": {
+    "id": "loan:MP-2026-5501",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:consummationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-05-22"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-05-22T23:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T23:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-05-22T23:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-mortgage-closing",
+    "version": "0.1.0"
+  }
+}

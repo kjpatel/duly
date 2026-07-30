@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:7bec384ad4e858b72e1504d72470a4e9c596a973f9fe3011fa73439f430ba024",
-  "receiptSha256": "7bec384ad4e858b72e1504d72470a4e9c596a973f9fe3011fa73439f430ba024",
+  "id": "urn:duly:receipt:sha256:69dcd1675cf09ab13deedd775658012520319bcfa3a2954b24bb7ad8c6f6c2ee",
+  "receiptSha256": "69dcd1675cf09ab13deedd775658012520319bcfa3a2954b24bb7ad8c6f6c2ee",
   "caseId": "case:golden:resc-0018",
   "decision": {
     "entity": "loan:resc-0018",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "ruleId": "RESC-DL-01",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
@@ -43,7 +43,7 @@
     },
     {
       "ruleId": "RESC-FUND-EXP",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
@@ -66,9 +66,6 @@
     },
     "rule": "RESC-DL-01",
     "premises": [
-      {
-        "factId": "urn:duly:fact:sha256:4f721e166f733826e731159d9ee8b8926363c0af7dec3ed3ecef0f5cc872816d"
-      },
       {
         "factId": "urn:duly:fact:sha256:64dde233386a9a6a233f540f9f8f8730018f23b784797956185e138e0ab13b8c"
       },
@@ -97,10 +94,6 @@
     ]
   },
   "inputFacts": [
-    {
-      "id": "urn:duly:fact:sha256:4f721e166f733826e731159d9ee8b8926363c0af7dec3ed3ecef0f5cc872816d",
-      "contentHash": "4f721e166f733826e731159d9ee8b8926363c0af7dec3ed3ecef0f5cc872816d"
-    },
     {
       "id": "urn:duly:fact:sha256:64dde233386a9a6a233f540f9f8f8730018f23b784797956185e138e0ab13b8c",
       "contentHash": "64dde233386a9a6a233f540f9f8f8730018f23b784797956185e138e0ab13b8c"

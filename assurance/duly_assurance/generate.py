@@ -132,12 +132,16 @@ def make_fact(
     value: dict,
     ontology: str,
     ts: str,
+    *,
+    confidence: dict | None = None,
 ) -> dict:
     """Build a schema-valid GroundedFact for the synthetic corpus.
 
     Grounding is an honest attestation (this corpus does not fake source
     documents); the assertion is a machine assertion by the generator; all
     timestamps are the derived per-case timestamp `ts` (no wall clock).
+    `confidence` defaults to a fully-confident raw score; low-confidence
+    templates pass an explicit score to exercise the pack abstention policy.
     """
     doc = {
         "caseId": case_ref,
@@ -155,7 +159,7 @@ def make_fact(
             "at": ts,
             "extractor": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
         },
-        "confidence": {"score": 1.0, "method": "raw"},
+        "confidence": confidence if confidence is not None else {"score": 1.0, "method": "raw"},
         "recordedAt": ts,
         "status": "asserted",
         "schemaRef": {"ontology": ontology, "version": "0.1.0"},
@@ -171,11 +175,15 @@ def build_notice_facts(
     expiration: _dt.date,
     margin: int,
     nonpayment: bool,
+    mailed_confidence: dict | None = None,
+    expiration_confidence: dict | None = None,
 ) -> tuple[list[dict], str, str]:
     """Facts + asOf points for one termination-notice case.
 
     The notice is mailed `margin` days before `expiration`; asOf.effective is
-    the mailed date, asOf.knowledge two days later.
+    the mailed date, asOf.knowledge two days later. The optional confidence
+    overrides exercise the pack's abstentionPolicy (mailed date carries a
+    per-attribute floor, expiration date the pack default).
     """
     mailed = expiration - _dt.timedelta(days=margin)
     ts = f"{mailed.isoformat()}T12:00:00Z"
@@ -198,6 +206,7 @@ def build_notice_facts(
             case_ref, notice_id, "nc:TerminationNotice", "nc:noticeMailedDate",
             {"kind": "date", "value": mailed.isoformat()},
             ontology, ts,
+            confidence=mailed_confidence,
         ),
         make_fact(
             case_ref, policy_id, "nc:Policy", "nc:governingState",
@@ -213,6 +222,7 @@ def build_notice_facts(
             case_ref, policy_id, "nc:Policy", "nc:policyExpirationDate",
             {"kind": "date", "value": expiration.isoformat()},
             ontology, ts,
+            confidence=expiration_confidence,
         ),
     ]
     if nonpayment:
@@ -236,11 +246,37 @@ def build_notice_facts(
 def draw_notice_params(template: dict, rng: random.Random) -> dict:
     span = (EXPIRATION_END - EXPIRATION_START).days
     lo, hi = template["margin_days"]
-    return {
+    params = {
         "expiration": EXPIRATION_START + _dt.timedelta(days=rng.randrange(span + 1)),
         "margin": rng.randint(lo, hi),
         "nonpayment": rng.random() < template["nonpayment_share"],
     }
+    # Confidence draws exercising the pack's abstentionPolicy
+    # (nc:noticeMailedDate floor 0.9 per-attribute, default 0.75), on both
+    # sides of each boundary. None = the make_fact default (1.0 raw).
+    r = rng.random()
+    if r < 0.05:
+        # Below the per-attribute floor AND the pack default: excluded.
+        params["mailed_confidence"] = {"score": 0.6, "method": "platt"}
+    elif r < 0.10:
+        # Above the 0.75 default but below the 0.9 override: excluded only
+        # because the per-attribute floor beats the default.
+        params["mailed_confidence"] = {"score": 0.85, "method": "platt"}
+    elif r < 0.15:
+        # Exactly at the per-attribute floor: binds (at-floor is inclusive).
+        params["mailed_confidence"] = {"score": 0.9, "method": "platt"}
+    else:
+        params["mailed_confidence"] = None
+    r = rng.random()
+    if r < 0.04:
+        # Below the pack default floor (no override on this attribute): excluded.
+        params["expiration_confidence"] = {"score": 0.7, "method": "temperature"}
+    elif r < 0.08:
+        # Exactly at the default floor: binds.
+        params["expiration_confidence"] = {"score": 0.75, "method": "temperature"}
+    else:
+        params["expiration_confidence"] = None
+    return params
 
 
 def _cents(c: int) -> str:
@@ -442,11 +478,22 @@ def main(argv: list[str] | None = None) -> int:
             facts, eff, kn, receipt = _generate_case(template, case_id, rng, packs[pack_rel], validator)
             generated.append((name, case_id, template, eff, kn, facts, receipt))
 
+    # Reset the synthetic corpus only: review-* entries are human-review
+    # golden cases (duly_review.golden), not generator output — they carry
+    # provenance no seed can regenerate, so regeneration preserves them
+    # (golden/README.md, "Case id series").
     for sub in ("cases", "receipts"):
         sub_dir = out / sub
         if sub_dir.exists():
-            shutil.rmtree(sub_dir)
-        sub_dir.mkdir(parents=True)
+            for entry in sub_dir.iterdir():
+                if entry.name.startswith("review-"):
+                    continue
+                if entry.is_dir():
+                    shutil.rmtree(entry)
+                else:
+                    entry.unlink()
+        else:
+            sub_dir.mkdir(parents=True)
     for _, case_id, template, eff, kn, facts, receipt in generated:
         _write_case(out, case_id, template, eff, kn, facts, receipt)
 

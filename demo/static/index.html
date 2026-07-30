@@ -84,6 +84,7 @@
 
     <div class="pane-body">
       <div class="document-list" id="doc-tabs" role="group" aria-label="Source documents"></div>
+      <p class="extraction-label hidden" id="extraction-label"></p>
       <div class="document-meta">
         <div class="document-active-copy">
           <span class="field-label">Viewing</span>
@@ -164,6 +165,22 @@
         </div>
       </div>
       <div id="derivation" class="derivation"></div>
+
+      <div class="section-heading rules-heading" id="abstentions-title" style="display:none">
+        <div>
+          <div class="field-label">Abstentions</div>
+          <p>Facts the decision declined to use, and why.</p>
+        </div>
+      </div>
+      <div id="abstentions"></div>
+
+      <div class="section-heading rules-heading" id="corrections-title" style="display:none">
+        <div>
+          <div class="field-label">Corrections applied</div>
+          <p>Human resolutions from this session.</p>
+        </div>
+      </div>
+      <div id="corrections"></div>
 
       <div class="section-heading rules-heading" id="rules-title">
         <div>

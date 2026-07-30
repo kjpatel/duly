@@ -45,11 +45,12 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered Markdown/PDF report for compliance and technical readers ([example](docs/example-audit-report.md)) | working |
 | [Rule packs](rulepacks/) | Termination-notice pack covering NY, FL, and CA, plus federal TRID fee tolerance — each rule cited to its statute, with declared expected outcomes run in CI | two packs, four jurisdictions |
 | [Starters](starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for both verticals | two shipped |
-| [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay | working |
-| Extraction adapters | Document AI providers (Docling, Azure DI, Google Document AI, Textract) emitting contract-conformant facts | scripted stub only |
+| [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay, and the review arc — abstention, inline correction, golden-case export | working |
+| [Extraction adapters](extraction/) | Document AI providers emitting contract-conformant facts with verified run envelopes | Docling + scripted stub; commercial adapters deferred |
 | [Bitemporal fact store](store/) | Append-only events, as-of projections across effective and knowledge time, supersession chains (SQLite; Postgres-portable schema) | working |
-| Review queue | Abstention routing; human corrections re-enter as first-class facts | not started |
-| [Assurance harness](assurance/) | Replay verifier, 250-case [golden corpus](golden/), rule-change impact analysis with CI PR comments | working |
+| [Review queue](review/) | Abstention routing; human corrections re-enter as first-class facts and auto-become golden cases; calibration label export | working (API + library) |
+| [Calibration](calibration/) | Temperature/Platt/conformal calibrators and abstention math, consuming the review queue's labeled pairs | working |
+| [Assurance harness](assurance/) | Replay verifier, 251-case [golden corpus](golden/) (250 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
 
 ## Design choices and why
 
@@ -99,16 +100,17 @@ Specifications that develop ahead of running code rarely get adopted. The contra
 
 ## The demonstration
 
-The milestone that validates the architecture end to end now runs. Two scenarios ship with the repo — a New York homeowners nonrenewal notice and a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure:
+The milestone that validates the architecture end to end now runs. Three scenarios ship with the repo — a New York homeowners nonrenewal notice, a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure, and a review-arc variant of the notice case whose extracted mailing date lands below the rule pack's confidence floor:
 
 ```bash
-uv sync
+uv sync                     # core install — extraction falls back to the scripted stub
+uv sync --extra extraction  # optional: live Docling extraction in the demo (large install)
 uv run uvicorn demo.app:app --port 8788
 ```
 
-Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide.
+Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
 
-Honest labels on the demo content: the documents are synthetic (generated by [starters/tools](starters/tools/), with facts span-verified against the actual PDF text); extraction is a scripted stub pending real adapters (M3); and the pre-2026 "30-day" historical rule version exists only to demonstrate effective-dated replay — it is marked `DEMO-SYNTHETIC` in the pack and is not real statutory history.
+Honest labels on the demo content: the documents are synthetic (generated by [starters/tools](starters/tools/), with facts span-verified against the actual PDF text); extraction runs the Docling adapter when the `extraction` extra is installed and the honest scripted stub otherwise, with the UI labeling which extractor produced the rendition; the review-arc scenario's 0.62 confidence is scripted so the abstention arc is reproducible; and the pre-2026 "30-day" historical rule version exists only to demonstrate effective-dated replay — it is marked `DEMO-SYNTHETIC` in the pack and is not real statutory history.
 
 ## Roadmap
 
@@ -137,11 +139,13 @@ Sequencing principle: build nothing until its consumer exists. Each milestone en
 - [x] Florida and California rule packs, statutorily verified (Fla. Stat. § 627.4133; Cal. Ins. Code §§ 678, 677.4) with explicit scope comments and TODO(verify) markers; jurisdiction scoping validated by equality-guard disjointness in the pack validator
 
 ### M3 — extraction and review
-- [ ] Extraction adapter interface + Docling adapter + one commercial adapter (Azure DI or Google Document AI)
-- [ ] Human corrections auto-become golden regression cases (moved from M2; depends on the review queue)
-- [ ] Extraction-run batch envelope: signed manifest so a whole run can be verified or revoked at once (deferred from M0)
-- [ ] Calibration module (temperature/Platt/conformal) with abstention policy hooks
-- [ ] Review queue API: abstention routing, human facts re-entering the store
+- [x] Extraction adapter interface + Docling adapter ([extraction/](extraction/)): rendition-anchored spans verified on every emission; the demo's scripted stub is adapter #1 behind the same contract
+- [ ] One commercial extraction adapter (Azure DI or Google Document AI) — deferred; the adapter contract is the seam it plugs into
+- [x] Human corrections auto-become golden regression cases (moved from M2; depends on the review queue): `python -m duly_review golden` freezes a resolved item as a replayable `review-*` case — one committed ([review-0001](golden/cases/review-0001)), regenerated byte-identically in tests
+- [x] Extraction-run batch envelope: content-addressed manifest so a whole run can be verified or revoked at once (deferred from M0; [envelope.py](extraction/duly_extraction/envelope.py), spec resolved question 4 — asymmetric signatures remain an open question)
+- [x] Calibration module (temperature/Platt/conformal) with abstention policy hooks ([calibration/](calibration/)): pack-level `abstentionPolicy` confidence floors in the kernel, labeled-pair export from the review queue
+- [x] Review queue API: abstention routing (pack-level `abstentionPolicy.routeTo` → receipt `routedTo`), human facts re-entering the store through its public API, dedup'd append-only queue with FastAPI surface ([review/](review/)), and calibration label export (with its censored-sample caveat stated where the labels come out)
+- [x] Demo integration — the review arc in the browser ([demo tour §9](docs/demo_tour.md)): startup extraction into a per-process fact store, a below-floor fact abstaining to the presumption, an inline human correction that supersedes it and flips the decision, and one-click export of the resolution as a golden-case bundle
 
 ### M4 — backends and standards alignment
 - [ ] Soufflé backend for large fact volumes; Z3/OR-Tools for arithmetic and timing constraints
@@ -169,12 +173,12 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; M0, M1, and M2 are complete ([v0.2.0](https://github.com/kjpatel/duly/releases/tag/v0.2.0)). The contract and rule IR are drafted, the reference kernel adjudicates three state notice packs and federal TRID fee tolerance deterministically, the interactive demonstration runs end to end, and 250 golden decisions replay byte-for-byte on every push. M3 — real extraction adapters, calibration, and the review queue — is next. Verify everything locally:
+Pre-alpha; M0, M1, and M2 are complete ([v0.2.0](https://github.com/kjpatel/duly/releases/tag/v0.2.0)), and M3 — extraction adapters, run envelopes, calibration, the review queue, and the browser review arc — is complete except for a commercial extraction adapter, which is deferred. The contract and rule IR are drafted, the reference kernel adjudicates three state notice packs and federal TRID fee tolerance deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop, and 251 golden decisions (250 synthetic + 1 review-born) replay byte-for-byte on every push. Verify everything locally:
 
 ```bash
-uv sync
-uv run pytest kernel/tests demo/tests assurance/tests store/tests   # full suite
-uv run python -m duly_assurance verify  # replay all 250 golden receipts byte-for-byte
+uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests   # full suite
+uv run python -m duly_assurance verify  # replay all 251 golden receipts byte-for-byte
 uv run spec/validate.py                 # spec examples: schemas + hashes
 uv run uvicorn demo.app:app --port 8788 # the interactive demo
 ```

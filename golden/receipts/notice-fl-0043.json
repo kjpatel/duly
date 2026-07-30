@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:b992ee5d1a359e5b0bdfffad2bf5f098375967902af32a9b3acdf1ee079965b9",
-  "receiptSha256": "b992ee5d1a359e5b0bdfffad2bf5f098375967902af32a9b3acdf1ee079965b9",
+  "id": "urn:duly:receipt:sha256:74019597346a3a87dd0c52e4e3bc2f02eab68401d83174c4b3f149108eee4337",
+  "receiptSha256": "74019597346a3a87dd0c52e4e3bc2f02eab68401d83174c4b3f149108eee4337",
   "caseId": "case:golden:notice-fl-0043",
   "decision": {
     "entity": "notice:notice-fl-0043",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-09-03T00:00:00Z",
-    "knowledge": "2025-09-05T12:00:00Z"
+    "effective": "2025-10-20T00:00:00Z",
+    "knowledge": "2025-10-22T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {

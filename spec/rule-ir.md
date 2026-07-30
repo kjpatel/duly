@@ -14,6 +14,11 @@ pack:
   ontologyVersion: "0.1.0"
   description: State-by-state cancellation/nonrenewal notice compliance.
 
+abstentionPolicy:     # optional; confidence floors for machine-asserted facts (see below)
+  minConfidence: 0.75
+  attributes:
+    nc:noticeMailedDate: 0.9
+
 decisions:            # the questions this pack can answer (consumed by UIs)
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
@@ -74,6 +79,70 @@ Two mechanisms, both recorded on the receipt:
 1. **`overrides`** (explicit exceptions): if rule R is applicable and fires, every rule listed in `R.overrides` has its conclusions suppressed for this run, and R's receipt entry records `defeated: [those ids]`. This is the default-and-exception pattern: `NC-DEF-00` presumes compliance; `NC-NR-01` overrides it when the notice-period arithmetic fails.
 2. **Priority** (conflict tiebreak): if two applicable rules conclude the *same attribute for the same entity* and neither overrides the other, the higher `priority` wins and the receipt records the loser as defeated. Equal priority on a same-attribute conflict is a pack-validation error — packs must be unambiguous. Exceptions, where the validator can *prove* the rules never both apply: disjoint effective windows (rule versioning), or contradictory equality guards on the same bound attribute (jurisdiction scoping — `state == "US-NY"` vs `state == "US-FL"`).
 
+## Abstention policy
+
+A pack may declare confidence floors for machine-asserted facts:
+
+```yaml
+abstentionPolicy:        # optional; absent = no confidence filtering
+  minConfidence: 0.75    # required when the block is present: the default floor
+  attributes:            # optional per-attribute overrides (CURIE -> floor)
+    nc:noticeMailedDate: 0.9
+  routeTo: notice-review # optional; the review queue abstentions route to (see "Routing")
+```
+
+Semantics, applied by the kernel at fact-binding time (before conflict detection, so an excluded fact neither binds nor conflicts):
+
+- A machine-asserted fact participates only if `confidence.score >= floor`, where the floor is the attribute's override when one exists, else `minConfidence`. A fact **at** the floor binds; abstention is strictly `score < floor`.
+- An excluded fact is invisible to bindings — rules needing that attribute are silently inapplicable, exactly as if the fact were missing — and the run records an abstention entry with reason `low_confidence` (shape below).
+- **Human-asserted facts** (`assertion.kind == "human"`) are never confidence-filtered. Calibrated confidence is a property of extractors; a reviewer's attestation is the correction channel the policy routes *to*, so filtering it would deadlock the review loop.
+- A machine-asserted fact carrying **no `confidence` field fails closed** under an active policy: it is excluded, and the entry says so in `details`. The contract calls confidence "required in practice for machine assertions"; a pack that opts into confidence floors must not be bypassable by omitting the score. Packs without a policy accept such facts unchanged (v0 behavior).
+
+The policy is part of the pack and versioned with it: changing a floor is a pack version bump, so a decision replayed under the old pack version reproduces the old outcome — the same discipline as changing a rule.
+
+**Receipt entry** (extends the `abstentions` list additively; `conflict` entries are unchanged):
+
+```json
+{
+  "entity": "notice:HO-77401-NY:2026-07-25",
+  "attribute": "nc:noticeMailedDate",
+  "reason": "low_confidence",
+  "facts": ["urn:duly:fact:sha256:…"],
+  "confidence": { "score": 0.85, "method": "platt" },
+  "threshold": {
+    "minConfidence": 0.9,
+    "source": "attribute",
+    "pack": "termination-notice-us-states",
+    "packVersion": "2026.3.0"
+  }
+}
+```
+
+`threshold.source` is `attribute` (an override applied) or `default`; `pack`/`packVersion` pin where the floor came from, so the entry routes and audits without the pack file in hand. `confidence` echoes the excluded fact's score and method; it is absent (and `details` explains) when the fact carried no confidence.
+
+### Routing
+
+The policy block may declare an optional `routeTo`: a plain string naming the review queue (or actor) this pack's abstentions go to. When present, the kernel copies it verbatim into **every** abstention entry the run emits — `low_confidence` exclusions and `conflict` entries alike — as the entry's `routedTo` field (already allowed by the receipt schema). Routing says where an abstention goes, not why it happened, so one destination covers both reasons; a pack that wants routed conflicts but no confidence filtering can declare `minConfidence: 0`.
+
+**Why on the pack, decided at adjudication time:** receipts are content-hashed and immutable, so anything that appears on the receipt must be known when the kernel runs. The pack is the only versioned artifact in hand at that moment, and routing is adjudication policy in exactly the sense the floors are — changing where abstentions go is a pack version bump that replays. `routeTo` is deliberately just a name, not an endpoint: the receipt records *which* queue was responsible; how that queue is hosted is deployment configuration, which must never leak into receipt bytes.
+
+**Backward compatibility:** `routeTo` is optional and additive. A pack without it — including every pack that predates the field — produces byte-identical receipts to the pre-routing kernel; a pack with no `abstentionPolicy` at all leaves conflict entries unrouted too. Consumers (the review queue's `enqueue_receipt`) accept unrouted entries, so routing is a labeling convenience, not a gate.
+
+**Rejected:**
+
+- *Routing decided by the review queue at enqueue time (not on the receipt).* Workable — and still supported, since `routedTo` is optional — but then the receipt cannot answer "who was responsible for this abstention?", which is an audit question, not an ops question.
+- *Deployment-level routing tables.* Same objection as engine-config floors: invisible to `rulePack.version`, so two byte-identical replays could have routed differently with no trace.
+- *Per-attribute routing.* No consumer yet; the per-attribute `attributes` map shows how it would be added additively if one appears.
+
+**Why pack-level, and why here:** abstention is policy, not data (grounded-facts D5) — the fact never carries an abstained flag, and the same fact may clear one pack's floor and not another's. The pack is the only artifact that is already versioned, effective-dated at selection time, and pinned on every receipt, so floors that live in the pack are floors that replay.
+
+**Rejected:**
+
+- *Engine or deployment configuration.* A floor outside the pack is invisible to `rulePack.version` on the receipt: two byte-identical replays could disagree because an ops setting changed. Everything that can change a decision must be versioned with the rulebase.
+- *Per-rule thresholds.* Floors express trust in extraction per attribute, not per rule; per-rule floors would let two rules in one run disagree about whether the same fact participated, making "which facts were consumed" ill-defined on the receipt.
+- *Per-decision thresholds.* D5 anticipates a fact clearing the floor for one decision and not another, but that granularity belongs with the calibration module (M3), which will know per-decision error targets. The v0 shape is forward-compatible: a decision-scoped block can be added additively.
+- *Method-aware floors* (e.g. a floor that only trusts `conformal` scores). Deferred with calibration; `confidence.method` is already on the fact and echoed on the entry, so nothing is lost by waiting.
+
 ## Receipt mapping
 
 The interpreter emits a `DecisionReceipt` per `spec/schemas/decision-receipt.schema.json`:
@@ -81,7 +150,7 @@ The interpreter emits a `DecisionReceipt` per `spec/schemas/decision-receipt.sch
 - `rulesFired`: every rule whose conclusion survived, with its `citation`, `priority`, effective window, and `defeated` list.
 - `derivation`: built from binding provenance — fact bindings become `{factId}` premises; `derived` bindings become nested derivation nodes.
 - `inputFacts`: every fact consumed anywhere in the derivation, pinned by id + contentHash.
-- `abstentions`: conflicts and (later) low-confidence exclusions.
+- `abstentions`: conflict entries (reason `conflict`) followed by low-confidence exclusions (reason `low_confidence`, see "Abstention policy"), each list internally sorted for determinism.
 - `asOf`: echoed from the evaluation request. Facts participate only if their `effectiveFrom/effectiveTo` window (when present) contains `asOf.effective`.
 
 ## Complete example — NY nonrenewal pack (matches `spec/examples/`)

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:8332824c4d10dace179c75c0957ba2e65dbbd421f2ee568e59b963cd2e8adde7",
-  "receiptSha256": "8332824c4d10dace179c75c0957ba2e65dbbd421f2ee568e59b963cd2e8adde7",
+  "id": "urn:duly:receipt:sha256:eff64a1d8783f3c06daea29688346eb13e4bddd3fac2ba63a34ea0a5493a92f2",
+  "receiptSha256": "eff64a1d8783f3c06daea29688346eb13e4bddd3fac2ba63a34ea0a5493a92f2",
   "caseId": "case:golden:notice-ny-0042",
   "decision": {
     "entity": "notice:notice-ny-0042",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-05-30T00:00:00Z",
-    "knowledge": "2025-06-01T12:00:00Z"
+    "effective": "2026-07-27T00:00:00Z",
+    "knowledge": "2026-07-29T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,17 +30,15 @@
       "defeated": []
     },
     {
-      "ruleId": "NY-NR-NONPAY-15",
+      "ruleId": "NY-NR-45",
       "version": "1.1.0",
       "citation": {
-        "text": "N.Y. Ins. Law § 3425(c)(1)(A)",
+        "text": "N.Y. Ins. Law § 3425(d)(1)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
-      "priority": 150,
-      "effectiveFrom": "1986-01-01T00:00:00Z",
-      "defeated": [
-        "NY-NR-45-LEGACY"
-      ]
+      "priority": 100,
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "defeated": []
     }
   ],
   "derivation": {
@@ -56,7 +54,26 @@
     "premises": []
   },
   "inputFacts": [],
-  "abstentions": [],
+  "abstentions": [
+    {
+      "entity": "notice:notice-ny-0042",
+      "attribute": "nc:noticeMailedDate",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:e1e1315d86fccb6b1fd75f38f3f14ad100665cf1f6410e2ace969034b97951b6"
+      ],
+      "confidence": {
+        "score": 0.6,
+        "method": "platt"
+      },
+      "threshold": {
+        "minConfidence": 0.9,
+        "source": "attribute",
+        "pack": "termination-notice-us-states",
+        "packVersion": "2026.3.0"
+      }
+    }
+  ],
   "engine": {
     "kernel": "duly-kernel",
     "version": "0.0.1",

@@ -35,6 +35,24 @@ def test_same_seed_regeneration_is_byte_identical(tmp_path):
         assert tree_a[rel] == tree_b[rel], f"{rel} differs between regenerations"
 
 
+def test_regeneration_preserves_review_series_cases(tmp_path):
+    """review-* entries are human-review golden cases (duly_review), not
+    generator output; resetting the synthetic corpus must not delete them."""
+    out = tmp_path / "g"
+    assert generate.main(["--out", str(out), "--count", "4", "--seed", "3", "--templates", "ny"]) == 0
+    review_case = out / "cases" / "review-0001"
+    (review_case / "facts").mkdir(parents=True)
+    (review_case / "case.yaml").write_text("id: review-0001\n")
+    review_receipt = out / "receipts" / "review-0001.json"
+    review_receipt.write_text("{}\n")
+    assert generate.main(["--out", str(out), "--count", "4", "--seed", "3", "--templates", "ny"]) == 0
+    assert (review_case / "case.yaml").read_text() == "id: review-0001\n"
+    assert review_receipt.read_text() == "{}\n"
+    # The synthetic series was still reset (same seed -> same ids, no strays).
+    ids = sorted(p.name for p in (out / "cases").iterdir())
+    assert ids == ["notice-ny-0001", "notice-ny-0002", "notice-ny-0003", "notice-ny-0004", "review-0001"]
+
+
 def test_case_ids_allocation_and_layout(tmp_path):
     out = tmp_path / "g"
     assert generate.main(
@@ -95,6 +113,42 @@ def test_notice_decision_flips_across_45_day_threshold():
         decisions[margin] = receipt["decision"]["value"]["value"]
     assert decisions[44] is False  # 44 < 45 -> NC-NR-01 fires, non-compliant
     assert decisions[45] is True  # 45 >= 45 -> presumption of compliance survives
+
+
+def test_low_confidence_draws_exercise_abstention_policy(tmp_path):
+    """The notice templates draw sub-floor confidences, so a generated corpus
+    contains cases that abstain under the pack's abstentionPolicy (falling to
+    the NC-DEF-00 presumption) and cases exactly at a floor that bind."""
+    out = tmp_path / "g"
+    assert generate.main(
+        ["--out", str(out), "--count", "60", "--seed", "7", "--templates", "ny"]
+    ) == 0
+    abstained, at_floor_bound = [], []
+    for path in sorted((out / "receipts").glob("*.json")):
+        receipt = json.loads(path.read_text())
+        entries = [a for a in receipt["abstentions"] if a["reason"] == "low_confidence"]
+        if entries:
+            abstained.append(receipt)
+            for entry in entries:
+                assert entry["confidence"]["score"] < entry["threshold"]["minConfidence"]
+                assert entry["threshold"]["pack"] == "termination-notice-us-states"
+        case_dir = out / "cases" / path.stem / "facts"
+        scores = {
+            f["attribute"]: f["confidence"]["score"]
+            for f in (json.loads(p.read_text()) for p in case_dir.glob("*.json"))
+        }
+        if not entries and (
+            scores.get("nc:noticeMailedDate") == 0.9
+            or scores.get("nc:policyExpirationDate") == 0.75
+        ):
+            at_floor_bound.append(receipt)
+    assert abstained, "corpus contains no low-confidence abstention case"
+    assert at_floor_bound, "corpus contains no at-floor case that binds"
+    for receipt in abstained:
+        # With a needed fact excluded, the deficiency rule cannot fire and
+        # the presumption of compliance decides.
+        assert receipt["decision"]["value"] == {"kind": "boolean", "value": True}
+        assert "NC-DEF-00" in {r["ruleId"] for r in receipt["rulesFired"]}
 
 
 def test_unknown_template_is_rejected(tmp_path, capsys):

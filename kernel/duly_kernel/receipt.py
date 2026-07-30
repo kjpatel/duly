@@ -119,7 +119,7 @@ def build_receipt(result: EvalResult, pack: dict, decision_attribute: str) -> di
         "rulesFired": [_rule_ref(f) for f in result.surviving],
         "derivation": derivation,
         "inputFacts": _input_facts(derivation, result),
-        "abstentions": list(result.conflicts),
+        "abstentions": list(result.conflicts) + list(result.exclusions),
         "engine": {
             "kernel": "duly-kernel",
             "version": __version__,

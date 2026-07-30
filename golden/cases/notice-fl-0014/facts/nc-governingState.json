@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:b680565abdfa46dbe4bf3ebdaf1585199dea17d0ee6ea8892d3927f00e2c015a",
-  "contentHash": "b680565abdfa46dbe4bf3ebdaf1585199dea17d0ee6ea8892d3927f00e2c015a",
+  "id": "urn:duly:fact:sha256:9f7fc3e3a2b713931b7c1d851745b3ebe6f1711e8f00509187b7fb82545fdbcc",
+  "contentHash": "9f7fc3e3a2b713931b7c1d851745b3ebe6f1711e8f00509187b7fb82545fdbcc",
   "caseId": "case:golden:notice-fl-0014",
   "entity": {
     "id": "policy:notice-fl-0014",
@@ -17,11 +17,11 @@
     "kind": "attestation",
     "actor": "golden-generator",
     "channel": "synthetic",
-    "at": "2026-09-05T12:00:00Z"
+    "at": "2026-03-13T12:00:00Z"
   },
   "assertion": {
     "kind": "machine",
-    "at": "2026-09-05T12:00:00Z",
+    "at": "2026-03-13T12:00:00Z",
     "extractor": {
       "name": "duly-golden-generator",
       "version": "0.1.0"
@@ -31,7 +31,7 @@
     "score": 1.0,
     "method": "raw"
   },
-  "recordedAt": "2026-09-05T12:00:00Z",
+  "recordedAt": "2026-03-13T12:00:00Z",
   "status": "asserted",
   "schemaRef": {
     "ontology": "duly-starter-notice",

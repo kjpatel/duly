@@ -1,0 +1,40 @@
+{
+  "assertion": {
+    "at": "2026-07-25T12:00:00Z",
+    "extractor": {
+      "name": "review-arc-fixture",
+      "version": "0.1.0"
+    },
+    "kind": "machine"
+  },
+  "attribute": "nc:governingState",
+  "caseId": "case:review:0001",
+  "confidence": {
+    "method": "raw",
+    "score": 1.0
+  },
+  "contentHash": "76456b2f689a9dc5b10112742bf6bc11ff02a90d40883b4122efa633d2863a54",
+  "entity": {
+    "id": "policy:review-0001",
+    "type": "nc:Policy"
+  },
+  "grounding": {
+    "actor": "review-arc-fixture",
+    "at": "2026-07-25T12:00:00Z",
+    "channel": "synthetic",
+    "kind": "attestation"
+  },
+  "id": "urn:duly:fact:sha256:76456b2f689a9dc5b10112742bf6bc11ff02a90d40883b4122efa633d2863a54",
+  "recordedAt": "2026-07-25T12:00:00Z",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  },
+  "status": "asserted",
+  "value": {
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020",
+    "kind": "code",
+    "value": "US-NY"
+  }
+}

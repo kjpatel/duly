@@ -13,6 +13,8 @@ const state = {
   receipt: null,
   factIndex: {},
   engineMode: null,
+  abstentions: [],         // enriched receipt abstention entries from the server
+  review: null,            // review-queue state for the case (availability, resolved items)
   lastVerdictKey: null,
   requestSeq: 0,
 };
@@ -31,6 +33,7 @@ function setWorkspaceStatus(text, mode = "ready") {
   status.classList.toggle("loading", mode === "loading");
   status.classList.toggle("fixture", mode === "fixture");
   status.classList.toggle("error", mode === "error");
+  status.classList.toggle("info", mode === "info");
 }
 
 function shortAttr(curie) {
@@ -97,11 +100,16 @@ async function selectScenario(id) {
   state.activeDocId = null;
   state.receipt = null;
   state.factIndex = {};
+  state.abstentions = [];
+  state.review = null;
   state.lastVerdictKey = null;
   $("answer-card").classList.add("hidden");
   $("error-card").classList.add("hidden");
   $("derivation").replaceChildren();
   $("rules-fired").replaceChildren();
+  renderAbstentions();
+  renderCorrections();
+  renderExtractionLabel();
   setDownloadsEnabled(false);
 
   $("asof-input").value = scenario.defaultAsOf || "";
@@ -342,7 +350,11 @@ async function runAdjudication() {
     // reads as the audit trail for the question that just failed.
     state.receipt = null;
     state.factIndex = {};
+    state.abstentions = [];
+    state.review = null;
     $("derivation").replaceChildren();
+    renderAbstentions();
+    renderCorrections();
     renderRulesFired();
     renderDocument();
     setDownloadsEnabled(false);
@@ -351,20 +363,30 @@ async function runAdjudication() {
   }
   $("error-card").classList.add("hidden");
 
-  state.receipt = payload.receipt;
-  state.factIndex = payload.factIndex || {};
-  state.engineMode = payload.engineMode;
-
-  renderAnswer(payload);
-  renderDerivation();
-  renderRulesFired();
-  renderDocument(); // re-highlight with the (possibly new) fact index
-  setDownloadsEnabled(true);
+  applyAdjudication(payload);
   const isFixture = payload.engineMode === "fixture";
   setWorkspaceStatus(
     isFixture ? "Fixture receipt" : "Decision ready",
     isFixture ? "fixture" : "ready"
   );
+}
+
+/* Apply one adjudication payload (from /api/adjudicate or /api/review/correct)
+ * to the workspace. The caller owns the status pill. */
+function applyAdjudication(payload) {
+  state.receipt = payload.receipt;
+  state.factIndex = payload.factIndex || {};
+  state.engineMode = payload.engineMode;
+  state.abstentions = payload.abstentions || [];
+  state.review = payload.review || null;
+
+  renderAnswer(payload);
+  renderDerivation();
+  renderAbstentions();
+  renderCorrections();
+  renderRulesFired();
+  renderDocument(); // re-highlight with the (possibly new) fact index
+  setDownloadsEnabled(true);
 }
 
 function setDownloadsEnabled(enabled) {
@@ -440,6 +462,12 @@ function factChip(factId) {
       quote.textContent = "“" + f.quote + "”";
       btn.append(quote);
     }
+    if (f.provenance && f.provenance.label) {
+      const prov = document.createElement("span");
+      prov.className = "fc-prov" + (f.provenance.kind === "human" ? " human" : "");
+      prov.textContent = f.provenance.kind + " · " + f.provenance.label;
+      btn.append(prov);
+    }
     btn.title = "Show in document";
     btn.addEventListener("click", () => focusFact(factId));
   } else {
@@ -488,6 +516,336 @@ function renderDerivation() {
   if (state.receipt && state.receipt.derivation) {
     container.append(derivationNode(state.receipt.derivation));
   }
+}
+
+/* ---------- extraction provenance ---------- */
+
+function renderExtractionLabel() {
+  const label = $("extraction-label");
+  const extraction = state.scenario && state.scenario.extraction;
+  const text = extraction && extraction.label ? extraction.label : "";
+  const note = extraction && extraction.note ? " (" + extraction.note + ")" : "";
+  label.textContent = text + note;
+  label.classList.toggle("hidden", !text);
+}
+
+/* ---------- abstentions and the review flow ---------- */
+
+/* Labels for the receipt's enumerated abstention reasons (vocabulary from the
+ * decision-receipt schema, not verdict wording — that stays server-side). */
+const REASON_LABELS = { low_confidence: "Low confidence", conflict: "Conflict" };
+
+function renderAbstentions() {
+  const container = $("abstentions");
+  container.replaceChildren();
+  const entries = state.abstentions || [];
+  $("abstentions-title").style.display = entries.length ? "" : "none";
+  for (const entry of entries) container.append(abstentionCard(entry));
+  if (entries.length && state.review && state.review.calibrationNote) {
+    container.append(calibrationNote());
+  }
+}
+
+function calibrationNote() {
+  const p = document.createElement("p");
+  p.className = "calibration-note";
+  p.textContent = state.review.calibrationNote;
+  return p;
+}
+
+function thresholdLine(entry) {
+  const wrap = document.createElement("div");
+  wrap.className = "abstention-threshold";
+  const confidence = entry.confidence || null;
+  const threshold = entry.threshold || {};
+  const score = document.createElement("div");
+  score.className = "abstention-score";
+  if (confidence && confidence.score != null && threshold.minConfidence != null) {
+    score.textContent =
+      "score " + confidence.score + " (" + (confidence.method || "unknown") + ")" +
+      " < floor " + threshold.minConfidence;
+  } else if (entry.details) {
+    score.textContent = entry.details;
+  } else {
+    score.textContent = "no usable confidence";
+  }
+  wrap.append(score);
+  if (threshold.pack && threshold.packVersion) {
+    const provenance = document.createElement("div");
+    provenance.className = "abstention-floor-source";
+    const origin = threshold.source === "attribute" ? "attribute floor" : "pack default";
+    provenance.textContent =
+      "floor set by " + threshold.pack + " " + threshold.packVersion + " (" + origin + ")";
+    wrap.append(provenance);
+  }
+  return wrap;
+}
+
+function abstentionCard(entry) {
+  const card = document.createElement("div");
+  card.className = "abstention-card";
+
+  const head = document.createElement("div");
+  head.className = "rule-head";
+  const reason = document.createElement("span");
+  reason.className = "abstention-reason";
+  reason.textContent = REASON_LABELS[entry.reason] || entry.reason || "Abstained";
+  const attr = document.createElement("span");
+  attr.className = "node-attr";
+  attr.textContent = shortAttr(entry.attribute);
+  head.append(reason, attr);
+  if (entry.routedTo) {
+    const routed = document.createElement("span");
+    routed.className = "rule-priority";
+    routed.textContent = "routed to " + entry.routedTo;
+    head.append(routed);
+  }
+  card.append(head, thresholdLine(entry));
+
+  const facts = document.createElement("div");
+  facts.className = "premises";
+  for (const factId of entry.facts || []) facts.append(factChip(factId));
+  if (facts.childNodes.length) card.append(facts);
+
+  const review = state.review || {};
+  if (review.available && entry.itemId && entry.itemStatus === "open") {
+    card.append(correctionControls(entry));
+  } else if (!review.available && review.note) {
+    const note = document.createElement("p");
+    note.className = "review-note";
+    note.textContent = review.note;
+    card.append(note);
+  }
+  return card;
+}
+
+function correctionControls(entry) {
+  const wrap = document.createElement("div");
+  wrap.className = "review-controls";
+
+  const toggle = document.createElement("button");
+  toggle.className = "download-btn review-toggle";
+  toggle.type = "button";
+  toggle.textContent = "Review & correct";
+  toggle.setAttribute("aria-pressed", "false");
+
+  const form = correctionForm(entry, toggle);
+  form.classList.add("hidden");
+
+  toggle.addEventListener("click", () => {
+    const nowHidden = form.classList.toggle("hidden");
+    toggle.setAttribute("aria-pressed", String(!nowHidden));
+    if (!nowHidden) {
+      const first = form.querySelector("input");
+      if (first) first.focus();
+    }
+  });
+
+  wrap.append(toggle, form);
+  return wrap;
+}
+
+function correctionField(labelText, input) {
+  const field = document.createElement("label");
+  field.className = "review-field";
+  const caption = document.createElement("span");
+  caption.className = "field-label";
+  caption.textContent = labelText;
+  field.append(caption, input);
+  return field;
+}
+
+function correctionForm(entry, toggle) {
+  const form = document.createElement("form");
+  form.className = "review-form";
+  form.setAttribute("aria-label", "Correct " + shortAttr(entry.attribute));
+
+  const machineFact = state.factIndex[(entry.facts || [])[0]] || null;
+
+  const valueInput = document.createElement("input");
+  valueInput.type = "text";
+  valueInput.required = true;
+  if (machineFact && machineFact.value != null) {
+    valueInput.value = fmtValue(machineFact.value); // prefill from the machine fact
+  }
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.required = true;
+  nameInput.placeholder = "e.g. J. Reviewer";
+
+  const roleInput = document.createElement("input");
+  roleInput.type = "text";
+  roleInput.required = true;
+  roleInput.placeholder = "e.g. compliance-review";
+
+  const error = document.createElement("p");
+  error.className = "review-error hidden";
+  error.setAttribute("role", "alert");
+
+  const session = document.createElement("p");
+  session.className = "review-session-note";
+  session.textContent = (state.review && state.review.sessionNote) || "";
+
+  const actions = document.createElement("div");
+  actions.className = "review-actions";
+  const submit = document.createElement("button");
+  submit.className = "review-submit";
+  submit.type = "submit";
+  submit.textContent = "Apply correction";
+  const cancel = document.createElement("button");
+  cancel.className = "download-btn";
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    form.classList.add("hidden");
+    toggle.setAttribute("aria-pressed", "false");
+  });
+  actions.append(submit, cancel);
+
+  form.append(
+    correctionField("Corrected value", valueInput),
+    correctionField("Reviewer name", nameInput),
+    correctionField("Reviewer role", roleInput),
+    error,
+    session,
+    actions
+  );
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitCorrection(entry, {
+      value: valueInput.value,
+      reviewerName: nameInput.value,
+      reviewerRole: roleInput.value,
+    }, error, submit);
+  });
+  return form;
+}
+
+async function submitCorrection(entry, fields, errorEl, submitBtn) {
+  const seq = ++state.requestSeq;
+  errorEl.classList.add("hidden");
+  submitBtn.disabled = true;
+  setWorkspaceStatus("Applying correction", "loading");
+  let payload = null;
+  let errorText = null;
+  try {
+    const res = await fetch("/api/review/correct", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scenarioId: state.scenario.id,
+        itemId: entry.itemId,
+        attribute: state.activeAttribute,
+        asOfEffective: $("asof-input").value || state.scenario.defaultAsOf,
+        value: fields.value,
+        reviewerName: fields.reviewerName,
+        reviewerRole: fields.reviewerRole,
+      }),
+    });
+    if (res.ok) {
+      payload = await res.json();
+    } else {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const err = await res.json();
+        if (err && err.detail) detail = String(err.detail);
+      } catch { /* keep status text */ }
+      errorText = detail;
+    }
+  } catch (e) {
+    errorText = String(e);
+  }
+  if (seq !== state.requestSeq) return;
+  submitBtn.disabled = false;
+
+  if (errorText !== null) {
+    errorEl.textContent = errorText;
+    errorEl.classList.remove("hidden");
+    setWorkspaceStatus("Correction failed", "error");
+    return;
+  }
+  applyAdjudication(payload);
+  setWorkspaceStatus("Correction applied — decision re-adjudicated", "info");
+}
+
+/* ---------- corrections applied this session ---------- */
+
+function renderCorrections() {
+  const container = $("corrections");
+  container.replaceChildren();
+  const review = state.review || {};
+  const resolved = review.resolved || [];
+  $("corrections-title").style.display = resolved.length ? "" : "none";
+  for (const item of resolved) container.append(correctionCard(item));
+  if (resolved.length) {
+    if (review.calibrationNote) container.append(calibrationNote());
+    const session = document.createElement("p");
+    session.className = "review-session-note";
+    session.textContent = review.sessionNote || "";
+    container.append(session);
+  }
+}
+
+function correctionCard(item) {
+  const card = document.createElement("div");
+  card.className = "correction-card";
+
+  const head = document.createElement("div");
+  head.className = "rule-head";
+  const badge = document.createElement("span");
+  badge.className = "correction-badge";
+  badge.textContent = "Corrected";
+  const attr = document.createElement("span");
+  attr.className = "node-attr";
+  attr.textContent = shortAttr(item.attribute);
+  const value = document.createElement("span");
+  value.className = "node-value";
+  value.textContent = "= " + fmtValue(item.value);
+  head.append(badge, attr, value);
+  card.append(head);
+
+  const who = document.createElement("div");
+  who.className = "correction-actor";
+  const actor = item.actor || {};
+  who.textContent =
+    "by " + (actor.id || "unknown reviewer") +
+    (actor.role ? " (" + actor.role + ")" : "") +
+    (item.resolvedAt ? " · " + fmtDay(item.resolvedAt) : "");
+  card.append(who);
+
+  if (item.supersededFactId) {
+    const superseded = document.createElement("div");
+    superseded.className = "correction-supersedes";
+    superseded.textContent = "supersedes " + item.supersededFactId.slice(0, 34) + "…";
+    superseded.title = item.supersededFactId;
+    card.append(superseded);
+  }
+
+  const exportBtn = document.createElement("button");
+  exportBtn.className = "download-btn";
+  exportBtn.type = "button";
+  exportBtn.textContent = "Export as golden case";
+  exportBtn.addEventListener("click", () => downloadGoldenCase(item.itemId));
+
+  const exportNote = document.createElement("p");
+  exportNote.className = "review-note";
+  exportNote.textContent =
+    "Downloads a replayable golden-case bundle. Committing it into golden/ " +
+    "is a human act — the demo never writes to the repository.";
+
+  card.append(exportBtn, exportNote);
+  return card;
+}
+
+function downloadGoldenCase(itemId) {
+  const params = new URLSearchParams({ itemId });
+  const a = document.createElement("a");
+  a.href = "/api/review/golden-case?" + params.toString();
+  document.body.append(a);
+  a.click();
+  a.remove();
 }
 
 function renderRulesFired() {

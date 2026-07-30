@@ -1,0 +1,38 @@
+{
+  "assertion": {
+    "at": "2026-07-25T12:00:00Z",
+    "extractor": {
+      "name": "review-arc-fixture",
+      "version": "0.1.0"
+    },
+    "kind": "machine"
+  },
+  "attribute": "nc:policyExpirationDate",
+  "caseId": "case:review:0001",
+  "confidence": {
+    "method": "raw",
+    "score": 1.0
+  },
+  "contentHash": "120aa512de9a7d141df12d8e8a8c96aa7fd2bdf38c41b4a759910dd351676bd8",
+  "entity": {
+    "id": "policy:review-0001",
+    "type": "nc:Policy"
+  },
+  "grounding": {
+    "actor": "review-arc-fixture",
+    "at": "2026-07-25T12:00:00Z",
+    "channel": "synthetic",
+    "kind": "attestation"
+  },
+  "id": "urn:duly:fact:sha256:120aa512de9a7d141df12d8e8a8c96aa7fd2bdf38c41b4a759910dd351676bd8",
+  "recordedAt": "2026-07-25T12:00:00Z",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  },
+  "status": "asserted",
+  "value": {
+    "kind": "date",
+    "value": "2026-09-01"
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:3091e52d1ad04f8e89a6f1250283ec231e3b828224db34fa37cdbee3fef50b8d",
-  "receiptSha256": "3091e52d1ad04f8e89a6f1250283ec231e3b828224db34fa37cdbee3fef50b8d",
+  "id": "urn:duly:receipt:sha256:59ecc342324d716c83620e44e7a6cfbd66652c5fad57a1041214934d6d29b664",
+  "receiptSha256": "59ecc342324d716c83620e44e7a6cfbd66652c5fad57a1041214934d6d29b664",
   "caseId": "case:golden:notice-fl-0021",
   "decision": {
     "entity": "notice:notice-fl-0021",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-04-24T00:00:00Z",
-    "knowledge": "2025-04-26T12:00:00Z"
+    "effective": "2026-05-24T00:00:00Z",
+    "knowledge": "2026-05-26T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,15 +30,17 @@
       "defeated": []
     },
     {
-      "ruleId": "FL-NR-120",
+      "ruleId": "FL-NONPAY-10",
       "version": "1.0.0",
       "citation": {
-        "text": "Fla. Stat. § 627.4133(2)(b)",
+        "text": "Fla. Stat. § 627.4133(2)(b)1.",
         "url": "http://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0600-0699/0627/Sections/0627.4133.html"
       },
-      "priority": 100,
+      "priority": 150,
       "effectiveFrom": "2016-01-01T00:00:00Z",
-      "defeated": []
+      "defeated": [
+        "FL-NR-120"
+      ]
     }
   ],
   "derivation": {

@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:ecbf7d71c731cb59fb6bacd16df5cfcde18d5108a32da828712c31639be8388b",
-  "receiptSha256": "ecbf7d71c731cb59fb6bacd16df5cfcde18d5108a32da828712c31639be8388b",
+  "id": "urn:duly:receipt:sha256:f0056e29b64c4e41801e89429df90b24494c86da9989da351014dbb56db685a2",
+  "receiptSha256": "f0056e29b64c4e41801e89429df90b24494c86da9989da351014dbb56db685a2",
   "caseId": "case:golden:notice-ny-0032",
   "decision": {
     "entity": "notice:notice-ny-0032",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-07-27T00:00:00Z",
-    "knowledge": "2026-07-29T12:00:00Z"
+    "effective": "2026-09-18T00:00:00Z",
+    "knowledge": "2026-09-20T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {

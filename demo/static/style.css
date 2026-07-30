@@ -59,6 +59,9 @@
   --warning-border: rgb(245 158 11 / 0.25);
   --error-soft: rgb(239 68 68 / 0.07);
   --error-border: rgb(239 68 68 / 0.25);
+  --info-soft: rgb(59 130 246 / 0.08);
+  --info-border: rgb(59 130 246 / 0.25);
+  --color-info-strong: #1d4ed8;
   --highlight: rgb(245 158 11 / 0.15);
   --highlight-strong: rgb(245 158 11 / 0.42);
   --header-surface: rgb(244 243 250 / 0.82);
@@ -263,6 +266,19 @@ summary:focus-visible {
 .header-status.error .status-dot {
   background: var(--color-error);
   box-shadow: 0 0 0 3px var(--error-soft);
+}
+
+/* Informational transitions (a correction was applied and re-adjudicated):
+   distinct from ready/fixture/error so the flip moment reads as an event. */
+.header-status.info {
+  color: var(--color-info-strong);
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.header-status.info .status-dot {
+  background: var(--color-info);
+  box-shadow: 0 0 0 3px var(--info-soft);
 }
 
 @keyframes status-pulse {
@@ -1127,6 +1143,215 @@ summary:focus-visible {
   color: var(--color-error-strong);
   background: var(--error-soft);
   border-color: var(--error-border);
+}
+
+/* ---------- extraction provenance ---------- */
+
+.extraction-label {
+  margin: 10px 1px 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+/* ---------- abstentions and the review flow ---------- */
+
+.abstention-card {
+  padding: 13px 14px;
+  margin-bottom: 8px;
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+  border-radius: 12px;
+}
+
+.abstention-reason {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  color: var(--color-warning-strong);
+  background: var(--color-bg-card);
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.abstention-threshold {
+  margin: 4px 0 8px;
+}
+
+.abstention-score {
+  color: var(--color-warning-strong);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.abstention-floor-source {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+}
+
+.review-note,
+.review-session-note {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.review-controls {
+  margin-top: 10px;
+}
+
+.review-toggle[aria-pressed="true"] {
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.review-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-field input {
+  min-height: 34px;
+  padding: 6px 10px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.review-field input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  outline: none;
+}
+
+.review-error {
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.review-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.review-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  color: var(--color-on-accent);
+  background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark));
+  border: 1px solid var(--color-accent-dark);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: filter 160ms ease;
+}
+
+.review-submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.review-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.calibration-note {
+  margin: 4px 0 8px;
+  padding: 9px 11px;
+  color: var(--color-info-strong);
+  background: var(--info-soft);
+  border: 1px solid var(--info-border);
+  border-radius: 8px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.correction-card {
+  padding: 13px 14px;
+  margin-bottom: 8px;
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
+  border-radius: 12px;
+}
+
+.correction-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  color: var(--color-success-strong);
+  background: var(--color-bg-card);
+  border: 1px solid var(--success-border);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.correction-actor {
+  color: var(--color-text-secondary);
+  font-size: 0.74rem;
+}
+
+.correction-supersedes {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.correction-card .download-btn {
+  margin-top: 10px;
+}
+
+.fc-prov {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+}
+
+.fc-prov.human {
+  color: var(--color-info-strong);
+  font-weight: 600;
 }
 
 .export-panel {

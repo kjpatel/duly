@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:fd3d1e156ade3080ce6ca5ac3f43861beb751784fa942a303e45c43e6484ca5c",
-  "receiptSha256": "fd3d1e156ade3080ce6ca5ac3f43861beb751784fa942a303e45c43e6484ca5c",
+  "id": "urn:duly:receipt:sha256:37cd55bf2bb939b95f40b78fc1e3eab663eccc2efb2412cc9e10a59b8cdb6965",
+  "receiptSha256": "37cd55bf2bb939b95f40b78fc1e3eab663eccc2efb2412cc9e10a59b8cdb6965",
   "caseId": "case:golden:notice-ca-0021",
   "decision": {
     "entity": "notice:notice-ca-0021",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-05-18T00:00:00Z",
-    "knowledge": "2025-05-20T12:00:00Z"
+    "effective": "2025-12-26T00:00:00Z",
+    "knowledge": "2025-12-28T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {

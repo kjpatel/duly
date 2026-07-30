@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:7c9cbcb69dd190a810345ccbacdad954f45151c6d641c04551ccf5fe1a43e310",
-  "receiptSha256": "7c9cbcb69dd190a810345ccbacdad954f45151c6d641c04551ccf5fe1a43e310",
+  "id": "urn:duly:receipt:sha256:39a1db71e42ae03587f0c69e0dcb1776e7aad7f627dfadc9fea5c980a5a3a26b",
+  "receiptSha256": "39a1db71e42ae03587f0c69e0dcb1776e7aad7f627dfadc9fea5c980a5a3a26b",
   "caseId": "case:golden:notice-ny-0035",
   "decision": {
     "entity": "notice:notice-ny-0035",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2025-03-20T00:00:00Z",
-    "knowledge": "2025-03-22T12:00:00Z"
+    "effective": "2026-07-23T00:00:00Z",
+    "knowledge": "2026-07-25T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
@@ -30,15 +30,14 @@
       "defeated": []
     },
     {
-      "ruleId": "NY-NR-45-LEGACY",
-      "version": "1.0.0",
+      "ruleId": "NY-NR-45",
+      "version": "1.1.0",
       "citation": {
         "text": "N.Y. Ins. Law § 3425(d)(1)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
       "priority": 100,
-      "effectiveFrom": "1986-01-01T00:00:00Z",
-      "effectiveTo": "2026-01-01T00:00:00Z",
+      "effectiveFrom": "2026-01-01T00:00:00Z",
       "defeated": []
     }
   ],

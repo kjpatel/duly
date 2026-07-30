@@ -83,6 +83,28 @@
             "description": "The facts involved (e.g. the low-confidence or conflicting candidates).",
             "items": { "type": "string", "pattern": "^urn:duly:fact:sha256:[0-9a-f]{64}$" }
           },
+          "confidence": {
+            "type": "object",
+            "required": ["score", "method"],
+            "additionalProperties": false,
+            "description": "The excluded fact's confidence as asserted (low_confidence entries; absent when the fact carried none).",
+            "properties": {
+              "score": { "type": "number", "minimum": 0, "maximum": 1 },
+              "method": { "enum": ["raw", "temperature", "platt", "conformal"] }
+            }
+          },
+          "threshold": {
+            "type": "object",
+            "required": ["minConfidence", "source", "pack", "packVersion"],
+            "additionalProperties": false,
+            "description": "The confidence floor that applied and its provenance: the rule pack's versioned abstentionPolicy (low_confidence entries).",
+            "properties": {
+              "minConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "source": { "enum": ["default", "attribute"] },
+              "pack": { "type": "string" },
+              "packVersion": { "type": "string" }
+            }
+          },
           "routedTo": { "type": "string", "description": "Review queue or actor the abstention was routed to." }
         }
       }

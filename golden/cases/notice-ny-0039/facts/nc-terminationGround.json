@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:73c9494c9c778181f81596424c26c15dfb3bf126722029cc8117989030ce75ab",
+  "contentHash": "73c9494c9c778181f81596424c26c15dfb3bf126722029cc8117989030ce75ab",
+  "caseId": "case:golden:notice-ny-0039",
+  "entity": {
+    "id": "notice:notice-ny-0039",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:terminationGround",
+  "value": {
+    "kind": "code",
+    "value": "Nonpayment",
+    "codeSystem": "duly-starter-notice/termination-grounds",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-10-30T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-10-30T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-10-30T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

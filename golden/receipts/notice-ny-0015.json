@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:eec0c92e4e4a81ce089b047da43fd4a385fa08b66bc4cee55da71560220915d8",
-  "receiptSha256": "eec0c92e4e4a81ce089b047da43fd4a385fa08b66bc4cee55da71560220915d8",
+  "id": "urn:duly:receipt:sha256:f4b25bd38ef9dbd2165e957e41b65a0f0641d69947b770b12c00b90c2f9fdccf",
+  "receiptSha256": "f4b25bd38ef9dbd2165e957e41b65a0f0641d69947b770b12c00b90c2f9fdccf",
   "caseId": "case:golden:notice-ny-0015",
   "decision": {
     "entity": "notice:notice-ny-0015",
@@ -11,24 +11,23 @@
     }
   },
   "asOf": {
-    "effective": "2025-08-05T00:00:00Z",
-    "knowledge": "2025-08-07T12:00:00Z"
+    "effective": "2026-06-06T00:00:00Z",
+    "knowledge": "2026-06-08T12:00:00Z"
   },
   "rulePack": {
     "name": "termination-notice-us-states",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {
-      "ruleId": "NY-NR-45-LEGACY",
-      "version": "1.0.0",
+      "ruleId": "NY-NR-45",
+      "version": "1.1.0",
       "citation": {
         "text": "N.Y. Ins. Law § 3425(d)(1)",
         "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
       },
       "priority": 100,
-      "effectiveFrom": "1986-01-01T00:00:00Z",
-      "effectiveTo": "2026-01-01T00:00:00Z",
+      "effectiveFrom": "2026-01-01T00:00:00Z",
       "defeated": []
     },
     {
@@ -57,10 +56,10 @@
     "rule": "NC-NR-01",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:247c585d2cfdd3ce62b30ab5b2981c05ff2f88af5ca84f6a8019e81218ee2c14"
+        "factId": "urn:duly:fact:sha256:4ae9b930f3ff4eceb67ac4bab409b199f4762375f0f99901f179acd52f30fb6b"
       },
       {
-        "factId": "urn:duly:fact:sha256:66b78b31049289486101789143ad42d94ffc70d1d04ad2c5bf88151bbf7a9323"
+        "factId": "urn:duly:fact:sha256:e5b50481a9a6c763393ad00799b3644d97a650370fdf21edbda8d62a62d3a335"
       },
       {
         "conclusion": {
@@ -68,16 +67,16 @@
           "attribute": "nc:requiredMinimumNoticeDays",
           "value": {
             "kind": "decimal",
-            "value": "30"
+            "value": "45"
           }
         },
-        "rule": "NY-NR-45-LEGACY",
+        "rule": "NY-NR-45",
         "premises": [
           {
-            "factId": "urn:duly:fact:sha256:bc52a9677be995abea652e977558c690f661ae6d10f30064e2d9d30127cd1dbf"
+            "factId": "urn:duly:fact:sha256:36286a32a2f3d9ffb38e0477f98bd2d8a2d5fae87580f190f204966097d0be2b"
           },
           {
-            "factId": "urn:duly:fact:sha256:ebf1d8f38cdd71bcc22b5bab27cea031a36ac08de13a4a8da9654387ea2cff63"
+            "factId": "urn:duly:fact:sha256:8db74385573a0b62db5eeef8ed62035c849f5fd6d923fd8838653c69d4313f59"
           }
         ]
       }
@@ -85,20 +84,20 @@
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:247c585d2cfdd3ce62b30ab5b2981c05ff2f88af5ca84f6a8019e81218ee2c14",
-      "contentHash": "247c585d2cfdd3ce62b30ab5b2981c05ff2f88af5ca84f6a8019e81218ee2c14"
+      "id": "urn:duly:fact:sha256:4ae9b930f3ff4eceb67ac4bab409b199f4762375f0f99901f179acd52f30fb6b",
+      "contentHash": "4ae9b930f3ff4eceb67ac4bab409b199f4762375f0f99901f179acd52f30fb6b"
     },
     {
-      "id": "urn:duly:fact:sha256:66b78b31049289486101789143ad42d94ffc70d1d04ad2c5bf88151bbf7a9323",
-      "contentHash": "66b78b31049289486101789143ad42d94ffc70d1d04ad2c5bf88151bbf7a9323"
+      "id": "urn:duly:fact:sha256:e5b50481a9a6c763393ad00799b3644d97a650370fdf21edbda8d62a62d3a335",
+      "contentHash": "e5b50481a9a6c763393ad00799b3644d97a650370fdf21edbda8d62a62d3a335"
     },
     {
-      "id": "urn:duly:fact:sha256:bc52a9677be995abea652e977558c690f661ae6d10f30064e2d9d30127cd1dbf",
-      "contentHash": "bc52a9677be995abea652e977558c690f661ae6d10f30064e2d9d30127cd1dbf"
+      "id": "urn:duly:fact:sha256:36286a32a2f3d9ffb38e0477f98bd2d8a2d5fae87580f190f204966097d0be2b",
+      "contentHash": "36286a32a2f3d9ffb38e0477f98bd2d8a2d5fae87580f190f204966097d0be2b"
     },
     {
-      "id": "urn:duly:fact:sha256:ebf1d8f38cdd71bcc22b5bab27cea031a36ac08de13a4a8da9654387ea2cff63",
-      "contentHash": "ebf1d8f38cdd71bcc22b5bab27cea031a36ac08de13a4a8da9654387ea2cff63"
+      "id": "urn:duly:fact:sha256:8db74385573a0b62db5eeef8ed62035c849f5fd6d923fd8838653c69d4313f59",
+      "contentHash": "8db74385573a0b62db5eeef8ed62035c849f5fd6d923fd8838653c69d4313f59"
     }
   ],
   "abstentions": [],

@@ -1,5 +1,5 @@
 id: notice-fl-0044
 pack: rulepacks/termination-notice-us-states/pack.yaml
 question: nc:noticeCompliant
-asOfEffective: "2025-07-29"
-asOfKnowledge: "2025-07-31T12:00:00Z"
+asOfEffective: "2025-04-21"
+asOfKnowledge: "2025-04-23T12:00:00Z"

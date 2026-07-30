@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:5767a4c8209456058c2630d71ef2ecc397db0d74fa1c532768d3aff76dc2ee51",
+  "contentHash": "5767a4c8209456058c2630d71ef2ecc397db0d74fa1c532768d3aff76dc2ee51",
+  "caseId": "case:golden:notice-fl-0021",
+  "entity": {
+    "id": "notice:notice-fl-0021",
+    "type": "nc:TerminationNotice"
+  },
+  "attribute": "nc:terminationGround",
+  "value": {
+    "kind": "code",
+    "value": "Nonpayment",
+    "codeSystem": "duly-starter-notice/termination-grounds",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2026-05-24T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-24T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-05-24T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-notice",
+    "version": "0.1.0"
+  }
+}

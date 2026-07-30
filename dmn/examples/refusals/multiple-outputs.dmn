@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: two output columns in one decision table.
+     DMN lets one table conclude several outputs at once. A duly rule's `then`
+     concludes exactly one attribute for one entity, and the receipt's
+     defeat and priority semantics are defined per attribute. Splitting a
+     multi-output table automatically would silently create rules the author
+     never wrote — with ids the author never chose. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="multipleOutputs" name="multiple outputs"
+             namespace="urn:duly:example:refusal:multiple-outputs">
+  <extensionElements>
+    <duly:pack name="refusal-multiple-outputs" version="0.0.1"/>
+  </extensionElements>
+
+  <decision id="category" name="trid:toleranceCategory">
+    <question>Which tolerance category applied to this fee?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCategory"
+                     valueKind="code" codeSystem="duly-starter-trid/tolerance-categories"
+                     codeSystemVersion="0.1.0"/>
+    </extensionElements>
+    <decisionTable id="categoryTable" hitPolicy="UNIQUE">
+      <input id="mFeeType" label="feeType">
+        <inputExpression typeRef="string"><text>trid:feeType</text></inputExpression>
+      </input>
+      <output id="mCategory" label="category" typeRef="string"/>
+      <output id="mCure" label="cure" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="mRow1">
+        <inputEntry><text>"TransferTax"</text></inputEntry>
+        <outputEntry><text>"ZeroTolerance"</text></outputEntry>
+        <outputEntry><text>0.00</text></outputEntry>
+        <annotationEntry><text>REFUSE-OUT-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: an input cell invokes a FEEL builtin.
+     `sum(...)` is real FEEL and is not S-FEEL. Compiling it would mean either
+     inventing an aggregation the rule IR does not have, or dropping the
+     condition — and a dropped condition is a rule that fires more often than
+     its author believes. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="nonSfeelCell" name="non-S-FEEL cell"
+             namespace="urn:duly:example:refusal:non-sfeel-cell">
+  <extensionElements>
+    <duly:pack name="refusal-non-sfeel-cell" version="0.0.1"/>
+  </extensionElements>
+
+  <decision id="cure" name="trid:toleranceCureAmount">
+    <question>Does this fee increase require a tolerance cure?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCureAmount"
+                     valueKind="money" currency="USD"/>
+    </extensionElements>
+    <decisionTable id="cureTable" hitPolicy="FIRST">
+      <input id="cDisclosed" label="disclosed">
+        <inputExpression typeRef="number"><text>trid:disclosedAmountAtBaseline</text></inputExpression>
+      </input>
+      <input id="cActual" label="actual">
+        <inputExpression typeRef="number"><text>trid:actualAmountAtClosing</text></inputExpression>
+      </input>
+      <output id="cCure" label="cure" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="cureRow1">
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>&gt; sum(disclosed, 100)</text></inputEntry>
+        <outputEntry><text>actual - disclosed</text></outputEntry>
+        <annotationEntry><text>REFUSE-SFEEL-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

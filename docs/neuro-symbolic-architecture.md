@@ -145,7 +145,7 @@ more explicitly:
 |---|---|---|
 | Ontology artifact | Versioned vocabulary and type constraints supplied by the adopter | The decision logic |
 | `GroundedFact` | One assertion about one case, with evidence and uncertainty | A conclusion merely because it is well-formed |
-| Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, and calendars | A domain ontology or workflow definition |
+| Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, and calendars. Authored as YAML, or compiled from a [DMN decision table](../spec/dmn.md) — either way the kernel sees one artifact | A domain ontology or workflow definition |
 | `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace | The facts, source rendition, or rule-pack bytes themselves |
 | Extraction run envelope | Integrity manifest for one run over one rendition | Authentication of the producer |
 
@@ -369,6 +369,19 @@ pack version must never be changed in place. A fact's `schemaRef` likewise
 pins an ontology name and version, not an ontology-file digest, so the same
 immutability requirement applies to ontology artifacts.
 
+Because pack identity sits *inside* the hashed body, two packs are two
+identities even when they encode the same rules. The DMN work made this
+concrete: a decision table compiled from
+[`dmn/examples/trid-fee-tolerance.dmn`](../dmn/examples/trid-fee-tolerance.dmn)
+reaches the same decision as the hand-written TRID pack, fires the same rules
+in the same order with the same defeat chains, and consumes the same facts —
+and cannot produce the same `receiptSha256`, because the two packs do not
+share a name. This is the same shape as `engine.backend` being inside the
+hash, and it is a feature rather than a limitation: a receipt is supposed to
+say which artifact decided, not merely what was decided. Any claim of
+equivalence between two rulebases is therefore a claim about *decisions*, and
+has to be stated and tested at that level.
+
 ### 7. Review closes the evidence loop
 
 A receipt can contain a decision and abstentions at the same time. For example,
@@ -577,6 +590,7 @@ until a workload supplies acceptance criteria.
 | Model or document AI as fact proposer | Supported by the adapter contract; autonomous model-driven proposal is supplied by the adopter, not shipped as a duly model |
 | Symbolic layer as decision authority | Implemented |
 | Deterministic report rendering | Implemented |
+| Business-editable decision tables compiled to the decision logic | Implemented for a deliberately narrow subset: DMN 1.3+ tables, S-FEEL cells, three of seven hit policies, mandatory per-row citation and effective date ([spec/dmn.md](../spec/dmn.md)). The compiler is an authoring surface, not a second engine — its output is an ordinary rule pack the same kernel executes |
 | Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
 | Natural-language-to-formal-query interface | Possible extension; not current behavior |
 | RDF or property-graph decision core | Not implemented |
@@ -608,7 +622,12 @@ ownership function—not a one-time implementation task.
 
 Defaults and exceptions can become difficult to review even when each rule is
 correct. Keep packs bounded, cite every rule, test each reasoning shape, and
-use static authoring tools to find overlap and unreachable coverage.
+use static authoring tools to find overlap and unreachable coverage. The
+[DMN compiler](../spec/dmn.md) addresses part of this at authoring time — a
+`UNIQUE` decision table whose rows cannot be proven disjoint is a compile
+error naming the row pairs, rather than a table whose overlap surfaces later
+as an adjudication conflict. It does not address unreachable coverage, which
+needs a solver.
 
 ### False confidence in integrity controls
 
@@ -680,7 +699,7 @@ These are extension paths, not commitments or a second roadmap. The
 
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
-| Rule authors need safer tools | DMN-to-IR authoring, stable rule IDs, Z3 overlap and coverage analysis | Authoring tools assist; only the deterministic kernel emits receipts |
+| Rule authors need safer tools | DMN-to-IR authoring (**shipped** — see below); still open: stable rule IDs, Z3 overlap and coverage analysis | Authoring tools assist; only the deterministic kernel emits receipts |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
@@ -723,5 +742,7 @@ requirement without weakening replay.
   interpreter and receipt builder.
 - [`review/duly_review`](../review/duly_review) contains the review and
   correction loop.
+- [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
+  packs, and refuses the tables it cannot compile honestly.
 - [`assurance/duly_assurance`](../assurance/duly_assurance) contains golden
   replay and rule-change impact analysis.

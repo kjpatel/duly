@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: hit policy COLLECT.
+     COLLECT returns a list of every matching row's output. A duly decision is
+     one value for one attribute on one entity; there is no list-valued
+     conclusion in the IR and no aggregation operator in the expression
+     language, so there is nothing honest to compile this to. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="unsupportedHitPolicy" name="unsupported hit policy"
+             namespace="urn:duly:example:refusal:unsupported-hit-policy">
+  <extensionElements>
+    <duly:pack name="refusal-unsupported-hit-policy" version="0.0.1"/>
+  </extensionElements>
+
+  <decision id="category" name="trid:toleranceCategory">
+    <question>Which tolerance category applied to this fee?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCategory"
+                     valueKind="code" codeSystem="duly-starter-trid/tolerance-categories"
+                     codeSystemVersion="0.1.0"/>
+    </extensionElements>
+    <decisionTable id="categoryTable" hitPolicy="COLLECT" aggregation="COUNT">
+      <input id="hFeeType" label="feeType">
+        <inputExpression typeRef="string"><text>trid:feeType</text></inputExpression>
+      </input>
+      <output id="hCategory" label="category" typeRef="string"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="hRow1">
+        <inputEntry><text>"TransferTax"</text></inputEntry>
+        <outputEntry><text>"ZeroTolerance"</text></outputEntry>
+        <annotationEntry><text>REFUSE-HIT-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

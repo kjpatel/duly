@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: a row with no effective date.
+     Rule selection is effective-dated: `asOf.effective` decides which
+     rulebase was in force on the day being adjudicated. A rule with no start
+     date cannot be selected for or against, so a default (say, 1900-01-01)
+     would be a claim about legal history that nobody made. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="undatedRow" name="undated row"
+             namespace="urn:duly:example:refusal:undated-row">
+  <extensionElements>
+    <duly:pack name="refusal-undated-row" version="0.0.1"/>
+  </extensionElements>
+
+  <decision id="category" name="trid:toleranceCategory">
+    <question>Which tolerance category applied to this fee?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCategory"
+                     valueKind="code" codeSystem="duly-starter-trid/tolerance-categories"
+                     codeSystemVersion="0.1.0"/>
+    </extensionElements>
+    <decisionTable id="categoryTable" hitPolicy="UNIQUE">
+      <input id="dFeeType" label="feeType">
+        <inputExpression typeRef="string"><text>trid:feeType</text></inputExpression>
+      </input>
+      <output id="dCategory" label="category" typeRef="string"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="dRow1">
+        <inputEntry><text>"TransferTax"</text></inputEntry>
+        <outputEntry><text>"ZeroTolerance"</text></outputEntry>
+        <annotationEntry><text>REFUSE-DATE-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text></text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

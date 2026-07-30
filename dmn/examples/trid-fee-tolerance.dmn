@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TRID (Reg Z) fee tolerance, authored as DMN decision tables.
+
+  This is the acceptance example for the DMN compiler: it recreates the three
+  rules of rulepacks/trid-fee-tolerance-us-federal/pack.yaml, and
+  dmn/tests/test_equivalence.py proves the compiled pack reaches the same
+  decision, firing the same rule ids and defeating the same rules, over the
+  committed starter facts in starters/trid/facts.
+
+  Read it as two tables in dependency order:
+
+    1. toleranceCategory  (UNIQUE)  — which tolerance bucket the fee sits in.
+    2. toleranceCureAmount (FIRST)  — the cure owed, defaulting to zero.
+
+  The `duly:` annotation columns carry what DMN has no vocabulary for and duly
+  will not do without: the rule id, the legal citation, and the date the rule
+  took effect. Every one of them is required; see spec/dmn.md.
+-->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="trid-fee-tolerance"
+             name="TRID fee tolerance"
+             namespace="urn:duly:example:trid-fee-tolerance">
+
+  <description>TRID (Reg Z) fee tolerance categorization and cure amounts.</description>
+
+  <extensionElements>
+    <duly:pack name="trid-fee-tolerance-dmn"
+               version="2026.1.0"
+               ontology="duly-mortgage-closing"
+               ontologyVersion="0.1.0"/>
+  </extensionElements>
+
+  <!-- The two facts read off the closing documents, and the one derived value. -->
+  <inputData id="feeType" name="trid:feeType"/>
+  <inputData id="disclosedAmountAtBaseline" name="trid:disclosedAmountAtBaseline"/>
+  <inputData id="actualAmountAtClosing" name="trid:actualAmountAtClosing"/>
+
+  <!-- ==================================================================
+       1. Tolerance category.
+
+       One row, one authority. UNIQUE is the honest hit policy for a table
+       whose rows are scoped by disjoint fee types: nothing here depends on
+       row order.
+       ================================================================== -->
+  <decision id="toleranceCategory" name="trid:toleranceCategory">
+    <question>Which tolerance category applied to this fee?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee"
+                     attribute="trid:toleranceCategory"
+                     entityVar="fee"
+                     valueKind="code"
+                     codeSystem="duly-starter-trid/tolerance-categories"
+                     codeSystemVersion="0.1.0"/>
+    </extensionElements>
+    <informationRequirement>
+      <requiredInput href="#feeType"/>
+    </informationRequirement>
+
+    <decisionTable id="toleranceCategoryTable" hitPolicy="UNIQUE">
+      <input id="tcFeeType" label="feeType">
+        <inputExpression typeRef="string">
+          <text>trid:feeType</text>
+        </inputExpression>
+      </input>
+      <output id="tcCategory" label="category" typeRef="string"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:citationUrl"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="tcRow1">
+        <description>Transfer taxes are a zero-tolerance charge: the amount disclosed on the Loan Estimate may not increase at closing.</description>
+        <inputEntry><text>"TransferTax"</text></inputEntry>
+        <outputEntry><text>"ZeroTolerance"</text></outputEntry>
+        <annotationEntry><text>TRID-CAT-02</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <!-- ==================================================================
+       2. Tolerance cure amount.
+
+       FIRST, because the rows ARE ordered: the specific zero-tolerance
+       computation comes first and the no-cure presumption catches everything
+       else. Compiled to descending rule priorities, so the kernel records the
+       presumption as defeated on the receipt rather than quietly discarding
+       it.
+
+       Note the `-` cells on the default row. `-` means "irrelevant", and the
+       compiler takes it literally: the default row binds NO fact, so it holds
+       even for a fee whose baseline disclosure was never extracted. Binding
+       the columns anyway would turn the presumption into a conditional.
+       ================================================================== -->
+  <decision id="toleranceCureAmount" name="trid:toleranceCureAmount">
+    <question>Does this fee increase require a tolerance cure?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee"
+                     attribute="trid:toleranceCureAmount"
+                     entityVar="fee"
+                     valueKind="money"
+                     currency="USD"/>
+    </extensionElements>
+    <informationRequirement>
+      <requiredDecision href="#toleranceCategory"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredInput href="#disclosedAmountAtBaseline"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredInput href="#actualAmountAtClosing"/>
+    </informationRequirement>
+
+    <decisionTable id="toleranceCureAmountTable" hitPolicy="FIRST">
+      <input id="tcaCategory" label="category">
+        <inputExpression typeRef="string">
+          <text>trid:toleranceCategory</text>
+        </inputExpression>
+      </input>
+      <input id="tcaDisclosed" label="disclosed">
+        <inputExpression typeRef="number">
+          <text>trid:disclosedAmountAtBaseline</text>
+        </inputExpression>
+      </input>
+      <input id="tcaActual" label="actual">
+        <inputExpression typeRef="number">
+          <text>trid:actualAmountAtClosing</text>
+        </inputExpression>
+      </input>
+      <output id="tcaCure" label="cure" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:citationUrl"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="tcaRow1">
+        <description>When a zero-tolerance fee exceeds its disclosed baseline at closing, the lender owes the borrower the excess as a tolerance cure.</description>
+        <inputEntry><text>"ZeroTolerance"</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>&gt; disclosed</text></inputEntry>
+        <outputEntry><text>actual - disclosed</text></outputEntry>
+        <annotationEntry><text>TRID-ZT-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.19#p-1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+
+      <rule id="tcaRow2">
+        <description>No tolerance cure is owed unless a specific rule computes one.</description>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <outputEntry><text>0.00</text></outputEntry>
+        <annotationEntry><text>TRID-DEF-00</text></annotationEntry>
+        <annotationEntry><text>Default presumption</text></annotationEntry>
+        <annotationEntry><text></text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+</definitions>

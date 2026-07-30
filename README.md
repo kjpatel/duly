@@ -103,7 +103,8 @@ Specifications that develop ahead of running code rarely get adopted. The contra
 The milestone that validates the architecture end to end now runs. Three scenarios ship with the repo — a New York homeowners nonrenewal notice, a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure, and a review-arc variant of the notice case whose extracted mailing date lands below the rule pack's confidence floor:
 
 ```bash
-uv sync
+uv sync                     # core install — extraction falls back to the scripted stub
+uv sync --extra extraction  # optional: live Docling extraction in the demo (large install)
 uv run uvicorn demo.app:app --port 8788
 ```
 
@@ -175,7 +176,7 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 Pre-alpha; M0, M1, and M2 are complete ([v0.2.0](https://github.com/kjpatel/duly/releases/tag/v0.2.0)), and M3 — extraction adapters, run envelopes, calibration, the review queue, and the browser review arc — is complete except for a commercial extraction adapter, which is deferred. The contract and rule IR are drafted, the reference kernel adjudicates three state notice packs and federal TRID fee tolerance deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop, and 251 golden decisions (250 synthetic + 1 review-born) replay byte-for-byte on every push. Verify everything locally:
 
 ```bash
-uv sync
+uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)
 uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests   # full suite
 uv run python -m duly_assurance verify  # replay all 251 golden receipts byte-for-byte
 uv run spec/validate.py                 # spec examples: schemas + hashes

@@ -202,7 +202,7 @@ The next consumer is an adopting engineering team. Make Duly a toolkit that can 
 
 - [ ] **Adopter's guide** — one end-to-end bring-your-own walkthrough: documents, extraction adapter, grounded facts, ontology conformance, rule packs, golden corpus, review queue, and calibration labels.
 - [ ] **Minimal integration example** — three facts, two rules, one adjudication, and one receipt in author-owned code.
-- [ ] **Example/toolkit separation** — relocate teaching content under an examples umbrella so the toolkit is usable without it. Golden replay proves the migration is behavior-preserving.
+- [ ] **Example/toolkit separation** — relocate the teaching content (rule packs, starters, sample ontologies, demo scenarios, corpus generator templates) under an examples umbrella so toolkit directories contain zero example content and `git rm -r examples/` leaves a working, empty toolkit. Mechanical path migration; no behavior change; golden replay proves it.
 - [ ] **Installable distribution** — publish versioned toolkit packages so adopters import the seam rather than fork the repository.
 - [ ] **Specification stability** — freeze the fact, receipt, and IR contracts; publish compatibility and deprecation policy.
 - [ ] **Contribution path** — complete the rule-pack authoring guide and contribution checks across packs, ontologies, starters, and golden-corpus coverage.

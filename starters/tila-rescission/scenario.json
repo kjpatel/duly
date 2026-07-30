@@ -26,8 +26,6 @@
   "facts": [
     "facts/fact-notice-delivered.json",
     "facts/fact-notice-deadline.json",
-    "facts/fact-rescission-period-in-force.json",
-    "facts/fact-rescission-period-expired.json",
     "facts/fact-settlement-consummation.json",
     "facts/fact-settlement-disclosures-delivered.json",
     "facts/fact-settlement-principal-dwelling.json",

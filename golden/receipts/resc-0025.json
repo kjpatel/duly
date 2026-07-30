@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:28d3b13a85cacea8b28fcad0b1e07e14b4fd64a154d0b2d5c4763dd7194ed6f5",
-  "receiptSha256": "28d3b13a85cacea8b28fcad0b1e07e14b4fd64a154d0b2d5c4763dd7194ed6f5",
+  "id": "urn:duly:receipt:sha256:5b888e03869168b1eae45c1fa40e7429a43e8cc81d845f48787a306fd567b58d",
+  "receiptSha256": "5b888e03869168b1eae45c1fa40e7429a43e8cc81d845f48787a306fd567b58d",
   "caseId": "case:golden:resc-0025",
   "decision": {
     "entity": "loan:resc-0025",
@@ -11,12 +11,12 @@
     }
   },
   "asOf": {
-    "effective": "2026-05-23T00:00:00Z",
-    "knowledge": "2026-05-25T12:00:00Z"
+    "effective": "2026-05-26T00:00:00Z",
+    "knowledge": "2026-05-28T12:00:00Z"
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -31,8 +31,19 @@
       "defeated": []
     },
     {
+      "ruleId": "RESC-DL-01",
+      "version": "2.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
       "ruleId": "RESC-FUND-STAY",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(c)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
@@ -56,14 +67,61 @@
     "rule": "RESC-FUND-STAY",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:78e24527a490146274fef679baa531e8748dd98da9a7f667efd9e4468313a34c"
+        "conclusion": {
+          "entity": "loan:resc-0025",
+          "attribute": "resc:rescissionDeadline",
+          "value": {
+            "kind": "date",
+            "value": "2026-05-27"
+          }
+        },
+        "rule": "RESC-DL-01",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:1e5befbfed40a7ecc4da8ea052b6cd15bea27cb39f4fa606feed32251d881ac1"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:26033d26373efd8d31e6421581bf1b262d3b4f5f92690d8aace6262cb5b3f9c0"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:e308f80afb1dbbe47323255204092ac3d867583824dc4995f2a590bb883f33ca"
+          },
+          {
+            "conclusion": {
+              "entity": "loan:resc-0025",
+              "attribute": "resc:rescissionApplies",
+              "value": {
+                "kind": "boolean",
+                "value": true
+              }
+            },
+            "rule": "RESC-APP-01",
+            "premises": [
+              {
+                "factId": "urn:duly:fact:sha256:eeea72e3f27edad51806921864f9a391dbbf56dd484afb570eacd7b413093abb"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:78e24527a490146274fef679baa531e8748dd98da9a7f667efd9e4468313a34c",
-      "contentHash": "78e24527a490146274fef679baa531e8748dd98da9a7f667efd9e4468313a34c"
+      "id": "urn:duly:fact:sha256:1e5befbfed40a7ecc4da8ea052b6cd15bea27cb39f4fa606feed32251d881ac1",
+      "contentHash": "1e5befbfed40a7ecc4da8ea052b6cd15bea27cb39f4fa606feed32251d881ac1"
+    },
+    {
+      "id": "urn:duly:fact:sha256:26033d26373efd8d31e6421581bf1b262d3b4f5f92690d8aace6262cb5b3f9c0",
+      "contentHash": "26033d26373efd8d31e6421581bf1b262d3b4f5f92690d8aace6262cb5b3f9c0"
+    },
+    {
+      "id": "urn:duly:fact:sha256:e308f80afb1dbbe47323255204092ac3d867583824dc4995f2a590bb883f33ca",
+      "contentHash": "e308f80afb1dbbe47323255204092ac3d867583824dc4995f2a590bb883f33ca"
+    },
+    {
+      "id": "urn:duly:fact:sha256:eeea72e3f27edad51806921864f9a391dbbf56dd484afb570eacd7b413093abb",
+      "contentHash": "eeea72e3f27edad51806921864f9a391dbbf56dd484afb570eacd7b413093abb"
     }
   ],
   "abstentions": [],

@@ -185,6 +185,50 @@ def test_determination_is_the_only_place_verdict_wording_lives():
     assert "2026-07-29" not in found["verdict"] + found["detail"]
 
 
+def test_rescission_deadline_cross_checks_the_printed_notice_date():
+    """The deadline is computed by the kernel; the date printed on the notice
+    is only a cross-check. Agreement is stated, disagreement warns — and in
+    both cases the computed date is the verdict."""
+    receipt = {
+        "decision": {
+            "attribute": "resc:rescissionDeadline",
+            "value": {"kind": "date", "value": "2026-05-27"},
+        },
+        "asOf": {"effective": "2026-05-26T00:00:00Z"},
+    }
+    printed_ok = {
+        "facts": [
+            {
+                "attribute": "resc:statedRescissionDeadline",
+                "value": {"kind": "date", "value": "2026-05-27"},
+            }
+        ]
+    }
+    found = _determination(receipt, printed_ok, "2026-05-26")
+    assert found["verdict"] == "Midnight of 2026-05-27"
+    assert "matches the deadline printed on the notice" in found["detail"]
+    assert found["tone"] == ""
+
+    misprinted = {
+        "facts": [
+            {
+                "attribute": "resc:statedRescissionDeadline",
+                "value": {"kind": "date", "value": "2026-05-24"},
+            }
+        ]
+    }
+    found = _determination(receipt, misprinted, "2026-05-26")
+    assert found["verdict"] == "Midnight of 2026-05-27"
+    assert "notice prints 2026-05-24" in found["detail"]
+    assert found["tone"] == "warn"
+
+    # No printed-date fact at all: no cross-check claim either way.
+    found = _determination(receipt, {"facts": []}, "2026-05-26")
+    assert found["verdict"] == "Midnight of 2026-05-27"
+    assert "printed" not in found["detail"]
+    assert found["tone"] == ""
+
+
 def test_unmapped_attributes_fall_back_without_claiming_a_verdict():
     receipt = {
         "decision": {

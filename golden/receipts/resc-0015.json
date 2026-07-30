@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:a9c41b4033d9c77c82c88a9ce1347d26172fdd12506d4cfd879c812b8c407ff0",
-  "receiptSha256": "a9c41b4033d9c77c82c88a9ce1347d26172fdd12506d4cfd879c812b8c407ff0",
+  "id": "urn:duly:receipt:sha256:6a13b1276f5ee0e9af36e5bebfd7ca7f63cccb9b932e2e08f0f0807057b7c9be",
+  "receiptSha256": "6a13b1276f5ee0e9af36e5bebfd7ca7f63cccb9b932e2e08f0f0807057b7c9be",
   "caseId": "case:golden:resc-0015",
   "decision": {
     "entity": "loan:resc-0015",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "ruleId": "RESC-DL-01",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
@@ -43,7 +43,7 @@
     },
     {
       "ruleId": "RESC-FUND-STAY",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(c)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
@@ -67,14 +67,61 @@
     "rule": "RESC-FUND-STAY",
     "premises": [
       {
-        "factId": "urn:duly:fact:sha256:b4cd564cda68671d79c9e324bed3da797f4d81959cb5ca616a86f9ee4051a455"
+        "conclusion": {
+          "entity": "loan:resc-0015",
+          "attribute": "resc:rescissionDeadline",
+          "value": {
+            "kind": "date",
+            "value": "2026-02-17"
+          }
+        },
+        "rule": "RESC-DL-01",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:11153b115a84552223dba4273de60c3138ca8be8e457ea58bba059cf9892ec76"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:6cd6ceb3e0513acb30554bdb12fd98c2f3b33057ea4d5bfad8a96dcfc271e7a9"
+          },
+          {
+            "factId": "urn:duly:fact:sha256:9b502c494989b85960ce24700c68f0266446d31756775e88470d9778508efe1b"
+          },
+          {
+            "conclusion": {
+              "entity": "loan:resc-0015",
+              "attribute": "resc:rescissionApplies",
+              "value": {
+                "kind": "boolean",
+                "value": true
+              }
+            },
+            "rule": "RESC-APP-01",
+            "premises": [
+              {
+                "factId": "urn:duly:fact:sha256:6b0ecdc769074b3ed7380ca688da1426220cb23362ad007f16f27c284db68fa4"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
   "inputFacts": [
     {
-      "id": "urn:duly:fact:sha256:b4cd564cda68671d79c9e324bed3da797f4d81959cb5ca616a86f9ee4051a455",
-      "contentHash": "b4cd564cda68671d79c9e324bed3da797f4d81959cb5ca616a86f9ee4051a455"
+      "id": "urn:duly:fact:sha256:11153b115a84552223dba4273de60c3138ca8be8e457ea58bba059cf9892ec76",
+      "contentHash": "11153b115a84552223dba4273de60c3138ca8be8e457ea58bba059cf9892ec76"
+    },
+    {
+      "id": "urn:duly:fact:sha256:6cd6ceb3e0513acb30554bdb12fd98c2f3b33057ea4d5bfad8a96dcfc271e7a9",
+      "contentHash": "6cd6ceb3e0513acb30554bdb12fd98c2f3b33057ea4d5bfad8a96dcfc271e7a9"
+    },
+    {
+      "id": "urn:duly:fact:sha256:9b502c494989b85960ce24700c68f0266446d31756775e88470d9778508efe1b",
+      "contentHash": "9b502c494989b85960ce24700c68f0266446d31756775e88470d9778508efe1b"
+    },
+    {
+      "id": "urn:duly:fact:sha256:6b0ecdc769074b3ed7380ca688da1426220cb23362ad007f16f27c284db68fa4",
+      "contentHash": "6b0ecdc769074b3ed7380ca688da1426220cb23362ad007f16f27c284db68fa4"
     }
   ],
   "abstentions": [],

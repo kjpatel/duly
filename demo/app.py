@@ -1053,29 +1053,48 @@ def _determination(
         }
 
     if attribute.endswith("rescissionDeadline"):
-        day = _date_prefix(str(value.get("value", ""))) or _format_value(value)
-        return {
-            "verdict": f"Midnight of {day}",
-            "detail": (
-                "Third precise business day after the latest trigger — "
-                "Saturdays count, Sundays and federal holidays do not"
-            ),
-            "tone": "",
-        }
+        computed = str(value.get("value", ""))
+        day = _date_prefix(computed) or _format_value(value)
+        # Cross-check the computed deadline against the date printed on the
+        # Notice of Right to Cancel (an extracted fact no rule consumes):
+        # agreement is worth saying; disagreement means the document needs
+        # review even though the computed deadline stands.
+        printed = _fact_value(scenario["facts"], "statedRescissionDeadline")
+        detail = (
+            "Computed by the kernel: third precise business day after the "
+            "latest trigger — Saturdays count, Sundays and federal holidays "
+            "do not"
+        )
+        tone = ""
+        if printed is not None:
+            if str(printed) == computed:
+                detail += "; matches the deadline printed on the notice"
+            else:
+                printed_day = _date_prefix(str(printed)) or str(printed)
+                detail = (
+                    "Computed by the kernel from the trigger dates; the "
+                    f"notice prints {printed_day} — the computed deadline "
+                    "stands, route the document for correction"
+                )
+                tone = "warn"
+        return {"verdict": f"Midnight of {day}", "detail": detail, "tone": tone}
 
     if attribute.endswith("fundingPermitted") and value.get("kind") == "boolean":
         permitted = bool(value.get("value"))
         if permitted:
             return {
                 "verdict": "Clear to fund",
-                "detail": "The rescission period has expired (or no rescission right applies)",
+                "detail": (
+                    "The as-of date is past the computed rescission deadline "
+                    "(or no rescission right applies)"
+                ),
                 "tone": "pos",
             }
         return {
             "verdict": "Funding hold",
             "detail": (
-                "Rescission period not shown expired — no disbursement "
-                "under 12 CFR 1026.23(c)"
+                "The computed rescission period has not been shown expired — "
+                "no disbursement under 12 CFR 1026.23(c)"
             ),
             "tone": "neg",
         }

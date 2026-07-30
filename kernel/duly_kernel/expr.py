@@ -42,6 +42,11 @@ class ExprNameError(ExprError):
     """An identifier is not bound in the evaluation environment."""
 
 
+class ExprCalendarError(ExprError):
+    """A calendar operation failed loudly: malformed calendar data, or a
+    date outside the calendar's declared coverage window."""
+
+
 # ---------------------------------------------------------------------------
 # Typed values
 # ---------------------------------------------------------------------------
@@ -170,6 +175,124 @@ def format_datetime(dt: _dt.datetime) -> str:
         dt = dt.replace(tzinfo=_dt.timezone.utc)
     dt = dt.astimezone(_dt.timezone.utc)
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# ---------------------------------------------------------------------------
+# Calendars (spec/rule-ir.md, "Calendars")
+# ---------------------------------------------------------------------------
+
+_WEEKDAY_NAMES = {
+    "Monday": 0,
+    "Tuesday": 1,
+    "Wednesday": 2,
+    "Thursday": 3,
+    "Friday": 4,
+    "Saturday": 5,
+    "Sunday": 6,
+}
+
+
+@dataclass(frozen=True)
+class Calendar:
+    """A pack-embedded business-day calendar: which days do NOT count.
+
+    Semantics are entirely the pack's: this layer knows only that days whose
+    weekday is in `excluded_weekdays` or whose date is in `holidays` are not
+    business days. `coverage` is a half-open [from, to) date window; any
+    calendar walk that touches a day outside it fails loudly
+    (ExprCalendarError) rather than silently treating uncovered days as
+    business days.
+    """
+
+    name: str
+    excluded_weekdays: frozenset[int]  # Monday = 0 .. Sunday = 6
+    holidays: frozenset[_dt.date]
+    coverage_from: _dt.date
+    coverage_to: _dt.date  # exclusive
+
+    def covers(self, day: _dt.date) -> bool:
+        return self.coverage_from <= day < self.coverage_to
+
+    def is_business_day(self, day: _dt.date) -> bool:
+        if not self.covers(day):
+            raise ExprCalendarError(
+                f"calendar {self.name!r} does not cover {day.isoformat()} "
+                f"(coverage [{self.coverage_from.isoformat()}, "
+                f"{self.coverage_to.isoformat()}))"
+            )
+        return day.weekday() not in self.excluded_weekdays and day not in self.holidays
+
+
+def parse_calendars(block: object) -> dict[str, Calendar]:
+    """Parse and validate a pack's `calendars:` block into Calendar objects.
+
+    Raises ExprCalendarError on any malformation: unknown keys, unparsable
+    dates, invalid weekday names, missing/inverted coverage, or a holiday
+    outside coverage. An absent/empty block yields an empty mapping.
+    """
+    if block is None:
+        return {}
+    if not isinstance(block, dict):
+        raise ExprCalendarError("'calendars' must be a mapping of name -> calendar")
+    out: dict[str, Calendar] = {}
+    for name, spec in block.items():
+        if not isinstance(name, str) or not name:
+            raise ExprCalendarError("calendar names must be non-empty strings")
+        where = f"calendars[{name!r}]"
+        if not isinstance(spec, dict):
+            raise ExprCalendarError(f"{where} must be a mapping")
+        unknown = set(spec) - {"description", "excludedWeekdays", "holidays", "coverage"}
+        if unknown:
+            raise ExprCalendarError(f"{where} has unknown key(s): {', '.join(sorted(unknown))}")
+        weekdays = spec.get("excludedWeekdays", [])
+        if not isinstance(weekdays, list):
+            raise ExprCalendarError(f"{where}.excludedWeekdays must be a list of weekday names")
+        excluded: set[int] = set()
+        for wd in weekdays:
+            if wd not in _WEEKDAY_NAMES:
+                raise ExprCalendarError(
+                    f"{where}.excludedWeekdays: unknown weekday {wd!r} "
+                    f"(use {', '.join(_WEEKDAY_NAMES)})"
+                )
+            excluded.add(_WEEKDAY_NAMES[wd])
+        coverage = spec.get("coverage")
+        if not isinstance(coverage, dict) or set(coverage) != {"from", "to"}:
+            raise ExprCalendarError(f"{where}.coverage must be a mapping with 'from' and 'to'")
+        cov_from = _calendar_date(coverage["from"], f"{where}.coverage.from")
+        cov_to = _calendar_date(coverage["to"], f"{where}.coverage.to")
+        if cov_from >= cov_to:
+            raise ExprCalendarError(f"{where}.coverage: 'from' must precede 'to'")
+        holidays_raw = spec.get("holidays", [])
+        if not isinstance(holidays_raw, list):
+            raise ExprCalendarError(f"{where}.holidays must be a list of ISO dates")
+        holidays: set[_dt.date] = set()
+        for h in holidays_raw:
+            day = _calendar_date(h, f"{where}.holidays")
+            if not (cov_from <= day < cov_to):
+                raise ExprCalendarError(
+                    f"{where}.holidays: {day.isoformat()} lies outside coverage "
+                    f"[{cov_from.isoformat()}, {cov_to.isoformat()})"
+                )
+            holidays.add(day)
+        out[name] = Calendar(
+            name=name,
+            excluded_weekdays=frozenset(excluded),
+            holidays=frozenset(holidays),
+            coverage_from=cov_from,
+            coverage_to=cov_to,
+        )
+    return out
+
+
+def _calendar_date(v: object, where: str) -> _dt.date:
+    if isinstance(v, _dt.date) and not isinstance(v, _dt.datetime):
+        return v
+    if isinstance(v, str):
+        try:
+            return _dt.date.fromisoformat(v)
+        except ValueError:
+            pass
+    raise ExprCalendarError(f"{where}: {v!r} is not an ISO date")
 
 
 # ---------------------------------------------------------------------------
@@ -462,7 +585,43 @@ def _eval_compare(op: str, lv: Value, rv: Value) -> BoolV:
     raise ExprSyntaxError(f"unknown comparison operator {op!r}")
 
 
-def _eval_call(func: str, args: tuple[Value, ...]) -> Value:
+def _eval_call(func: str, args: tuple[Value, ...], calendars: dict[str, Calendar]) -> Value:
+    if func == "add_business_days":
+        _require(len(args) == 3, "add_business_days() takes exactly three arguments")
+        start, n, cal_name = args
+        _require(isinstance(start, DateV), "add_business_days() first argument must be a date")
+        _require(
+            isinstance(n, DecimalV),
+            "add_business_days() second argument must be a decimal integer",
+        )
+        _require(
+            isinstance(cal_name, StringV),
+            "add_business_days() third argument must be a calendar name string",
+        )
+        count = n.value  # type: ignore[union-attr]
+        if count != count.to_integral_value() or count < 0:
+            raise ExprTypeError(
+                f"add_business_days() count must be a non-negative integer, got {count}"
+            )
+        calendar = calendars.get(cal_name.value)  # type: ignore[union-attr]
+        if calendar is None:
+            raise ExprNameError(
+                f"unknown calendar {cal_name.value!r} "  # type: ignore[union-attr]
+                f"(pack declares: {', '.join(sorted(calendars)) or 'none'})"
+            )
+        day = start.value  # type: ignore[union-attr]
+        if not calendar.covers(day):
+            raise ExprCalendarError(
+                f"calendar {calendar.name!r} does not cover start date {day.isoformat()} "
+                f"(coverage [{calendar.coverage_from.isoformat()}, "
+                f"{calendar.coverage_to.isoformat()}))"
+            )
+        remaining = int(count)
+        while remaining:
+            day += _dt.timedelta(days=1)
+            if calendar.is_business_day(day):
+                remaining -= 1
+        return DateV(day)
     if func == "date":
         _require(len(args) == 1, "date() takes exactly one argument")
         (a,) = args
@@ -498,8 +657,16 @@ def _eval_call(func: str, args: tuple[Value, ...]) -> Value:
     raise ExprNameError(f"unknown function {func!r}")
 
 
-def evaluate(node: Node, env: dict[str, Value]) -> Value:
-    """Evaluate an AST against an environment of typed values."""
+def evaluate(
+    node: Node,
+    env: dict[str, Value],
+    calendars: dict[str, Calendar] | None = None,
+) -> Value:
+    """Evaluate an AST against an environment of typed values.
+
+    `calendars` supplies the pack's named business-day calendars (see
+    parse_calendars); omitting it leaves calendar-free evaluation unchanged.
+    """
     if isinstance(node, Lit):
         return node.value
     if isinstance(node, Var):
@@ -507,7 +674,7 @@ def evaluate(node: Node, env: dict[str, Value]) -> Value:
             raise ExprNameError(f"unbound variable {node.name!r}")
         return env[node.name]
     if isinstance(node, Unary):
-        v = evaluate(node.operand, env)
+        v = evaluate(node.operand, env, calendars)
         if node.op == "-":
             if isinstance(v, DecimalV):
                 return DecimalV(-v.value)
@@ -521,8 +688,8 @@ def evaluate(node: Node, env: dict[str, Value]) -> Value:
     if isinstance(node, Binary):
         # Both operands are evaluated (no short-circuit) so type errors
         # always surface loudly and deterministically.
-        lv = evaluate(node.left, env)
-        rv = evaluate(node.right, env)
+        lv = evaluate(node.left, env, calendars)
+        rv = evaluate(node.right, env, calendars)
         if node.op in ("and", "or"):
             _require(
                 isinstance(lv, BoolV) and isinstance(rv, BoolV),
@@ -535,11 +702,38 @@ def evaluate(node: Node, env: dict[str, Value]) -> Value:
             return _eval_compare(node.op, lv, rv)
         return _eval_arith(node.op, lv, rv)
     if isinstance(node, Call):
-        args = tuple(evaluate(a, env) for a in node.args)
-        return _eval_call(node.func, args)
+        args = tuple(evaluate(a, env, calendars) for a in node.args)
+        return _eval_call(node.func, args, calendars or {})
     raise ExprSyntaxError(f"unknown AST node {node!r}")
 
 
-def evaluate_str(src: str, env: dict[str, Value] | None = None) -> Value:
+def evaluate_str(
+    src: str,
+    env: dict[str, Value] | None = None,
+    calendars: dict[str, Calendar] | None = None,
+) -> Value:
     """Parse and evaluate an expression string."""
-    return evaluate(parse(src), env or {})
+    return evaluate(parse(src), env or {}, calendars)
+
+
+def calendar_calls(node: Node) -> list[Call]:
+    """Every `add_business_days` call node in `node`, in source order. Used
+    by pack validation to check calendar references statically (arity, and
+    that the calendar argument is a string literal naming a declared
+    calendar)."""
+    out: list[Call] = []
+
+    def walk(n: Node) -> None:
+        if isinstance(n, Unary):
+            walk(n.operand)
+        elif isinstance(n, Binary):
+            walk(n.left)
+            walk(n.right)
+        elif isinstance(n, Call):
+            for a in n.args:
+                walk(a)
+            if n.func == "add_business_days":
+                out.append(n)
+
+    walk(node)
+    return out

@@ -271,6 +271,39 @@ def test_resc_calendar_table_matches_business_day_arithmetic():
             assert has_holiday == (label in ("both", "holiday")), f"{label} {iso}"
 
 
+def test_pack_calendar_reconciles_with_generator_business_day_table():
+    """The TILA pack embeds the 12 CFR 1026.2(a)(6) calendar as data; this
+    module derives the same holidays from the 5 U.S.C. 6103(a) formulas. The
+    two must never drift: the embedded dates must equal the statutory
+    computation for every covered year, and the kernel's add_business_days
+    walk must land on the same deadline as the generator's arithmetic for
+    every consummation date the corpus draws."""
+    from duly_kernel import expr as kexpr
+
+    pack = yaml.safe_load(
+        (REPO / "rulepacks/tila-rescission-us-federal/pack.yaml").read_text()
+    )
+    calendars = kexpr.parse_calendars(pack["calendars"])
+    cal = calendars["tila-precise"]
+
+    assert cal.excluded_weekdays == frozenset({6})  # Sundays only; Saturdays count
+    assert cal.coverage_from == dt.date(2026, 1, 1)
+    assert cal.coverage_to == dt.date(2028, 1, 1)
+    for year in (2026, 2027):
+        embedded = {d for d in cal.holidays if d.year == year}
+        assert embedded == generate.federal_holidays(year), year
+    assert {d.year for d in cal.holidays} == {2026, 2027}
+
+    for dates in generate.RESC_CALENDARS.values():
+        for iso in dates:
+            start = dt.date.fromisoformat(iso)
+            walked = kexpr.evaluate_str(
+                f'add_business_days(date("{iso}"), 3, "tila-precise")', {}, calendars
+            )
+            assert isinstance(walked, kexpr.DateV)
+            assert walked.value == generate.add_business_days(start, 3), iso
+
+
 def test_ron_decision_flips_at_california_operative_date():
     template = generate.STATE_TEMPLATES["ron"]
     pack = yaml.safe_load((REPO / template["pack"]).read_text())

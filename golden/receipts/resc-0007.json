@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:e21ac7d7fb80fb4aad10df29e142584539446ae786459f89b562cd8c0637da14",
-  "receiptSha256": "e21ac7d7fb80fb4aad10df29e142584539446ae786459f89b562cd8c0637da14",
+  "id": "urn:duly:receipt:sha256:8f285f40be220e50f7360a9cef6f4deec6c0a7de86515f21fe19a9b1553ff801",
+  "receiptSha256": "8f285f40be220e50f7360a9cef6f4deec6c0a7de86515f21fe19a9b1553ff801",
   "caseId": "case:golden:resc-0007",
   "decision": {
     "entity": "loan:resc-0007",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "tila-rescission-us-federal",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "ruleId": "RESC-DL-01",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
@@ -43,7 +43,7 @@
     },
     {
       "ruleId": "RESC-FUND-EXP",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "citation": {
         "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
         "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"

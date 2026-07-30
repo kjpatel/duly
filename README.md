@@ -50,7 +50,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Bitemporal fact store](store/) | Append-only events, as-of projections across effective and knowledge time, supersession chains (SQLite; Postgres-portable schema) | working |
 | [Review queue](review/) | Abstention routing; human corrections re-enter as first-class facts and auto-become golden cases; calibration label export | working (API + library) |
 | [Calibration](calibration/) | Temperature/Platt/conformal calibrators and abstention math, consuming the review queue's labeled pairs | working |
-| [Assurance harness](assurance/) | Replay verifier, 251-case [golden corpus](golden/) (250 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
+| [Assurance harness](assurance/) | Replay verifier, 351-case [golden corpus](golden/) (350 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
 
 ## Design choices and why
 
@@ -134,7 +134,7 @@ Sequencing principle: build nothing until its consumer exists. Each milestone en
 ### M2 — replay and regression (complete)
 - [x] Bitemporal fact store ([store/](store/)): append-only events on SQLite with a Postgres-portable schema; as-of projections across knowledge and effective time; supersession chains and knowledge-time travel ("what did we know in March") tested end to end
 - [x] Replay verifier: `python -m duly_assurance verify` re-adjudicates every golden case and asserts byte-identical receipts
-- [x] Golden corpus ([golden/](golden/)): 250 committed synthetic cases with receipts, seeded and deterministically regenerable, exercising every rule in the notice and TRID packs including effective-date boundaries and defeat chains (the four mortgage-closing packs added later carry declared `expected.yaml` outcomes run in CI, but no corpus cases yet — see M4)
+- [x] Golden corpus ([golden/](golden/)): 350 committed synthetic cases with receipts, seeded and deterministically regenerable, exercising every rule in every pack including effective-date boundaries and defeat chains (extended in M4 when the mortgage-closing packs landed)
 - [x] Rule-change impact analysis in CI: PRs touching rulepacks/ get a sticky comment — "N of M decisions flip" — with before/after receipts and reasoning-only-change tracking ([.github/workflows/ci.yml](.github/workflows/ci.yml))
 - [x] Florida and California rule packs, statutorily verified (Fla. Stat. § 627.4133; Cal. Ins. Code §§ 678, 677.4) with explicit scope comments and TODO(verify) markers; jurisdiction scoping validated by equality-guard disjointness in the pack validator
 
@@ -150,7 +150,7 @@ Sequencing principle: build nothing until its consumer exists. Each milestone en
 
 Ordered by consumer readiness rather than by ambition. The first item closes a regression gap the mortgage-closing packs opened. The next three are additive, carry no risk to replay determinism, and strengthen the interchange story the whole project rests on. The constraint solver comes last but already has a named consumer, which is why it is in M4 at all.
 
-- [ ] Golden-corpus coverage for the four mortgage-closing packs (carried forward from M2, which predates them). They ship declared `expected.yaml` outcomes, but the corpus holds cases only for the notice and TRID packs — and since [impact analysis](assurance/duly_assurance/impact.py) runs *over the corpus*, editing a RON, eSign, rescission, or recording rule today reports "0 of 251 decisions flip" no matter what it broke. The regression net does not yet cover two thirds of the rule packs
+- [x] Golden-corpus coverage for the four mortgage-closing packs (carried forward from M2, which predates them): 25 boundary-stratified cases per pack — every real RON authorization date straddled both sides, every eSign routing cell, rescission windows with and without Sunday/holiday extensions, recording violations and cures including committed receipts carrying `low_confidence` abstentions. Verified by perturbation: a deliberately broken rule in each pack now reports flips in [impact analysis](assurance/duly_assurance/impact.py) instead of "0 of N decisions flip"
 - [ ] PROV-O JSON-LD context for facts and receipts
 - [ ] SHACL/LinkML ontology conformance gate — the enforcement half of bring-your-own-ontology: facts already reference an ontology by CURIE + version, and nothing yet checks conformance
 - [ ] DMN decision-table authoring surface compiling to the same IR (compliance edits without a deploy)
@@ -188,12 +188,12 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; **M0 through M3 are complete** — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 251 golden decisions (250 synthetic + 1 review-born) replay byte-for-byte on every push. M4 — standards alignment (PROV-O, SHACL/LinkML, DMN) and constraint solving — is next; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
+Pre-alpha; **M0 through M3 are complete** — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 — standards alignment (PROV-O, SHACL/LinkML, DMN) and constraint solving — is next; the alternate Datalog backend moved to M5, and a commercial extraction adapter to v1.1. Verify everything locally:
 
 ```bash
 uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)
 uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests   # full suite
-uv run python -m duly_assurance verify  # replay all 251 golden receipts byte-for-byte
+uv run python -m duly_assurance verify  # replay all 351 golden receipts byte-for-byte
 uv run spec/validate.py                 # spec examples: schemas + hashes
 uv run uvicorn demo.app:app --port 8788 # the interactive demo
 ```

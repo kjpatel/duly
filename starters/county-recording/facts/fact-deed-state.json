@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:205861f5f5b71147c40003012675e76fa5b8dfa983d9e3c77f33cd018d2b3f70",
+  "contentHash": "205861f5f5b71147c40003012675e76fa5b8dfa983d9e3c77f33cd018d2b3f70",
+  "caseId": "case:recording:DOT-2026-081512",
+  "entity": {
+    "id": "recording:DOT-2026-081512",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:recordingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:deed-of-trust:DOT-2026-081512:2026-07-24",
+    "documentSha256": "a26792a3f58c23b6e9826670f062ce7e75d1a1be027a33af38b1a0dba9b4005f",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:a26792a3",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 308,
+      "end": 374
+    },
+    "quote": "Recording jurisdiction: County of Los Angeles, State of California"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T17:41:12Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-29:031"
+    }
+  },
+  "confidence": {
+    "score": 0.968,
+    "method": "conformal",
+    "calibrationRef": "cal:recording-docs:2026-06"
+  },
+  "recordedAt": "2026-07-29T17:41:12Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

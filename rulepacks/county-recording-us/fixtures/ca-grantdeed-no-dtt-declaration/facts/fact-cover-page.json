@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:1478fb435a6e72df85260c69a5fdddd3a8a145c3560ac090b1c0d0fd705e2b53",
+  "contentHash": "1478fb435a6e72df85260c69a5fdddd3a8a145c3560ac090b1c0d0fd705e2b53",
+  "caseId": "case:recording:FX-ca-grantdeed-no-dtt-declaration",
+  "entity": {
+    "id": "recording:FX-ca-grantdeed-no-dtt-declaration",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:coverPageAttached",
+  "value": {
+    "kind": "boolean",
+    "value": false
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

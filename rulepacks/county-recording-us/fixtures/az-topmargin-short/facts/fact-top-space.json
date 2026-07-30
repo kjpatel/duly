@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:8340e4af07037c5ea04965604d0c40d598096f55bfb1fc987fc5249845389807",
+  "contentHash": "8340e4af07037c5ea04965604d0c40d598096f55bfb1fc987fc5249845389807",
+  "caseId": "case:recording:FX-az-topmargin-short",
+  "entity": {
+    "id": "recording:FX-az-topmargin-short",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:firstPageTopSpaceInches",
+  "value": {
+    "kind": "decimal",
+    "value": "1.6"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 0.95,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

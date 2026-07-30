@@ -1,0 +1,34 @@
+{
+  "id": "county-recording",
+  "title": "LA County deed of trust — recording readiness",
+  "caseId": "case:recording:DOT-2026-081512",
+  "ontology": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:deed-of-trust:DOT-2026-081512:2026-07-24",
+      "title": "Deed of Trust (first page)",
+      "pdf": "documents/deed-of-trust.pdf",
+      "rendition": "renditions/deed-of-trust.txt",
+      "sha256": "a26792a3f58c23b6e9826670f062ce7e75d1a1be027a33af38b1a0dba9b4005f"
+    },
+    {
+      "id": "doc:transmittal:DOT-2026-081512:2026-07-27",
+      "title": "Recording Transmittal",
+      "pdf": "documents/transmittal-sheet.pdf",
+      "rendition": "renditions/transmittal-sheet.txt",
+      "sha256": "447c76fcd917685f07c4a89828491c6bab9682db28d7f00088373edc2ed4cd36"
+    }
+  ],
+  "facts": [
+    "facts/fact-deed-instrument-type.json",
+    "facts/fact-deed-state.json",
+    "facts/fact-deed-apn.json",
+    "facts/fact-deed-concurrent-taxed-transfer.json",
+    "facts/fact-transmittal-top-space.json",
+    "facts/fact-transmittal-cover-page.json"
+  ],
+  "rulePack": "rulepacks/county-recording-us/pack.yaml"
+}

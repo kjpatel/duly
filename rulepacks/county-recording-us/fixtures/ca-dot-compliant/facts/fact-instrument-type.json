@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:840f0c2bf695c64a5e1bad2018f0695240c0733bf59fd15a26c218f120369a4f",
+  "contentHash": "840f0c2bf695c64a5e1bad2018f0695240c0733bf59fd15a26c218f120369a4f",
+  "caseId": "case:recording:FX-ca-dot-compliant",
+  "entity": {
+    "id": "recording:FX-ca-dot-compliant",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:instrumentType",
+  "value": {
+    "kind": "code",
+    "value": "DeedOfTrust",
+    "codeSystem": "duly-starter-recording/instrument-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

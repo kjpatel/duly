@@ -1,0 +1,172 @@
+# Expected kernel outcomes for county-recording-us.
+# kernel/tests/test_rulepacks.py runs every case here on every test run: each
+# case evaluates the pack against the facts in factsFrom at asOf.effective.
+#
+# HARNESS GAP, noted honestly: the expected.yaml harness asserts the decision
+# value, the surviving rule set, and the defeated map — it cannot assert the
+# receipt's `abstentions` list, and it cannot assert a no-decision outcome
+# (the kernel raises AdjudicationError, which the harness treats as a test
+# error, so this pack's fail-closed unknown-jurisdiction posture has no case
+# here). Both are therefore asserted indirectly within what the harness CAN
+# check:
+#   - the below-floor starter cases pin REC-TOPSPACE-01 ABSENT from
+#     expectRulesFired even though the committed measurement (2.1 in) is on
+#     its face short of the required 2.5 — only the low_confidence exclusion
+#     of the measurement fact explains that absence; and
+#   - the abstention entry itself (reason, score 0.58 vs floor 0.85, routing
+#     to recording-review) is exercised end to end by the demo review arc and
+#     kernel/tests/test_abstention_policy.py's machinery.
+cases:
+  # A clean Los Angeles County deed of trust: 2.7 in of first-page top space
+  # clears the Gov. Code § 27361.6 reservation of 2.5 in, so REC-TOPSPACE-01
+  # never fires and the scoped California presumption REC-DEF-CA survives.
+  # CA-SB2-EXEMPT-DTT defeats the $75 SB 2 default because the instrument is
+  # recorded concurrently with a taxed transfer.
+  - name: ca-dot-compliant-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-dot-compliant/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # Same facts, SB 2 question: recorded concurrently with a transfer subject
+  # to documentary transfer tax, so § 27388.1's exemption zeroes the fee.
+  - name: ca-dot-sb2-exempt-no-fee
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-dot-compliant/facts
+    asOfEffective: "2026-08-20"
+    question: rec:sb2FeeDueUSD
+    expectDecision: { kind: money, amount: "0.00", currency: "USD" }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # A California grant deed with no documentary-transfer-tax declaration on
+  # its face: Rev. & Tax. Code § 11933 is a statutory "shall not record", so
+  # CA-DTT-11933 fires and defeats the recordability presumption. The format
+  # checks pass (2.7 in), which is the point — a package can be perfectly
+  # formatted and still bounce on the tax declaration.
+  - name: ca-grantdeed-missing-dtt-declaration-not-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-grantdeed-no-dtt-declaration/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [CA-TOPSPACE-25, CA-DTT-11933, CA-SB2-75]
+    expectDefeated:
+      CA-DTT-11933: [REC-DEF-CA]
+
+  # Same grant deed, SB 2 question: not recorded in connection with a taxed
+  # transfer (rec:concurrentWithTaxedTransfer = false), so no exemption binds
+  # and the § 27388.1 default of $75.00 stands.
+  - name: ca-grantdeed-sb2-fee-due
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-grantdeed-no-dtt-declaration/facts
+    asOfEffective: "2026-08-20"
+    question: rec:sb2FeeDueUSD
+    expectDecision: { kind: money, amount: "75.00", currency: "USD" }
+    expectRulesFired: [CA-TOPSPACE-25, CA-DTT-11933, CA-SB2-75]
+    expectDefeated:
+      CA-DTT-11933: [REC-DEF-CA]
+
+  # California deed of trust measured at 2.2 in of first-page top space —
+  # short of the 2.5 in reservation — with no cover page attached to cure it,
+  # so REC-TOPSPACE-01 fires and the package is not recordable as submitted.
+  - name: ca-topspace-short-not-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-topspace-short/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [CA-TOPSPACE-25, REC-TOPSPACE-01, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      REC-TOPSPACE-01: [REC-DEF-CA]
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # The statutory cure: the same short first page WITH a Gov. Code § 27361.6
+  # cover page attached. REC-TOPSPACE-01's cover == false guard fails, so the
+  # presumption survives and the package records.
+  - name: ca-topspace-short-with-cover-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/ca-topspace-short-with-cover/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # The jurisdiction contrast, same measurement as ca-topspace-short: 2.2 in
+  # FAILS in California (2.5 in required) but PASSES in Arizona, where A.R.S.
+  # § 11-480(B) requires only a 2 in top margin on the first page. This is
+  # the long-tail thesis in one pair of cases — the measurement didn't
+  # change, the county did.
+  - name: az-dot-compliant-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/az-dot-compliant/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [REC-DEF-AZ, AZ-TOPMARGIN-20]
+    expectDefeated: {}
+
+  # The derived intermediate for the AZ case: the required reservation is the
+  # jurisdiction-specific 2.0, not the Californian 2.5.
+  - name: az-dot-required-top-space
+    factsFrom: rulepacks/county-recording-us/fixtures/az-dot-compliant/facts
+    asOfEffective: "2026-08-20"
+    question: rec:requiredFirstPageTopSpaceInches
+    expectDecision: { kind: decimal, value: "2.0" }
+    expectRulesFired: [REC-DEF-AZ, AZ-TOPMARGIN-20]
+    expectDefeated: {}
+
+  # Arizona deed of trust at 1.6 in — short even of Arizona's 2 in — with no
+  # cover sheet attached (A.R.S. § 11-480 allows the same attach-a-sheet
+  # cure), so REC-TOPSPACE-01 defeats the Arizona presumption.
+  - name: az-topmargin-short-not-recordable
+    factsFrom: rulepacks/county-recording-us/fixtures/az-topmargin-short/facts
+    asOfEffective: "2026-08-20"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: false }
+    expectRulesFired: [AZ-TOPMARGIN-20, REC-TOPSPACE-01]
+    expectDefeated:
+      REC-TOPSPACE-01: [REC-DEF-AZ]
+
+  # THE ABSTENTION ARC (starter facts): the committed transmittal measurement
+  # says 2.1 in — on its face short of the required 2.5 — but the fact
+  # carries a SCRIPTED confidence of 0.58 (see the honesty note in
+  # starters/tools/targets/county-recording-transmittal.json), below the
+  # pack's 0.85 per-attribute floor. The kernel excludes it (reason
+  # low_confidence, routed to recording-review), REC-TOPSPACE-01 is silently
+  # inapplicable, and the scoped presumption survives. REC-TOPSPACE-01's
+  # absence from expectRulesFired here is the harness-visible shadow of that
+  # abstention (see the header note); the demo's review arc then has a human
+  # confirm the 2.1 measurement, which supersedes the machine fact and flips
+  # this decision to false.
+  - name: starter-below-floor-measurement-abstains-presumption-stands
+    factsFrom: starters/county-recording/facts
+    asOfEffective: "2026-07-29"
+    question: rec:recordable
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # Starter facts, derived intermediate: the LA County package needs the
+  # California 2.5 in reservation. Unaffected by the excluded measurement —
+  # the requirement derives from the jurisdiction, not from the measurement.
+  - name: starter-required-top-space
+    factsFrom: starters/county-recording/facts
+    asOfEffective: "2026-07-29"
+    question: rec:requiredFirstPageTopSpaceInches
+    expectDecision: { kind: decimal, value: "2.5" }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]
+
+  # Starter facts, SB 2 question: the deed of trust rides with a taxed grant
+  # deed (declared on the deed's own face), so the § 27388.1 fee is exempt.
+  - name: starter-sb2-exempt-no-fee
+    factsFrom: starters/county-recording/facts
+    asOfEffective: "2026-07-29"
+    question: rec:sb2FeeDueUSD
+    expectDecision: { kind: money, amount: "0.00", currency: "USD" }
+    expectRulesFired: [REC-DEF-CA, CA-TOPSPACE-25, CA-SB2-EXEMPT-DTT]
+    expectDefeated:
+      CA-SB2-EXEMPT-DTT: [CA-SB2-75]

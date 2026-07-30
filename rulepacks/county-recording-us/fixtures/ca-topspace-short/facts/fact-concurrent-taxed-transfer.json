@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:ccb137d9e488ee485f39072e23c3758a33d3f7faa93da68eb83fe736cd6ace7c",
+  "contentHash": "ccb137d9e488ee485f39072e23c3758a33d3f7faa93da68eb83fe736cd6ace7c",
+  "caseId": "case:recording:FX-ca-topspace-short",
+  "entity": {
+    "id": "recording:FX-ca-topspace-short",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:concurrentWithTaxedTransfer",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-08-15T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-08-15T12:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-08-15T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

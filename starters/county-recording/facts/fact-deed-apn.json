@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:1e7eabe1911f9d0036154adb95af5016cafe9d2ef07ea825b9406e15e2eabd31",
+  "contentHash": "1e7eabe1911f9d0036154adb95af5016cafe9d2ef07ea825b9406e15e2eabd31",
+  "caseId": "case:recording:DOT-2026-081512",
+  "entity": {
+    "id": "recording:DOT-2026-081512",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:assessorParcelNumber",
+  "value": {
+    "kind": "string",
+    "value": "5551-002-013"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:deed-of-trust:DOT-2026-081512:2026-07-24",
+    "documentSha256": "a26792a3f58c23b6e9826670f062ce7e75d1a1be027a33af38b1a0dba9b4005f",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:a26792a3",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 197,
+      "end": 214
+    },
+    "quote": "APN: 5551-002-013"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-07-29T17:41:12Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-07-29:031"
+    }
+  },
+  "confidence": {
+    "score": 0.957,
+    "method": "conformal",
+    "calibrationRef": "cal:recording-docs:2026-06"
+  },
+  "recordedAt": "2026-07-29T17:41:12Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

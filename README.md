@@ -168,7 +168,9 @@ Deferred behind M4 on the project's own sequencing principle: Soufflé's justifi
 ### v1.0 — specification stability
 - [ ] Spec freeze with versioning policy
 - [ ] Second starter vertical: claims coverage determination against a synthetic manuscript — grant → exclusion → exception chains as a full defeasible-reasoning showcase
-- [ ] Rule-pack authoring guide and contribution pipeline
+- [ ] Rule-pack authoring guide and contribution pipeline. The guide shipped early ([rulepacks/README.md](rulepacks/README.md)), written from direct evidence — four packs authored in one day from the existing packs as templates, which surfaced exactly what the pipeline still owes:
+  - **Decision phrasing as pack data.** A pack whose decisions carry non-boolean values (codes, dates, money) currently needs a `_determination` edit in [demo/app.py](demo/app.py) — a core file — before its verdicts render as anything better than a raw CURIE. That breaks the contribution model's promise that pack authors never touch the core. Fix: an optional `phrasing` block per decision in pack.yaml (`{verdict, detail, tone}`, tone ∈ pos/neg/warn), consumed generically by the demo. Wording stays server-side, which is the demo's design principle; the edges decouple fully, which is this project's
+  - **A rule-id naming convention.** Today's six packs mix pack-prefix-first (`PKG-CD-10`), jurisdiction-first (`VA-RON-2012`, `CA-DTT-11933`), and function-first (`RON-DEF-00`) ids — each inherited from a different aspect of the earliest packs' precedent. Rule ids appear on receipts, in audit reports, and in defeat chains, so the convention belongs in the guide before pack seven exists
 
 ### v1.1 — ecosystem breadth
 - [ ] One commercial extraction adapter (Azure DI or Google Document AI) — deferred out of M3: Docling proved the adapter interface against a real converter, and a second provider adds credential handling and recorded-response fixtures without changing the contract it plugs into. The point of the seam is that this is someone else's contribution to make ([contribution model](#contribution-model))

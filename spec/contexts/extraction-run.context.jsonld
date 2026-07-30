@@ -1,0 +1,31 @@
+{
+  "description": "JSON-LD 1.1 context mapping a stored ExtractionRunEnvelope (spec/schemas/extraction-run.schema.json) onto PROV-O. The envelope is a prov:Collection whose members are the run's facts; applied out-of-band or via the export wrapper (kernel/duly_kernel/provo.py); never embedded in stored documents. See spec/prov-o.md.",
+  "specVersion": "v0",
+  "@context": {
+    "@version": 1.1,
+    "prov": "http://www.w3.org/ns/prov#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "duly": "https://duly.dev/spec/v0/vocab#",
+    "id": "@id",
+    "contentHash": "duly:contentHash",
+    "runId": { "@id": "prov:wasGeneratedBy", "@type": "@id" },
+    "adapter": {
+      "@id": "duly:adapter",
+      "@context": {
+        "name": "duly:name",
+        "version": "duly:version",
+        "modelId": "duly:modelId"
+      }
+    },
+    "documentId": { "@id": "duly:sourceDocument", "@type": "@id" },
+    "documentSha256": "duly:documentSha256",
+    "rendition": {
+      "@id": "duly:rendition",
+      "@context": {
+        "sha256": "duly:sha256"
+      }
+    },
+    "createdAt": { "@id": "prov:generatedAtTime", "@type": "xsd:dateTime" },
+    "factIds": { "@id": "prov:hadMember", "@type": "@id" }
+  }
+}

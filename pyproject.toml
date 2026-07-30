@@ -25,6 +25,7 @@ dev = [
     "jsonschema>=4.18",
     "pytest>=8.0",
     "httpx>=0.27",
+    "pyld>=2.0",
 ]
 
 [build-system]

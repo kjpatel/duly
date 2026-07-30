@@ -1,0 +1,36 @@
+{
+  "id": "tila-rescission",
+  "title": "TILA right of rescission: refinance funding timing",
+  "caseId": "case:loan:RF-2026-3117",
+  "ontology": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  },
+  "documents": [
+    {
+      "id": "doc:cancel-notice:RF-2026-3117:2026-05-22",
+      "title": "Notice of Right to Cancel",
+      "pdf": "documents/cancel-notice.pdf",
+      "rendition": "renditions/cancel-notice.txt",
+      "sha256": "a9e41b7f2d88b94e4662ff4ad66dd7d7757912ac7af5d6a40279c73a0d571b30"
+    },
+    {
+      "id": "doc:settlement:RF-2026-3117:2026-05-22",
+      "title": "Settlement Statement",
+      "pdf": "documents/settlement.pdf",
+      "rendition": "renditions/settlement.txt",
+      "sha256": "add17e65e8491d12a943fb8c5a52477922663831ac6eb0a765c63ef5ca7d6b52"
+    }
+  ],
+  "facts": [
+    "facts/fact-notice-delivered.json",
+    "facts/fact-notice-deadline.json",
+    "facts/fact-rescission-period-in-force.json",
+    "facts/fact-rescission-period-expired.json",
+    "facts/fact-settlement-consummation.json",
+    "facts/fact-settlement-disclosures-delivered.json",
+    "facts/fact-settlement-principal-dwelling.json",
+    "facts/fact-settlement-loan-purpose.json"
+  ],
+  "rulePack": "rulepacks/tila-rescission-us-federal/pack.yaml"
+}

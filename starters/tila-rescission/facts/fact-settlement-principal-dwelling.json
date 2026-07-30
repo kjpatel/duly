@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:ee10863a9623781bb057d161f2c518bd92fc6c4d11c447d361d5f2df29f11f4a",
+  "contentHash": "ee10863a9623781bb057d161f2c518bd92fc6c4d11c447d361d5f2df29f11f4a",
+  "caseId": "case:loan:RF-2026-3117",
+  "entity": {
+    "id": "loan:RF-2026-3117",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:securedByPrincipalDwelling",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:settlement:RF-2026-3117:2026-05-22",
+    "documentSha256": "add17e65e8491d12a943fb8c5a52477922663831ac6eb0a765c63ef5ca7d6b52",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:add17e65",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 328,
+      "end": 373
+    },
+    "quote": "Property is the Borrowers' principal dwelling"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T22:12:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-05-22:032"
+    }
+  },
+  "confidence": {
+    "score": 0.978,
+    "method": "conformal",
+    "calibrationRef": "cal:resc-docs:2026-04"
+  },
+  "recordedAt": "2026-05-22T22:12:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

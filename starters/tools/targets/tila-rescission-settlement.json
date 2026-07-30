@@ -1,0 +1,87 @@
+{
+  "documentId": "doc:settlement:RF-2026-3117:2026-05-22",
+  "caseId": "case:loan:RF-2026-3117",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-05-22T22:12:00Z",
+  "runId": "run:2026-05-22:032",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-settlement-consummation.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:consummationDate",
+      "value": {
+        "kind": "date",
+        "value": "2026-05-22"
+      },
+      "quote": "Date of Consummation (Settlement): May 22, 2026",
+      "confidence": {
+        "score": 0.992,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    },
+    {
+      "file": "fact-settlement-disclosures-delivered.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:materialDisclosuresDeliveredDate",
+      "value": {
+        "kind": "date",
+        "value": "2026-05-22"
+      },
+      "quote": "material TILA disclosures delivered: May 22, 2026",
+      "confidence": {
+        "score": 0.984,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    },
+    {
+      "file": "fact-settlement-principal-dwelling.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:securedByPrincipalDwelling",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "Property is the Borrowers' principal dwelling",
+      "confidence": {
+        "score": 0.978,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    },
+    {
+      "file": "fact-settlement-loan-purpose.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:transactionType",
+      "value": {
+        "kind": "code",
+        "value": "Refinance",
+        "codeSystem": "duly-starter-resc/transaction-types",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "Loan Purpose: Refinance",
+      "confidence": {
+        "score": 0.986,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    }
+  ]
+}

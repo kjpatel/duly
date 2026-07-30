@@ -1,0 +1,52 @@
+{
+  "id": "urn:duly:fact:sha256:37d96fe0321331c943ba6314ef0394941f7ae23e9777373bf304cd382b461bf2",
+  "contentHash": "37d96fe0321331c943ba6314ef0394941f7ae23e9777373bf304cd382b461bf2",
+  "caseId": "case:loan:RF-2026-3117",
+  "entity": {
+    "id": "loan:RF-2026-3117",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:transactionType",
+  "value": {
+    "kind": "code",
+    "value": "Refinance",
+    "codeSystem": "duly-starter-resc/transaction-types",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:settlement:RF-2026-3117:2026-05-22",
+    "documentSha256": "add17e65e8491d12a943fb8c5a52477922663831ac6eb0a765c63ef5ca7d6b52",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:add17e65",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 374,
+      "end": 397
+    },
+    "quote": "Loan Purpose: Refinance"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T22:12:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-05-22:032"
+    }
+  },
+  "confidence": {
+    "score": 0.986,
+    "method": "conformal",
+    "calibrationRef": "cal:resc-docs:2026-04"
+  },
+  "recordedAt": "2026-05-22T22:12:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

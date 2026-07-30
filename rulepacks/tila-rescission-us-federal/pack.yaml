@@ -1,0 +1,265 @@
+pack:
+  name: tila-rescission-us-federal
+  version: "2026.1.0"
+  ontology: duly-starter-resc
+  ontologyVersion: "0.1.0"
+  description: TILA (Reg Z) right of rescission — applicability, deadline, and funding hold.
+
+# ============================================================================
+# MODELING BOUNDARY — read before trusting the deadline decision.
+#
+# 12 CFR § 1026.23(a)(3)(i) sets the rescission deadline at "midnight of the
+# third business day following consummation, delivery of the notice required
+# by paragraph (b) of this section, or delivery of all material disclosures,
+# whichever occurs last." "Business day" here is the PRECISE definition of
+# 12 CFR § 1026.2(a)(6): "all calendar days except Sundays and the legal
+# public holidays specified in 5 U.S.C. 6103(a)" — which the section's second
+# sentence applies expressly "for purposes of rescission under §§ 1026.15 and
+# 1026.23." That is a DIFFERENT calendar from the general definition in the
+# same paragraph (days the creditor's offices are open): under the precise
+# definition SATURDAYS COUNT and Sundays/federal holidays never do.
+# Conflating the two definitions is the classic industry bug — a weekday-only
+# calendar computes the wrong deadline whenever a Saturday falls inside the
+# window.
+#
+# The rule IR (spec/rule-ir.md) cannot express that computation. Its date
+# vocabulary is date literals, date comparison, min/max over dates, and
+# days_between (calendar days). There is no date+N arithmetic, no
+# day-of-week function, and no holiday calendar, so "third business day
+# following X" is NOT expressible in a rule. Rather than fake it with
+# calendar-day arithmetic, this pack models the honestly expressible slice:
+#
+#   * resc:statedRescissionDeadline is an EXTRACTED fact — the deadline
+#     printed on the Notice of Right to Cancel (the H-8 model form's "final
+#     date to cancel" blank). Computing/verifying the business-day arithmetic
+#     is the extraction pipeline's job, outside the IR.
+#   * RESC-DL-01 validates a NECESSARY (not sufficient) condition that IS
+#     expressible: the stated deadline must be at least 3 calendar days after
+#     the latest of the three trigger dates (3 business days can never span
+#     fewer than 3 calendar days). A stated deadline that fails this check is
+#     impossible under any business-day calendar and the pack refuses to
+#     conclude a deadline at all (a loud no-decision, not a wrong date).
+#   * resc:rescissionPeriodInForce / resc:rescissionPeriodExpired are
+#     effective-dated facts (bounded truth in the sense of spec/rule-ir.md,
+#     "Resolved in v0") derived by extraction from the same printed deadline:
+#     in-force over [consummation, deadline+1d), expired from deadline+1d on.
+#     They are what makes resc:fundingPermitted flip with asOf.effective —
+#     replaying the same facts on day 2 and day 4 gives opposite answers.
+#
+# Demo calendar note: the committed starter scenario uses Memorial Day 2026
+# (Monday 2026-05-25; 5 U.S.C. 6103(a) — "the last Monday in May") inside the
+# window. That holiday date is embedded in the synthetic documents and window
+# facts, not in any rule here; it was computed from the statutory formula and
+# a 2026 calendar, not looked up from an authoritative holiday list.
+#
+# PROTECTIVE DEFAULT — documented choice for missing facts: when the notice-
+# delivery fact (or either rescission-period window fact) is missing, no
+# funding rule can show the period expired, so RESC-FUND-DEF holds funding
+# NOT permitted (treat the period as not-yet-expired). Likewise a missing
+# trigger-date fact makes RESC-DL-01 inapplicable and the deadline question
+# a loud no-decision rather than a guess. This pack declares no
+# abstentionPolicy: the notice pack already showcases confidence floors, and
+# here the protective behavior comes from the default rule, which also
+# covers facts that are absent (not merely low-confidence).
+#
+# SCOPE — not modeled (no facts in the starter vocabulary): the § 1026.23(f)(2)
+# same-creditor refinancing partial exemption (new advances only), the
+# § 1026.23(a)(3)(ii)/(h) extended 3-year period when notice or material
+# disclosures are never delivered, § 1026.23(e) consumer waivers for bona fide
+# personal financial emergencies, and multi-consumer delivery timing (each
+# consumer entitled to notice). The starter models one loan entity per case
+# (rule-IR v0 restriction).
+# ============================================================================
+
+decisions:
+  - attribute: resc:rescissionApplies
+    entityType: resc:Loan
+    question: "Does the right of rescission apply to this loan?"
+  - attribute: resc:rescissionDeadline
+    entityType: resc:Loan
+    question: "When does the rescission period end?"
+  - attribute: resc:fundingPermitted
+    entityType: resc:Loan
+    question: "May the lender disburse the loan funds?"
+
+rules:
+  # --- Applicability -------------------------------------------------------
+
+  - id: RESC-APP-01
+    description: "The right of rescission applies to a credit transaction secured by the consumer's principal dwelling."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "12 CFR § 1026.23(a)(1)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+    effectiveFrom: "2011-12-30"  # 12 CFR part 1026 (CFPB Reg Z restatement) effective date, 76 FR 79768
+    given:
+      loan:     { entityType: resc:Loan }
+      dwelling: { attribute: resc:securedByPrincipalDwelling }
+    when:
+      - dwelling == true
+    then:
+      entity: loan
+      attribute: resc:rescissionApplies
+      value: { kind: boolean, value: true }
+
+  # Priority 110 vs RESC-APP-01's 100: the two rules can never both fire
+  # (contradictory guards on the same boolean fact), but the pack validator
+  # can only prove disjointness for string-literal equality guards, so the
+  # priorities are made distinct to keep the pack provably unambiguous.
+  - id: RESC-APP-02
+    description: "The right of rescission does not apply when the transaction is not secured by the consumer's principal dwelling."
+    version: "1.0.0"
+    priority: 110
+    citation:
+      text: "12 CFR § 1026.23(a)(1)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:     { entityType: resc:Loan }
+      dwelling: { attribute: resc:securedByPrincipalDwelling }
+    when:
+      - dwelling == false
+    then:
+      entity: loan
+      attribute: resc:rescissionApplies
+      value: { kind: boolean, value: false }
+
+  # Purchase-money exemption: a "residential mortgage transaction"
+  # (§ 1026.2(a)(24): financing the acquisition or initial construction of
+  # the dwelling) is exempt under § 1026.23(f)(1) even though it is secured
+  # by the principal dwelling — hence the override of RESC-APP-01. This is
+  # why refinances and HELOCs with a new creditor carry rescission risk and
+  # purchases do not.
+  - id: RESC-EXC-RMT
+    description: "A residential mortgage transaction (purchase-money financing of the dwelling's acquisition or initial construction) is exempt from the right of rescission."
+    version: "1.0.0"
+    priority: 200
+    citation:
+      text: "12 CFR § 1026.23(f)(1); 12 CFR § 1026.2(a)(24)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)(1)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:   { entityType: resc:Loan }
+      txType: { attribute: resc:transactionType }
+    when:
+      - txType == "Purchase"
+    then:
+      entity: loan
+      attribute: resc:rescissionApplies
+      value: { kind: boolean, value: false }
+    overrides: [RESC-APP-01]
+
+  # --- Deadline ------------------------------------------------------------
+
+  # See MODELING BOUNDARY above: the IR cannot compute "midnight of the third
+  # business day following the latest trigger" (no business-day calendar), so
+  # this rule certifies the extraction-proposed deadline printed on the
+  # notice, gated by the expressible necessary condition — the stated date
+  # must fall at least 3 calendar days after the LATEST of the three trigger
+  # dates of § 1026.23(a)(3)(i) (max over consummation, notice delivery, and
+  # material-disclosures delivery). If the printed date is earlier than that,
+  # no business-day calendar could make it lawful and this rule refuses to
+  # fire: the deadline question becomes a loud no-decision.
+  - id: RESC-DL-01
+    description: "The rescission period runs until midnight of the third business day following the latest of consummation, delivery of the notice of the right to rescind, and delivery of all material disclosures; the deadline stated on the notice is certified only when it is consistent with that rule's calendar-day lower bound."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:                 { entityType: resc:Loan }
+      consummated:          { attribute: resc:consummationDate }
+      noticeDelivered:      { attribute: resc:noticeDeliveredDate }
+      disclosuresDelivered: { attribute: resc:materialDisclosuresDeliveredDate }
+      stated:               { attribute: resc:statedRescissionDeadline }
+      applies:              { derived: resc:rescissionApplies }
+    when:
+      - applies == true
+      - days_between(max(max(consummated, noticeDelivered), disclosuresDelivered), stated) >= 3
+    then:
+      entity: loan
+      attribute: resc:rescissionDeadline
+      value: { kind: date, expr: "stated" }
+
+  # --- Funding -------------------------------------------------------------
+
+  - id: RESC-FUND-DEF
+    description: "Funds are presumed not disbursable until a specific rule shows the rescission period has expired or that no rescission right exists (protective default: an unproven rescission period is treated as not yet expired)."
+    version: "1.0.0"
+    priority: 0
+    citation:
+      text: "Protective default presumption; cf. 12 CFR § 1026.23(c)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan: { entityType: resc:Loan }
+    then:
+      entity: loan
+      attribute: resc:fundingPermitted
+      value: { kind: boolean, value: false }
+
+  # Priority 150 (above RESC-FUND-EXP's 100): if the in-force and expired
+  # window facts ever overlap at one asOf point — which would mean the
+  # extraction-derived windows are inconsistent — the protective conclusion
+  # wins.
+  - id: RESC-FUND-STAY
+    description: "While the rescission period is in force, no money may be disbursed other than in escrow, no services performed, and no materials delivered."
+    version: "1.0.0"
+    priority: 150
+    citation:
+      text: "12 CFR § 1026.23(c)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:    { entityType: resc:Loan }
+      inForce: { attribute: resc:rescissionPeriodInForce }
+    when:
+      - inForce == true
+    then:
+      entity: loan
+      attribute: resc:fundingPermitted
+      value: { kind: boolean, value: false }
+    overrides: [RESC-FUND-DEF]
+
+  - id: RESC-FUND-EXP
+    description: "Once the rescission period has expired without the consumer rescinding, the creditor may disburse the loan funds."
+    version: "1.0.0"
+    priority: 100
+    citation:
+      text: "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:    { entityType: resc:Loan }
+      expired: { attribute: resc:rescissionPeriodExpired }
+      applies: { derived: resc:rescissionApplies }
+    when:
+      - applies == true
+      - expired == true
+    then:
+      entity: loan
+      attribute: resc:fundingPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RESC-FUND-DEF]
+
+  - id: RESC-FUND-NA
+    description: "When no right of rescission applies to the transaction, section 1026.23(c) imposes no funding delay."
+    version: "1.0.0"
+    priority: 200
+    citation:
+      text: "12 CFR § 1026.23(a)(1), (f)"
+      url: "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)"
+    effectiveFrom: "2011-12-30"
+    given:
+      loan:    { entityType: resc:Loan }
+      applies: { derived: resc:rescissionApplies }
+    when:
+      - applies == false
+    then:
+      entity: loan
+      attribute: resc:fundingPermitted
+      value: { kind: boolean, value: true }
+    overrides: [RESC-FUND-DEF]

@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:e28818f84d98fc9715d59c6d8c862ccaba4022355976d08814d6058287edd325",
+  "contentHash": "e28818f84d98fc9715d59c6d8c862ccaba4022355976d08814d6058287edd325",
+  "caseId": "case:loan:PM-2026-4402",
+  "entity": {
+    "id": "loan:PM-2026-4402",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:consummationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-05-22"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "fixture-author",
+    "channel": "synthetic",
+    "at": "2026-05-22T23:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T23:00:00Z",
+    "extractor": {
+      "name": "duly-fixture",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-05-22T23:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

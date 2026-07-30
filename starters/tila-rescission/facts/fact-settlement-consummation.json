@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:6400f9bb69049c9be0d8ca42c7a9f8a6ec0b79e5c43b6e662e86886ea6c45f06",
+  "contentHash": "6400f9bb69049c9be0d8ca42c7a9f8a6ec0b79e5c43b6e662e86886ea6c45f06",
+  "caseId": "case:loan:RF-2026-3117",
+  "entity": {
+    "id": "loan:RF-2026-3117",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:consummationDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-05-22"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:settlement:RF-2026-3117:2026-05-22",
+    "documentSha256": "add17e65e8491d12a943fb8c5a52477922663831ac6eb0a765c63ef5ca7d6b52",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:add17e65",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 405,
+      "end": 452
+    },
+    "quote": "Date of Consummation (Settlement): May 22, 2026"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T22:12:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-05-22:032"
+    }
+  },
+  "confidence": {
+    "score": 0.992,
+    "method": "conformal",
+    "calibrationRef": "cal:resc-docs:2026-04"
+  },
+  "recordedAt": "2026-05-22T22:12:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

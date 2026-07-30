@@ -1,0 +1,50 @@
+{
+  "id": "urn:duly:fact:sha256:45c0880f61d5ad54cc12e598ef5e560c45620837b68a7c81a7a33d0a3b8217f9",
+  "contentHash": "45c0880f61d5ad54cc12e598ef5e560c45620837b68a7c81a7a33d0a3b8217f9",
+  "caseId": "case:loan:RF-2026-3117",
+  "entity": {
+    "id": "loan:RF-2026-3117",
+    "type": "resc:Loan"
+  },
+  "attribute": "resc:noticeDeliveredDate",
+  "value": {
+    "kind": "date",
+    "value": "2026-05-22"
+  },
+  "grounding": {
+    "kind": "document",
+    "documentId": "doc:cancel-notice:RF-2026-3117:2026-05-22",
+    "documentSha256": "a9e41b7f2d88b94e4662ff4ad66dd7d7757912ac7af5d6a40279c73a0d571b30",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:a9e41b7f",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
+      "start": 1438,
+      "end": 1469
+    },
+    "quote": "Right to Cancel on May 22, 2026"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-05-22T22:05:00Z",
+    "extractor": {
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:2026-05-22:031"
+    }
+  },
+  "confidence": {
+    "score": 0.988,
+    "method": "conformal",
+    "calibrationRef": "cal:resc-docs:2026-04"
+  },
+  "recordedAt": "2026-05-22T22:05:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  }
+}

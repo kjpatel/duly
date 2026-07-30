@@ -1,0 +1,88 @@
+{
+  "documentId": "doc:cancel-notice:RF-2026-3117:2026-05-22",
+  "caseId": "case:loan:RF-2026-3117",
+  "schemaRef": {
+    "ontology": "duly-starter-resc",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-05-22T22:05:00Z",
+  "runId": "run:2026-05-22:031",
+  "page": 1,
+  "facts": [
+    {
+      "file": "fact-notice-delivered.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:noticeDeliveredDate",
+      "value": {
+        "kind": "date",
+        "value": "2026-05-22"
+      },
+      "quote": "Right to Cancel on May 22, 2026",
+      "confidence": {
+        "score": 0.988,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    },
+    {
+      "file": "fact-notice-deadline.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:statedRescissionDeadline",
+      "value": {
+        "kind": "date",
+        "value": "2026-05-27"
+      },
+      "quote": "MIDNIGHT of May 27, 2026",
+      "confidence": {
+        "score": 0.981,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      }
+    },
+    {
+      "file": "fact-rescission-period-in-force.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:rescissionPeriodInForce",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "MIDNIGHT of May 27, 2026 (or midnight of the third business day following",
+      "confidence": {
+        "score": 0.975,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      },
+      "effectiveFrom": "2026-05-22T00:00:00Z",
+      "effectiveTo": "2026-05-28T00:00:00Z"
+    },
+    {
+      "file": "fact-rescission-period-expired.json",
+      "entity": {
+        "id": "loan:RF-2026-3117",
+        "type": "resc:Loan"
+      },
+      "attribute": "resc:rescissionPeriodExpired",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "quote": "MIDNIGHT of May 27, 2026",
+      "confidence": {
+        "score": 0.975,
+        "method": "conformal",
+        "calibrationRef": "cal:resc-docs:2026-04"
+      },
+      "effectiveFrom": "2026-05-28T00:00:00Z"
+    }
+  ]
+}

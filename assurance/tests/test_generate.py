@@ -156,3 +156,134 @@ def test_unknown_template_is_rejected(tmp_path, capsys):
         ["--out", str(tmp_path / "g"), "--count", "4", "--seed", "1", "--templates", "zz"]
     ) == 2
     assert "unknown template" in capsys.readouterr().err
+
+
+def test_stratified_templates_regenerate_byte_identical(tmp_path):
+    """Each stratified template (ron, esign, resc, rec) is its own seeded
+    draw stream: regenerating with the same seed reproduces every byte."""
+    for name in ("ron", "esign", "resc", "rec"):
+        a = tmp_path / name / "a"
+        b = tmp_path / name / "b"
+        args = ["--count", "8", "--seed", "3", "--templates", name]
+        assert generate.main(["--out", str(a), *args]) == 0
+        assert generate.main(["--out", str(b), *args]) == 0
+        tree_a = _tree_bytes(a)
+        tree_b = _tree_bytes(b)
+        assert tree_a.keys() == tree_b.keys()
+        for rel in tree_a:
+            assert tree_a[rel] == tree_b[rel], f"{name}: {rel} differs between regenerations"
+
+
+def test_strata_tables_fit_their_corpus_quota():
+    """Strata cells cycle with the case counter, so a table longer than the
+    template's corpus quota (25 at the default --count and weights) would
+    leave its tail boundaries permanently undrawn."""
+    quotas = generate.allocate(350, list(generate.STATE_TEMPLATES))
+    for name, template in generate.STATE_TEMPLATES.items():
+        if "strata" in template:
+            assert len(template["strata"]) <= quotas[name], (
+                f"{name}: {len(template['strata'])} strata exceed quota {quotas[name]}"
+            )
+
+
+def test_committed_corpus_covers_all_six_packs():
+    """The committed golden corpus carries cases for every rule pack in the
+    repo, so `impact` can see a change to any of them."""
+    cases = REPO / "golden" / "cases"
+    by_prefix: dict[str, int] = {}
+    packs: set[str] = set()
+    questions: set[str] = set()
+    for case_dir in cases.iterdir():
+        prefix = case_dir.name.rsplit("-", 1)[0]
+        by_prefix[prefix] = by_prefix.get(prefix, 0) + 1
+        case = yaml.safe_load((case_dir / "case.yaml").read_text())
+        packs.add(case["pack"])
+        questions.add(case["question"])
+    for prefix in ("ron", "esign", "resc", "rec"):
+        assert by_prefix.get(prefix) == 25, f"{prefix}: {by_prefix.get(prefix)} cases"
+    assert packs == {
+        "rulepacks/termination-notice-us-states/pack.yaml",
+        "rulepacks/trid-fee-tolerance-us-federal/pack.yaml",
+        "rulepacks/notarization-ron-us-states/pack.yaml",
+        "rulepacks/esign-closing-package/pack.yaml",
+        "rulepacks/tila-rescission-us-federal/pack.yaml",
+        "rulepacks/county-recording-us/pack.yaml",
+    }
+    # Strata pick among each pack's declared decisions, so every decision
+    # attribute the four packs declare appears as a corpus question.
+    assert {
+        "ron:ronPermitted", "ron:notarizationCompliant",
+        "pkg:signingMethod", "pkg:eSignEligible",
+        "resc:rescissionApplies", "resc:rescissionDeadline", "resc:fundingPermitted",
+        "rec:recordable", "rec:requiredFirstPageTopSpaceInches", "rec:sb2FeeDueUSD",
+    } <= questions
+
+
+def test_committed_recording_receipts_carry_low_confidence_abstentions():
+    """Both sides of the pack's 0.85 floor on the measured top space: below
+    it the committed receipt abstains (routed to recording-review) and the
+    recordability presumption survives; at it the measurement binds and the
+    deficiency stands."""
+    abstained, at_floor_bound = [], []
+    for path in sorted((REPO / "golden" / "receipts").glob("rec-*.json")):
+        receipt = json.loads(path.read_text())
+        entries = [a for a in receipt["abstentions"] if a["reason"] == "low_confidence"]
+        for entry in entries:
+            assert entry["routedTo"] == "recording-review"
+            assert entry["confidence"]["score"] < entry["threshold"]["minConfidence"]
+            assert entry["threshold"]["pack"] == "county-recording-us"
+        if any(e["attribute"] == "rec:firstPageTopSpaceInches" for e in entries):
+            abstained.append(receipt)
+        case_dir = REPO / "golden" / "cases" / path.stem / "facts"
+        scores = {
+            f["attribute"]: f["confidence"]["score"]
+            for f in (json.loads(p.read_text()) for p in case_dir.glob("*.json"))
+        }
+        if not entries and scores.get("rec:firstPageTopSpaceInches") == 0.85:
+            at_floor_bound.append(receipt)
+    assert abstained, "no committed rec receipt abstains on the measured top space"
+    for receipt in abstained:
+        # The measurement is excluded, so the deficiency rule cannot fire.
+        assert receipt["decision"]["value"] == {"kind": "boolean", "value": True}
+    assert at_floor_bound, "no committed rec case binds exactly at the 0.85 floor"
+    for receipt in at_floor_bound:
+        assert receipt["decision"]["value"] == {"kind": "boolean", "value": False}
+        assert "REC-TOPSPACE-01" in {r["ruleId"] for r in receipt["rulesFired"]}
+
+
+def test_resc_calendar_table_matches_business_day_arithmetic():
+    """Every RESC_CALENDARS date must start on a business weekday and put the
+    promised Sunday/holiday shape inside its three-business-day window; a
+    wrong entry would quietly weaken the corpus's coverage claims."""
+    holidays = generate.federal_holidays(2026)
+    expected_span = {"both": 5, "sunday": 4, "holiday": 4, "neither": 3}
+    for label, dates in generate.RESC_CALENDARS.items():
+        for iso in dates:
+            start = dt.date.fromisoformat(iso)
+            assert start.weekday() < 5 and start not in holidays, iso
+            deadline = generate.add_business_days(start, 3)
+            span = (deadline - start).days
+            assert span == expected_span[label], f"{label} {iso}: span {span}"
+            window = [start + dt.timedelta(days=i) for i in range(1, span + 1)]
+            has_sunday = any(d.weekday() == 6 for d in window)
+            has_holiday = any(d in holidays for d in window)
+            assert has_sunday == (label in ("both", "sunday")), f"{label} {iso}"
+            assert has_holiday == (label in ("both", "holiday")), f"{label} {iso}"
+
+
+def test_ron_decision_flips_at_california_operative_date():
+    template = generate.STATE_TEMPLATES["ron"]
+    pack = yaml.safe_load((REPO / template["pack"]).read_text())
+    decisions = {}
+    for as_of in (dt.date(2029, 12, 31), dt.date(2030, 1, 1)):
+        facts, eff, kn = generate.build_ron_facts(
+            template,
+            f"ron-threshold-{as_of.isoformat()}",
+            state="US-CA",
+            method="RemoteOnline",
+            as_of=as_of,
+        )
+        receipt = adjudicate(facts, pack, eff, kn, "ron:ronPermitted")
+        decisions[as_of] = receipt["decision"]["value"]["value"]
+    assert decisions[dt.date(2029, 12, 31)] is False  # signed law, not yet operative
+    assert decisions[dt.date(2030, 1, 1)] is True  # statutory outside operative date

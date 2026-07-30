@@ -1,0 +1,84 @@
+{
+  "id": "urn:duly:receipt:sha256:bcc01c17df28ddba1441b5570849fd3ce27431f2b4ddedc4a49e0d0c7ce7a642",
+  "receiptSha256": "bcc01c17df28ddba1441b5570849fd3ce27431f2b4ddedc4a49e0d0c7ce7a642",
+  "caseId": "case:golden:esign-0012",
+  "decision": {
+    "entity": "task:esign-0012",
+    "attribute": "pkg:eSignEligible",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-08-14T00:00:00Z",
+    "knowledge": "2026-08-16T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-NOTE-31",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021; Fannie Mae Selling Guide B8-8-02 (12/13/2023); Freddie Mac Seller/Servicer Guide ch. 1402",
+        "url": "https://selling-guide.fanniemae.com/sel/b8-8-02/requirements-creating-closing-and-correcting-enotes"
+      },
+      "priority": 150,
+      "effectiveFrom": "2023-12-13T00:00:00Z",
+      "defeated": [
+        "PKG-NOTE-30"
+      ]
+    },
+    {
+      "ruleId": "PKG-NOTE-32",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7021(b), (d); Fannie Mae Selling Guide B8-8-02 (12/13/2023)",
+        "url": "https://www.law.cornell.edu/uscode/text/15/7021"
+      },
+      "priority": 150,
+      "effectiveFrom": "2023-12-13T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-01"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0012",
+      "attribute": "pkg:eSignEligible",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "PKG-NOTE-32",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:28cd0142aa7648393c81e8ab3e405c51046084e424c510c20f06ff17e6db6f52"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:7f8c03065315a693db0e14ad92cfad8e7c720a19a9b77b1c378446dd1f3dfbe9"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:28cd0142aa7648393c81e8ab3e405c51046084e424c510c20f06ff17e6db6f52",
+      "contentHash": "28cd0142aa7648393c81e8ab3e405c51046084e424c510c20f06ff17e6db6f52"
+    },
+    {
+      "id": "urn:duly:fact:sha256:7f8c03065315a693db0e14ad92cfad8e7c720a19a9b77b1c378446dd1f3dfbe9",
+      "contentHash": "7f8c03065315a693db0e14ad92cfad8e7c720a19a9b77b1c378446dd1f3dfbe9"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

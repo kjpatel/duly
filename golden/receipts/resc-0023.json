@@ -1,0 +1,89 @@
+{
+  "id": "urn:duly:receipt:sha256:9742d36c0a5f47a8be4fb1a6d8efd3771a09416ce07fd76ae941057139a7a9b0",
+  "receiptSha256": "9742d36c0a5f47a8be4fb1a6d8efd3771a09416ce07fd76ae941057139a7a9b0",
+  "caseId": "case:golden:resc-0023",
+  "decision": {
+    "entity": "loan:resc-0023",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-01-19T00:00:00Z",
+    "knowledge": "2026-01-21T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-02",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 110,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-NA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1), (f)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF",
+        "RESC-FUND-STAY"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0023",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RESC-FUND-NA",
+    "premises": [
+      {
+        "conclusion": {
+          "entity": "loan:resc-0023",
+          "attribute": "resc:rescissionApplies",
+          "value": {
+            "kind": "boolean",
+            "value": false
+          }
+        },
+        "rule": "RESC-APP-02",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:894211d5265df02660fa09a88ce894daa523c6cf42fbc652b3d840cc5f6100be"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:894211d5265df02660fa09a88ce894daa523c6cf42fbc652b3d840cc5f6100be",
+      "contentHash": "894211d5265df02660fa09a88ce894daa523c6cf42fbc652b3d840cc5f6100be"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,5 @@
+id: ron-0022
+pack: rulepacks/notarization-ron-us-states/pack.yaml
+question: ron:ronPermitted
+asOfEffective: "2008-05-23"
+asOfKnowledge: "2008-05-25T12:00:00Z"

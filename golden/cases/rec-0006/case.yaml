@@ -1,0 +1,5 @@
+id: rec-0006
+pack: rulepacks/county-recording-us/pack.yaml
+question: rec:sb2FeeDueUSD
+asOfEffective: "2027-09-24"
+asOfKnowledge: "2027-09-26T12:00:00Z"

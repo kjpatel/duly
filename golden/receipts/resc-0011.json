@@ -1,0 +1,86 @@
+{
+  "id": "urn:duly:receipt:sha256:129ce9e80437523c9051a7afeec8be8c6519a9067a311fe3b5331247999fb8c5",
+  "receiptSha256": "129ce9e80437523c9051a7afeec8be8c6519a9067a311fe3b5331247999fb8c5",
+  "caseId": "case:golden:resc-0011",
+  "decision": {
+    "entity": "loan:resc-0011",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-06-20T00:00:00Z",
+    "knowledge": "2026-06-22T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-DL-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-STAY",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(c)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 150,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0011",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RESC-FUND-STAY",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:3184395b3f3cec853d1ff1d2a37074df5e1f8a87282fe4c9b050dac6e4195c61"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:3184395b3f3cec853d1ff1d2a37074df5e1f8a87282fe4c9b050dac6e4195c61",
+      "contentHash": "3184395b3f3cec853d1ff1d2a37074df5e1f8a87282fe4c9b050dac6e4195c61"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

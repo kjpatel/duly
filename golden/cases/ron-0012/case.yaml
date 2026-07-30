@@ -1,0 +1,5 @@
+id: ron-0012
+pack: rulepacks/notarization-ron-us-states/pack.yaml
+question: ron:notarizationCompliant
+asOfEffective: "2023-03-03"
+asOfKnowledge: "2023-03-05T12:00:00Z"

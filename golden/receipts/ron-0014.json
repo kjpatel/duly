@@ -1,0 +1,74 @@
+{
+  "id": "urn:duly:receipt:sha256:12d922c32592ee5caa508db483455687e6c320a95179bc4202fb4539bbab4a08",
+  "receiptSha256": "12d922c32592ee5caa508db483455687e6c320a95179bc4202fb4539bbab4a08",
+  "caseId": "case:golden:ron-0014",
+  "decision": {
+    "entity": "notarization:ron-0014",
+    "attribute": "ron:ronPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2030-01-01T00:00:00Z",
+    "knowledge": "2030-01-03T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "CA-RON-2030",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Cal. Gov't Code § 8231.1 et seq. (SB 696, Stats. 2023, ch. 291; operative upon Secretary of State certification or Jan. 1, 2030, whichever is earlier)",
+        "url": "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202320240SB696"
+      },
+      "priority": 100,
+      "effectiveFrom": "2030-01-01T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0014",
+      "attribute": "ron:ronPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "CA-RON-2030",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:d708a7ef9ecb7035977af21bd7c38c4b19ef36449ef01c8a72cd86b37c058c66"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:d708a7ef9ecb7035977af21bd7c38c4b19ef36449ef01c8a72cd86b37c058c66",
+      "contentHash": "d708a7ef9ecb7035977af21bd7c38c4b19ef36449ef01c8a72cd86b37c058c66"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

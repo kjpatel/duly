@@ -1,0 +1,77 @@
+{
+  "id": "urn:duly:receipt:sha256:5cafc0b4cf9127f060ba35426aaaed13511e8f8599784b38c8e638bc52d768b9",
+  "receiptSha256": "5cafc0b4cf9127f060ba35426aaaed13511e8f8599784b38c8e638bc52d768b9",
+  "caseId": "case:golden:resc-0019",
+  "decision": {
+    "entity": "loan:resc-0019",
+    "attribute": "resc:rescissionApplies",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-03-25T00:00:00Z",
+    "knowledge": "2026-03-27T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-EXC-RMT",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(f)(1); 12 CFR § 1026.2(a)(24)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)(1)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-APP-01"
+      ]
+    },
+    {
+      "ruleId": "RESC-FUND-NA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1), (f)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0019",
+      "attribute": "resc:rescissionApplies",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RESC-EXC-RMT",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:7af720fe2f4b4b17ce090f89eacafa74cba7a2b947e7fc1a5ff0f7e07435bb85"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:7af720fe2f4b4b17ce090f89eacafa74cba7a2b947e7fc1a5ff0f7e07435bb85",
+      "contentHash": "7af720fe2f4b4b17ce090f89eacafa74cba7a2b947e7fc1a5ff0f7e07435bb85"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

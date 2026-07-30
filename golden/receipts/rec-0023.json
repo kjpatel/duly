@@ -1,0 +1,92 @@
+{
+  "id": "urn:duly:receipt:sha256:9a67ff70e142c0823cf3b4f5999805d1470d4648981d05b94faa430e0ea13fba",
+  "receiptSha256": "9a67ff70e142c0823cf3b4f5999805d1470d4648981d05b94faa430e0ea13fba",
+  "caseId": "case:golden:rec-0023",
+  "decision": {
+    "entity": "submission:rec-0023",
+    "attribute": "rec:recordable",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-10-04T00:00:00Z",
+    "knowledge": "2026-10-06T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "county-recording-us",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "REC-DEF-AZ",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (Arizona packages only)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "AZ-TOPMARGIN-20",
+      "version": "1.0.0",
+      "citation": {
+        "text": "A.R.S. § 11-480(B)",
+        "url": "https://www.azleg.gov/ars/11/00480.htm"
+      },
+      "priority": 100,
+      "effectiveFrom": "1991-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "submission:rec-0023",
+      "attribute": "rec:recordable",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "REC-DEF-AZ",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:431daefd38c3796fca82e3e746b6d368715e6beeb54902c7913e92fee9d4397b"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:431daefd38c3796fca82e3e746b6d368715e6beeb54902c7913e92fee9d4397b",
+      "contentHash": "431daefd38c3796fca82e3e746b6d368715e6beeb54902c7913e92fee9d4397b"
+    }
+  ],
+  "abstentions": [
+    {
+      "entity": "submission:rec-0023",
+      "attribute": "rec:firstPageTopSpaceInches",
+      "reason": "low_confidence",
+      "facts": [
+        "urn:duly:fact:sha256:6882355c7bff4feed25e2cefbbffa27127e1cac1f177858ded28c48b6d19cbb4"
+      ],
+      "confidence": {
+        "score": 0.84,
+        "method": "conformal"
+      },
+      "threshold": {
+        "minConfidence": 0.85,
+        "source": "attribute",
+        "pack": "county-recording-us",
+        "packVersion": "2026.1.0"
+      },
+      "routedTo": "recording-review"
+    }
+  ],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:ed717976270a99707a87801df8b92ca04f082dbb7341c5a1b6864e30a56af8e0",
+  "receiptSha256": "ed717976270a99707a87801df8b92ca04f082dbb7341c5a1b6864e30a56af8e0",
+  "caseId": "case:golden:esign-0017",
+  "decision": {
+    "entity": "task:esign-0017",
+    "attribute": "pkg:eSignEligible",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-07-16T00:00:00Z",
+    "knowledge": "2026-07-18T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "esign-closing-package",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "PKG-DEF-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail-safe to wet ink)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "PKG-DOT-40",
+      "version": "1.0.0",
+      "citation": {
+        "text": "15 U.S.C. § 7001(b); state acknowledgment and county recording law (e-recording boundary: sibling recording pack)",
+        "url": "https://www.law.cornell.edu/uscode/text/15/7001"
+      },
+      "priority": 150,
+      "effectiveFrom": "2000-10-01T00:00:00Z",
+      "defeated": [
+        "PKG-DEF-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "task:esign-0017",
+      "attribute": "pkg:eSignEligible",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "PKG-DEF-01",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

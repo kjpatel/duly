@@ -1,0 +1,5 @@
+id: resc-0007
+pack: rulepacks/tila-rescission-us-federal/pack.yaml
+question: resc:rescissionApplies
+asOfEffective: "2026-02-18"
+asOfKnowledge: "2026-02-20T12:00:00Z"

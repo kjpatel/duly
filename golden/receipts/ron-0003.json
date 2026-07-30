@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:549ecebde3eff51f48ccb931574a0fbcccf3f858a01dcebf23bf08bd1465948d",
+  "receiptSha256": "549ecebde3eff51f48ccb931574a0fbcccf3f858a01dcebf23bf08bd1465948d",
+  "caseId": "case:golden:ron-0003",
+  "decision": {
+    "entity": "notarization:ron-0003",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2013-07-02T00:00:00Z",
+    "knowledge": "2013-07-04T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "VA-RON-2012",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Va. Code § 47.1-2 (2011 Acts cc. 731, 834, eff. July 1, 2012)",
+        "url": "https://law.lis.virginia.gov/vacode/title47.1/section47.1-2/"
+      },
+      "priority": 100,
+      "effectiveFrom": "2012-07-01T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0003",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RON-COMP-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

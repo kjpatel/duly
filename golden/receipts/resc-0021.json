@@ -1,0 +1,90 @@
+{
+  "id": "urn:duly:receipt:sha256:2a208394505dfef4beaf05cba757bc71061a02c7b50416deef421073c68f83f3",
+  "receiptSha256": "2a208394505dfef4beaf05cba757bc71061a02c7b50416deef421073c68f83f3",
+  "caseId": "case:golden:resc-0021",
+  "decision": {
+    "entity": "loan:resc-0021",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-04-13T00:00:00Z",
+    "knowledge": "2026-04-15T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-EXC-RMT",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(f)(1); 12 CFR § 1026.2(a)(24)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)(1)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-APP-01"
+      ]
+    },
+    {
+      "ruleId": "RESC-FUND-NA",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1), (f)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(f)"
+      },
+      "priority": 200,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0021",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RESC-FUND-NA",
+    "premises": [
+      {
+        "conclusion": {
+          "entity": "loan:resc-0021",
+          "attribute": "resc:rescissionApplies",
+          "value": {
+            "kind": "boolean",
+            "value": false
+          }
+        },
+        "rule": "RESC-EXC-RMT",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b",
+      "contentHash": "89c82e32f37701715ec9f9b87f89b7f6fc16ab2c1ce38f5df5fb820070c2e46b"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "urn:duly:receipt:sha256:7ba8cf19c9581ef1f0b4124c6e9a1fb72b65424185fb7296e2aac62acd7a10bc",
+  "receiptSha256": "7ba8cf19c9581ef1f0b4124c6e9a1fb72b65424185fb7296e2aac62acd7a10bc",
+  "caseId": "case:golden:ron-0017",
+  "decision": {
+    "entity": "notarization:ron-0017",
+    "attribute": "ron:ronPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2020-12-01T00:00:00Z",
+    "knowledge": "2020-12-03T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RON-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail closed: RON exists only by statutory authorization)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RON-COMP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Derived: the state authorization rules of this pack, applied to the method used"
+      },
+      "priority": 200,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": [
+        "RON-COMP-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0017",
+      "attribute": "ron:ronPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RON-DEF-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

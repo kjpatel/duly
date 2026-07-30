@@ -1,0 +1,5 @@
+id: resc-0024
+pack: rulepacks/tila-rescission-us-federal/pack.yaml
+question: resc:fundingPermitted
+asOfEffective: "2026-06-02"
+asOfKnowledge: "2026-06-04T12:00:00Z"

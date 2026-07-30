@@ -1,0 +1,127 @@
+{
+  "id": "urn:duly:receipt:sha256:a64fa744e6149790bbd2ddf8eb67b6c61d7338266fba19fce4c4f78ba68b50b3",
+  "receiptSha256": "a64fa744e6149790bbd2ddf8eb67b6c61d7338266fba19fce4c4f78ba68b50b3",
+  "caseId": "case:golden:resc-0018",
+  "decision": {
+    "entity": "loan:resc-0018",
+    "attribute": "resc:rescissionDeadline",
+    "value": {
+      "kind": "date",
+      "value": "2026-05-27"
+    }
+  },
+  "asOf": {
+    "effective": "2026-05-28T00:00:00Z",
+    "knowledge": "2026-05-30T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-DL-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-EXP",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0018",
+      "attribute": "resc:rescissionDeadline",
+      "value": {
+        "kind": "date",
+        "value": "2026-05-27"
+      }
+    },
+    "rule": "RESC-DL-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:266499b72f098e851d089fdcac017fe734d59ef0321ee327c05e640861395e04"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:4e1fc57577cf9f79e68f710d989c21844c69d8bcb43c2896277782a2266be262"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:572d0048079a7f4f6209a90788ac5cd1b5d161e41308a39cd6843ec0ec4d0cf3"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:d2a6977594d0820acf435a95cbce75f7b394a148ff93b069a3dc2b10880f9a79"
+      },
+      {
+        "conclusion": {
+          "entity": "loan:resc-0018",
+          "attribute": "resc:rescissionApplies",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "rule": "RESC-APP-01",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:3f69b2e4c90d832cdcdbfb4806dde118479559aaaf66e9a34b1515f08ddf317f"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:266499b72f098e851d089fdcac017fe734d59ef0321ee327c05e640861395e04",
+      "contentHash": "266499b72f098e851d089fdcac017fe734d59ef0321ee327c05e640861395e04"
+    },
+    {
+      "id": "urn:duly:fact:sha256:4e1fc57577cf9f79e68f710d989c21844c69d8bcb43c2896277782a2266be262",
+      "contentHash": "4e1fc57577cf9f79e68f710d989c21844c69d8bcb43c2896277782a2266be262"
+    },
+    {
+      "id": "urn:duly:fact:sha256:572d0048079a7f4f6209a90788ac5cd1b5d161e41308a39cd6843ec0ec4d0cf3",
+      "contentHash": "572d0048079a7f4f6209a90788ac5cd1b5d161e41308a39cd6843ec0ec4d0cf3"
+    },
+    {
+      "id": "urn:duly:fact:sha256:d2a6977594d0820acf435a95cbce75f7b394a148ff93b069a3dc2b10880f9a79",
+      "contentHash": "d2a6977594d0820acf435a95cbce75f7b394a148ff93b069a3dc2b10880f9a79"
+    },
+    {
+      "id": "urn:duly:fact:sha256:3f69b2e4c90d832cdcdbfb4806dde118479559aaaf66e9a34b1515f08ddf317f",
+      "contentHash": "3f69b2e4c90d832cdcdbfb4806dde118479559aaaf66e9a34b1515f08ddf317f"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

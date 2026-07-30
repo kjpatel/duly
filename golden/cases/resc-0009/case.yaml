@@ -1,0 +1,5 @@
+id: resc-0009
+pack: rulepacks/tila-rescission-us-federal/pack.yaml
+question: resc:rescissionDeadline
+asOfEffective: "2026-03-03"
+asOfKnowledge: "2026-03-05T12:00:00Z"

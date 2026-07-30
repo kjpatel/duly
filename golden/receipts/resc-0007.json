@@ -1,0 +1,86 @@
+{
+  "id": "urn:duly:receipt:sha256:17f9c824be5c8a949e3caf92ab77a99d10556e69ed0549c1af1fd623d59a7906",
+  "receiptSha256": "17f9c824be5c8a949e3caf92ab77a99d10556e69ed0549c1af1fd623d59a7906",
+  "caseId": "case:golden:resc-0007",
+  "decision": {
+    "entity": "loan:resc-0007",
+    "attribute": "resc:rescissionApplies",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-02-18T00:00:00Z",
+    "knowledge": "2026-02-20T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-DL-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-EXP",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0007",
+      "attribute": "resc:rescissionApplies",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RESC-APP-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:c3b11615ba911f4c0b31a6f8cec04648c181cc8371d5c1ce407db495b9cf1d06"
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:c3b11615ba911f4c0b31a6f8cec04648c181cc8371d5c1ce407db495b9cf1d06",
+      "contentHash": "c3b11615ba911f4c0b31a6f8cec04648c181cc8371d5c1ce407db495b9cf1d06"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

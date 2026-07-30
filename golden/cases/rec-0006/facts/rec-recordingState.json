@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:47f4d7dc7628f82894e49d1774ec06dd6038594178bab76b0a763fc018173ce2",
+  "contentHash": "47f4d7dc7628f82894e49d1774ec06dd6038594178bab76b0a763fc018173ce2",
+  "caseId": "case:golden:rec-0006",
+  "entity": {
+    "id": "submission:rec-0006",
+    "type": "rec:RecordingSubmission"
+  },
+  "attribute": "rec:recordingState",
+  "value": {
+    "kind": "code",
+    "value": "US-CA",
+    "codeSystem": "iso-3166-2",
+    "codeSystemVersion": "2020"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2027-09-24T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2027-09-24T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2027-09-24T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-recording",
+    "version": "0.1.0"
+  }
+}

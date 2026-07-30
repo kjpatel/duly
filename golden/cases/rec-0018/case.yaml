@@ -1,0 +1,5 @@
+id: rec-0018
+pack: rulepacks/county-recording-us/pack.yaml
+question: rec:recordable
+asOfEffective: "2026-08-21"
+asOfKnowledge: "2026-08-23T12:00:00Z"

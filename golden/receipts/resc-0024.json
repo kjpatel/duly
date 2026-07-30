@@ -1,0 +1,64 @@
+{
+  "id": "urn:duly:receipt:sha256:356a9ee30be19645998d6f1323dcc7dc807fe4461c1a12d7e7eb606ce4ade287",
+  "receiptSha256": "356a9ee30be19645998d6f1323dcc7dc807fe4461c1a12d7e7eb606ce4ade287",
+  "caseId": "case:golden:resc-0024",
+  "decision": {
+    "entity": "loan:resc-0024",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-06-02T00:00:00Z",
+    "knowledge": "2026-06-04T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-DEF",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Protective default presumption; cf. 12 CFR § 1026.23(c)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 0,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0024",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RESC-FUND-DEF",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:bddf81e1d0f6ac811ffeee6039ceb5b36d4ceec74bf42f381274f95f9b9fc12d",
+  "contentHash": "bddf81e1d0f6ac811ffeee6039ceb5b36d4ceec74bf42f381274f95f9b9fc12d",
+  "caseId": "case:golden:esign-0001",
+  "entity": {
+    "id": "task:esign-0001",
+    "type": "pkg:SigningTask"
+  },
+  "attribute": "pkg:esignConsentObtained",
+  "value": {
+    "kind": "boolean",
+    "value": true
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "golden-generator",
+    "channel": "synthetic",
+    "at": "2015-03-17T12:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2015-03-17T12:00:00Z",
+    "extractor": {
+      "name": "duly-golden-generator",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2015-03-17T12:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-starter-esign",
+    "version": "0.1.0"
+  }
+}

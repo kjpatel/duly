@@ -1,0 +1,85 @@
+{
+  "id": "urn:duly:receipt:sha256:4dbeac8ddb82d140faccbbdd729bb9281d68611bdde7f8e3e2f928bdc976d7b4",
+  "receiptSha256": "4dbeac8ddb82d140faccbbdd729bb9281d68611bdde7f8e3e2f928bdc976d7b4",
+  "caseId": "case:golden:ron-0004",
+  "decision": {
+    "entity": "notarization:ron-0004",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2014-05-23T00:00:00Z",
+    "knowledge": "2014-05-25T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RON-DEF-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption (fail closed: RON exists only by statutory authorization)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RON-COMP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Derived: the state authorization rules of this pack, applied to the method used"
+      },
+      "priority": 200,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": [
+        "RON-COMP-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0004",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "RON-COMP-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:3c0d5671b08eb085e2975d7d23c4af7407dea9ed3eb97925a912e3d027916afc"
+      },
+      {
+        "conclusion": {
+          "entity": "notarization:ron-0004",
+          "attribute": "ron:ronPermitted",
+          "value": {
+            "kind": "boolean",
+            "value": false
+          }
+        },
+        "rule": "RON-DEF-00",
+        "premises": []
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:3c0d5671b08eb085e2975d7d23c4af7407dea9ed3eb97925a912e3d027916afc",
+      "contentHash": "3c0d5671b08eb085e2975d7d23c4af7407dea9ed3eb97925a912e3d027916afc"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

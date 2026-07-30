@@ -1,0 +1,5 @@
+id: rec-0025
+pack: rulepacks/county-recording-us/pack.yaml
+question: rec:recordable
+asOfEffective: "1989-11-27"
+asOfKnowledge: "1989-11-29T12:00:00Z"

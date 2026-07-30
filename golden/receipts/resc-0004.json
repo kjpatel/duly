@@ -1,0 +1,106 @@
+{
+  "id": "urn:duly:receipt:sha256:5f344fe407638e5950f6ecd8a0db8d47e04aa7ece91548a189f65edb955d895a",
+  "receiptSha256": "5f344fe407638e5950f6ecd8a0db8d47e04aa7ece91548a189f65edb955d895a",
+  "caseId": "case:golden:resc-0004",
+  "decision": {
+    "entity": "loan:resc-0004",
+    "attribute": "resc:fundingPermitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-01-21T00:00:00Z",
+    "knowledge": "2026-01-23T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "tila-rescission-us-federal",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "RESC-APP-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(1)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(1)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-DL-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(a)(3)(i); 12 CFR § 1026.2(a)(6) (precise business-day definition)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(a)(3)(i)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "RESC-FUND-EXP",
+      "version": "1.0.0",
+      "citation": {
+        "text": "12 CFR § 1026.23(c); 12 CFR § 1026.23(a)(3)(i)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.23#p-1026.23(c)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2011-12-30T00:00:00Z",
+      "defeated": [
+        "RESC-FUND-DEF"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "loan:resc-0004",
+      "attribute": "resc:fundingPermitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RESC-FUND-EXP",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98"
+      },
+      {
+        "conclusion": {
+          "entity": "loan:resc-0004",
+          "attribute": "resc:rescissionApplies",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "rule": "RESC-APP-01",
+        "premises": [
+          {
+            "factId": "urn:duly:fact:sha256:7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8"
+          }
+        ]
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98",
+      "contentHash": "a24e5d9a4e11afd6644b79280a5937f76d6f2269f9c11d157066010b580b4e98"
+    },
+    {
+      "id": "urn:duly:fact:sha256:7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8",
+      "contentHash": "7d8fcc1d14e50893732fb921868c10771f0f19b6d0f316831cfcb89d685c84e8"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

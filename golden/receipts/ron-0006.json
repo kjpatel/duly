@@ -1,0 +1,65 @@
+{
+  "id": "urn:duly:receipt:sha256:5314312e5e92e14d5711cc806475ef6a55f51abdeb16409e42ff05876e60ef13",
+  "receiptSha256": "5314312e5e92e14d5711cc806475ef6a55f51abdeb16409e42ff05876e60ef13",
+  "caseId": "case:golden:ron-0006",
+  "decision": {
+    "entity": "notarization:ron-0006",
+    "attribute": "ron:notarizationCompliant",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2018-08-01T00:00:00Z",
+    "knowledge": "2018-08-03T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "notarization-ron-us-states",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "TX-RON-2018",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Tex. Gov't Code §§ 406.101–406.113 (HB 1217, 85th Leg., eff. July 1, 2018)",
+        "url": "https://statutes.capitol.texas.gov/Docs/GV/htm/GV.406.htm"
+      },
+      "priority": 100,
+      "effectiveFrom": "2018-07-01T00:00:00Z",
+      "defeated": [
+        "RON-DEF-00"
+      ]
+    },
+    {
+      "ruleId": "RON-COMP-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Default presumption"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "notarization:ron-0006",
+      "attribute": "ron:notarizationCompliant",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "RON-COMP-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

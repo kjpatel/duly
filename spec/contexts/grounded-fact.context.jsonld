@@ -1,0 +1,87 @@
+{
+  "description": "JSON-LD 1.1 context mapping a stored GroundedFact (spec/schemas/grounded-fact.schema.json) onto PROV-O. Applied out-of-band (JSON-LD expandContext) or via the export wrapper (kernel/duly_kernel/provo.py); never embedded in stored documents, which are content-addressed and must not change. See spec/prov-o.md.",
+  "specVersion": "v0",
+  "@context": {
+    "@version": 1.1,
+    "prov": "http://www.w3.org/ns/prov#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "duly": "https://duly.dev/spec/v0/vocab#",
+    "id": "@id",
+    "contentHash": "duly:contentHash",
+    "caseId": { "@id": "duly:caseId", "@type": "@id" },
+    "entity": {
+      "@id": "duly:entity",
+      "@context": {
+        "type": "duly:entityType"
+      }
+    },
+    "attribute": "duly:attribute",
+    "value": { "@id": "duly:value", "@type": "@json" },
+    "grounding": {
+      "@id": "@nest",
+      "@context": {
+        "kind": "duly:groundingKind",
+        "documentId": { "@id": "prov:wasDerivedFrom", "@type": "@id" },
+        "documentSha256": "duly:documentSha256",
+        "rendition": {
+          "@id": "prov:wasQuotedFrom",
+          "@context": {
+            "extractor": "duly:extractorName",
+            "extractorVersion": "duly:extractorVersion"
+          }
+        },
+        "page": "duly:page",
+        "charSpan": { "@id": "duly:charSpan", "@type": "@json" },
+        "bbox": { "@id": "duly:bbox", "@type": "@json" },
+        "quote": "duly:quote",
+        "actor": { "@id": "prov:wasAttributedTo", "@type": "@id" },
+        "at": { "@id": "duly:attestedAt", "@type": "xsd:dateTime" },
+        "channel": "duly:channel",
+        "note": "duly:note"
+      }
+    },
+    "assertion": {
+      "@id": "@nest",
+      "@context": {
+        "kind": "duly:assertionKind",
+        "at": { "@id": "duly:assertedAt", "@type": "xsd:dateTime" },
+        "extractor": {
+          "@id": "@nest",
+          "@context": {
+            "name": "duly:extractorName",
+            "version": "duly:extractorVersion",
+            "modelId": "duly:modelId",
+            "runId": { "@id": "prov:wasGeneratedBy", "@type": "@id" }
+          }
+        },
+        "actor": {
+          "@id": "prov:wasAttributedTo",
+          "@context": {
+            "role": "duly:role"
+          }
+        }
+      }
+    },
+    "confidence": {
+      "@id": "duly:confidence",
+      "@context": {
+        "score": "duly:score",
+        "method": "duly:method",
+        "calibrationRef": "duly:calibrationRef"
+      }
+    },
+    "effectiveFrom": { "@id": "duly:effectiveFrom", "@type": "xsd:dateTime" },
+    "effectiveTo": { "@id": "duly:effectiveTo", "@type": "xsd:dateTime" },
+    "recordedAt": { "@id": "prov:generatedAtTime", "@type": "xsd:dateTime" },
+    "status": "duly:status",
+    "supersedes": { "@id": "prov:wasRevisionOf", "@type": "@id" },
+    "schemaRef": {
+      "@id": "duly:schemaRef",
+      "@context": {
+        "ontology": "duly:ontology",
+        "version": "duly:version"
+      }
+    },
+    "sensitivity": "duly:sensitivity"
+  }
+}

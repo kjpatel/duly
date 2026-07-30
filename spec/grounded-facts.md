@@ -101,7 +101,7 @@ Receipts are content-addressed the same way facts are (`receiptSha256`, JCS cano
 
 ## Relationship to standards
 
-- **PROV-O** — a JSON-LD context mapping facts and receipts onto `prov:Entity` / `prov:Activity` / `prov:wasDerivedFrom` is planned; the field structure was chosen so this mapping is lossless.
+- **PROV-O** — a JSON-LD context mapping facts and receipts onto `prov:Entity` / `prov:Activity` / `prov:wasQuotedFrom` and friends is specified in [prov-o.md](prov-o.md) and shipped in [contexts/](contexts/). The mapping is deliberately partial, not lossless: bitemporal effective time, confidence, and abstentions have no faithful PROV equivalent and stay in the `duly:` namespace (prov-o.md, P8).
 - **SHACL / LinkML** — the ontology conformance gate facts pass through before entering the store; LinkML is the intended source language so one definition yields JSON Schema, SHACL, and dataclasses.
 - **DMN** — a compliance-editable authoring surface that compiles to the same rule IR; receipts are identical regardless of authoring surface.
 

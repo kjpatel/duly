@@ -1,0 +1,97 @@
+{
+  "description": "JSON-LD 1.1 context mapping a stored DecisionReceipt (spec/schemas/decision-receipt.schema.json) onto PROV-O. Applied out-of-band (JSON-LD expandContext) or via the export wrapper (kernel/duly_kernel/provo.py), which additionally materializes the adjudication prov:Activity; never embedded in stored documents. See spec/prov-o.md.",
+  "specVersion": "v0",
+  "@context": {
+    "@version": 1.1,
+    "prov": "http://www.w3.org/ns/prov#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "duly": "https://duly.dev/spec/v0/vocab#",
+    "id": "@id",
+    "receiptSha256": "duly:receiptSha256",
+    "caseId": { "@id": "duly:caseId", "@type": "@id" },
+    "decision": {
+      "@id": "duly:decision",
+      "@context": {
+        "entity": { "@id": "duly:entity", "@type": "@id" },
+        "attribute": "duly:attribute",
+        "value": { "@id": "duly:value", "@type": "@json" }
+      }
+    },
+    "asOf": {
+      "@id": "duly:asOf",
+      "@context": {
+        "effective": { "@id": "duly:effectiveTime", "@type": "xsd:dateTime" },
+        "knowledge": { "@id": "duly:knowledgeTime", "@type": "xsd:dateTime" }
+      }
+    },
+    "rulePack": {
+      "@id": "duly:rulePack",
+      "@context": {
+        "name": "duly:name",
+        "version": "duly:version",
+        "gitCommit": "duly:gitCommit",
+        "url": { "@id": "duly:url", "@type": "@id" }
+      }
+    },
+    "rulesFired": {
+      "@id": "duly:ruleFired",
+      "@context": {
+        "ruleId": "duly:ruleId",
+        "version": "duly:version",
+        "citation": {
+          "@id": "duly:citation",
+          "@context": {
+            "text": "duly:text",
+            "url": { "@id": "duly:url", "@type": "@id" }
+          }
+        },
+        "priority": "duly:priority",
+        "effectiveFrom": { "@id": "duly:effectiveFrom", "@type": "xsd:dateTime" },
+        "effectiveTo": { "@id": "duly:effectiveTo", "@type": "xsd:dateTime" },
+        "defeated": "duly:defeated"
+      }
+    },
+    "derivation": { "@id": "duly:derivation", "@type": "@json" },
+    "inputFacts": {
+      "@id": "prov:wasDerivedFrom",
+      "@context": {
+        "contentHash": "duly:contentHash"
+      }
+    },
+    "abstentions": {
+      "@id": "duly:abstention",
+      "@context": {
+        "entity": { "@id": "duly:entity", "@type": "@id" },
+        "attribute": "duly:attribute",
+        "reason": "duly:reason",
+        "details": "duly:details",
+        "facts": { "@id": "duly:consideredFact", "@type": "@id" },
+        "confidence": {
+          "@id": "duly:confidence",
+          "@context": {
+            "score": "duly:score",
+            "method": "duly:method"
+          }
+        },
+        "threshold": {
+          "@id": "duly:threshold",
+          "@context": {
+            "minConfidence": "duly:minConfidence",
+            "source": "duly:source",
+            "pack": "duly:pack",
+            "packVersion": "duly:packVersion"
+          }
+        },
+        "routedTo": "duly:routedTo"
+      }
+    },
+    "engine": {
+      "@id": "duly:engine",
+      "@context": {
+        "kernel": "duly:kernel",
+        "version": "duly:version",
+        "backend": "duly:backend"
+      }
+    }
+  }
+}

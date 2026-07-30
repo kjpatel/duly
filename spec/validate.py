@@ -44,6 +44,73 @@ def content_hash(doc: dict, hash_field: str) -> str:
     return hashlib.sha256(canonical(body)).hexdigest()
 
 
+PROV_NS = "http://www.w3.org/ns/prov#"
+DULY_NS = "https://duly.dev/spec/v0/vocab#"
+
+
+def check_contexts() -> int:
+    """Structural checks on the PROV-O JSON-LD contexts (spec/contexts/).
+
+    Deliberately processor-free: real expansion against committed documents is
+    covered by kernel/tests/test_provo.py (pyld, dev dependency). Here we check
+    what a context file must declare to be usable at all: JSON-LD 1.1 mode, the
+    expected namespace bindings, and that every term maps to a keyword, to a
+    compact IRI under a declared prefix, or to an absolute IRI.
+    """
+    failures = 0
+    paths = sorted((SPEC / "contexts").glob("*.context.jsonld"))
+    if not paths:
+        print("FAIL  spec/contexts/: no *.context.jsonld files found")
+        return 1
+    for path in paths:
+        try:
+            ctx = json.loads(path.read_text())["@context"]
+        except (json.JSONDecodeError, KeyError) as exc:
+            print(f"FAIL  {path.name}: not a JSON-LD context document ({exc})")
+            failures += 1
+            continue
+        problems = []
+        if ctx.get("@version") != 1.1:
+            problems.append("@version is not 1.1")
+        if ctx.get("prov") != PROV_NS:
+            problems.append(f"prov prefix is not {PROV_NS}")
+        if ctx.get("duly") != DULY_NS:
+            problems.append(f"duly prefix is not {DULY_NS}")
+        prefixes = {k for k, v in ctx.items() if isinstance(v, str) and v.startswith("http")}
+
+        def iri_ok(iri: str) -> bool:
+            if iri.startswith("@"):
+                return True
+            if ":" in iri and iri.split(":", 1)[0] in prefixes:
+                return True
+            return iri.startswith("http")
+
+        def walk_terms(mapping: dict, at: str):
+            for term, defn in mapping.items():
+                if term.startswith("@"):
+                    continue
+                where = f"{at}{term}"
+                if isinstance(defn, str):
+                    if not iri_ok(defn):
+                        problems.append(f"{where}: unresolvable mapping {defn!r}")
+                elif isinstance(defn, dict):
+                    iri = defn.get("@id")
+                    if iri is None or not iri_ok(iri):
+                        problems.append(f"{where}: unresolvable @id {iri!r}")
+                    if "@context" in defn:
+                        walk_terms(defn["@context"], where + ".")
+                else:
+                    problems.append(f"{where}: unexpected term definition type")
+
+        walk_terms(ctx, "")
+        for problem in problems:
+            print(f"FAIL  {path.name}: {problem}")
+            failures += 1
+        if not problems:
+            print(f"ok    {path.name} (JSON-LD context)")
+    return failures
+
+
 def main() -> int:
     schemas = {}
     registry = Registry()
@@ -119,10 +186,12 @@ def main() -> int:
                 print(f"FAIL  {path.name}: derivation cites {fid[:40]}… missing from inputFacts")
                 failures += 1
 
+    failures += check_contexts()
+
     if failures:
         print(f"\n{failures} failure(s)")
         return 1
-    print("\nAll examples valid, hashes verified.")
+    print("\nAll examples valid, hashes verified, contexts well-formed.")
     return 0
 
 

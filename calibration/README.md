@@ -15,14 +15,16 @@ Everything is deterministic — no wall clock, no randomness. Fit timestamps are
 
 ## What this deliberately does not claim
 
-**Nothing in this repository is calibrated.** Fitting requires labeled `(raw_score, correct)` pairs, where `correct` was decided by a human — and those labels do not exist yet for any real extractor. They arrive later in M3, when the review queue turns human corrections into exactly these labels. The tests fit on *synthetic* data with known miscalibration; they prove the math converges and the guarantees hold on data that satisfies the assumptions — nothing more. A calibration module that shipped pretending to be fitted would be the confident wrongness this project exists to eliminate, wearing a lab coat.
+**Nothing in this repository is calibrated.** Fitting requires labeled `(raw_score, correct)` pairs, where `correct` was decided by a human — and those labels do not exist yet for any real extractor. The mechanism that produces them shipped in M3: the [review queue](../review/README.md) turns human corrections into exactly these pairs. What is still missing is *volume* — real reviewed traffic from a real extractor — and no amount of machinery substitutes for it. The tests fit on *synthetic* data with known miscalibration; they prove the math converges and the guarantees hold on data that satisfies the assumptions — nothing more. A calibration module that shipped pretending to be fitted would be the confident wrongness this project exists to eliminate, wearing a lab coat.
 
 The conformal guarantee is also narrower than it sounds: it bounds the **marginal** probability of accepting an incorrect fact (≤ alpha, distribution-free, assuming exchangeability). It does **not** bound the error rate *among* accepted facts, and it breaks under drift — new templates, new extractor versions — which is why serialized params carry their sample count, fit date, and dataset reference.
+
+**A boundary detail, if you ever copy a fitted threshold into a pack floor.** The two tests disagree at exactly one point. `ConformalCalibrator.accepts` abstains *at* the threshold — `score > threshold`, strict, because the guarantee's error event is `{s > threshold}` — while the kernel admits a fact *at* its floor: `score >= minConfidence`. So setting `minConfidence` to a fitted threshold does not reproduce the calibrator's behavior for a score landing exactly on it: the calibrator abstains, the kernel binds. The gap is one representable value wide and no pack derives its floor this way today, but a pack that starts to should account for the asymmetry rather than assume the two are the same test.
 
 ## How it connects
 
 ```
-extraction adapters (M3)          this package                    kernel policy
+extraction adapters               this package                    kernel policy
 raw scores + review labels  ───▶  fit / validate / serialize ───▶ conformal threshold into the
                                   recalibrate_fact           ───▶ pack's abstention policy;
                                                                   recalibrated facts supersede

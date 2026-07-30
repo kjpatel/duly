@@ -1,0 +1,727 @@
+# Neuro-symbolic architecture in duly
+
+This guide is for platform engineers who understand conventional application,
+data, and AI systems but are new to neuro-symbolic architecture. It explains
+the general pattern, the specific version implemented by duly, the guarantees
+that version does and does not provide, and the directions in which it could
+grow.
+
+The [grounded-fact specification](../spec/grounded-facts.md) and
+[rule IR specification](../spec/rule-ir.md) remain authoritative for contract
+and evaluation semantics. The [README roadmap](../README.md#roadmap) remains
+authoritative for delivery sequence. This document supplies the system mental
+model.
+
+## The short version
+
+Neuro-symbolic AI is a family of architectures that combine learned,
+probabilistic components with explicit, symbolic representations and
+reasoning. The boundary can be drawn in many places.
+
+duly chooses a deliberately narrow division of labor:
+
+> **Perception proposes; logic disposes.**
+
+- A replaceable extraction layer reads unstructured documents and proposes
+  atomic, typed facts.
+- Every machine-proposed fact retains its evidence and source identity and
+  should carry its uncertainty; an active pack policy fails closed when
+  confidence is absent.
+- A deterministic kernel—not a language model—applies versioned,
+  effective-dated rules to the selected facts.
+- The primary output is a content-addressed decision receipt containing the
+  decision and derivation, pinning the evidence chain, and recording the
+  applied rule trace and any abstentions.
+- Unreliable or conflicting evidence can be excluded and explicitly queued
+  for human review by the integrating service. Human corrections re-enter
+  through the same fact contract and preserve history.
+
+This is not joint neural-logical inference, learned theorem proving, or an LLM
+reasoning inside a knowledge graph. It is a governed handoff from fallible
+perception to explicit adjudication.
+
+The architecture does not make uncertainty disappear. It concentrates
+uncertainty at named boundaries where it can be inspected, measured,
+rejected, or reviewed.
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    subgraph edge["Replaceable perception edge"]
+        D["Source document"] --> X["Extraction adapter"]
+        X --> P["Rendition + proposed facts + run envelope"]
+    end
+
+    subgraph core["Governed decision path"]
+        G["Admission checks"] --> S["Append-only bitemporal fact store"]
+        S --> V["As-of fact projection"]
+        V --> K["Deterministic rule kernel"]
+        K --> R["Content-addressed decision receipt"]
+    end
+
+    O["Versioned ontology"] --> G
+    P --> G
+    RP["Versioned rule pack<br/>rules, confidence policy, calendars"] --> K
+    R -->|enqueue abstentions| Q["Review queue"]
+    Q --> H["Human correction"]
+    H --> S
+    R --> A["Golden replay and impact analysis"]
+    RP --> A
+```
+
+There are really two systems here:
+
+1. The **runtime evidence flow** moves from document bytes to a rendition, to
+   proposed facts, to an as-of projection, to a receipt.
+2. The **change-control flow** versions ontologies and rule packs, validates
+   them, replays historical cases, and makes the impact of a change visible
+   before deployment.
+
+The second flow is as important as the first in a regulated system. A correct
+decision today is insufficient if the organization cannot explain what changed
+or reproduce yesterday's decision later.
+
+Moving governed meaning into typed, versioned artifacts restores deterministic
+contract tests, impact analysis, and replay for that part of the system.
+Behavior at the probabilistic perception edge still requires statistical
+evaluation; explicit artifacts do not make model behavior deterministic.
+
+## The two traditions, in practical terms
+
+The statistical and symbolic traditions solve different parts of the problem.
+
+| Capability | Probabilistic or neural systems | Symbolic systems |
+|---|---|---|
+| Read variable language and layouts | Strong | Require structured input |
+| Handle ambiguity and unfamiliar phrasing | Strong, but fallible | Brittle outside encoded concepts |
+| Represent an explicit rule | Implicitly at best | Directly |
+| Reproduce an identical derivation | Not generally | Can, with deterministic semantics and retained inputs |
+| Explain which rule used which fact | Generated explanation may be unfaithful | Can emit a native evaluation artifact |
+| Adapt without manual knowledge engineering | Often learns from data | Typically requires governed schema and rule maintenance |
+
+Pure symbolic systems historically struggled because the world had to be
+formalized before they could act. Modern extraction models make that
+formalization cheaper: they can propose structure from language. Pure
+statistical systems have the opposite weakness: they can read language but do
+not naturally provide a stable, inspectable decision procedure.
+
+duly composes the two without asking either to do the other's job. A model may
+propose that a notice was mailed on a certain date. It does not decide whether
+the notice complied with a statute. A rule pack may decide compliance from
+accepted dates and jurisdiction facts. It does not parse the source PDF.
+
+## Prior grounding rather than post-hoc explanation
+
+A conventional retrieval-augmented system can show which passages were near a
+model when it produced an answer. That is provenance of text, not necessarily
+provenance of the decision. A generated rationale may be readable without
+being the computation that produced the result.
+
+duly moves evidence and constraints in front of the decision:
+
+1. a machine assertion must first become a typed, grounded proposal;
+2. a correctly composed admission path makes malformed, untraceable, or
+   nonconforming proposals fail loudly;
+3. explicit rules derive the decision from the admitted fact set; and
+4. the receipt records the actual rule-to-fact derivation.
+
+This is the useful meaning of **prior grounding** in duly. The model's output
+does not acquire decision authority merely because it sounds plausible or
+cites a document. It must cross a governed interface first.
+
+This shifts part of the safety strategy from monitoring free-form output to
+constraining the decision path. It does not replace monitoring, evaluation, or
+human review, and it does not make extraction errors impossible.
+
+## The artifacts that carry meaning
+
+Semantic-web literature often distinguishes a **T-Box**—the vocabulary and
+constraints describing what can exist—from an **A-Box**—assertions about
+particular things. That is a useful analogy, but duly separates the concerns
+more explicitly:
+
+| Artifact | Role in duly | What it is not |
+|---|---|---|
+| Ontology artifact | Versioned vocabulary and type constraints supplied by the adopter | The decision logic |
+| `GroundedFact` | One assertion about one case, with evidence and uncertainty | A conclusion merely because it is well-formed |
+| Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, and calendars | A domain ontology or workflow definition |
+| `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace | The facts, source rendition, or rule-pack bytes themselves |
+| Extraction run envelope | Integrity manifest for one run over one rendition | Authentication of the producer |
+
+In T-Box/A-Box terms, the ontology is T-Box-like and grounded facts are
+A-Box-like. Rule packs are a separate policy artifact. duly does not currently
+use an RDF/OWL knowledge base or an OWL reasoner, so the analogy should not be
+read as an implementation claim.
+
+## The runtime lifecycle
+
+### 1. A document becomes an immutable rendition
+
+The source document is pinned by a SHA-256 digest of its bytes. An extraction
+adapter produces a **rendition**: immutable extracted text with its own hash and
+the identity and version of the tool that produced it.
+
+Facts point to character offsets in that rendition, not vaguely to "the PDF."
+Different PDF parsers produce different text and therefore different offsets.
+Retaining the exact rendition is what lets an old fact's quote remain
+resolvable after an extractor upgrade.
+
+The shipped adapters are intentionally modest:
+
+- the scripted stub makes demonstrations deterministic;
+- the Docling adapter converts the document into a rendition and locates an
+  author-declared quote. The target already supplies the entity, attribute,
+  value, and quote; the adapter's raw confidence is a quote-match heuristic,
+  not semantic field accuracy or a calibrated probability.
+
+They are not autonomous ontology-discovery systems. A production LLM or
+document model can replace the proposal mechanism while preserving the same
+rendition, fact, span, and envelope contracts. duly is the extraction boundary,
+not the extraction model.
+
+### 2. Extraction produces proposed grounded facts
+
+A [`GroundedFact`](../spec/grounded-facts.md) is one
+entity–attribute–value assertion. For example:
+
+```text
+notice:HO-77401-NY:2026-07-25
+  nc:noticeMailedDate
+  2026-07-25
+```
+
+The complete fact also carries:
+
+- a typed value—dates, decimals, money, codes, booleans, and entity
+  references have distinct representations;
+- document grounding with the source hash, rendition, exact span, and quote,
+  or a human attestation when no document contains the fact;
+- machine or human assertion provenance;
+- for a machine assertion, normally confidence and its method—the schema
+  currently permits omission, while an active pack policy excludes a
+  confidence-less machine fact;
+- a required, caller-supplied `recordedAt` knowledge timestamp and optional
+  `effectiveFrom`/`effectiveTo` validity window;
+- an exact ontology name and version;
+- a content hash from which the fact ID is derived.
+
+Atomicity matters. An extractor can be confident about an amount and uncertain
+about its regulatory category. Separate facts let the system admit, reject,
+supersede, and calibrate those assertions independently.
+
+### 3. The admission boundary checks the proposal
+
+One extraction run emits an
+[`ExtractionRunEnvelope`](../spec/grounded-facts.md#resolved-questions) for one
+rendition. `verify_envelope` checks, before ingestion:
+
+- the envelope's hash and ID;
+- the rendition hash;
+- ordered and complete membership of the supplied fact list;
+- every fact's hash and ID;
+- that each fact's document hash, rendition ID, and assertion run ID match the
+  corresponding envelope fields;
+- that every quote exactly equals the rendition slice named by its span;
+- optionally, conformance to the fact's pinned ontology when the deployment
+  supplies an `OntologyRegistry`.
+
+"Complete" here means that the verifier received exactly the outputs declared
+by this run. It does not mean that the extractor found every decision-relevant
+fact in the document.
+
+`verify_envelope` does not compare a fact's `documentId` with the envelope's,
+compare extractor metadata with `envelope.adapter`, or recompute the source
+document hash from source bytes it was not given. Full JSON Schema validation
+supplies additional shape and URN checks. A production admission path should
+compose both layers and establish the source hash when it first receives the
+bytes.
+
+If a run must later be withdrawn, `revoke_run` appends retraction events for
+its live facts. It does not delete or rewrite their history.
+
+The [ontology conformance gate](../spec/ontology-conformance.md) checks that the
+ontology version exists, the entity type and attribute are declared together,
+the value kind is correct, and codes belong to the expected code system and,
+for closed enums, the permitted set.
+
+These checks answer different questions:
+
+- **Schema and ontology checks:** is this assertion expressed in an allowed
+  form and vocabulary?
+- **Envelope and span checks:** are these the exact artifacts the adapter
+  emitted, and does the quoted evidence resolve?
+- **Extraction evaluation and review:** did the adapter interpret the evidence
+  correctly?
+
+Only the last question is about semantic truth. A wrong date can be
+well-typed, correctly hashed, and perfectly grounded to the phrase it
+misinterpreted.
+
+One integration detail matters: duly is a toolkit, not a monolithic service.
+`adjudicate()` trusts the fact list it receives. Full JSON Schema validation,
+envelope verification, and ontology conformance must be composed into the
+deployment's admission path; the kernel does not repeat them. Ontology checking
+is optional in `verify_envelope` because the registry belongs to the adopter,
+so a production integration must supply it deliberately.
+
+### 4. The store preserves what was known, not just what is current
+
+The reference [`FactStore`](../store/) is an append-only SQLite event store.
+It records assertions, supersessions, and retractions; it never updates the
+original fact in place.
+
+This supports two independent time questions:
+
+- **Effective time:** when was the assertion true in the world?
+- **Knowledge time:** when had the system learned it?
+
+`recordedAt` is required but caller-supplied. The store never reads the wall
+clock and does not authenticate that timestamp. Effective windows are optional;
+the v0 convention is that event assertions generally omit them, while facts
+with genuinely bounded validity include them.
+
+A correction is a new human-asserted fact that can supersede the earlier
+machine fact. An earlier knowledge-time projection still contains the old
+state; a later projection contains the correction. This is how the system can
+answer, "What would we have decided then, using what we knew then?"
+
+The caller must obtain the fact set through `FactStore.as_of` before calling
+the kernel. The kernel records `asOf.knowledge` on the receipt but does not
+itself reconstruct historical knowledge; it evaluates the supplied
+projection. That boundary is important in any alternative storage
+implementation.
+
+The same `asOf.effective` point currently selects rule versions and filters
+bounded fact validity. Separating those into independently selectable time
+dials is a future semantic extension, not current behavior.
+
+### 5. The kernel applies explicit decision semantics
+
+The current kernel is a pure-Python reference interpreter for duly's
+[rule IR](../spec/rule-ir.md). It is not yet a Datalog, Soufflé, ASP, or solver
+backend.
+
+A rule declares:
+
+- the entity and attributes it needs;
+- an effective window;
+- a typed condition;
+- the conclusion it produces;
+- its priority and any rules it explicitly overrides;
+- a legal or policy citation.
+
+Evaluation is deterministic:
+
+1. Bounded facts and rules are filtered at the supplied effective time.
+2. Pack-owned confidence floors exclude low-confidence machine facts.
+3. Conflicts are resolved only by explicit policy: one human assertion can
+   outrank machine assertions; otherwise the attribute is unbindable.
+4. Rules with unresolved inputs are inapplicable.
+5. Derived dependencies are evaluated in strata, so producers settle before
+   consumers and dependency cycles are rejected.
+6. Explicit overrides suppress named defaults or general rules.
+7. Priority resolves remaining same-attribute conflicts; unresolved
+   ambiguity is an error.
+8. Pack-owned business calendars fail loudly outside their declared coverage
+   rather than guessing.
+
+This is **defeasible reasoning**: a low-priority presumption can apply by
+default and a more specific rule can defeat it when its conditions hold. The
+receipt records that defeat rather than hiding it.
+
+duly derives conclusions during each adjudication and emits a receipt; receipt
+persistence is the integrating service's responsibility. It does not write
+derived conclusions back as materialized facts. A future materialized
+inference or graph layer would need premise-and-rule lineage so changes can
+invalidate every dependent conclusion.
+
+### 6. The receipt is the decision product
+
+The kernel emits a content-addressed `DecisionReceipt` containing:
+
+- the decision value and entity;
+- the effective and knowledge as-of pair;
+- rule-pack name and version;
+- the surviving rules, citations, priorities, effective windows, and defeated
+  rule IDs;
+- a nested derivation from conclusion to consumed facts;
+- every consumed fact pinned by ID and content hash;
+- low-confidence and conflict abstentions, including any optional routing
+  label;
+- the kernel version and backend.
+
+The Markdown/PDF audit report and
+[PROV-O JSON-LD export](../spec/prov-o.md) are deterministic projections of
+these artifacts. They do not ask a model to invent an explanation. PROV-O
+provides useful lineage interoperability, but the mapping is deliberately
+partial: effective time, confidence, abstention, and defeasible-rule structure
+do not have faithful generic PROV equivalents.
+
+A retrieved passage or citation provides provenance of an input. The receipt's
+derivation provides provenance of the decision procedure: which accepted facts
+bound which rules and how their conclusions composed.
+
+The receipt is content-addressed, but the current runtime receipt identifies a
+rule pack by name and version rather than hashing the pack bytes. Replay
+therefore also depends on the repository's immutability discipline: a released
+pack version must never be changed in place. A fact's `schemaRef` likewise
+pins an ontology name and version, not an ontology-file digest, so the same
+immutability requirement applies to ontology artifacts.
+
+### 7. Review closes the evidence loop
+
+A receipt can contain a decision and abstentions at the same time. For example,
+a low-confidence fact may be excluded while a conservative presumption still
+produces a decision. "The system abstained on evidence" does not always mean
+"the system produced no decision."
+
+An integrator passes receipt abstentions to `ReviewQueue.enqueue_receipt`,
+where they become deduplicated, append-only review items. A pack may attach an
+optional `routedTo` label; the kernel does not dispatch work to a queue. A
+reviewer can:
+
+- resolve the item with a human-asserted grounded fact, usually superseding
+  the machine assertion; or
+- dismiss it because exclusion was the correct outcome.
+
+The correction enters through the ordinary fact-store API, so subsequent
+adjudication needs no special "human override" execution path. A resolved case
+can become a committed golden regression case and can yield a labeled pair for
+calibration.
+
+Those labels are selected from reviewed, usually abstained facts. They are a
+censored sample, not an unbiased estimate of extraction accuracy. duly ships
+calibration mathematics, not a pre-calibrated production model.
+
+There is also a current boundary mismatch to resolve before making a conformal
+guarantee in production: `ConformalCalibrator.accepts` uses a strict
+`score > threshold` test, while the kernel admits a fact at
+`score >= minConfidence`. Copying a fitted conformal threshold directly into a
+pack floor therefore does not preserve equality behavior literally.
+
+## A concrete duly example
+
+The insurance starter asks whether a New York nonrenewal notice supplied
+enough notice.
+
+1. The extractor proposes the governing state, notice type, mailing date, and
+   policy expiration date, each grounded to a rendition span.
+2. The termination-notice rule pack derives the required notice period for the
+   jurisdiction and notice type.
+3. A noncompliance rule compares the two dates and can defeat the pack's
+   low-priority presumption of compliance.
+4. In the review scenario, the mailing-date proposal has confidence `0.62`,
+   below the pack's `0.90` attribute floor. The kernel excludes it and records
+   a `low_confidence` abstention. The demo explicitly enqueues it for review.
+   The presumption remains as the decision, explicitly identified as such.
+5. A reviewer supplies a human assertion for the mailing date and supersedes
+   the machine fact.
+6. The next as-of projection contains the correction. The specific rule now
+   fires, defeats the presumption, and changes the verdict.
+7. The resolved case is exported as a replayable golden case.
+
+The UI is useful, but it is not the architecture. The architecture is that the
+same correction is a new immutable fact, the changed conclusion has a new
+receipt, and both historical states remain reconstructible. See
+[Follow one fact](follow-one-fact.md) for the committed data and hashes at each
+step.
+
+## Missingness, open-world reasoning, and defaults
+
+One of the most important choices in any symbolic system is what absence means.
+
+Under an **open-world** interpretation, a missing fact means "unknown." Under a
+**closed-world** interpretation, it may mean "false" or "not present." Neither
+is universally correct. A complete, bounded document may justify an
+absence-based conclusion; an incomplete case file does not.
+
+duly does not inherit RDF/OWL open-world semantics because it is not an OWL
+reasoner. Its v0 behavior is operational:
+
+- a rule fires only when all of its declared bindings resolve;
+- a missing binding makes that rule inapplicable;
+- a different default or presumption may still produce a decision;
+- if no rule produces the requested decision, the kernel raises an
+  `AdjudicationError`.
+
+Low-confidence and conflicting facts produce explicit receipt abstentions.
+Ordinary missing bindings do **not** currently produce `reason: missing`
+entries, even though the receipt schema permits that shape. Ontology
+conformance also does not enforce sibling-field completeness.
+
+Therefore, pack authors must not silently treat "not extracted" as "verified
+absent." When absence is decision-relevant, the workflow should establish
+document completeness or encode an explicit fact that the rule can consume.
+More expressive completeness checkpoints are a credible extension, but they
+are not current behavior.
+
+## What the current guarantees mean
+
+| Property | What duly provides | What it does not imply |
+|---|---|---|
+| Determinism | The same supplied fact set, exact rule content, as-of pair, and engine produce the same receipt bytes | That the facts or rules are true |
+| Grounding | A verified quote resolves to an exact span in an exact rendition | That the extractor interpreted the quote correctly |
+| Content addressing | Mutation of facts, envelopes, renditions, or receipts is detectable | Producer identity, authorization, or an adversarially immutable database |
+| Ontology conformance | With the registry enabled, vocabulary, attachment, value kinds, and codes conform to a pinned version | Record completeness, cross-fact consistency, or domain truth |
+| Confidence policy | Low-confidence machine facts can be excluded under versioned pack policy | A calibrated error rate unless representative labels and the calibrator's assumptions hold |
+| Defeasible rules | Defaults, exceptions, priorities, and derivations are explicit and replayable | That the encoded policy is complete, current, or legally correct |
+| Bitemporal replay | The store can reconstruct facts known at a prior knowledge point and valid at an effective point | Correct replay if a caller bypasses the as-of projection |
+| Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples |
+| Impact analysis | A rule change's flips and reasoning changes are visible on the corpus | Automatic approval or rejection of the change |
+| PROV-O export | Standard lineage tools can query useful artifact relationships | A lossless mapping of duly's time, uncertainty, or rule semantics |
+
+The compact version is:
+
+> Determinism makes a decision reproducible and inspectable. It does not make
+> the decision true.
+
+Correctness still depends on extraction quality, evidence coverage, ontology
+fitness, rule quality, temporal selection, implementation correctness, and
+human governance.
+
+## The gates
+
+The most dangerous transition in a neuro-symbolic system is where a
+probabilistic proposal acquires deterministic authority. A useful design rule
+is to name and test every such boundary.
+
+| Boundary | duly mechanism today | Residual risk |
+|---|---|---|
+| Document → proposed fact | Immutable rendition, source hash, typed fact, exact grounding span, extractor identity, and deployment-required confidence | A plausible but wrong interpretation can still be well-grounded |
+| Proposed run → admitted facts | Deployment-composed JSON Schema validation, envelope verification, and optional ontology registry; envelope checks finish before `ingest_envelope` writes | An integration can omit schema or ontology enforcement; hashes provide integrity, not authenticity |
+| Stored history → decision input | Explicit `FactStore.as_of` projection, effective windows, supersession/retraction history | The caller can supply the wrong projection or bypass the store |
+| Facts → rule bindings | Pack confidence floors, conflict policy, typed expressions, explicit dependencies | Missingness and completeness remain pack/workflow concerns |
+| Rule/ontology change → release | Pack validation, expected outcomes, conformance checks, golden replay, impact analysis | A stable baseline can still encode the wrong policy |
+
+Three additional gates become relevant only if the product grows into those
+surfaces:
+
+- **Natural language → formal query:** validate syntax, schema references, and
+  bounded scope before deterministic execution. These checks cannot prove user
+  intent—a query can be valid, executable, and still ask the wrong formal
+  question—so semantic translation needs its own evaluation and review.
+- **Receipt → generated prose:** permit a model to phrase only claims already
+  present in the receipt and evidence chain.
+- **Decision → external action:** validate the action against explicit policy,
+  authorization, freshness, and idempotency requirements before execution.
+
+duly currently adjudicates and emits evidence-linked receipts. It does not
+autonomously deny a claim, release funds, close a loan, or execute another
+consequential action. An orchestrator remains responsible for side effects.
+
+## Where knowledge graphs fit
+
+A knowledge graph represents entities and typed relationships as a connected
+graph. It becomes especially useful for questions such as:
+
+- Which endorsements modify the coverage implicated by this loss?
+- Which decisions relied, directly or indirectly, on a retracted fact?
+- How are parties, documents, transactions, clauses, and decisions connected
+  across a long-running case?
+
+Vector retrieval and graph retrieval answer different questions. Vector search
+finds text that is semantically similar to a query; graph traversal follows
+relationships the system has explicitly modeled and can make a multi-hop path
+inspectable. A graph is "complete" only relative to its schema and its current,
+correctly populated contents—it cannot recover an omitted or stale fact. The
+two approaches can be composed when a workload needs broad candidate recall
+followed by explicit relationship checks.
+
+duly is neuro-symbolic without being a general-purpose knowledge-graph
+platform. Today it has:
+
+- atomic facts with entity IDs, CURIE attributes, and an `entityRef` value
+  kind;
+- versioned LinkML ontology artifacts and a constrained conformance gate;
+- a relational append-only event store;
+- a deterministic rule interpreter for bounded per-case adjudication;
+- PROV-O export for external RDF/SPARQL lineage queries.
+
+It does **not** have a graph-native source of truth, graph traversal in the
+kernel, OWL inference, general SHACL enforcement at runtime, or GraphRAG.
+LinkML can generate SHACL for standards-tooling tests, but the hot-path
+validator interprets a documented LinkML subset.
+
+That is a sensible boundary for the current workload. The v0 kernel assumes
+one entity per entity type and one live fact per attribute in a case. Its
+demonstrations ask bounded document-decision questions; adding graph
+infrastructure would create another consistency, temporal, and operational
+surface without yet simplifying those decisions.
+
+A graph becomes justified when a real workload needs multiple same-type
+entities, explicit relationship constraints, multi-hop or cross-document
+reasoning, longitudinal queries, or large-scale lineage traversal. The safest
+evolution is likely:
+
+1. keep content-addressed facts, receipts, and evidence as canonical artifacts;
+2. project those artifacts into a graph for the demonstrated query or
+   reasoning workload;
+3. preserve bitemporal, confidence, abstention, and defeasible-rule semantics
+   that generic graph vocabularies cannot represent faithfully;
+4. regenerate or validate the projection rather than maintaining two
+   unaudited sources of truth.
+
+RDF/OWL/SHACL and labeled property graphs offer different semantics and
+ergonomics; neither is universally correct. RDF and standards-based validation
+are attractive when formal interoperability and inference are requirements.
+Property graphs are often convenient for application traversal. A hybrid
+vector-plus-graph retrieval layer can help when recall and relationship
+verification are both needed. None should become a foundational dependency
+until a workload supplies acceptance criteria.
+
+## Current implementation versus adjacent patterns
+
+| Pattern | Status in duly |
+|---|---|
+| Model or document AI as fact proposer | Supported by the adapter contract; autonomous model-driven proposal is supplied by the adopter, not shipped as a duly model |
+| Symbolic layer as decision authority | Implemented |
+| Deterministic report rendering | Implemented |
+| Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
+| Natural-language-to-formal-query interface | Possible extension; not current behavior |
+| RDF or property-graph decision core | Not implemented |
+| Joint neural-symbolic training or differentiable logic | Out of scope for the current architecture |
+| Datalog/Soufflé or ASP execution backend | Roadmap option after equivalence semantics and a real workload |
+| Agent plans, symbolic layer executes actions | Possible integration pattern; duly itself does not execute consequential actions |
+
+## Failure modes a platform team should design for
+
+### Deterministic garbage in, deterministic garbage out
+
+The kernel can produce a perfectly replayable wrong decision from a
+wrong-but-valid fact. Measure field-level extraction accuracy and audit
+accepted facts, not only abstentions.
+
+### Omitted evidence
+
+No schema or graph can return a fact that was never extracted or modeled.
+Document-set completeness, required evidence, and negative evidence need
+explicit workflow semantics.
+
+### Stale structured knowledge
+
+Ontologies, rules, calendars, and mappings change as products, forms, and laws
+change. Their maintenance is a permanent product, engineering, and domain
+ownership function—not a one-time implementation task.
+
+### Rule explosion
+
+Defaults and exceptions can become difficult to review even when each rule is
+correct. Keep packs bounded, cite every rule, test each reasoning shape, and
+use static authoring tools to find overlap and unreachable coverage.
+
+### False confidence in integrity controls
+
+Hashes detect mutation; they do not authenticate a producer. The append-only
+SQLite API preserves history by convention, but direct database access is not
+tamper-proof storage. Signatures, identity, authorization, retention, and
+evidence custody belong in the deployment architecture.
+
+### Distribution drift and biased labels
+
+A new form template or extractor version can invalidate calibration
+assumptions. Review-queue labels cover a selected slice of traffic. Production
+evaluation needs representative sampling, segmentation by adapter/model
+version, and explicit drift monitoring.
+
+### Bypassed seams
+
+Because duly is composable, callers can invoke the kernel without envelope,
+schema, ontology, or store checks. Expose a narrow internal platform API that
+enforces the whole admission and as-of sequence instead of letting every
+application compose it differently.
+
+## Integration guidance for a platform team
+
+**Current maturity:** duly is pre-alpha, its contracts are v0 and may break
+before v1.0, and its SQLite stores, in-process demo, and reference wiring are
+not a production deployment blueprint. The responsibilities below describe
+how a platform team should compose the current contracts, not a claim that the
+repository already supplies enterprise operations.
+
+A production integration should treat duly as a decision component inside a
+larger workflow:
+
+1. **Own the domain artifacts.** Version and retain the ontology, rule packs,
+   calendars, citations, and golden corpus. Never mutate a released version in
+   place.
+2. **Wrap the extractor.** Require it to emit a content-addressed rendition,
+   atomic grounded facts, confidence metadata, and a complete run envelope.
+3. **Build one admission service.** Validate the JSON contract, verify the
+   envelope and spans, enable the deployment's ontology registry, and write
+   only through the append-only store API.
+4. **Project before adjudicating.** Resolve the exact knowledge and effective
+   times through the store, then pass that projection and the matching pack to
+   `adjudicate()`. Never default to the wall clock.
+5. **Persist the full evidence chain.** Source bytes, renditions, facts,
+   envelopes, rule-pack artifacts, receipts, and correction events have
+   different retention roles; a receipt alone cannot resolve a quote.
+6. **Queue abstentions explicitly.** Call the review-queue integration, use
+   optional `routedTo` labels for selection when packs provide them, and define
+   queue ownership, service levels, correction authority, and the operational
+   meaning of a default decision produced alongside an abstention.
+7. **Keep actions outside the kernel.** The orchestrator should consume the
+   receipt, enforce authorization and freshness, and record any consequential
+   side effect separately.
+8. **Gate every change.** Run pack tests, schema and ontology checks, golden
+   replay, and impact analysis before promoting a new artifact version.
+9. **Measure layers separately.** Extraction accuracy, fact admission,
+   abstention, rule correctness, decision outcomes, review rate, latency, and
+   drift are different metrics.
+
+For an executable walk through these artifacts, use the
+[demo tour](demo_tour.md). For the actual JSON from source text through human
+correction, use [Follow one fact](follow-one-fact.md).
+
+## How the architecture can grow
+
+These are extension paths, not commitments or a second roadmap. The
+[README roadmap](../README.md#roadmap) is the canonical release plan.
+
+| Demonstrated need | Credible extension | Invariant to preserve |
+|---|---|---|
+| Rule authors need safer tools | DMN-to-IR authoring, stable rule IDs, Z3 overlap and coverage analysis | Authoring tools assist; only the deterministic kernel emits receipts |
+| Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
+| Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
+| Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
+| Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection | Existing atomic facts and receipts remain canonical and old cases replay |
+| Conversational investigation | Typed query API, validated natural-language-to-query translation, receipt-grounded rendering | A model may translate or phrase; it does not silently create facts or decisions |
+| Governed agentic workflows | Receipt-aware action policies and idempotent orchestration adapters | duly remains decision authority, while the orchestrator owns side effects |
+| Higher-volume relational reasoning | Define cross-backend equivalence, then add a Datalog/Soufflé backend and differential testing | Decision semantics and trace fidelity match the reference kernel |
+| Genuinely non-stratified rule fragments | Consider an ASP backend for the demonstrated fragment | Complexity is introduced locally, with deterministic selection and explainable receipts |
+
+The durable design principle is not "use more symbolic technology." It is:
+
+> Move only the meaning that must be governed into explicit, versioned,
+> testable artifacts, and preserve the evidence at every boundary.
+
+Better models should make the perception edge cheaper and more accurate
+without changing that principle. Richer rules, graphs, or solvers should be
+added only when they strengthen a demonstrated decision or governance
+requirement without weakening replay.
+
+## Reading and code map
+
+- [Concepts](concepts.md) defines the repository's vocabulary precisely.
+- [Follow one fact](follow-one-fact.md) traces a committed fact, receipt, and
+  correction byte by byte.
+- [Grounded-fact contract](../spec/grounded-facts.md) explains every fact and
+  receipt design decision.
+- [Rule IR](../spec/rule-ir.md) defines applicability, stratification,
+  defeasibility, abstention, and receipt mapping.
+- [Ontology conformance](../spec/ontology-conformance.md) defines the LinkML
+  subset and the gate's honest boundaries.
+- [PROV-O alignment](../spec/prov-o.md) explains the partial external
+  provenance mapping.
+- [Rule-pack authoring guide](../rulepacks/README.md) is the starting point for
+  changing decision content.
+- [`extraction/duly_extraction`](../extraction/duly_extraction) contains the
+  adapter and run-envelope boundary.
+- [`store/duly_store`](../store/duly_store) contains append-only bitemporal
+  storage.
+- [`kernel/duly_kernel`](../kernel/duly_kernel) contains the reference
+  interpreter and receipt builder.
+- [`review/duly_review`](../review/duly_review) contains the review and
+  correction loop.
+- [`assurance/duly_assurance`](../assurance/duly_assurance) contains golden
+  replay and rule-change impact analysis.

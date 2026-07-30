@@ -1,6 +1,7 @@
 {
   "id": "ron-closing",
   "title": "California remote online notarization eligibility for a closing",
+  "domain": "mortgage",
   "caseId": "case:closing:ESC-4821-CA",
   "ontology": {
     "ontology": "duly-starter-ron",

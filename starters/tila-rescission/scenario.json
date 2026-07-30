@@ -1,6 +1,7 @@
 {
   "id": "tila-rescission",
   "title": "TILA right of rescission: refinance funding timing",
+  "domain": "mortgage",
   "caseId": "case:loan:RF-2026-3117",
   "ontology": {
     "ontology": "duly-starter-resc",

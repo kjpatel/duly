@@ -60,8 +60,15 @@ def test_every_scenario_carries_a_domain(monkeypatch):
     by_id = {s["id"]: s for s in scenarios}
     assert by_id["notice-ny"]["domain"] == "insurance"
     assert by_id["notice-ny"]["domainLabel"] == "Insurance"
-    assert by_id["trid"]["domain"] == "mortgage"
-    assert by_id["trid"]["domainLabel"] == "Mortgage closing"
+    for scenario_id in (
+        "trid",
+        "ron-closing",
+        "esign-package",
+        "tila-rescission",
+        "county-recording",
+    ):
+        assert by_id[scenario_id]["domain"] == "mortgage", scenario_id
+        assert by_id[scenario_id]["domainLabel"] == "Mortgage closing", scenario_id
     if "notice-ny-review" in by_id:
         assert by_id["notice-ny-review"]["domain"] == "insurance"
 

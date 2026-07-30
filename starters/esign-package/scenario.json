@@ -1,6 +1,7 @@
 {
   "id": "esign-package",
   "title": "eSign routing: closing-package promissory note as a registered eNote",
+  "domain": "mortgage",
   "caseId": "case:closing-package:CP-2026-0847",
   "ontology": {
     "ontology": "duly-starter-esign",

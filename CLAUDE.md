@@ -20,6 +20,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `rulepacks/` | Six packs (insurance + mortgage closing), each `pack.yaml` + `expected.yaml` (+ `fixtures/`) |
 | `starters/` | Synthetic documents, renditions, span-verified facts, one demo scenario per vertical |
 | `golden/` | 351 committed cases + receipts — the replay/impact baseline |
+| `whatif/` | Backward queries: free one input, solve the pack for it, verify every answer by re-running the kernel (`python -m duly_whatif`, optional z3) |
 | `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) — [dmn/README.md](dmn/README.md) |
 | `demo/` | FastAPI + vanilla-JS decision workspace |
 
@@ -27,7 +28,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests -q
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
 uv run spec/validate.py                   # spec examples: schemas + hashes
@@ -42,6 +43,7 @@ The three marker-gated suites are **skipped** by the command above — they need
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml   # ontologies are real LinkML
 uv sync --extra prove  && uv run pytest assurance/tests  -q -m z3           # verifier encoding is sound
+uv sync --extra prove  && uv run pytest whatif/tests     -q -m z3           # what-if answers survive kernel verification
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling  # live adapter (heavy: pulls torch)
 ```
 
@@ -56,6 +58,7 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 ## Gotchas that have actually bitten
 
+- **A what-if answer is a proposal until the kernel has run.** `whatif/` reuses `prove`'s SMT encoding unmodified but stands in the *opposite* relation to it: `prove` lives on UNSAT, where widening the input space is safe; what-if lives on SAT, where widening is exactly what makes an answer unreliable. So every value it returns is re-adjudicated through `duly_kernel.api.adjudicate`, and extremals are boundary-verified. Never add a return path that skips that — a spurious SAT must become a `SolverKernelContradiction`, not an answer. And never write a second encoder: `test_the_encoding_is_the_one_prove_uses` asserts class identity so divergence has to be deliberate.
 - **`prove` only ever sees packs the kernel already blessed.** `validate_pack` refuses any same-priority pair concluding one attribute unless it can prove disjointness syntactically or the author wrote an `overrides` — so a pack with an *unproven* same-priority overlap cannot load, and `python -m duly_assurance prove` cannot meet one in a committed pack. Its non-zero exit is a **differential check between two proof systems**, not a routine gate: it firing would mean Z3 refuted a proof `_equality_guards` accepted. Don't write a test that reaches it through `load_pack` — build the pack dict and call `analyze_pack` directly.
 - **An `overrides` can mean two different things, and only a solver tells them apart.** `PKG-NOTE-31 overrides PKG-NOTE-30` is an authored legal exception over rules that genuinely overlap (a registered eNote *is* a promissory note); TILA's manufactured priority gap is a workaround for a proof the validator cannot perform. Both look identical in the pack. Run `prove` before adding either — if the pair comes back PROVED-DISJOINT you were working around the validator, and the comment saying so belongs on the rule.
 - **Only `attribute` bindings can prove disjointness — `derived` ones cannot.** Narrower than the boolean-guard gotcha below and less visible: `_equality_guards` inspects only `when` items whose variable resolves to an *attribute* binding, so `category == "ZeroTolerance"` on a `derived` binding proves nothing however string-equal it looks. Two same-priority rules separated only by a derived-value guard need an explicit `overrides`.
@@ -96,6 +99,7 @@ A feature is not shipped when the code merges. It is shipped when it is **docume
 - [docs/faq.md](docs/faq.md) — the objections a skeptical reader raises first, answered in one place
 - [rulepacks/README.md](rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
 - [spec/pack-verification.md](spec/pack-verification.md) — the static verifier's fragment, its per-operator encoding, and what a green `prove` run does and does not license
+- [spec/whatif.md](spec/whatif.md) — backward queries, the solver-proposes/kernel-disposes contract, and why UNSAT is the weaker verdict
 - [ontologies/README.md](ontologies/README.md) / [spec/ontology-conformance.md](spec/ontology-conformance.md) — the ontology registry, the crosswalk rules (verify or omit), and the conformance gate's exact subset
 - [starters/README.md](starters/README.md) — starter layout and shared tooling
 - [golden/README.md](golden/README.md) — corpus contract, case-id series, regeneration rules

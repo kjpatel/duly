@@ -54,6 +54,14 @@ Two layers, answering different questions. The kernel refuses to load an ambiguo
 
 It runs at validation time, never during adjudication. The solver is an optional dependency, the kernel does not import it, and nothing it produces reaches a receipt — so a green run tells you your rulebase is internally consistent, which is a real and previously uncheckable property, and still not the same thing as being right about the law. See [spec/pack-verification.md](../spec/pack-verification.md).
 
+## You used a solver to pick that date. Why should I trust it?
+
+You shouldn't, and the tool doesn't. A what-if answer — *"the notice had to be mailed by 2026-04-24"* — starts life as a satisfying assignment from Z3, and Z3 is reasoning about an *encoding* of the rulebase, not the rulebase. The encoding deliberately approximates in places (money loses its currency, decimals lose their scale), and those approximations are chosen to keep the static verifier's proofs sound — which has the side effect of making raw solver answers *less* reliable, not more.
+
+So the solver proposes and the kernel disposes. Every value is handed back to `duly_kernel.api.adjudicate` — the same code that produced the original receipt — and the answer is reported only if the kernel agrees. Extremal answers get a second check: the kernel must also *refuse* one step beyond. If solver and kernel disagree, `python -m duly_whatif` raises with both artifacts instead of returning an answer, and a deliberately broken encoding is committed as a test to prove that guard fires.
+
+Two things it still cannot promise, both stated wherever an answer appears rather than only in the spec. "No value works" (UNSAT) is not pointwise-verifiable — there is no point to hand the kernel — so it rests on the encoding alone, except over finite domains where every member is checked. And extremality means the kernel confirmed this value and refused the next step, not that nothing further out could work. See [spec/whatif.md](../spec/whatif.md).
+
 ## Is this a product I can deploy?
 
 Not yet — it is a pre-alpha specification with a working reference implementation. What runs today: six rule packs across two domains, an interactive demo of the full extract → decide → abstain → correct loop, and a 351-case corpus that replays byte-for-byte on every push. Breaking changes are expected until v1.0. The most useful thing an early adopter can do is pressure-test the [contract's open questions](../spec/grounded-facts.md#open-questions) against a real workflow.

@@ -12,6 +12,12 @@ name: Optional dependency suites
 #   z3       the static pack verifier's encoding is sound, no committed pack
 #            contains an unproven same-priority overlap, and every what-if
 #            answer still agrees with what the kernel actually decides.
+#   ortools  the closing-scheduler example still plans a real closing against
+#            real adjudications, deterministically, and still gets its hard
+#            constraints from receipts rather than from a second copy of the
+#            rules. This one is a *worked example*, so its rot is the most
+#            embarrassing kind: an example that no longer runs teaches an
+#            adopter the opposite of what it claims.
 #   docling  the live extraction adapter still emits contract-conformant facts
 #            with resolvable spans.
 #
@@ -33,6 +39,7 @@ on:
       - 'whatif/**'
       - 'extraction/**'
       - 'spec/**'
+      - 'examples/**'
       - 'pyproject.toml'
       - '.github/workflows/optional-deps.yml'
   schedule:
@@ -79,6 +86,35 @@ jobs:
       # every merge to main, but pointless as a per-pack-PR checkbox.
       - name: Differential check — Z3 against the validator's own proofs
         run: uv run python -m duly_assurance prove rulepacks/*/pack.yaml
+
+  ortools:
+    name: closing-scheduler example
+    # PR-triggered, unlike `docling`, on a cost argument rather than a
+    # principled one: the ortools wheel is ~20 MB and installs in seconds,
+    # where the extraction extra pulls torch and costs minutes. An example is
+    # also the thing most likely to be broken by an innocent-looking change
+    # to the kernel or the spec, so catching it on the PR is worth the seconds.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # `--extra prove` as well as `--extra scheduling`: one test in the suite
+      # cross-checks the scheduler's swept funding boundary against what-if's
+      # solved one. It skips without z3, and a skipped cross-check proves
+      # nothing, so this job installs both.
+      - run: uv sync --extra scheduling --extra prove
+      - name: The example's suite — plan, separation, determinism, degradation
+        run: uv run pytest examples/closing-scheduler -q -m ortools
+      - name: The example is the demo; run it
+        run: uv run python examples/closing-scheduler/schedule.py
+
+      # NOTE for whoever edits a rule pack: `rulepacks/**` is deliberately
+      # absent from this workflow's paths filter (see the comment on the z3
+      # job), so a pack change that moves the committed plan in
+      # `test_scheduler.py::test_the_plan_is_the_committed_demo_output` will
+      # surface on the merge to main rather than on the pack PR. That is the
+      # same trade the rest of this workflow makes; the fix is a one-line date
+      # update in that test, made in the same spirit as a golden regeneration.
 
   docling:
     name: live Docling adapter

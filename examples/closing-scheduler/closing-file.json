@@ -1,0 +1,164 @@
+{
+  "$note": [
+    "DEMO-SYNTHETIC. Every value below is invented for this example; no loan, notary,",
+    "recorder office or county calendar named here exists. The compliance-relevant",
+    "attributes are real ontology slots (ontologies/duly-mortgage-closing/0.1.0.yaml)",
+    "carrying real code values, so the facts minted from them are contract-conformant —",
+    "but they are attestations by a closing coordinator, not extractions from documents.",
+    "In production the `known` block is what your extractors and fact store already hold",
+    "(see starters/ for span-grounded equivalents of exactly these attributes)."
+  ],
+
+  "id": "esc-7714-ca",
+  "title": "ESC-7714 — California refinance, in-person notarization, LA County recording",
+  "caseId": "case:closing:ESC-7714-CA",
+
+  "plan": {
+    "$note": "No wall clock anywhere. The planning date is an input; nothing reads today().",
+    "planningDate": "2026-02-10",
+    "horizonDays": 30,
+    "asOfKnowledge": "2026-02-10T09:00:00Z",
+    "attestedAt": "2026-02-10T09:00:00Z"
+  },
+
+  "attestor": {
+    "actor": "user:closing-coordinator:ESC-7714",
+    "role": "Closing coordinator",
+    "channel": "loan-origination-system"
+  },
+
+  "schemaRef": { "ontology": "duly-mortgage-closing", "version": "0.1.0" },
+
+  "entities": {
+    "loan": { "id": "loan:ESC-7714-CA", "type": "resc:Loan" },
+    "notarization": { "id": "notarization:ESC-7714-CA", "type": "ron:Notarization" },
+    "submission": { "id": "recording:ESC-7714-CA-DOT", "type": "rec:RecordingSubmission" }
+  },
+
+  "known": [
+    {
+      "$note": "A refinance secured by the borrower's principal dwelling: rescission applies.",
+      "entity": "loan",
+      "attribute": "resc:securedByPrincipalDwelling",
+      "value": { "kind": "boolean", "value": true }
+    },
+    {
+      "entity": "loan",
+      "attribute": "resc:transactionType",
+      "value": {
+        "kind": "code",
+        "value": "Refinance",
+        "codeSystem": "duly-starter-resc/transaction-types",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    {
+      "$note": "The notarial act is planned as a physical-presence signing.",
+      "entity": "notarization",
+      "attribute": "ron:governingState",
+      "value": {
+        "kind": "code",
+        "value": "US-CA",
+        "codeSystem": "iso-3166-2",
+        "codeSystemVersion": "2020"
+      }
+    },
+    {
+      "entity": "notarization",
+      "attribute": "ron:notarizationMethod",
+      "value": {
+        "kind": "code",
+        "value": "InPerson",
+        "codeSystem": "duly-starter-ron/notarization-methods",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    {
+      "$note": "The prepared security instrument, measured before the closing.",
+      "entity": "submission",
+      "attribute": "rec:recordingState",
+      "value": {
+        "kind": "code",
+        "value": "US-CA",
+        "codeSystem": "iso-3166-2",
+        "codeSystemVersion": "2020"
+      }
+    },
+    {
+      "entity": "submission",
+      "attribute": "rec:instrumentType",
+      "value": {
+        "kind": "code",
+        "value": "DeedOfTrust",
+        "codeSystem": "duly-starter-recording/instrument-types",
+        "codeSystemVersion": "0.1.0"
+      }
+    },
+    {
+      "entity": "submission",
+      "attribute": "rec:firstPageTopSpaceInches",
+      "value": { "kind": "decimal", "value": "2.75" }
+    },
+    {
+      "entity": "submission",
+      "attribute": "rec:coverPageAttached",
+      "value": { "kind": "boolean", "value": false }
+    },
+    {
+      "$note": "A refinance: no concurrent taxed transfer, so the SB 2 fee is not exempt.",
+      "entity": "submission",
+      "attribute": "rec:concurrentWithTaxedTransfer",
+      "value": { "kind": "boolean", "value": false }
+    },
+    {
+      "entity": "submission",
+      "attribute": "rec:transferTaxDeclarationPresent",
+      "value": { "kind": "boolean", "value": false }
+    }
+  ],
+
+  "signingDateAttributes": {
+    "$note": [
+      "MODELING ASSUMPTION, stated because it is the example's, not the pack's:",
+      "all three 12 CFR 1026.23(a)(3)(i) triggers — consummation, delivery of the",
+      "notice of the right to rescind, and delivery of all material disclosures —",
+      "happen at the signing table, so all three take the candidate signing date.",
+      "A closing where a trigger lands on a different day is a different input file,",
+      "not a different scheduler: add the attribute to `known` with its own date and",
+      "drop it from this list."
+    ],
+    "entity": "loan",
+    "attributes": [
+      "resc:consummationDate",
+      "resc:noticeDeliveredDate",
+      "resc:materialDisclosuresDeliveredDate"
+    ]
+  },
+
+  "operational": {
+    "$note": [
+      "DEMO-SYNTHETIC OPERATIONAL PREFERENCES. Nothing here is law, and nothing here",
+      "may ever restate law. These are the only constraints the scheduler is allowed",
+      "to encode itself: who is available when. If you find yourself wanting to add",
+      "'wait three business days after signing' to this block, stop — that is TILA,",
+      "it already lives in rulepacks/tila-rescission-us-federal/pack.yaml, and a second",
+      "copy of it here is the defect this example exists to prevent."
+    ],
+    "signing": {
+      "$note": "Mobile notary; already booked through Feb 13; office closed Presidents' Day.",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "unavailable": ["2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-16"]
+    },
+    "funding": {
+      "$note": "Wire desk: weekdays only. Saturdays are business days under 1026.2(a)(6); the wire desk is not.",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "unavailable": []
+    },
+    "recording": {
+      "$note": "County recorder e-recording window; closed Feb 23 for a synthetic system-maintenance day.",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "unavailable": ["2026-02-23"]
+    },
+    "recordOnOrAfterFunding": true
+  }
+}

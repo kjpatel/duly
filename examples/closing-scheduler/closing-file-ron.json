@@ -1,0 +1,37 @@
+{
+  "$note": [
+    "The same closing, with one attribute changed: the borrower asks to sign remotely.",
+    "",
+    "Nothing in schedule.py knows anything about remote online notarization. It asks",
+    "the RON pack the same question it always asks, for every candidate day in the",
+    "horizon, and gets the same answer every time: not compliant. So the signing table",
+    "is empty, there is no feasible plan, and the receipt says why — California's",
+    "Online Notarization Act is signed law that is not yet operative (the pack encodes",
+    "its statutory outside date of 2030-01-01 and fails closed until then).",
+    "",
+    "This is the point of the example stated in the negative. A scheduler that had a",
+    "state RON table hard-coded would either be wrong about California or would have to",
+    "be maintained in step with fifty legislatures. This one is neither, because it",
+    "does not have the table."
+  ],
+
+  "extends": "closing-file.json",
+
+  "id": "esc-7714-ca-ron",
+  "title": "ESC-7714 — the same California refinance, signed by remote online notarization",
+
+  "override": {
+    "known": [
+      {
+        "entity": "notarization",
+        "attribute": "ron:notarizationMethod",
+        "value": {
+          "kind": "code",
+          "value": "RemoteOnline",
+          "codeSystem": "duly-starter-ron/notarization-methods",
+          "codeSystemVersion": "0.1.0"
+        }
+      }
+    ]
+  }
+}

@@ -26,6 +26,14 @@ The expensive failure mode in regulated work is not being wrong — it is being 
 
 The defining query of regulated replay is: *evaluate a March file under March rules, as we understood the facts in March.* That needs two independent time axes — when a fact or rule applies in the world (effective time) and when the system learned it (knowledge time) — because they routinely disagree: a correction learned in November changes what we know, not what was true in March. One timestamp can answer "what do we believe now"; it cannot answer "what would we have decided then," and the second question is the one an auditor asks. Retrofitting the second axis onto a unitemporal store is a rewrite, which is why duly carries both from day one.
 
+If you would rather see it than read about it, the demo's [evidence browser](demo_tour.md#11-the-evidence-browser) puts a knowledge-time dial over a case: drag it back past a reviewer's correction and the corrected fact becomes not-yet-known, the below-floor machine fact it replaced goes live again, and the questions that cite each one move with them.
+
+## Can I see the actual document, or only the text your extractor pulled out of it?
+
+Both, and the difference is deliberately not smoothed over. A fact's grounding cites two different things: the source document's SHA-256 — the bytes — and a character span into a *rendition*, which is one extractor's reading of those bytes. The [evidence browser](demo_tour.md#11-the-evidence-browser) serves the committed PDF beside the rendition and tells you whether the file still hashes to what the facts cite.
+
+What it will not do is draw highlights on the PDF. Character offsets are not page coordinates, and no fact in the contract carries the latter; an overlay computed from offsets would be a guess presented with the authority of provenance. The spans are drawn where they are measured. (Facts may carry a bounding box as well as a span — see [D3](../spec/grounded-facts.md#d3-every-fact-says-where-it-came-from-a-span-or-an-attestation) — and a browser that drew those would be drawing something real; none of the committed starters carry one.)
+
 ## Who writes the rules, and what happens when a regulation changes?
 
 Rule packs are YAML: each rule carries a legal citation, a priority, an effective window, and explicit exception relationships — designed for compliance analysts and domain experts, with a [step-by-step authoring guide](../rulepacks/README.md). When a regulation changes, you add a new rule version with its own effective date; nothing retrains, old decisions still replay under the old rule, and CI reports exactly which historical decisions the change would flip. (A [decision-table authoring surface](../spec/dmn.md) for analysts who prefer DMN to YAML has shipped.)
@@ -46,6 +54,12 @@ Because "last Monday in May" is legal content, not engine code. Jurisdictions di
 
 Yes, for the subset duly can execute honestly. `python -m duly_dmn compile my-rules.dmn -o rulepacks/my-pack/pack.yaml` turns a DMN 1.3+ decision table into a rule pack; the kernel cannot tell the result from a hand-written one, and `dmn/tests/test_equivalence.py` proves it by adjudicating the same facts under compiled and hand-written versions of the TRID rules, then comparing decision, rules fired, defeat chains, and input facts. Three things will surprise you. Every row needs `duly:ruleId`, `duly:citation`, and `duly:effectiveFrom` annotation columns — the compiler will not invent an id, a citation, or a date on your behalf. Only `UNIQUE`, `FIRST`, and `PRIORITY` compile; `COLLECT` and friends return lists, and a duly decision is one value for one attribute. And compiling is step 1 of the [authoring guide](../rulepacks/README.md), not all of it — `expected.yaml`, a starter, demo verdict phrasing, and a golden-corpus generator template are still yours to write. The full supported subset, the annotation convention, and every refusal class: [spec/dmn.md](../spec/dmn.md).
 
+## Do I have to edit YAML to work on rules?
+
+No, though you should still read it. The demo ships a **rule studio** (<http://localhost:8788/rules>, [tour §10](demo_tour.md)) that renders every pack's rules as decision-table grids — rows are rules, columns are the inputs they bind — and lets you edit the cells, the rule forms, or the YAML text. What makes it more than a form over a file is the panel beside it: one click each for the kernel's validator, the pack's own declared cases, an ad-hoc case you build by changing input values, golden-corpus impact analysis, and (with the optional solver) a proof of whether your draft and the committed pack decide alike. Those instruments already existed as five separate command-line tools; the studio's contribution is putting them in one place, in the order that catches things, so a rule author sees them disagree. The stock demonstration is exactly that disagreement: change New York's 45-day minimum to 60, and all four declared cases still pass while the corpus reports one flipped decision.
+
+Two things it deliberately does not do. It never writes into `rulepacks/` — it hands you `pack.yaml` bytes and a diff, and `git add` is yours, the same rule as the golden-case export. And its decision tables are a *view* of the rule IR, not a DMN round trip: `duly_dmn` compiles DMN into the IR and does not decompile, so authoring through DMN is the import tab and that path is one-way on purpose.
+
 ## How do I know a rule pack does not contradict itself?
 
 Two layers, answering different questions. The kernel refuses to load an ambiguous pack outright: two rules concluding the same attribute at the same priority are a validation error unless it can *prove* they never both apply. But its proof set is deliberately tiny — disjoint effective windows, or contradictory quoted-string equality guards — so a boolean split, a numeric range, or a guard on a derived value comes back "cannot prove", which is a statement about the validator, not about your rules. Authors then write an `overrides` or spread the priorities apart, and record the real argument in a code comment.
@@ -61,6 +75,20 @@ You shouldn't, and the tool doesn't. A what-if answer — *"the notice had to be
 So the solver proposes and the kernel disposes. Every value is handed back to `duly_kernel.api.adjudicate` — the same code that produced the original receipt — and the answer is reported only if the kernel agrees. Extremal answers get a second check: the kernel must also *refuse* one step beyond. If solver and kernel disagree, `python -m duly_whatif` raises with both artifacts instead of returning an answer, and a deliberately broken encoding is committed as a test to prove that guard fires.
 
 Two things it still cannot promise, both stated wherever an answer appears rather than only in the spec. "No value works" (UNSAT) is not pointwise-verifiable — there is no point to hand the kernel — so it rests on the encoding alone, except over finite domains where every member is checked. And extremality means the kernel confirmed this value and refused the next step, not that nothing further out could work. See [spec/whatif.md](../spec/whatif.md).
+
+## Someone hands me a receipt. How do I check it, without trusting them?
+
+Open it in the receipt viewer (<http://localhost:8788/receipt>, or `/api/receipts/inspect`) and it runs three checks before it shows you anything. Their independence is the answer to your question, because each one closes a different hole.
+
+**Its own hash.** Recompute SHA-256 over the receipt's canonical body and compare it to the `receiptSha256` it carries. This needs nothing but the receipt — not our repository, not our facts, not our packs — so it works on a receipt produced by somebody else's deployment years ago. It proves exactly one thing: nobody edited this document after it was sealed.
+
+**Its facts.** Every fact pinned in `inputFacts` is present and hashes to the content hash in its own id. A receipt pins facts by hash rather than by value, so it cannot supply them itself; if you were handed the receipt alone, this check reports *not checked* rather than passing vacuously.
+
+**Replay.** Re-run the kernel over those facts, that pack version, and the receipt's own asOf pair, and compare byte-for-byte. This is `python -m duly_assurance verify` narrowed to a single receipt.
+
+The reason it is three checks and not one is the forgery that beats the first two. Edit a verdict, then recompute the hash: the document is now internally consistent, its facts are genuine and correctly hashed, and the report renders in fluent sentences with real statutory citations. Hash passes. Facts pass. Replay fails, because the rules do not produce that answer. **Sealed, internally consistent, and true are three different properties**, and a system that checks only the first has confused tamper-evidence for correctness.
+
+Two honest limits. The hash is an integrity claim, not an authenticity one — it proves the document is unaltered, not who produced it; signing is an open question, the same one the [extraction run envelope](../spec/grounded-facts.md#resolved-questions) leaves open. And replay tells you the receipt is a faithful record of what this rulebase concludes, which is not a claim that the rulebase is right about the law. For that, read the citations — they are in the report, one per rule. See [demo tour §12](demo_tour.md#12-the-receipt-viewer).
 
 ## Who decides how the answer is worded?
 

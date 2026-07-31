@@ -1,0 +1,625 @@
+/* Receipt viewer — layered on style.css, every selector scoped to
+   `body.viewer` so it can reuse names the decision workspace and the rule
+   studio already own without any of the three reaching into another. */
+
+/* Two panes, not three. The receipt picker lives in the toolbar because 351
+   receipts are searched rather than browsed, and the width a rail would have
+   taken is worth more to the report and the verification checks. */
+.viewer #viewer {
+  width: calc(100% - 48px);
+  max-width: 1840px;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(520px, 2.15fr) minmax(340px, 1fr);
+  gap: 20px;
+  padding-bottom: 24px;
+}
+
+.viewer code,
+.viewer .mono {
+  font-family: var(--font-mono);
+}
+
+.viewer .muted {
+  margin: 4px 0;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+
+.viewer .empty {
+  margin: 12px 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.viewer .note {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.viewer .note:empty {
+  display: none;
+}
+
+.viewer .note.warn {
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+}
+
+.viewer .note.error {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border: 1px solid var(--error-border);
+}
+
+/* ---------- buttons and inputs ---------- */
+
+.viewer .primary-btn,
+.viewer .ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 570;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.viewer .primary-btn {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.viewer .primary-btn:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+}
+
+.viewer .ghost-btn {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+}
+
+.viewer .ghost-btn:hover:not(:disabled) {
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.viewer .ghost-btn.small {
+  min-height: 27px;
+  padding: 4px 9px;
+  font-size: 0.68rem;
+}
+
+.viewer .icon-btn {
+  padding: 2px 6px;
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.viewer .icon-btn:hover {
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.viewer .text-input {
+  width: 100%;
+  padding: 7px 9px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  resize: vertical;
+}
+
+.viewer .text-input.mono {
+  font-family: var(--font-mono);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.viewer .text-input:focus-visible {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 0;
+}
+
+.viewer .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.viewer .field label {
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 570;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.viewer .field-hint {
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+/* ---------- the receipt picker (toolbar combobox) ---------- */
+
+.viewer .viewer-toolbar .controls {
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.viewer .pack-field {
+  min-width: 200px;
+}
+
+/* Wide enough that a case id and its decision never collide, and the anchor
+   the dropdown is positioned against. */
+.viewer .receipt-field {
+  position: relative;
+  min-width: 340px;
+}
+
+.viewer .receipt-field .control-input {
+  width: 100%;
+}
+
+.viewer .combo-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.viewer .combo-pop[hidden] {
+  display: none;
+}
+
+.viewer .combo-note {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.68rem;
+}
+
+.viewer .combo-list {
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.viewer .combo-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.viewer .combo-option.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.viewer .combo-option.current .combo-case::after {
+  content: " • open";
+  color: var(--color-accent-dark);
+  font-weight: 500;
+}
+
+.viewer .combo-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.viewer .combo-case {
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 570;
+}
+
+.viewer .combo-value {
+  flex: 0 0 auto;
+  color: var(--color-accent-dark);
+  font-size: 0.71rem;
+  font-weight: 570;
+}
+
+/* One line, never two: the hash stays pinned right and the pack name gives up
+   characters first, so an option is a predictable two rows tall and more of
+   them fit before the reader has to scroll. */
+.viewer .combo-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.viewer .combo-meta > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewer .combo-tag {
+  padding: 1px 6px;
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  font-size: 0.6rem;
+}
+
+.viewer .combo-hash {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.63rem;
+}
+
+/* ---------- report ---------- */
+
+/* The report view switcher is `.tabs` / `.tab` in style.css, shared with the
+   rule studio and the evidence browser. */
+
+.viewer .report-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.viewer .report-section {
+  padding-bottom: 6px;
+}
+
+.viewer .report-section + .report-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.viewer .report-section h3 {
+  margin: 0 0 10px;
+  color: var(--color-text-primary);
+  font-size: 0.86rem;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+.viewer .report-subhead {
+  margin: 14px 0 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 590;
+}
+
+.viewer .report-para {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.viewer .report-kv {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) 1fr;
+  gap: 3px 14px;
+  margin: 0 0 12px;
+}
+
+.viewer .report-kv.tight {
+  margin: 8px 0 0;
+  gap: 2px 10px;
+  font-size: 0.7rem;
+}
+
+.viewer .report-kv dt {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 550;
+}
+
+.viewer .report-kv dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.viewer .report-kv dd.mono {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.viewer .report-steps {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+}
+
+.viewer .report-steps > li {
+  margin-bottom: 12px;
+}
+
+.viewer .step-lead {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.viewer .step-evidence {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  list-style: none;
+  background: var(--accent-softer);
+  border-left: 2px solid var(--accent-border);
+  border-radius: 0 8px 8px 0;
+}
+
+.viewer .step-evidence li {
+  color: var(--color-text-secondary);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.viewer .report-code {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  color: var(--color-text-secondary);
+  background: var(--accent-softer);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.viewer .report-code.json {
+  max-height: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.viewer .pane-badge.partial {
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+/* ---------- verification ---------- */
+
+.viewer .verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 0.82rem;
+  font-weight: 590;
+  line-height: 1.45;
+}
+
+.viewer .verdict-banner.pass {
+  color: var(--color-success-strong);
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
+}
+
+.viewer .verdict-banner.fail {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border: 1px solid var(--error-border);
+}
+
+.viewer .verdict-banner.partial {
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+}
+
+.viewer .check-card {
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.viewer .check-card.fail {
+  border-color: var(--error-border);
+}
+
+.viewer .check-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.viewer .check-label {
+  color: var(--color-text-primary);
+  font-size: 0.77rem;
+  font-weight: 590;
+}
+
+.viewer .check-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.63rem;
+  font-weight: 590;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.viewer .check-pill.pass {
+  color: var(--color-success-strong);
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
+}
+
+.viewer .check-pill.fail {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border: 1px solid var(--error-border);
+}
+
+.viewer .check-pill.unavailable {
+  color: var(--color-text-muted);
+  background: var(--color-bg-card-hover);
+  border: 1px solid var(--color-border);
+}
+
+.viewer .check-detail {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.viewer .check-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.viewer .resolution,
+.viewer .downloads {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.viewer .download-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ---------- modal ---------- */
+
+.viewer .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(11 15 26 / 0.35);
+}
+
+.viewer .modal-backdrop[hidden] {
+  display: none;
+}
+
+.viewer .modal {
+  width: min(680px, 100%);
+  max-height: min(760px, 88vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.viewer .modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.viewer .modal-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 620;
+}
+
+.viewer .modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+}
+
+.viewer .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1180px) {
+  .viewer #viewer {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer .pane {
+    max-height: none;
+  }
+
+  /* The controls wrap here, so the dropdown anchors to a field that may now
+     be the full width of the toolbar rather than a third of it. */
+  .viewer .receipt-field,
+  .viewer .pack-field {
+    min-width: 0;
+    flex: 1 1 240px;
+  }
+
+  .viewer .combo-pop {
+    max-height: 300px;
+  }
+}

@@ -1810,4 +1810,54 @@ def api_document(scenario_id: str, document_id: str) -> dict[str, Any]:
     return {"title": doc["title"], "renditionText": doc["renditionText"]}
 
 
+# The Rule Studio: browse, edit and test the rule packs themselves. It ships
+# as its own module because it shares nothing with adjudication but the kernel
+# — different artifacts (packs, not cases), different verbs (draft and prove,
+# not answer). Mounted here rather than run standalone so one `uvicorn
+# demo.app:app` still starts the whole demonstration.
+from demo import rules_api  # noqa: E402, PLC0415
+
+app.include_router(rules_api.router)
+
+
+@app.get("/rules")
+def rules_studio() -> Response:
+    return Response(
+        content=(STATIC_DIR / "rules.html").read_bytes(), media_type="text/html"
+    )
+
+
+# The Evidence Browser: the case's documents and grounded facts as objects in
+# their own right, at a knowledge time you choose. Separate module for the same
+# reason as the studio — the workspace is scoped to one question's receipt, and
+# this is scoped to everything the store holds, which is a different projection
+# of the same case rather than a bigger version of the same pane.
+from demo import evidence_api  # noqa: E402, PLC0415
+
+app.include_router(evidence_api.router)
+
+
+@app.get("/evidence")
+def evidence_browser() -> Response:
+    return Response(
+        content=(STATIC_DIR / "evidence.html").read_bytes(), media_type="text/html"
+    )
+
+
+# The Receipt viewer: open a receipt that already exists and check whether it
+# holds. Mounted alongside the workspace for the same reason as the studio —
+# it shares only the kernel with adjudication, and reaches it from the other
+# end: the workspace produces a receipt, this reads one back.
+from demo import receipts_api  # noqa: E402, PLC0415
+
+app.include_router(receipts_api.router)
+
+
+@app.get("/receipt")
+def receipt_viewer() -> Response:
+    return Response(
+        content=(STATIC_DIR / "receipt.html").read_bytes(), media_type="text/html"
+    )
+
+
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

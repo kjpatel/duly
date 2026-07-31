@@ -8,7 +8,7 @@ Entries are written after the fact, from merged work.
 
 ## v0.4.0 — M4: standards, authoring, and static assurance
 
-Ten capabilities across twenty-one pull requests, and **the golden corpus was never regenerated once**. All 351 receipts still replay byte-for-byte from before any of it. Every track's acceptance test was that `git diff -- golden/` came back empty.
+Ten capabilities across twenty-five pull requests (#6–#30), and **the golden corpus was never regenerated once**. All 351 receipts still replay byte-for-byte from before any of it. Every track's acceptance test was that `git diff -- golden/` came back empty.
 
 ### Interchange and contract
 

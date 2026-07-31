@@ -28,7 +28,7 @@ The defining query of regulated replay is: *evaluate a March file under March ru
 
 ## Who writes the rules, and what happens when a regulation changes?
 
-Rule packs are YAML: each rule carries a legal citation, a priority, an effective window, and explicit exception relationships — designed for compliance analysts and domain experts, with a [step-by-step authoring guide](../rulepacks/README.md). When a regulation changes, you add a new rule version with its own effective date; nothing retrains, old decisions still replay under the old rule, and CI reports exactly which historical decisions the change would flip. (A decision-table authoring surface for analysts who prefer DMN to YAML is on the [roadmap](../README.md#roadmap).)
+Rule packs are YAML: each rule carries a legal citation, a priority, an effective window, and explicit exception relationships — designed for compliance analysts and domain experts, with a [step-by-step authoring guide](../rulepacks/README.md). When a regulation changes, you add a new rule version with its own effective date; nothing retrains, old decisions still replay under the old rule, and CI reports exactly which historical decisions the change would flip. (A [decision-table authoring surface](../spec/dmn.md) for analysts who prefer DMN to YAML has shipped.)
 
 ## Can our existing data-governance or lineage tooling read duly's audit trail?
 
@@ -61,6 +61,10 @@ You shouldn't, and the tool doesn't. A what-if answer — *"the notice had to be
 So the solver proposes and the kernel disposes. Every value is handed back to `duly_kernel.api.adjudicate` — the same code that produced the original receipt — and the answer is reported only if the kernel agrees. Extremal answers get a second check: the kernel must also *refuse* one step beyond. If solver and kernel disagree, `python -m duly_whatif` raises with both artifacts instead of returning an answer, and a deliberately broken encoding is committed as a test to prove that guard fires.
 
 Two things it still cannot promise, both stated wherever an answer appears rather than only in the spec. "No value works" (UNSAT) is not pointwise-verifiable — there is no point to hand the kernel — so it rests on the encoding alone, except over finite domains where every member is checked. And extremality means the kernel confirmed this value and refused the next step, not that nothing further out could work. See [spec/whatif.md](../spec/whatif.md).
+
+## Who decides how the answer is worded?
+
+The same person who wrote the rule. A pack declares both the question it can answer and the phrasing of the answer — verdict, supporting clause, and tone, with cases for the value concluded and the evidence behind it. Nothing about a verdict lives in the UI, so an organization replacing the rule packs replaces the wording with them and never forks the demo to do it. The wording is versioned with the rules but deliberately *outside* the receipt hash: what a decision **is** is `decision.value`, which is hashed and replays forever; how it **reads** has to stay improvable. See [Decision phrasing](../spec/rule-ir.md#decision-phrasing).
 
 ## Is this a product I can deploy?
 

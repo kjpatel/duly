@@ -1,6 +1,7 @@
 pack:
   name: tila-rescission-us-federal
   version: "2026.2.0"
+  idPrefix: RESC         # the family every new rule id joins (spec/rule-ir.md, "Rule ids")
   ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: TILA (Reg Z) right of rescission — applicability, computed deadline, and funding hold.
@@ -115,12 +116,59 @@ decisions:
   - attribute: resc:rescissionApplies
     entityType: resc:Loan
     question: "Does the right of rescission apply to this loan?"
+    phrasing:
+      # A rescission right is a hold on the file, not good news: warn, not pos.
+      - when: { value: true }
+        verdict: "Rescission applies"
+        detail: >-
+          Dwelling-secured, non-purchase — three-business-day right under 12
+          CFR 1026.23
+        tone: warn
+      - when: { value: false }
+        verdict: "No rescission right"
+        detail: "Residential mortgage transaction or not the principal dwelling"
+        tone: pos
   - attribute: resc:rescissionDeadline
     entityType: resc:Loan
     question: "When does the rescission period end?"
+    phrasing:
+      # The computed deadline is the verdict in every branch. The date printed
+      # on the Notice of Right to Cancel is an extracted fact no rule consumes,
+      # used here only as a cross-check: agreement is worth saying, and
+      # disagreement routes the document for review without moving the answer.
+      - when: { fact: { attribute: statedRescissionDeadline, equals: "{value}" } }
+        verdict: "Midnight of {value|day}"
+        detail: >-
+          Computed by the kernel: third precise business day after the latest
+          trigger — Saturdays count, Sundays and federal holidays do not;
+          matches the deadline printed on the notice
+      - when: { fact: { attribute: statedRescissionDeadline, present: true } }
+        verdict: "Midnight of {value|day}"
+        detail: >-
+          Computed by the kernel from the trigger dates; the notice prints
+          {fact:statedRescissionDeadline|day} — the computed deadline stands,
+          route the document for correction
+        tone: warn
+      - verdict: "Midnight of {value|day}"
+        detail: >-
+          Computed by the kernel: third precise business day after the latest
+          trigger — Saturdays count, Sundays and federal holidays do not
   - attribute: resc:fundingPermitted
     entityType: resc:Loan
     question: "May the lender disburse the loan funds?"
+    phrasing:
+      - when: { value: true }
+        verdict: "Clear to fund"
+        detail: >-
+          The as-of date is past the computed rescission deadline (or no
+          rescission right applies)
+        tone: pos
+      - when: { value: false }
+        verdict: "Funding hold"
+        detail: >-
+          The computed rescission period has not been shown expired — no
+          disbursement under 12 CFR 1026.23(c)
+        tone: neg
 
 rules:
   # --- Applicability -------------------------------------------------------

@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from . import expr as _expr
+from . import rule_ids as _rule_ids
 
 
 class PackValidationError(Exception):
@@ -52,6 +53,7 @@ def validate_pack(pack: dict) -> None:
     for i, d in enumerate(decisions):
         if not isinstance(d, dict) or not isinstance(d.get("attribute"), str):
             raise PackValidationError(f"decisions[{i}] must have an 'attribute' CURIE")
+        _validate_phrasing(d.get("phrasing"), f"decisions[{i}] ({d['attribute']})")
 
     _validate_abstention_policy(pack.get("abstentionPolicy"))
 
@@ -68,6 +70,10 @@ def validate_pack(pack: dict) -> None:
     for i, rule in enumerate(rules):
         _validate_rule(rule, i, seen_ids, calendars)
 
+    id_problem = _rule_ids.check_rule_ids(pack, rules)
+    if id_problem is not None:
+        raise PackValidationError(id_problem)
+
     ids = {r["id"] for r in rules}
     for rule in rules:
         for target in rule.get("overrides", []) or []:
@@ -78,6 +84,148 @@ def validate_pack(pack: dict) -> None:
 
     _check_derived_cycles(rules)
     _check_priority_ambiguity(rules)
+
+
+_PHRASING_CASE_KEYS = {"when", "verdict", "detail", "tone"}
+_PHRASING_GUARDS = {"value", "amount", "fact", "abstained"}
+_PHRASING_FACT_GUARD_KEYS = {"attribute", "equals", "present"}
+_PHRASING_TONES = {"pos", "neg", "warn", ""}
+_PHRASING_AMOUNTS = {"positive", "nonPositive"}
+_PHRASING_ABSTAINED = {"lowConfidence", "none"}
+_PHRASING_FORMATS = {"", "day", "int"}
+_PHRASING_TOKEN = re.compile(r"\{([^{}]*)\}")
+
+
+def _validate_phrasing(phrasing: object, where: str) -> None:
+    """Validate the optional per-decision `phrasing` block
+    (spec/rule-ir.md, "Decision phrasing").
+
+    Phrasing is *presentation metadata*: it never reaches a receipt, a fact, or
+    anything hashed. It is validated here anyway, because the pack is where its
+    author will read the error — the whole point of moving verdict wording into
+    the pack is that a pack author never has to touch the demo to fix it.
+    """
+    if phrasing is None:
+        return
+    if not isinstance(phrasing, list) or not phrasing:
+        raise PackValidationError(
+            f"{where}: 'phrasing' must be a non-empty list of cases"
+        )
+    for j, case in enumerate(phrasing):
+        at = f"{where}: phrasing[{j}]"
+        if not isinstance(case, dict):
+            raise PackValidationError(f"{at} must be a mapping")
+        unknown = set(case) - _PHRASING_CASE_KEYS
+        if unknown:
+            raise PackValidationError(
+                f"{at} has unknown key(s): {', '.join(sorted(unknown))} "
+                f"(allowed: {', '.join(sorted(_PHRASING_CASE_KEYS))})"
+            )
+        if "verdict" not in case:
+            raise PackValidationError(f"{at} is missing 'verdict'")
+        _validate_phrasing_text(case["verdict"], f"{at}.verdict")
+        if "detail" in case:
+            _validate_phrasing_text(case["detail"], f"{at}.detail")
+        tone = case.get("tone", "")
+        if not isinstance(tone, str) or tone not in _PHRASING_TONES:
+            raise PackValidationError(
+                f"{at}.tone must be one of {sorted(_PHRASING_TONES)}, got {tone!r}"
+            )
+        _validate_phrasing_guard(case.get("when"), f"{at}.when")
+
+
+def _validate_phrasing_guard(when: object, where: str) -> None:
+    if when is None:
+        return
+    if not isinstance(when, dict) or not when:
+        raise PackValidationError(f"{where} must be a non-empty mapping of guards")
+    unknown = set(when) - _PHRASING_GUARDS
+    if unknown:
+        raise PackValidationError(
+            f"{where} has unknown guard(s): {', '.join(sorted(unknown))} "
+            f"(allowed: {', '.join(sorted(_PHRASING_GUARDS))})"
+        )
+    if "amount" in when and when["amount"] not in _PHRASING_AMOUNTS:
+        raise PackValidationError(
+            f"{where}.amount must be one of {sorted(_PHRASING_AMOUNTS)}, "
+            f"got {when['amount']!r}"
+        )
+    if "abstained" in when and when["abstained"] not in _PHRASING_ABSTAINED:
+        raise PackValidationError(
+            f"{where}.abstained must be one of {sorted(_PHRASING_ABSTAINED)}, "
+            f"got {when['abstained']!r}"
+        )
+    if "fact" not in when:
+        return
+    guard = when["fact"]
+    if not isinstance(guard, dict):
+        raise PackValidationError(f"{where}.fact must be a mapping")
+    unknown = set(guard) - _PHRASING_FACT_GUARD_KEYS
+    if unknown:
+        raise PackValidationError(
+            f"{where}.fact has unknown key(s): {', '.join(sorted(unknown))} "
+            f"(allowed: {', '.join(sorted(_PHRASING_FACT_GUARD_KEYS))})"
+        )
+    if not isinstance(guard.get("attribute"), str) or not guard["attribute"]:
+        raise PackValidationError(
+            f"{where}.fact.attribute is required and must be an attribute name"
+        )
+    if "equals" not in guard and "present" not in guard:
+        raise PackValidationError(
+            f"{where}.fact must test 'equals' or 'present'"
+        )
+    if "present" in guard and not isinstance(guard["present"], bool):
+        raise PackValidationError(f"{where}.fact.present must be true or false")
+    if isinstance(guard.get("equals"), str):
+        _validate_phrasing_tokens(guard["equals"], f"{where}.fact.equals")
+
+
+def _validate_phrasing_text(text: object, where: str) -> None:
+    candidates = [text] if isinstance(text, str) else text
+    if not isinstance(candidates, list) or not candidates:
+        raise PackValidationError(
+            f"{where} must be a string, or a non-empty list of alternatives "
+            f"(the first whose placeholders all resolve is used)"
+        )
+    for k, candidate in enumerate(candidates):
+        if not isinstance(candidate, str):
+            raise PackValidationError(f"{where}[{k}] must be a string")
+        _validate_phrasing_tokens(candidate, f"{where}[{k}]" if len(candidates) > 1 else where)
+
+
+def _validate_phrasing_tokens(text: str, where: str) -> None:
+    """Every `{placeholder}` must name something a renderer can resolve."""
+    for token in _PHRASING_TOKEN.findall(text):
+        spec, _, fmt = token.partition("|")
+        head, sep, arg = spec.strip().partition(":")
+        fmt, arg = fmt.strip(), arg.strip()
+        problem = None
+        if head in ("value", "fact", "derived"):
+            if fmt not in _PHRASING_FORMATS:
+                problem = f"unknown format {fmt!r} (one of {sorted(_PHRASING_FORMATS - {''})})"
+            elif head == "value" and sep:
+                problem = "takes no argument"
+            elif head != "value" and not arg:
+                problem = "needs an attribute name, e.g. {%s:noticeMailedDate}" % head
+        elif head in ("money", "caveat"):
+            if sep or fmt:
+                problem = "takes no argument and no format"
+        elif head == "daysBetween":
+            start, comma, end = arg.partition(",")
+            if not (start.strip() and comma and end.strip()) or fmt:
+                problem = (
+                    "takes two attribute names, e.g. "
+                    "{daysBetween:noticeMailedDate,policyExpirationDate}"
+                )
+        else:
+            problem = "is not a known placeholder"
+        if problem:
+            raise PackValidationError(
+                f"{where}: placeholder {{{token}}} {problem}. Known placeholders: "
+                f"{{value}}, {{money}}, {{caveat}}, {{fact:<attribute>}}, "
+                f"{{derived:<attribute>}}, {{daysBetween:<from>,<to>}}; "
+                f"formats: |day, |int"
+            )
 
 
 def _validate_abstention_policy(policy: object) -> None:

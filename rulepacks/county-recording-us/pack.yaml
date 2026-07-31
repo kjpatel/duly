@@ -13,6 +13,7 @@
 pack:
   name: county-recording-us
   version: "2026.1.0"
+  idPrefix: REC          # the family every new rule id joins (spec/rule-ir.md, "Rule ids")
   ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: County recording readiness for deeds and security instruments.
@@ -35,12 +36,41 @@ decisions:
   - attribute: rec:recordable
     entityType: rec:RecordingSubmission
     question: "Will this instrument be accepted for recording as submitted?"
+    phrasing:
+      # "Recordable" can mean "no requirement was evaluated": say which.
+      - when: { value: true, abstained: lowConfidence }
+        verdict: "Recordable"
+        detail: "{caveat}"
+        tone: warn
+      - when: { value: true }
+        verdict: "Recordable"
+        detail: "No encoded requirement found the package deficient"
+        tone: pos
+      - when: { value: false }
+        verdict: "Not recordable as submitted"
+        detail: >-
+          An encoded county requirement found the package deficient — see the
+          rules fired
+        tone: neg
   - attribute: rec:requiredFirstPageTopSpaceInches
     entityType: rec:RecordingSubmission
     question: "How much first-page top space must be reserved for the recorder?"
+    phrasing:
+      - verdict: "{value} inches"
+        detail: "First-page top space reserved for the recorder"
   - attribute: rec:sb2FeeDueUSD
     entityType: rec:RecordingSubmission
     question: "What Building Homes and Jobs Act (SB 2) fee is due at recording?"
+    phrasing:
+      - when: { amount: positive }
+        verdict: "{money} SB 2 fee due"
+        detail: "Building Homes and Jobs Act fee at recording"
+        tone: warn
+      - verdict: "No SB 2 fee"
+        detail: >-
+          Exempt — recorded in connection with a transfer subject to
+          documentary transfer tax
+        tone: pos
 
 rules:
   # FAIL-CLOSED DEFAULT, deliberately jurisdiction-scoped. The notice pack's

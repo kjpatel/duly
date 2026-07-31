@@ -1,6 +1,7 @@
 pack:
   name: trid-fee-tolerance-us-federal
   version: "2026.1.0"
+  idPrefix: TRID         # the family every new rule id joins (spec/rule-ir.md, "Rule ids")
   ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: TRID (Reg Z) fee tolerance categorization and cure amounts.
@@ -9,9 +10,31 @@ decisions:
   - attribute: trid:toleranceCureAmount
     entityType: trid:Fee
     question: "Does this fee increase require a tolerance cure?"
+    phrasing:
+      - when: { amount: positive }
+        verdict: "Cure required"
+        detail: "{money} tolerance cure"
+        tone: warn
+      - verdict: "No cure required"
+        detail: "{money}"
+        tone: pos
   - attribute: trid:toleranceCategory
     entityType: trid:Fee
     question: "Which tolerance category applied to this fee?"
+    phrasing:
+      - when: { value: ZeroTolerance }
+        verdict: "Zero tolerance"
+        detail: "The disclosed amount may not increase at closing"
+      - when: { value: TenPercentCumulative }
+        verdict: "10% cumulative tolerance"
+        detail: "Fee tolerance category"
+      - when: { value: NoToleranceLimit }
+        verdict: "No tolerance limit"
+        detail: "Fee tolerance category"
+      # An unmapped code renders as itself rather than as a raw CURIE: the
+      # category is named, the claim about what it means is withheld.
+      - verdict: "{value}"
+        detail: "Fee tolerance category"
 
 rules:
   - id: TRID-DEF-00

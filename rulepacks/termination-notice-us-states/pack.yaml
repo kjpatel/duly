@@ -1,6 +1,7 @@
 pack:
   name: termination-notice-us-states
   version: "2026.3.0"
+  idPrefix: NC           # the family every new rule id joins (spec/rule-ir.md, "Rule ids")
   ontology: duly-starter-notice
   ontologyVersion: "0.1.0"
   description: State-by-state cancellation/nonrenewal notice compliance.
@@ -20,9 +21,31 @@ decisions:
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
     question: "Was this termination notice compliant?"
+    phrasing:
+      # Compliant *because* the deficiency arithmetic could not run is not a
+      # clean verdict: say the presumption out loud before anything else.
+      - when: { value: true, abstained: lowConfidence }
+        verdict: "Compliant"
+        detail: "{caveat}"
+        tone: warn
+      - when: { value: true }
+        verdict: "Compliant"
+        detail:
+          - "{daysBetween:noticeMailedDate,policyExpirationDate} days notice given, {derived:requiredMinimumNoticeDays|int} required"
+          - "No applicable rule found the notice deficient"
+        tone: pos
+      - when: { value: false }
+        verdict: "Not compliant"
+        detail:
+          - "{daysBetween:noticeMailedDate,policyExpirationDate} days notice given, {derived:requiredMinimumNoticeDays|int} required"
+          - ""
+        tone: neg
   - attribute: nc:requiredMinimumNoticeDays
     entityType: nc:TerminationNotice
     question: "What minimum notice period applied?"
+    phrasing:
+      - verdict: "{value} days"
+        detail: "Minimum advance notice required"
 
 rules:
   - id: NC-DEF-00

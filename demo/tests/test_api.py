@@ -18,11 +18,27 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import yaml  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from demo.app import _determination, _render_answer, app  # noqa: E402
 
 client = TestClient(app)
+
+
+def _pack(name: str) -> dict:
+    """A committed rule pack, loaded as the demo loads it.
+
+    Determination tests build their scenario around the real pack because the
+    wording under test lives *in* the pack (its `phrasing:` block), not in
+    demo/app.py. Fabricating a pack here would only test the renderer.
+    """
+    path = REPO_ROOT / "rulepacks" / name / "pack.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _scenario(pack_name: str, facts: list[dict] | None = None) -> dict:
+    return {"pack": _pack(pack_name), "facts": facts or []}
 
 
 def _first_scenario():
@@ -157,10 +173,11 @@ def test_render_answer_describes_tolerance_cure_as_a_determination():
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
 
-    answer = _render_answer(receipt, {"facts": []}, "2026-07-29")
+    scenario = _scenario("trid-fee-tolerance-us-federal")
+    answer = _render_answer(receipt, scenario, "2026-07-29")
 
     assert answer == "Cure required: 250.00 USD tolerance cure as of 2026-07-29."
-    assert _determination(receipt, {"facts": []}, "2026-07-29") == {
+    assert _determination(receipt, scenario, "2026-07-29") == {
         "verdict": "Cure required",
         "detail": "250.00 USD tolerance cure",
         "tone": "warn",
@@ -177,7 +194,7 @@ def test_determination_is_the_only_place_verdict_wording_lives():
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
 
-    found = _determination(receipt, {"facts": []}, "2026-07-29")
+    found = _determination(receipt, _scenario("trid-fee-tolerance-us-federal"), "2026-07-29")
 
     assert found["verdict"] == "Zero tolerance"
     assert found["detail"] == "The disclosed amount may not increase at closing"
@@ -196,40 +213,47 @@ def test_rescission_deadline_cross_checks_the_printed_notice_date():
         },
         "asOf": {"effective": "2026-05-26T00:00:00Z"},
     }
-    printed_ok = {
-        "facts": [
+    printed_ok = _scenario(
+        "tila-rescission-us-federal",
+        [
             {
                 "attribute": "resc:statedRescissionDeadline",
                 "value": {"kind": "date", "value": "2026-05-27"},
             }
-        ]
-    }
+        ],
+    )
     found = _determination(receipt, printed_ok, "2026-05-26")
     assert found["verdict"] == "Midnight of 2026-05-27"
     assert "matches the deadline printed on the notice" in found["detail"]
     assert found["tone"] == ""
 
-    misprinted = {
-        "facts": [
+    misprinted = _scenario(
+        "tila-rescission-us-federal",
+        [
             {
                 "attribute": "resc:statedRescissionDeadline",
                 "value": {"kind": "date", "value": "2026-05-24"},
             }
-        ]
-    }
+        ],
+    )
     found = _determination(receipt, misprinted, "2026-05-26")
     assert found["verdict"] == "Midnight of 2026-05-27"
     assert "notice prints 2026-05-24" in found["detail"]
     assert found["tone"] == "warn"
 
     # No printed-date fact at all: no cross-check claim either way.
-    found = _determination(receipt, {"facts": []}, "2026-05-26")
+    found = _determination(receipt, _scenario("tila-rescission-us-federal"), "2026-05-26")
     assert found["verdict"] == "Midnight of 2026-05-27"
     assert "printed" not in found["detail"]
     assert found["tone"] == ""
 
 
 def test_unmapped_attributes_fall_back_without_claiming_a_verdict():
+    """An attribute the pack declares no phrasing for degrades honestly.
+
+    This is the fallback the pack-authoring guide points at: the demo says
+    `attribute = value` rather than inventing a verdict it cannot support.
+    """
     receipt = {
         "decision": {
             "attribute": "nc:someFutureAttribute",
@@ -237,14 +261,160 @@ def test_unmapped_attributes_fall_back_without_claiming_a_verdict():
         },
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
+    scenario = _scenario("termination-notice-us-states")
 
-    found = _determination(receipt, {"facts": []}, "2026-07-29")
+    found = _determination(receipt, scenario, "2026-07-29")
 
     assert found["generic"] is True
     assert found["tone"] == ""
-    assert _render_answer(receipt, {"facts": []}, "2026-07-29") == (
+    assert _render_answer(receipt, scenario, "2026-07-29") == (
         "nc:someFutureAttribute = Whatever as of 2026-07-29."
     )
+
+
+def test_a_boolean_decision_needs_no_phrasing_block():
+    """The Yes/No fallback, so a simple pack declares nothing at all."""
+    receipt = {
+        "decision": {
+            "attribute": "nc:someFutureFlag",
+            "value": {"kind": "boolean", "value": True},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+    }
+    scenario = _scenario("termination-notice-us-states")
+    scenario["pack"]["decisions"].append(
+        {"attribute": "nc:someFutureFlag", "entityType": "nc:TerminationNotice"}
+    )
+
+    found = _determination(receipt, scenario, "2026-07-29")
+
+    assert found == {"verdict": "Yes", "detail": "", "tone": "pos"}
+
+
+def test_verdict_wording_is_pack_data_not_demo_code():
+    """Editing the pack changes the wording; no demo code names the verdict.
+
+    This is the contribution-surface promise: a pack author who wants
+    different wording edits their pack, and a *new* pack's decision renders
+    without anyone touching demo/app.py.
+    """
+    receipt = {
+        "decision": {
+            "attribute": "trid:toleranceCategory",
+            "value": {"kind": "code", "value": "ZeroTolerance"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+    }
+    scenario = _scenario("trid-fee-tolerance-us-federal")
+    for decision in scenario["pack"]["decisions"]:
+        if decision["attribute"] == "trid:toleranceCategory":
+            decision["phrasing"] = [
+                {"verdict": "Nulltoleranz", "detail": "{value}", "tone": "neg"}
+            ]
+
+    assert _determination(receipt, scenario, "2026-07-29") == {
+        "verdict": "Nulltoleranz",
+        "detail": "ZeroTolerance",
+        "tone": "neg",
+    }
+
+
+def test_every_placeholder_the_validator_accepts_is_one_the_demo_renders():
+    """The two halves of the phrasing contract must not drift apart.
+
+    `validate_pack` owns the vocabulary (a pack author's typo has to fail
+    where the pack loads); this module owns the rendering. A placeholder the
+    kernel blesses and the renderer cannot resolve would silently discard a
+    template alternative instead of erroring.
+    """
+    from duly_kernel.ir import validate_pack
+
+    receipt = {
+        "decision": {
+            "attribute": "nc:noticeCompliant",
+            "value": {"kind": "money", "amount": "45.00", "currency": "USD"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+        "abstentions": [
+            {
+                "attribute": "nc:noticeMailedDate",
+                "reason": "low_confidence",
+                "confidence": {"score": 0.62},
+                "threshold": {"minConfidence": 0.75},
+            }
+        ],
+        "derivation": {
+            "conclusion": {"attribute": "nc:noticeCompliant"},
+            "premises": [
+                {
+                    "conclusion": {
+                        "attribute": "nc:requiredMinimumNoticeDays",
+                        "value": {"kind": "decimal", "value": "45"},
+                    },
+                    "premises": [],
+                }
+            ],
+        },
+    }
+    facts = [
+        {"attribute": "nc:noticeMailedDate", "value": {"kind": "date", "value": "2026-07-25"}},
+        {
+            "attribute": "nc:policyExpirationDate",
+            "value": {"kind": "date", "value": "2026-09-01"},
+        },
+    ]
+    templates = [
+        "{value}",
+        "{value|day}",
+        "{value|int}",
+        "{money}",
+        "{caveat}",
+        "{fact:noticeMailedDate}",
+        "{fact:noticeMailedDate|day}",
+        "{derived:requiredMinimumNoticeDays}",
+        "{derived:requiredMinimumNoticeDays|int}",
+        "{daysBetween:noticeMailedDate,policyExpirationDate}",
+    ]
+    scenario = _scenario("termination-notice-us-states", facts)
+    for template in templates:
+        pack = _pack("termination-notice-us-states")
+        for decision in pack["decisions"]:
+            if decision["attribute"] == "nc:noticeCompliant":
+                decision["phrasing"] = [{"verdict": template}]
+        validate_pack(pack)  # the kernel accepts it …
+        found = _determination(receipt, {"pack": pack, "facts": facts}, "2026-07-29")
+        assert not found.get("generic"), template  # … and the renderer resolves it
+        assert found["verdict"], template
+    assert scenario["pack"]["decisions"]  # sanity: the committed pack still parses
+
+
+def test_every_committed_pack_phrases_every_decision_it_advertises():
+    """A pack that advertises a question must be able to phrase its answer.
+
+    Boolean decisions may rely on the Yes/No fallback; anything else needs a
+    `phrasing:` block, or the demo would render a bare value. Sweeping the
+    packs here means a new pack is covered the moment it lands.
+    """
+    non_boolean = {
+        "nc:requiredMinimumNoticeDays",
+        "trid:toleranceCureAmount",
+        "trid:toleranceCategory",
+        "pkg:signingMethod",
+        "resc:rescissionDeadline",
+        "rec:requiredFirstPageTopSpaceInches",
+        "rec:sb2FeeDueUSD",
+    }
+    seen = set()
+    for pack_dir in sorted((REPO_ROOT / "rulepacks").iterdir()):
+        pack_file = pack_dir / "pack.yaml"
+        if not pack_file.exists():
+            continue
+        pack = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+        for decision in pack.get("decisions") or []:
+            attribute = decision["attribute"]
+            seen.add(attribute)
+            assert decision.get("phrasing"), (pack_dir.name, attribute)
+    assert non_boolean <= seen
 
 
 def test_fixture_mode_refuses_questions_the_fixture_receipt_cannot_answer(monkeypatch):

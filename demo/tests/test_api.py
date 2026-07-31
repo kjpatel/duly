@@ -530,6 +530,25 @@ def test_report_endpoint_exports_receipt_as_prov_o_jsonld(monkeypatch):
     assert doc["decision"]["attribute"] == scenario["questions"][0]["attribute"]
 
 
+def test_static_assets_revalidate_rather_than_letting_the_browser_guess():
+    """Starlette sends etag/last-modified but no cache-control, and a browser
+    with no directive invents its own freshness window and serves from cache
+    without asking — which is how a stale stylesheet renders against new
+    markup. `no-cache` requires revalidation; the etag keeps it cheap."""
+    for path in ("/style.css", "/app.js", "/index.html"):
+        res = client.get(path)
+        assert res.status_code == 200, path
+        assert res.headers.get("cache-control") == "no-cache", path
+        assert res.headers.get("etag"), path
+
+    # Revalidation must still be a 304 with no body, or this trades one bug
+    # for a bandwidth regression.
+    etag = client.get("/style.css").headers["etag"]
+    fresh = client.get("/style.css", headers={"If-None-Match": etag})
+    assert fresh.status_code == 304
+    assert not fresh.content
+
+
 def test_report_endpoint_rejects_unknown_format():
     scenario = _first_scenario()
     res = client.get(

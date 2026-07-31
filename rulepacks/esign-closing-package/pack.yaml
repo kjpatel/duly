@@ -1,6 +1,7 @@
 pack:
   name: esign-closing-package
   version: "2026.1.0"
+  idPrefix: PKG          # the family every new rule id joins (spec/rule-ir.md, "Rule ids")
   ontology: duly-mortgage-closing
   ontologyVersion: "0.1.0"
   description: eSign eligibility and signing-method routing for closing-package documents.
@@ -28,9 +29,36 @@ decisions:
   - attribute: pkg:eSignEligible
     entityType: pkg:SigningTask
     question: "May this document be signed electronically?"
+    phrasing:
+      - when: { value: true }
+        verdict: "eSign permitted"
+        detail: "This document may be signed electronically"
+        tone: pos
+      - when: { value: false }
+        verdict: "eSign not permitted"
+        detail: "Route this document to wet-ink signing"
+        tone: neg
   - attribute: pkg:signingMethod
     entityType: pkg:SigningTask
     question: "Which signing channel should this document be routed to?"
+    phrasing:
+      - when: { value: ESign }
+        verdict: "Route to eSign"
+        detail: "Electronic signing with ESIGN consumer consent on file"
+        tone: pos
+      - when: { value: ENoteEVault }
+        verdict: "Route to eNote"
+        detail: >-
+          Electronic note registered on the MERS eRegistry, authoritative copy
+          in the eVault
+        tone: pos
+      - when: { value: WetInk }
+        verdict: "Route to wet ink"
+        detail: "Ink signature on paper required"
+        tone: warn
+      # An unmapped route names itself and claims nothing about its handling.
+      - verdict: "{value}"
+        detail: "Signing route"
 
 rules:
   # FAIL-SAFE DEFAULT: unknown or unmatched document types route to wet ink.

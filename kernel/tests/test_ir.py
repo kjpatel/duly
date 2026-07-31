@@ -102,3 +102,82 @@ def test_then_entity_must_be_bound():
     rule["then"]["entity"] = "ghost"
     with pytest.raises(PackValidationError, match="then.entity"):
         validate_pack(minimal_pack([rule]))
+
+
+# --- Decision phrasing (presentation metadata; spec/rule-ir.md) -------------
+
+
+def phrased_pack(phrasing) -> dict:
+    pack = minimal_pack([minimal_rule("R-1")])
+    pack["decisions"][0]["phrasing"] = phrasing
+    return pack
+
+
+def test_a_decision_needs_no_phrasing_block():
+    validate_pack(minimal_pack([minimal_rule("R-1")]))
+
+
+def test_valid_phrasing_passes():
+    validate_pack(
+        phrased_pack(
+            [
+                {
+                    "when": {"value": True, "abstained": "lowConfidence"},
+                    "verdict": "Compliant",
+                    "detail": "{caveat}",
+                    "tone": "warn",
+                },
+                {
+                    "when": {"fact": {"attribute": "noticeType", "equals": "Nonrenewal"}},
+                    "verdict": "{value} days",
+                    "detail": [
+                        "{daysBetween:mailedOn,expiresOn} given, {derived:minDays|int} required",
+                        "",
+                    ],
+                },
+                {"verdict": "Midnight of {value|day}"},
+            ]
+        )
+    )
+
+
+def test_phrasing_case_needs_a_verdict():
+    with pytest.raises(PackValidationError, match="missing 'verdict'"):
+        validate_pack(phrased_pack([{"detail": "no headline"}]))
+
+
+def test_phrasing_tone_vocabulary_is_closed():
+    with pytest.raises(PackValidationError, match="tone must be one of"):
+        validate_pack(phrased_pack([{"verdict": "Yes", "tone": "excited"}]))
+
+
+def test_phrasing_rejects_unknown_placeholders():
+    with pytest.raises(PackValidationError, match=r"\{amount\} is not a known placeholder"):
+        validate_pack(phrased_pack([{"verdict": "{amount} due"}]))
+
+
+def test_phrasing_rejects_an_unknown_format():
+    with pytest.raises(PackValidationError, match="unknown format 'month'"):
+        validate_pack(phrased_pack([{"verdict": "{value|month}"}]))
+
+
+def test_phrasing_rejects_a_bare_fact_placeholder():
+    with pytest.raises(PackValidationError, match="needs an attribute name"):
+        validate_pack(phrased_pack([{"verdict": "{fact:}"}]))
+
+
+def test_phrasing_rejects_unknown_guards():
+    with pytest.raises(PackValidationError, match="unknown guard"):
+        validate_pack(phrased_pack([{"when": {"weather": "sunny"}, "verdict": "Yes"}]))
+
+
+def test_phrasing_fact_guard_must_test_something():
+    with pytest.raises(PackValidationError, match="must test 'equals' or 'present'"):
+        validate_pack(
+            phrased_pack([{"when": {"fact": {"attribute": "x"}}, "verdict": "Yes"}])
+        )
+
+
+def test_phrasing_rejects_unknown_case_keys():
+    with pytest.raises(PackValidationError, match="unknown key"):
+        validate_pack(phrased_pack([{"verdict": "Yes", "colour": "blue"}]))

@@ -61,6 +61,23 @@ decisions:
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
     question: "Was this termination notice compliant?"
+    phrasing:
+      - when: { value: true, abstained: lowConfidence }
+        verdict: "Compliant"
+        detail: "{caveat}"
+        tone: warn
+      - when: { value: true }
+        verdict: "Compliant"
+        detail:
+          - "{daysBetween:noticeMailedDate,policyExpirationDate} days notice given, {derived:requiredMinimumNoticeDays|int} required"
+          - "No applicable rule found the notice deficient"
+        tone: pos
+      - when: { value: false }
+        verdict: "Not compliant"
+        detail:
+          - "{daysBetween:noticeMailedDate,policyExpirationDate} days notice given, {derived:requiredMinimumNoticeDays|int} required"
+          - ""
+        tone: neg
 
 rules:
   - id: NC-DEF-00
@@ -837,34 +854,6 @@ def _format_value(value: Any) -> str:
     return str(value.get("value"))
 
 
-TOLERANCE_CATEGORY_LABELS = {
-    "ZeroTolerance": "Zero tolerance",
-    "TenPercentCumulative": "10% cumulative tolerance",
-    "NoToleranceLimit": "No tolerance limit",
-}
-
-SIGNING_METHOD_ROUTES = {
-    "ESign": {
-        "verdict": "Route to eSign",
-        "detail": "Electronic signing with ESIGN consumer consent on file",
-        "tone": "pos",
-    },
-    "ENoteEVault": {
-        "verdict": "Route to eNote",
-        "detail": (
-            "Electronic note registered on the MERS eRegistry, "
-            "authoritative copy in the eVault"
-        ),
-        "tone": "pos",
-    },
-    "WetInk": {
-        "verdict": "Route to wet ink",
-        "detail": "Ink signature on paper required",
-        "tone": "warn",
-    },
-}
-
-
 def _low_confidence_caveat(receipt: dict[str, Any]) -> str | None:
     """A "Presumption only — …" detail when the verdict stands only because a
     below-floor fact was excluded, else None. Shared by every decision whose
@@ -892,6 +881,185 @@ def _low_confidence_caveat(receipt: dict[str, Any]) -> str | None:
     return "Presumption only — " + "; ".join(parts)
 
 
+# --- Decision phrasing -----------------------------------------------------
+#
+# How a decision value is worded is *pack data*, not demo code. A decision in
+# a pack.yaml may carry a `phrasing:` block (spec/rule-ir.md, "Decision
+# phrasing"); what follows is only its renderer. Adding a rule pack never
+# means editing this file — the failure it used to cause (a new non-boolean
+# decision leaking a raw CURIE into the UI) is now a pack-authoring omission
+# with a pack-authoring fix.
+#
+# Phrasing is presentation and stays presentation: it is read from the pack
+# the demo already has in hand, never written to a receipt, a fact, or
+# anything hashed.
+
+_PHRASING_TOKEN = re.compile(r"\{([^{}]+)\}")
+
+
+def _phrasing_scalar(raw: Any, fmt: str) -> str | None:
+    """Format an already-unwrapped scalar (a fact's `value.value`)."""
+    if fmt == "day":
+        return _date_prefix(str(raw)) or str(raw)
+    if fmt == "int":
+        try:
+            return str(int(float(raw)))
+        except (TypeError, ValueError):
+            return None
+    return str(raw)
+
+
+def _phrasing_value(value: Any, fmt: str) -> str | None:
+    """Format a fact-value mapping (`{kind, value}` / `{kind, amount, currency}`)."""
+    if not isinstance(value, dict):
+        return _phrasing_scalar(value, fmt)
+    if fmt == "day":
+        return _date_prefix(str(value.get("value") or "")) or _format_value(value)
+    if fmt == "int":
+        return _phrasing_scalar(value.get("value"), "int")
+    return _format_value(value)
+
+
+def _phrasing_days_between(facts: list[dict[str, Any]], start: str, end: str) -> str | None:
+    a, b = _fact_value(facts, start), _fact_value(facts, end)
+    if a is None or b is None:
+        return None
+    try:
+        return str(
+            (date.fromisoformat(str(b)[:10]) - date.fromisoformat(str(a)[:10])).days
+        )
+    except ValueError:
+        return None
+
+
+def _phrasing_token(
+    token: str, receipt: dict[str, Any], scenario: dict[str, Any], value: dict[str, Any]
+) -> str | None:
+    """Resolve one `{token}`. None means *unresolvable*, which discards the
+    template alternative that used it — that is how a pack says "phrase it
+    this way when the inputs are there, that way when they are not"."""
+    spec, _, fmt = token.partition("|")
+    head, _, arg = spec.strip().partition(":")
+    fmt, arg = fmt.strip(), arg.strip()
+    facts = scenario.get("facts") or []
+    if head == "value":
+        return _phrasing_value(value, fmt)
+    if head == "money":
+        text = " ".join(
+            str(part) for part in (value.get("amount"), value.get("currency")) if part
+        )
+        return text or None
+    if head == "caveat":
+        return _low_confidence_caveat(receipt)
+    if head == "fact":
+        raw = _fact_value(facts, arg)
+        return None if raw is None else _phrasing_scalar(raw, fmt)
+    if head == "derived":
+        found = _find_derived_value(receipt.get("derivation"), arg)
+        return None if found is None else _phrasing_value(found, fmt)
+    if head == "daysBetween":
+        start, _, end = arg.partition(",")
+        return _phrasing_days_between(facts, start.strip(), end.strip())
+    return None
+
+
+def _phrasing_render(
+    template: Any,
+    receipt: dict[str, Any],
+    scenario: dict[str, Any],
+    value: dict[str, Any],
+) -> str | None:
+    if not isinstance(template, str):
+        return None
+    out: list[str] = []
+    pos = 0
+    for match in _PHRASING_TOKEN.finditer(template):
+        resolved = _phrasing_token(match.group(1), receipt, scenario, value)
+        if resolved is None:
+            return None
+        out.append(template[pos:match.start()])
+        out.append(resolved)
+        pos = match.end()
+    out.append(template[pos:])
+    return "".join(out)
+
+
+def _phrasing_first(
+    candidates: Any,
+    receipt: dict[str, Any],
+    scenario: dict[str, Any],
+    value: dict[str, Any],
+) -> str | None:
+    """The first alternative whose every token resolves, or None."""
+    if isinstance(candidates, str):
+        candidates = [candidates]
+    if not isinstance(candidates, list):
+        return None
+    for candidate in candidates:
+        rendered = _phrasing_render(candidate, receipt, scenario, value)
+        if rendered is not None:
+            return rendered
+    return None
+
+
+def _money_is_positive(value: dict[str, Any]) -> bool:
+    amount = value.get("amount")
+    try:
+        return float(amount) > 0
+    except (TypeError, ValueError):
+        return bool(amount)
+
+
+def _phrasing_case_applies(
+    when: Any, receipt: dict[str, Any], scenario: dict[str, Any], value: dict[str, Any]
+) -> bool:
+    """Every declared guard must hold; an absent/empty `when` always holds."""
+    if not when:
+        return True
+    if not isinstance(when, dict):
+        return False
+    if "value" in when:
+        expected = when["value"]
+        if isinstance(expected, bool):
+            if value.get("kind") != "boolean" or bool(value.get("value")) is not expected:
+                return False
+        elif str(value.get("value", "")) != str(expected):
+            return False
+    if "amount" in when:
+        if (when["amount"] == "positive") is not _money_is_positive(value):
+            return False
+    if "abstained" in when:
+        excluded = _low_confidence_caveat(receipt) is not None
+        if (when["abstained"] == "lowConfidence") is not excluded:
+            return False
+    guard = when.get("fact")
+    if isinstance(guard, dict):
+        raw = _fact_value(scenario.get("facts") or [], str(guard.get("attribute", "")))
+        if "present" in guard and bool(guard["present"]) is not (raw is not None):
+            return False
+        if "equals" in guard:
+            if raw is None:
+                return False
+            expected_text = guard["equals"]
+            if isinstance(expected_text, str) and "{" in expected_text:
+                expected_text = _phrasing_render(expected_text, receipt, scenario, value)
+                if expected_text is None:
+                    return False
+            if str(raw) != str(expected_text):
+                return False
+    return True
+
+
+def _decision_phrasing(pack: Any, attribute: str) -> list[Any] | None:
+    if not isinstance(pack, dict):
+        return None
+    for decision in pack.get("decisions") or []:
+        if isinstance(decision, dict) and decision.get("attribute") == attribute:
+            cases = decision.get("phrasing")
+            return cases if isinstance(cases, list) else None
+    return None
+
+
 def _determination(
     receipt: dict[str, Any], scenario: dict[str, Any], effective: str
 ) -> dict[str, Any]:
@@ -899,255 +1067,32 @@ def _determination(
 
     Returns ``verdict`` (the headline), ``detail`` (one supporting sentence, no
     terminal period) and ``tone`` ("pos" | "neg" | "warn" | ""). The client
-    renders these verbatim, so no phrasing is duplicated in JavaScript. When no
-    branch recognises the attribute, ``generic`` is set and the caller falls back
-    to a raw ``attribute = value`` rendering.
+    renders these verbatim, so no phrasing is duplicated in JavaScript.
+
+    The wording comes from the pack's own `phrasing:` block. When the pack
+    declares none — or declares none whose guards match this value — a boolean
+    decision falls back to Yes/No and anything else sets ``generic``, and the
+    caller renders a raw ``attribute = value`` string rather than inventing a
+    verdict it cannot support.
     """
     decision = receipt.get("decision", {})
     attribute = decision.get("attribute", "")
     value = decision.get("value", {})
 
-    if attribute.endswith("noticeCompliant") and value.get("kind") == "boolean":
-        compliant = bool(value.get("value"))
-        verdict = "Compliant" if compliant else "Not compliant"
-        tone = "pos" if compliant else "neg"
-        caveat = _low_confidence_caveat(receipt) if compliant else None
-        if caveat:
-            # Compliant only because the deficiency arithmetic could not run:
-            # a below-floor fact was excluded and the presumption stands. Say
-            # so instead of presenting the presumption as a clean verdict.
-            return {"verdict": verdict, "detail": caveat, "tone": "warn"}
-        mailed = _fact_value(scenario["facts"], "noticeMailedDate")
-        expiration = _fact_value(scenario["facts"], "policyExpirationDate")
-        min_days_value = _find_derived_value(
-            receipt.get("derivation"), "requiredMinimumNoticeDays"
-        )
-        days_given = None
-        if mailed and expiration:
-            try:
-                days_given = (
-                    date.fromisoformat(str(expiration)[:10])
-                    - date.fromisoformat(str(mailed)[:10])
-                ).days
-            except ValueError:
-                days_given = None
-        min_days = None
-        if isinstance(min_days_value, dict):
-            raw = min_days_value.get("value")
-            try:
-                min_days = int(float(raw))
-            except (TypeError, ValueError):
-                min_days = None
-        if days_given is not None and min_days is not None:
-            detail = f"{days_given} days notice given, {min_days} required"
-        elif compliant:
-            detail = "No applicable rule found the notice deficient"
-        else:
-            detail = ""
-        return {"verdict": verdict, "detail": detail, "tone": tone}
-
-    if attribute.endswith("toleranceCureAmount") and value.get("kind") == "money":
-        amount = value.get("amount")
-        currency = value.get("currency")
-        formatted = " ".join(str(part) for part in (amount, currency) if part)
-        try:
-            cure_required = float(amount) > 0
-        except (TypeError, ValueError):
-            cure_required = bool(amount)
-        if cure_required:
-            return {
-                "verdict": "Cure required",
-                "detail": f"{formatted} tolerance cure",
-                "tone": "warn",
-            }
+    cases = _decision_phrasing(scenario.get("pack"), attribute)
+    for case in cases or []:
+        if not isinstance(case, dict):
+            continue
+        if not _phrasing_case_applies(case.get("when"), receipt, scenario, value):
+            continue
+        verdict = _phrasing_first(case.get("verdict"), receipt, scenario, value)
+        if verdict is None:
+            continue
+        detail = _phrasing_first(case.get("detail"), receipt, scenario, value)
         return {
-            "verdict": "No cure required",
-            "detail": formatted,
-            "tone": "pos",
-        }
-
-    if attribute.endswith("requiredMinimumNoticeDays"):
-        return {
-            "verdict": f"{_format_value(value)} days",
-            "detail": "Minimum advance notice required",
-            "tone": "",
-        }
-
-    if attribute.endswith("toleranceCategory"):
-        raw_category = str(value.get("value", ""))
-        category = TOLERANCE_CATEGORY_LABELS.get(raw_category, raw_category)
-        detail = (
-            "The disclosed amount may not increase at closing"
-            if raw_category == "ZeroTolerance"
-            else "Fee tolerance category"
-        )
-        return {"verdict": category, "detail": detail, "tone": ""}
-
-    # --- RON notarization (rulepacks/notarization-ron-us-states) ---
-
-    if attribute.endswith("ronPermitted") and value.get("kind") == "boolean":
-        permitted = bool(value.get("value"))
-        return {
-            "verdict": "RON permitted" if permitted else "RON not permitted",
-            "detail": (
-                "A statute in force authorizes remote online notarization in this state"
-                if permitted
-                else "No statute in force authorizes remote online notarization in this state"
-            ),
-            "tone": "pos" if permitted else "neg",
-        }
-
-    if attribute.endswith("notarizationCompliant") and value.get("kind") == "boolean":
-        compliant = bool(value.get("value"))
-        if compliant:
-            method = _fact_value(scenario["facts"], "notarizationMethod")
-            detail = (
-                "Remote online notarization was authorized at this date"
-                if method == "RemoteOnline"
-                else "In-person notarization — the RON authorization question does not arise"
-            )
-            return {"verdict": "Compliant", "detail": detail, "tone": "pos"}
-        return {
-            "verdict": "Not compliant",
-            "detail": "Notarized by remote online audio-visual means where RON was not permitted",
-            "tone": "neg",
-        }
-
-    # --- eSign routing (rulepacks/esign-closing-package) ---
-
-    if attribute.endswith("eSignEligible") and value.get("kind") == "boolean":
-        eligible = bool(value.get("value"))
-        return {
-            "verdict": "eSign permitted" if eligible else "eSign not permitted",
-            "detail": (
-                "This document may be signed electronically"
-                if eligible
-                else "Route this document to wet-ink signing"
-            ),
-            "tone": "pos" if eligible else "neg",
-        }
-
-    if attribute.endswith("signingMethod"):
-        route = SIGNING_METHOD_ROUTES.get(str(value.get("value", "")))
-        if route:
-            return dict(route)
-        return {"verdict": _format_value(value), "detail": "Signing route", "tone": ""}
-
-    # --- TILA rescission (rulepacks/tila-rescission-us-federal) ---
-
-    if attribute.endswith("rescissionApplies") and value.get("kind") == "boolean":
-        applies = bool(value.get("value"))
-        if applies:
-            return {
-                "verdict": "Rescission applies",
-                "detail": (
-                    "Dwelling-secured, non-purchase — three-business-day right "
-                    "under 12 CFR 1026.23"
-                ),
-                "tone": "warn",
-            }
-        return {
-            "verdict": "No rescission right",
-            "detail": "Residential mortgage transaction or not the principal dwelling",
-            "tone": "pos",
-        }
-
-    if attribute.endswith("rescissionDeadline"):
-        computed = str(value.get("value", ""))
-        day = _date_prefix(computed) or _format_value(value)
-        # Cross-check the computed deadline against the date printed on the
-        # Notice of Right to Cancel (an extracted fact no rule consumes):
-        # agreement is worth saying; disagreement means the document needs
-        # review even though the computed deadline stands.
-        printed = _fact_value(scenario["facts"], "statedRescissionDeadline")
-        detail = (
-            "Computed by the kernel: third precise business day after the "
-            "latest trigger — Saturdays count, Sundays and federal holidays "
-            "do not"
-        )
-        tone = ""
-        if printed is not None:
-            if str(printed) == computed:
-                detail += "; matches the deadline printed on the notice"
-            else:
-                printed_day = _date_prefix(str(printed)) or str(printed)
-                detail = (
-                    "Computed by the kernel from the trigger dates; the "
-                    f"notice prints {printed_day} — the computed deadline "
-                    "stands, route the document for correction"
-                )
-                tone = "warn"
-        return {"verdict": f"Midnight of {day}", "detail": detail, "tone": tone}
-
-    if attribute.endswith("fundingPermitted") and value.get("kind") == "boolean":
-        permitted = bool(value.get("value"))
-        if permitted:
-            return {
-                "verdict": "Clear to fund",
-                "detail": (
-                    "The as-of date is past the computed rescission deadline "
-                    "(or no rescission right applies)"
-                ),
-                "tone": "pos",
-            }
-        return {
-            "verdict": "Funding hold",
-            "detail": (
-                "The computed rescission period has not been shown expired — "
-                "no disbursement under 12 CFR 1026.23(c)"
-            ),
-            "tone": "neg",
-        }
-
-    # --- County recording (rulepacks/county-recording-us) ---
-
-    if attribute.endswith("recordable") and value.get("kind") == "boolean":
-        recordable = bool(value.get("value"))
-        if recordable:
-            caveat = _low_confidence_caveat(receipt)
-            if caveat:
-                return {"verdict": "Recordable", "detail": caveat, "tone": "warn"}
-            return {
-                "verdict": "Recordable",
-                "detail": "No encoded requirement found the package deficient",
-                "tone": "pos",
-            }
-        return {
-            "verdict": "Not recordable as submitted",
-            "detail": (
-                "An encoded county requirement found the package deficient — "
-                "see the rules fired"
-            ),
-            "tone": "neg",
-        }
-
-    if attribute.endswith("requiredFirstPageTopSpaceInches"):
-        return {
-            "verdict": f"{_format_value(value)} inches",
-            "detail": "First-page top space reserved for the recorder",
-            "tone": "",
-        }
-
-    if attribute.endswith("sb2FeeDueUSD") and value.get("kind") == "money":
-        amount = value.get("amount")
-        formatted = " ".join(str(part) for part in (amount, value.get("currency")) if part)
-        try:
-            fee_due = float(amount) > 0
-        except (TypeError, ValueError):
-            fee_due = bool(amount)
-        if fee_due:
-            return {
-                "verdict": f"{formatted} SB 2 fee due",
-                "detail": "Building Homes and Jobs Act fee at recording",
-                "tone": "warn",
-            }
-        return {
-            "verdict": "No SB 2 fee",
-            "detail": (
-                "Exempt — recorded in connection with a transfer subject to "
-                "documentary transfer tax"
-            ),
-            "tone": "pos",
+            "verdict": verdict,
+            "detail": detail or "",
+            "tone": str(case.get("tone") or ""),
         }
 
     if value.get("kind") == "boolean":

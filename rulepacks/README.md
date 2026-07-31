@@ -15,7 +15,7 @@ rulepacks/<pack-name>/
 
 Copy [termination-notice-us-states](termination-notice-us-states/) for a jurisdiction-scoped pack, or [trid-fee-tolerance-us-federal](trid-fee-tolerance-us-federal/) for a two-document computation. Neither is a toy; both are what shipped.
 
-## Most wiring is automatic. Four things are not.
+## Most wiring is automatic. Three things are not.
 
 This is the part worth internalizing, because it is where contributions silently come up short.
 
@@ -26,18 +26,18 @@ This is the part worth internalizing, because it is where contributions silently
 | `rulepacks/<name>/expected.yaml` | `kernel/tests/test_rulepacks.py`, which globs `rulepacks/*/expected.yaml` |
 | `starters/<name>/scenario.json` | the demo, which iterates `starters/*/` at startup |
 | `starters/<name>/facts/*.json` | `starters/tools/check_facts.py` (schema, hashes, spans) |
+| a `phrasing:` block on a decision | the demo, which words every verdict from the pack ([spec/rule-ir.md](../spec/rule-ir.md), "Decision phrasing") |
 | a new test directory | CI, which runs all suites listed in `.github/workflows/ci.yml` |
 
 **Not automatic** — nothing fails loudly if you skip these, which is exactly why they get skipped:
 
-1. **Demo verdict phrasing.** A new decision attribute renders through `_determination()` in [demo/app.py](../demo/app.py) or it falls to a generic `attribute = value` string and leaks a raw CURIE into the UI. There is a test for this (`test_every_offered_question_is_answerable_and_phrased_for_humans`), so it will fail — but it fails in `demo/`, which pack authors do not expect to touch. Boolean decisions get a Yes/No fallback and pass without phrasing; code-, date-, and money-valued decisions do not.
-2. **Golden-corpus coverage.** [Impact analysis](../assurance/duly_assurance/impact.py) — the "this change flips N of M historical decisions" CI comment — runs *over the golden corpus*, not over `expected.yaml`. A pack with no generator template in [assurance/duly_assurance/generate.py](../assurance/duly_assurance/generate.py) gets a cheerful "0 of N decisions flip" for every edit, forever. `expected.yaml` catches breakage; only the corpus catches *drift*. Adding a template is a registry entry plus a fact builder — `STATE_TEMPLATES` is deliberately data, not code.
-3. **Extractor pinning for scripted confidences.** If a scenario depends on a specific confidence value — e.g. a below-floor fact that must abstain — set `"demoExtractor": "stub"` in its `scenario.json`. Docling measures its own confidence and will silently overwrite a scripted 0.58 with a passing 0.9, skipping the arc the scenario exists to demonstrate. This one has no failing test to warn you; it was found by looking at the running demo.
-4. **Ontology coverage.** Every attribute, entity type, and code value your pack or targets introduce must be declared in the ontology version the facts' `schemaRef` pins ([ontologies/](../ontologies/)). This one *does* fail loudly — `conformance/tests/test_repo_conformance.py` sweeps every committed fact — but it fails in `conformance/`, which pack authors do not expect to touch. New terms for an existing domain go in a **new version file** of that domain's ontology (committed versions are immutable; see [spec/ontology-conformance.md](../spec/ontology-conformance.md)), and the facts pin the new version.
+1. **Golden-corpus coverage.** [Impact analysis](../assurance/duly_assurance/impact.py) — the "this change flips N of M historical decisions" CI comment — runs *over the golden corpus*, not over `expected.yaml`. A pack with no generator template in [assurance/duly_assurance/generate.py](../assurance/duly_assurance/generate.py) gets a cheerful "0 of N decisions flip" for every edit, forever. `expected.yaml` catches breakage; only the corpus catches *drift*. Adding a template is a registry entry plus a fact builder — `STATE_TEMPLATES` is deliberately data, not code.
+2. **Extractor pinning for scripted confidences.** If a scenario depends on a specific confidence value — e.g. a below-floor fact that must abstain — set `"demoExtractor": "stub"` in its `scenario.json`. Docling measures its own confidence and will silently overwrite a scripted 0.58 with a passing 0.9, skipping the arc the scenario exists to demonstrate. This one has no failing test to warn you; it was found by looking at the running demo.
+3. **Ontology coverage.** Every attribute, entity type, and code value your pack or targets introduce must be declared in the ontology version the facts' `schemaRef` pins ([ontologies/](../ontologies/)). This one *does* fail loudly — `conformance/tests/test_repo_conformance.py` sweeps every committed fact — but it fails in `conformance/`, which pack authors do not expect to touch. New terms for an existing domain go in a **new version file** of that domain's ontology (committed versions are immutable; see [spec/ontology-conformance.md](../spec/ontology-conformance.md)), and the facts pin the new version.
 
 ## The path, in order
 
-1. **Write `pack.yaml`.** Decisions first (each with `attribute`, `entityType`, and the human `question` the demo shows), then rules: `priority`, `citation`, `effectiveFrom`, `given`/`when`/`then`, and `overrides` where a rule defeats a default.
+1. **Write `pack.yaml`.** Decisions first (each with `attribute`, `entityType`, the human `question` the demo shows, and the `phrasing` for its answer — step 6), then `idPrefix` and the rules: `id`, `priority`, `citation`, `effectiveFrom`, `given`/`when`/`then`, and `overrides` where a rule defeats a default.
 
    *Or author this step as a decision table.* If your organization already reviews rules as DMN — business analysts with a modeller, an existing table your compliance team maintains — you can write the rules as a DMN 1.3+ decision table and compile it:
 
@@ -45,18 +45,19 @@ This is the part worth internalizing, because it is where contributions silently
    uv run python -m duly_dmn compile my-rules.dmn -o rulepacks/my-pack/pack.yaml
    ```
 
-   The output is an ordinary pack; the kernel cannot tell. **This replaces step 1 and nothing else** — steps 2–7 below are the same either way. Worth knowing before you choose: every row needs `duly:ruleId`, `duly:citation`, and `duly:effectiveFrom` annotation columns, because the compiler will not invent an id, a citation, or a date on your behalf; and only `UNIQUE`, `FIRST`, and `PRIORITY` compile, since the others return lists and a duly decision is one value for one attribute. If you are writing rules from scratch and have no DMN tooling, YAML is the shorter path. See [spec/dmn.md](../spec/dmn.md).
+   The output is an ordinary pack; the kernel cannot tell. **This replaces step 1 and nothing else** — steps 2–7 below are the same either way. Worth knowing before you choose: every row needs `duly:ruleId`, `duly:citation`, and `duly:effectiveFrom` annotation columns, because the compiler will not invent an id, a citation, or a date on your behalf; and only `UNIQUE`, `FIRST`, and `PRIORITY` compile, since the others return lists and a duly decision is one value for one attribute. If you are writing rules from scratch and have no DMN tooling, YAML is the shorter path. See [spec/dmn.md](../spec/dmn.md). The ids you author in `duly:ruleId` are permanent in exactly the same way, so hold them to the same convention — though note the compiler emits no `pack.idPrefix`, so a compiled pack is not currently checked against it.
 2. **Write `expected.yaml`** covering every rule and every defeat chain, plus both sides of each effective-date boundary. `factsFrom` points at a starter's facts or at `fixtures/`. This is what CI runs, so under-covering here is invisible until something breaks in production.
 3. **Build a starter** — synthetic documents so the pack is demonstrable. Write `starters/<name>/make_documents.py` importing the shared helpers from [starters/tools/make_documents.py](../starters/tools/make_documents.py) (import them; do not edit the shared file), commit the PDFs and renditions, and pin each document's `sha256` in `scenario.json`.
 4. **Declare fact targets and extract.** One `starters/tools/targets/<name>-<doc>.json` per document, then `starters/tools/extract.py` to emit span-verified facts, then `check_facts.py` to prove every quote matches `rendition[start:end]`.
 5. **Set `domain` in `scenario.json`** (`"mortgage"`, `"insurance"`, …) so the demo groups the scenario. Unknown slugs get a title-cased label and a missing field lands in "Other" — graceful, but unlabeled.
-6. **Add `_determination` phrasing** for each decision: `{verdict, detail, tone}`, where `tone` is `pos`/`neg`/`warn`/`""`. Wording lives server-side only — never in `app.js`.
+6. **Declare the phrasing in your pack** — a `phrasing:` block on each decision, giving `{verdict, detail, tone}` per case, where `tone` is `pos`/`neg`/`warn`/`""` ([spec/rule-ir.md](../spec/rule-ir.md), "Decision phrasing"). This is domain wording, so it belongs with the rules and not in a UI; no demo code is involved either way. A boolean decision may skip it and fall back to Yes/No. Anything else without it renders as `attribute = value`, which is honest but useless to a reviewer.
 7. **Add a generator template** so the corpus and impact analysis cover the pack. Draw parameters that straddle every boundary the rules encode, the way the notice templates' margin ranges cross each state's threshold in both directions.
 
 ## Constraints that will bite you
 
 All verified against the kernel, not folklore:
 
+- **A rule id is a handle, not a claim — and it is permanent.** Ids are inside `rulesFired` on every receipt that cited them, and receipts are immutable, so an id that encodes a fact is wrong forever once that fact changes. `NY-NR-45` is in 76 golden receipts and will keep saying 45 whatever New York does next. Mint ids as `<PREFIX>-<TOPIC>[-<QUALIFIER>][-NN]`, uppercase, where `PREFIX` is your pack's declared `pack.idPrefix` and `NN` is a two-digit sequence number that means nothing else. The validator refuses a digit anywhere but that tail (so no years, statute sections or bill numbers), refuses a tail that equals a number in the rule's own body, and refuses an id outside the pack's family. Existing ids that predate the convention are exempt by an explicit list in [kernel/duly_kernel/rule_ids.py](../kernel/duly_kernel/rule_ids.py) — 17 of the 46 would fail today, which is what one late convention costs. Full argument in [spec/rule-ir.md](../spec/rule-ir.md), "Rule ids".
 - **One entity per `entityType` per case, one live fact per attribute.** Per-document decisions therefore need either one case per document or the document type modelled as an attribute of a single entity. Two live facts for one attribute is a *conflict*, not an overwrite ([spec/rule-ir.md](../spec/rule-ir.md)).
 - **Same-priority rules concluding the same attribute must be provably disjoint**, or the pack validator rejects it. The proofs it accepts: non-overlapping effective windows, contradictory equality guards, or an explicit `overrides`. The guard check (`_equality_guards` in [kernel/duly_kernel/ir.py](../kernel/duly_kernel/ir.py)) matches only `var == "quoted string"` — **boolean guards do not count**, so two rules distinguished solely by `x == true` / `x == false` need an explicit `overrides` even though they look disjoint to a human.
 
@@ -97,4 +98,4 @@ Then the full suite, because a pack touches more than it looks like it touches:
 uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
 ```
 
-A useful final check that no test performs: perturb one of your rules, run `impact`, and confirm it reports the flips you expect. If it reports zero, your pack has no corpus coverage — see item 2 above.
+A useful final check that no test performs: perturb one of your rules, run `impact`, and confirm it reports the flips you expect. If it reports zero, your pack has no corpus coverage — see item 1 above.

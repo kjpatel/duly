@@ -10,6 +10,7 @@ This v0 uses YAML directly as the IR serialization. One file per pack.
 pack:
   name: termination-notice-us-states
   version: "2026.2.0"
+  idPrefix: NC          # optional; the rule-id family this pack mints (see "Rule ids")
   ontology: duly-starter-notice
   ontologyVersion: "0.1.0"
   description: State-by-state cancellation/nonrenewal notice compliance.
@@ -29,6 +30,10 @@ decisions:            # the questions this pack can answer (consumed by UIs)
   - attribute: nc:noticeCompliant
     entityType: nc:TerminationNotice
     question: "Was this termination notice compliant?"
+    phrasing:         # optional; how a UI words the answer (see "Decision phrasing")
+      - when: { value: false }
+        verdict: "Not compliant"
+        tone: neg
 
 rules:
   - id: NC-DEF-00
@@ -39,7 +44,7 @@ rules:
 
 | Field | Required | Meaning |
 |---|---|---|
-| `id` | yes | Stable identifier, unique within the pack (e.g. `NY-NR-45`). |
+| `id` | yes | Stable identifier, unique within the pack (e.g. `RESC-FUND-STAY`). Follows the convention below; **never** renamed. |
 | `version` | yes | Semver of this rule. |
 | `priority` | yes | Integer; used for conflict resolution (higher wins). Defaults/presumptions sit low (0), specific rules higher. |
 | `citation` | yes | `{text, url?}` — legal source. Defaults may cite `"Default presumption"`. |
@@ -49,6 +54,37 @@ rules:
 | `when` | no | List of boolean expressions, ANDed. Omitted/empty = always true (this is how default rules work). |
 | `then` | yes | The conclusion: `{entity: <var>, attribute: <CURIE>, value: <literal or expr>}`. |
 | `overrides` | no | List of rule ids this rule defeats when it fires. |
+
+## Rule ids
+
+```
+<PREFIX>-<TOPIC>[-<QUALIFIER>…][-NN]        RESC-FUND-STAY, PKG-NOTE-31, NC-NY-NONRENEWAL-01
+```
+
+Uppercase letters and hyphens, with an optional **trailing two-digit sequence number** that means nothing except "the next id in this family". A pack declares its family once as `pack.idPrefix`; every id it mints starts with it.
+
+**A rule id is a handle, not a claim.** This is the whole argument. Everything an id is tempted to encode already has a home on the rule — the statute is in `citation`, the date is in `effectiveFrom`, the threshold is in `then.value`, the jurisdiction is in the `when` guard — and an id that repeats one of them becomes *false* when that field changes. The difference is that the field can be corrected and the id cannot: ids are inside `rulesFired` on every receipt that cited them, and receipts are content-addressed and immutable by construction. `NY-NR-45` names New York's 45-day nonrenewal notice; the day the legislature moves to 60, the pack gets a new effective-dated rule and the old id goes on saying 45 in 76 committed receipts, forever. There is no cheap fix, which is why the rule is *don't*, not *rename it later*.
+
+Three parts are machine-checked by `validate_pack`, and the rest is style left to review — the split is deliberate, because a check that pretends to more certainty than it has is the failure mode this repo spends most of its effort avoiding:
+
+| Checked | What it rejects | What it cannot see |
+|---|---|---|
+| No digits outside the trailing `NN` | `TX-RON-2018` (a year), `CA-DTT-11933` (a statute section), `CA-SB2-75` (a bill number), `NY-NR-45-LEGACY` (digits mid-id) | — |
+| `NN` must not equal a number in the rule's own `when` or `then.value` | `NY-NR-45` concluding 45 days; `CA-NR-75` concluding 75 | a semantic number the body never mentions — `CA-TOPSPACE-25` for 2.5 inches passes, because `25 ≠ 2.5` |
+| Every id starts with `pack.idPrefix` | a second scheme growing inside one pack | nothing, when the pack declares no prefix |
+
+`NN = 00` is exempt from the echo check: `-00` is the default-rule slot repo-wide and a default very often concludes zero, so the coincidence carries no claim.
+
+**Opting in.** The checks run only for packs that declare `pack.idPrefix` — declaring one *is* the opt-in. Every pack in this repo declares one, and `kernel/tests/test_rule_ids.py` fails if a new one does not. An adopter porting a rulebase whose ids are already in their own receipts is not forced to rename what this section argues cannot be renamed; they leave `idPrefix` off, or adopt the convention for new packs only.
+
+**Grandfathering.** The 46 rule ids committed before this convention existed are exempt, listed by pack in [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) — an explicit list, not a date cutoff or a heuristic, so the exemption is finite and countable. 17 of the 46 would fail the convention today: five jurisdiction-first county ids, five year-suffixed RON ids, and seven notice ids carrying day counts. `test_rule_ids.py` pins both numbers and asserts that every non-conforming committed id is on the list, so the list can only grow in a diff that says so.
+
+**Rejected:**
+
+- *Renaming the offenders.* `NY-NR-45` appears in 76 golden receipts. Renaming would rewrite the audit chain to make the repo look tidier — precisely the mutation the content-addressing invariant exists to prevent. The convention is forward-looking or it is nothing.
+- *Deriving ids from row or file position* (`PACK-03`). Inserting a rule above would silently re-label history; the same objection `spec/dmn.md` gives for requiring an authored `duly:ruleId`.
+- *Jurisdiction-first ids* (`NY-NR-01`). A jurisdiction-first id claims the jurisdiction is the rule's primary key, but the pack is the unit of versioning and the receipt already pins `rulePack.name`; meanwhile rules that span jurisdictions (`RON-COMP-01`) have nowhere to sit. Jurisdiction belongs in a `TOPIC` segment: `NC-NY-NONRENEWAL-01`.
+- *A global id registry across packs.* Ids need to be unique within a pack, because a receipt cites `rulePack` and `rulesFired` together. Cross-pack uniqueness would need coordination no adopter can join.
 
 ## `given` — variable bindings
 
@@ -183,6 +219,58 @@ The policy block may declare an optional `routeTo`: a plain string naming the re
 - *Per-rule thresholds.* Floors express trust in extraction per attribute, not per rule; per-rule floors would let two rules in one run disagree about whether the same fact participated, making "which facts were consumed" ill-defined on the receipt.
 - *Per-decision thresholds.* D5 anticipates a fact clearing the floor for one decision and not another, but that granularity belongs with the calibration module (M3), which will know per-decision error targets. The v0 shape is forward-compatible: a decision-scoped block can be added additively.
 - *Method-aware floors* (e.g. a floor that only trusts `conformal` scores). Deferred with calibration; `confidence.method` is already on the fact and echoed on the entry, so nothing is lost by waiting.
+
+## Decision phrasing
+
+A decision already carries the human `question` a UI asks. It may also carry the phrasing of the **answer**:
+
+```yaml
+decisions:
+  - attribute: trid:toleranceCureAmount
+    entityType: trid:Fee
+    question: "Does this fee increase require a tolerance cure?"
+    phrasing:                            # optional; first matching case wins
+      - when: { amount: positive }
+        verdict: "Cure required"         # the headline
+        detail: "{money} tolerance cure" # one supporting clause, no terminal period
+        tone: warn                       # pos | neg | warn | "" (default "")
+      - verdict: "No cure required"
+        detail: "{money}"
+        tone: pos
+```
+
+**Why in the pack.** A decision value is a CURIE-attributed code, date, or money amount; turning it into a sentence takes domain knowledge — that a positive cure amount is a warning and a zero one is not, that a rescission right is a hold on the file rather than good news. That knowledge lives with the rules, and it belongs to whoever wrote them. Before this block, a pack that concluded a new non-boolean attribute rendered as a raw `attribute = value` string until someone edited the demo's `_determination()`, which meant every new pack had a mandatory core-code change hidden in a directory pack authors never open. Phrasing in the pack removes the last such change.
+
+**Cases.** `phrasing` is an ordered list; the first case whose `when` guards all hold supplies the wording. Guards (all optional, all ANDed):
+
+| Guard | Holds when |
+|---|---|
+| `value: true` / `value: false` | the decision value is that boolean |
+| `value: ZeroTolerance` | the decision value's `value` equals that literal (codes, strings) |
+| `amount: positive` / `nonPositive` | the decision's money amount is / is not `> 0` |
+| `abstained: lowConfidence` / `none` | the run did / did not exclude a fact below the confidence floor |
+| `fact: {attribute: X, equals: Y}` | the case asserts a fact for `X` whose value is `Y`; `equals: "{value}"` compares it to the decision value |
+| `fact: {attribute: X, present: true}` | a fact for `X` exists at all |
+
+**Templates.** `verdict` and `detail` are strings, or a **list of alternatives** — the first whose every placeholder resolves is used, which is how a pack says "phrase it this way when the inputs are there, that way when they are not":
+
+```yaml
+detail:
+  - "{daysBetween:noticeMailedDate,policyExpirationDate} days notice given, {derived:requiredMinimumNoticeDays|int} required"
+  - "No applicable rule found the notice deficient"
+```
+
+Placeholders: `{value}` (the decision value), `{money}` (amount and currency), `{caveat}` (the "presumption only — … excluded below the confidence floor" sentence, unresolvable when nothing was excluded), `{fact:<attribute>}`, `{derived:<attribute>}` (a value concluded by another rule in the same run), `{daysBetween:<from>,<to>}`. Formats: `|day` (an ISO date's day part), `|int`. `validate_pack` rejects an unknown placeholder, an unknown format, an unknown guard, or a tone outside the four values — so a typo fails where the pack is loaded, not in a UI test.
+
+**Fallback, and why it stays.** A decision with no matching case — or no `phrasing` at all — is not an error. A boolean value renders Yes/No, so a simple pack declares nothing; anything else renders as `attribute = value` and is flagged `generic`, so a UI degrades to naming the raw value rather than inventing a verdict it cannot support. Honest degradation is the point: an unphrased code should look unphrased.
+
+**Presentation only.** Phrasing never enters a receipt, a fact, an envelope, or any hashed body — it is read by a renderer from the pack the caller already has. This is not a style preference: fact and receipt hashes are SHA-256 over canonical JSON of the whole body, so a wording key added in place would change every hash and break replay. Wording must therefore be free to improve; a decision's *meaning* is `decision.value`, which is hashed, and only that.
+
+**Rejected:**
+
+- *Phrasing in the UI* (the status quo ante). It made every pack a two-repository change, and put legal wording in the one place lawyers do not review.
+- *A general expression language for phrasing.* The guard and placeholder vocabularies are closed and small on purpose. The pack already has a real expression language for things that change the answer; a second one for things that change the sentence would be a second thing to verify, with none of the same stakes.
+- *Localization (`phrasing.en`, `phrasing.es`).* Additive when a consumer needs it — a language key nests above the case list without touching anything here. Nothing in the repo has a second locale, and inventing one would produce unreviewed legal wording in a language no maintainer reads.
 
 ## Receipt mapping
 

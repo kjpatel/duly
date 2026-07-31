@@ -1860,4 +1860,27 @@ def receipt_viewer() -> Response:
     )
 
 
-app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+class _RevalidatingStatics(StaticFiles):
+    """StaticFiles that always revalidates instead of letting the browser guess.
+
+    Starlette sends `etag` and `last-modified` but no `cache-control`. With no
+    directive a browser falls back to *heuristic freshness* — it invents an
+    expiry (commonly a fraction of the age since `last-modified`) and serves
+    from cache without asking. That is how a stale stylesheet renders against
+    new markup, and it is invisible to whoever deployed it, because their own
+    browser holds the fresh copy.
+
+    `no-cache` does not disable caching; it requires revalidation. The etag
+    still does the real work — a matching request comes back 304 with no body —
+    so this costs one conditional request per asset and removes the class of
+    bug entirely. Correctness over a saved round trip: this is a demo whose
+    whole claim is that what you see is what the kernel did.
+    """
+
+    def file_response(self, *args, **kwargs):  # type: ignore[override]
+        response = super().file_response(*args, **kwargs)
+        response.headers.setdefault("cache-control", "no-cache")
+        return response
+
+
+app.mount("/", _RevalidatingStatics(directory=str(STATIC_DIR), html=True), name="static")

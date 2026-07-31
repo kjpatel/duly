@@ -262,14 +262,29 @@ duly stands on, and deliberately does not rebuild: [OpenFisca](https://openfisca
 
 ## Status
 
-Pre-alpha; **M0 through M3 are complete** ([v0.3.0](https://github.com/kjpatel/duly/releases/tag/v0.3.0)) — the contract, the reference kernel, bitemporal replay and regression, and now extraction adapters, run envelopes, calibration, the review queue, and the browser review arc. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically, the interactive demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios, and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 is underway: PROV-O export, ontology conformance, and calendar arithmetic have shipped; the remaining work focuses on rule authoring and static verification. M5 then makes the toolkit straightforward to adopt before later releases add durable deployment, decision support, and alternate execution when real workloads justify them. Verify everything locally:
+Pre-alpha; **M0 through M4 are complete** ([v0.4.0](https://github.com/kjpatel/duly/releases/tag/v0.4.0)) — the contract, the reference kernel, bitemporal replay and regression, extraction adapters and the review queue, and now standards alignment, a second authoring surface, and static assurance. The kernel adjudicates six rule packs across insurance and mortgage closing deterministically; the demonstration runs the full abstain → correct → flip → golden-case loop over seven scenarios; and 351 golden decisions (350 synthetic + 1 review-born) replay byte-for-byte on every push. M4 added ten capabilities without regenerating the corpus once — the [changelog](CHANGELOG.md#v040--m4-standards-authoring-and-static-assurance) records what each turned out to mean, and the table above is what they are.
+
+**M5 makes the toolkit adoptable**: a bring-your-own walkthrough, a minimal integration example, and a clean separation of teaching content from the toolkit — tested by deleting `examples/` and requiring what remains to still work.
+
+Verify everything locally:
 
 ```bash
-uv sync   # add --extra extraction to also run the live-Docling tests (marker-gated, skipped otherwise)
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests   # full suite
-uv run python -m duly_assurance verify  # replay all 351 golden receipts byte-for-byte
-uv run spec/validate.py                 # spec examples: schemas + hashes
-uv run uvicorn demo.app:app --port 8788 # the interactive demo
+uv sync
+uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run python -m duly_assurance verify   # replay all 351 golden receipts byte-for-byte
+uv run python -m duly_assurance impact   # what your change would flip
+uv run spec/validate.py                  # spec examples: schemas + hashes
+uv run uvicorn demo.app:app --port 8788  # the interactive demo
+```
+
+That command **skips four suites**, which need optional dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
+
+```bash
+uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml       # ontologies are real LinkML
+uv sync --extra prove      && uv run pytest assurance/tests -q -m z3            # verifier encoding is sound
+uv sync --extra prove      && uv run pytest whatif/tests    -q -m z3            # what-if survives kernel verification
+uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
+uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```
 
 Breaking changes remain expected until v1.0. Feedback on the spec's [open questions](spec/grounded-facts.md#open-questions) and the [rule IR](spec/rule-ir.md) is the most useful contribution right now.

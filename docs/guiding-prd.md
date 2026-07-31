@@ -273,15 +273,32 @@ decision and receipt authority.
 
 ## Open questions
 
+These divide by who can answer them. The second group blocks v1.0 by
+construction — a specification freeze is the act of closing those questions —
+so each carries a roadmap item rather than waiting for evidence.
+
+Answerable only by an adopter:
+
 - Which external workflow will first validate independent adoption?
-- What capacity envelope should the reference interpreter publish at v1.0?
-- Must review-queue resolution always supersede the abstained fact?
-- What multi-entity binding model is needed when real packs outgrow the current
-  one-entity-per-type simplification?
 - Which contributor pathway fails first in practice: rule authoring, ontology
   mapping, extraction integration, or golden-corpus generation?
 - What evidence would demonstrate that duly is more governable than a
   model-centric workflow for a specific adopter?
+
+Blocking the v1.0 contract freeze:
+
+- Must review-queue resolution always supersede the abstained fact?
+  ([spec/grounded-facts.md](../spec/grounded-facts.md#open-questions), open
+  question 2 — a coexisting human fact leaves a `low_confidence` entry on every
+  future receipt for an attribute the decision did use)
+- What multi-entity binding model is needed when real packs outgrow the current
+  one-entity-per-type simplification?
+  ([spec/rule-ir.md](../spec/rule-ir.md#open-questions-v0), open question 1 —
+  the IR already assigns quantified bindings to v1, and the TRID pack works
+  around their absence with one fee entity per case)
+- What capacity envelope should the reference interpreter publish at v1.0?
+  (Measurement, not optimization — an adopter sizing a workload needs a number
+  before a deployment exists to produce one)
 
 ## Decision cadence
 

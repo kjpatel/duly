@@ -2,7 +2,9 @@
 
 What each release turned out to mean. The [roadmap](README.md#roadmap) says what is planned and what is done; this file says what was learned doing it — the boundaries that moved, the claims that were corrected, and the things that could not be done honestly.
 
-Entries are written after the fact, from merged work. Version numbers track milestones, not the contract: the fact, receipt, and IR contracts are v0 and may break until v1.0.
+Entries are written after the fact, from merged work.
+
+**These versions are git tags marking milestones, not package releases.** `pyproject.toml` deliberately stays at `0.0.1`: nothing is published, and [installable distribution](README.md#roadmap) is an M5 item. A tag says "this milestone is done and here is what it meant" — it does not say the contract is stable. The fact, receipt, and IR contracts are v0 and may break until v1.0.
 
 ## v0.4.0 — M4: standards, authoring, and static assurance
 

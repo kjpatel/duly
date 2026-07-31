@@ -99,6 +99,7 @@ A feature is not shipped when the code merges. It is shipped when it is **docume
 ## Documentation map
 
 - [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) — the platform-engineer mental model: architecture, trust boundaries, guarantees, and extension paths
+- [CHANGELOG.md](CHANGELOG.md) — what each release turned out to mean; read it before assuming why something is the way it is
 - [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
 - [docs/concepts.md](docs/concepts.md) — the vocabulary this repo uses precisely; read it before assuming a term means what it usually means
 - [docs/faq.md](docs/faq.md) — the objections a skeptical reader raises first, answered in one place

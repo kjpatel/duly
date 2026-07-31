@@ -657,6 +657,7 @@ until a workload supplies acceptance criteria.
 | RDF or property-graph decision core | Not implemented |
 | Joint neural-symbolic training or differentiable logic | Out of scope for the current architecture |
 | Datalog/Soufflé or ASP execution backend | Roadmap option after equivalence semantics and a real workload |
+| Optimizer plans, symbolic layer decides admissibility | Implemented as a worked example ([examples/closing-scheduler](../examples/closing-scheduler/README.md)): every hard constraint given to CP-SAT is a table of adjudications, the scheduler holds no copy of any rule, and each planned date cites the receipt ids that constrained it. It plans and explains; it still does not execute |
 | Agent plans, symbolic layer executes actions | Possible integration pattern; duly itself does not execute consequential actions |
 
 ## Failure modes a platform team should design for
@@ -749,9 +750,20 @@ larger workflow:
    optional `routedTo` labels for selection when packs provide them, and define
    queue ownership, service levels, correction authority, and the operational
    meaning of a default decision produced alongside an abstention.
-7. **Keep actions outside the kernel.** The orchestrator should consume the
-   receipt, enforce authorization and freshness, and record any consequential
-   side effect separately.
+7. **Keep actions outside the kernel, and reasoning too.** The orchestrator
+   should consume the receipt, enforce authorization and freshness, and record
+   any consequential side effect separately. That is only half the boundary: an
+   integration can respect it perfectly at the API level and still hold a
+   second copy of the rule — a business-day wait, a jurisdiction table, a
+   threshold — beside the call that asked about it. Such a copy is invisible at
+   the seam, because the seam still looks correct. It is detectable by
+   mutation: change the rule in the pack, change nothing in the orchestrator,
+   and the orchestrator's behaviour must change.
+   [examples/closing-scheduler](../examples/closing-scheduler/README.md) is the
+   first thing in this repository that demonstrates that boundary rather than
+   asserting it, and that mutation is what it demonstrates it with. It plans
+   and explains; it still executes nothing, so the *action* half of the
+   boundary remains asserted rather than shown.
 8. **Gate every change.** Run pack tests, schema and ontology checks, golden
    replay, and impact analysis before promoting a new artifact version.
 9. **Measure layers separately.** Extraction accuracy, fact admission,
@@ -775,7 +787,7 @@ These are extension paths, not commitments or a second roadmap. The
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
 | Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection | Existing atomic facts and receipts remain canonical and old cases replay |
 | Conversational investigation | Typed query API, validated natural-language-to-query translation, receipt-grounded rendering | A model may translate or phrase; it does not silently create facts or decisions |
-| Governed agentic workflows | Receipt-aware action policies and idempotent orchestration adapters | duly remains decision authority, while the orchestrator owns side effects |
+| Governed agentic workflows | Receipt-aware action policies and idempotent orchestration adapters. The decision-consumption half now has a worked reference ([examples/closing-scheduler](../examples/closing-scheduler/README.md)); the action half — authorization, freshness, idempotency — remains open | duly remains decision authority, the orchestrator owns side effects, and the orchestrator holds no copy of the rule it just asked about |
 | Higher-volume relational reasoning | Define cross-backend equivalence, then add a Datalog/Soufflé backend and differential testing | Decision semantics and trace fidelity match the reference kernel |
 | Genuinely non-stratified rule fragments | Consider an ASP backend for the demonstrated fragment | Complexity is introduced locally, with deterministic selection and explainable receipts |
 
@@ -816,6 +828,10 @@ requirement without weakening replay.
   packs, and refuses the tables it cannot compile honestly.
 - [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) carries the
   rule-id convention and the explicit list of ids that predate it.
+
+- [`examples/closing-scheduler`](../examples/closing-scheduler) plans a mortgage
+  closing with CP-SAT over adjudicated permissibility windows, and cites the
+  receipt ids that constrained each date.
 - [`whatif/duly_whatif`](../whatif/duly_whatif) solves a pack backwards for one
   freed input and verifies every answer by re-running the kernel on it.
 - [`assurance/duly_assurance/prove.py`](../assurance/duly_assurance/prove.py)

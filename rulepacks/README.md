@@ -71,6 +71,8 @@ All verified against the kernel, not folklore:
 - **The IR has no calendar arithmetic.** Expressions cover boolean logic, `min`/`max`, `abs`, `days_between`, comparisons, and typed literals — there is no date-plus-N, no day-of-week, no holiday calendar. If your rule needs business-day math, model the honestly expressible slice and document the boundary, as [tila-rescission](tila-rescission-us-federal/pack.yaml) does in its `MODELING BOUNDARY` header. A documented limitation is a contribution; a silent approximation is a defect.
 - **Changing a pack changes receipts.** Bump the pack version, and expect the impact-analysis CI comment to tell you how many historical decisions moved. Adding an `abstentionPolicy` where there was none excludes below-floor facts and will shift outcomes.
 
+Packs are also consumed from outside this repo's own tooling. [examples/closing-scheduler](../examples/closing-scheduler/README.md) plans a mortgage closing against `tila-rescission-us-federal`, `notarization-ron-us-states` and `county-recording-us`, and pins the resulting plan in a test. If your change moves a date those packs decide, that test is a legitimate casualty — update it in the same commit, as you would a golden receipt.
+
 ## Honesty conventions
 
 The repo's culture here is not negotiable, because the entire value proposition is that a decision is defensible.

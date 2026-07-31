@@ -66,6 +66,14 @@ Two things it still cannot promise, both stated wherever an answer appears rathe
 
 The same person who wrote the rule. A pack declares both the question it can answer and the phrasing of the answer — verdict, supporting clause, and tone, with cases for the value concluded and the evidence behind it. Nothing about a verdict lives in the UI, so an organization replacing the rule packs replaces the wording with them and never forks the demo to do it. The wording is versioned with the rules but deliberately *outside* the receipt hash: what a decision **is** is `decision.value`, which is hashed and replays forever; how it **reads** has to stay improvable. See [Decision phrasing](../spec/rule-ir.md#decision-phrasing).
 
+## We want to put duly inside a scheduler. How do we stop the scheduler learning the rules?
+
+You make it structurally unable to. The scheduler never sees a rule — it sees a verdict and a receipt id. It asks `adjudicate()` for every candidate date and gets back a table of days that were permitted; that table is the constraint it hands the solver. The rule stays in the pack, in one copy, cited and effective-dated.
+
+The failure this avoids is neither hypothetical nor exotic: an optimizer that encodes "wait three business days after consummation" beside the TILA pack has two sources of truth for one legal requirement, and the first person to discover that the § 1026.2(a)(6) rescission calendar counts *Saturdays* will fix only one of them.
+
+The claim is testable, which is the part that matters. [examples/closing-scheduler](../examples/closing-scheduler/README.md) perturbs the TILA pack from three business days to five, edits no line of the scheduler, and requires the funding date to move; and it opens the wire desk on Saturdays and requires the compliance floor *not* to. A scheduler with its own copy of the rule fails the first test; one that confused staffing with law fails the second. Each date in the plan also cites the receipt ids that constrained it, so the boundary is legible in the output and not only in the tests.
+
 ## Is this a product I can deploy?
 
 Not yet — it is a pre-alpha specification with a working reference implementation. What runs today: six rule packs across two domains, an interactive demo of the full extract → decide → abstain → correct loop, and a 351-case corpus that replays byte-for-byte on every push. Breaking changes are expected until v1.0. The most useful thing an early adopter can do is pressure-test the [contract's open questions](../spec/grounded-facts.md#open-questions) against a real workflow.

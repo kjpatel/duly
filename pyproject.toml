@@ -28,6 +28,16 @@ extraction = [
 prove = [
     "z3-solver>=4.12",
 ]
+# CP-SAT for `examples/closing-scheduler`, which plans a closing around duly's
+# adjudications. Optional for the same reason as the two above and one more:
+# it belongs to an *example* of embedding duly, not to duly. The kernel, the
+# packs and the receipts the example consumes are all produced without it, and
+# the example's own compliance half runs without it too (`--no-solve`).
+# Install with `uv sync --extra scheduling` or `uv run --with ortools ...`;
+# the @pytest.mark.ortools tests skip when ortools is not importable.
+scheduling = [
+    "ortools>=9.8",
+]
 
 [dependency-groups]
 dev = [
@@ -52,4 +62,5 @@ markers = [
     "docling: exercises the live Docling converter; requires `uv sync --extra extraction` (skipped when docling is not importable)",
     "linkml: proves the committed ontologies are genuine LinkML with real tooling; run via `uv run --with linkml --with pyshacl pytest conformance/tests -m linkml` (skipped when linkml is not importable)",
     "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests -m z3` (skipped when z3 is not importable)",
+    "ortools: exercises the CP-SAT closing scheduler example; run via `uv run --with ortools pytest examples/closing-scheduler -m ortools` (skipped when ortools is not importable)",
 ]

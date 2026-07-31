@@ -916,7 +916,8 @@ def _phrasing_value(value: Any, fmt: str) -> str | None:
     if fmt == "day":
         return _date_prefix(str(value.get("value") or "")) or _format_value(value)
     if fmt == "int":
-        return _phrasing_scalar(value.get("value"), "int")
+        raw = value.get("value", value.get("amount"))
+        return _phrasing_scalar(raw, "int")
     return _format_value(value)
 
 

@@ -319,6 +319,75 @@ def test_verdict_wording_is_pack_data_not_demo_code():
     }
 
 
+def test_every_placeholder_the_validator_accepts_is_one_the_demo_renders():
+    """The two halves of the phrasing contract must not drift apart.
+
+    `validate_pack` owns the vocabulary (a pack author's typo has to fail
+    where the pack loads); this module owns the rendering. A placeholder the
+    kernel blesses and the renderer cannot resolve would silently discard a
+    template alternative instead of erroring.
+    """
+    from duly_kernel.ir import validate_pack
+
+    receipt = {
+        "decision": {
+            "attribute": "nc:noticeCompliant",
+            "value": {"kind": "money", "amount": "45.00", "currency": "USD"},
+        },
+        "asOf": {"effective": "2026-07-29T00:00:00Z"},
+        "abstentions": [
+            {
+                "attribute": "nc:noticeMailedDate",
+                "reason": "low_confidence",
+                "confidence": {"score": 0.62},
+                "threshold": {"minConfidence": 0.75},
+            }
+        ],
+        "derivation": {
+            "conclusion": {"attribute": "nc:noticeCompliant"},
+            "premises": [
+                {
+                    "conclusion": {
+                        "attribute": "nc:requiredMinimumNoticeDays",
+                        "value": {"kind": "decimal", "value": "45"},
+                    },
+                    "premises": [],
+                }
+            ],
+        },
+    }
+    facts = [
+        {"attribute": "nc:noticeMailedDate", "value": {"kind": "date", "value": "2026-07-25"}},
+        {
+            "attribute": "nc:policyExpirationDate",
+            "value": {"kind": "date", "value": "2026-09-01"},
+        },
+    ]
+    templates = [
+        "{value}",
+        "{value|day}",
+        "{value|int}",
+        "{money}",
+        "{caveat}",
+        "{fact:noticeMailedDate}",
+        "{fact:noticeMailedDate|day}",
+        "{derived:requiredMinimumNoticeDays}",
+        "{derived:requiredMinimumNoticeDays|int}",
+        "{daysBetween:noticeMailedDate,policyExpirationDate}",
+    ]
+    scenario = _scenario("termination-notice-us-states", facts)
+    for template in templates:
+        pack = _pack("termination-notice-us-states")
+        for decision in pack["decisions"]:
+            if decision["attribute"] == "nc:noticeCompliant":
+                decision["phrasing"] = [{"verdict": template}]
+        validate_pack(pack)  # the kernel accepts it …
+        found = _determination(receipt, {"pack": pack, "facts": facts}, "2026-07-29")
+        assert not found.get("generic"), template  # … and the renderer resolves it
+        assert found["verdict"], template
+    assert scenario["pack"]["decisions"]  # sanity: the committed pack still parses
+
+
 def test_every_committed_pack_phrases_every_decision_it_advertises():
     """A pack that advertises a question must be able to phrase its answer.
 

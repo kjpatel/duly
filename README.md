@@ -203,35 +203,42 @@ The standards work strengthens the interchange contract; the rest makes rule cha
 - [x] Pack-owned decision phrasing, so non-boolean decisions need no core or demo change ([spec/rule-ir.md](spec/rule-ir.md))
 - [x] Rule-ID convention and contribution checks, with the pre-existing ids grandfathered ([spec/rule-ir.md](spec/rule-ir.md))
 - [x] OR-Tools scheduling example: adjudications produce the permissible windows, an optimizer chooses among them ([examples/closing-scheduler](examples/closing-scheduler/))
+- [x] Z3 what-if queries: free one input of a decided case and solve the pack backwards, every answer re-adjudicated by the kernel before it is reported ([spec/whatif.md](spec/whatif.md)) — planned for v1.2 and pulled forward once the verifier's encoding existed to reuse
 
 **Exit:** a domain author can create, validate, test, review, and impact-assess a rule change without modifying the kernel. Met.
 
 ### M5 — adoption and v1.0
 
-The next consumer is an adopting engineering team. Make Duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples; do this before implementing a second execution backend.
+The next consumer is an adopting engineering team. Make duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples; do this before implementing a second execution backend.
 
-- [ ] **Adopter's guide** — one end-to-end bring-your-own walkthrough: documents, extraction adapter, grounded facts, ontology conformance, rule packs, golden corpus, review queue, and calibration labels.
-- [ ] **Minimal integration example** — three facts, two rules, one adjudication, and one receipt in author-owned code.
-- [ ] **Example/toolkit separation** — relocate the teaching content (rule packs, starters, sample ontologies, demo scenarios, corpus generator templates) under an examples umbrella so toolkit directories contain zero example content and `git rm -r examples/` leaves a working, empty toolkit. Mechanical path migration; no behavior change; golden replay proves it.
+- [ ] **Example/toolkit separation** — relocate the teaching content (rule packs, starters, sample ontologies, demo scenarios, corpus generator templates) under an examples umbrella so toolkit directories contain zero example content and `git rm -r examples/` leaves a working, empty toolkit. The four demo surfaces are toolkit, not teaching content: each reads whatever packs, cases and receipts exist rather than any particular ones, so the test is that they start honestly against none. Mechanical path migration; no behavior change; golden replay proves it. Sequenced first — the guides below are written against the layout it leaves.
+- [ ] **Contract closeout** — freezing the fact, receipt and IR contracts is a semantic commitment, not a publishing act, and three of the questions it has to answer are already written down. Sequenced second because it is the only item that can invalidate the others: quantified bindings change what a pack can say, and a guide teaching the binding model that preceded them would have to be rewritten. Quantified bindings, which [spec/rule-ir.md](spec/rule-ir.md#open-questions-v0) assigns to IR v1 and the TRID pack works around today with one fee entity per case. Whether a review resolution must supersede the fact it rules on ([spec/grounded-facts.md](spec/grounded-facts.md#open-questions)), which decides whether a receipt can keep carrying a `low_confidence` entry for an attribute it did use. And whether the run envelope reserves a signature affordance — the implementation stays in v1.2, but a frozen shape has to know whether authenticity arrives additively.
+- [ ] **Compatibility policy** — versioning, deprecation, and what "the contracts are v0 and may break" stops meaning; published with the freeze rather than after it.
 - [ ] **Installable distribution** — publish versioned toolkit packages so adopters import the seam rather than fork the repository.
-- [ ] **Specification stability** — freeze the fact, receipt, and IR contracts; publish compatibility and deprecation policy.
-- [x] **Rule studio** ([tour §10](docs/demo_tour.md#10-the-rule-studio)) — M4's exit criterion said a domain author *can* create, validate, test and impact-assess a rule change without touching the kernel. It was true and it took five separate command-line tools. The studio is the surface that composes them over one in-memory draft, which is also what made them productively disagree on screen: declared cases green, corpus flipped.
-- [x] **Receipt viewer** ([tour §12](docs/demo_tour.md#12-the-receipt-viewer)) — the corpus proves 351 receipts replay; nobody outside this repository could check *one*. The viewer is that check made available to whoever is holding the receipt, and building it sharpened the claim: a hash proves a document was not altered after sealing, and only re-running the rules proves the seal was honest. Those are two properties, so the rail reports them separately.
-- [x] **Evidence browser** ([tour §11](docs/demo_tour.md#11-the-evidence-browser)) — the store has been bitemporal since M2 and nothing showed it. The workspace answers one question from the facts a receipt cited; the browser shows the case's whole fact set at a knowledge time you choose, so supersession stops being a paragraph in the README and becomes a thing you drag a dial to watch happen.
-- [ ] **Contribution path** — complete the rule-pack authoring guide and contribution checks across packs, ontologies, starters, and golden-corpus coverage.
+- [ ] **Minimal integration example** — three facts, two rules, one adjudication, and one receipt in author-owned code. Before the guide, not after: it is the cheapest test that the published seam is importable at all, and if it cannot be written the full walkthrough is already doomed.
+- [ ] **Adopter's guide** — one end-to-end bring-your-own walkthrough: documents, extraction adapter, grounded facts, ontology conformance, rule packs, golden corpus, review queue, and calibration labels. Executed from the published packages on a clean machine, not from a working tree, because that is the only version of the walkthrough an adopter will ever run.
+- [ ] **Contribution paths, both edges** — the [contribution model](#contribution-model) rests on two surfaces, and only one of them has a path. Complete the rule-pack authoring guide and contribution checks across packs, ontologies, starters and golden-corpus coverage, *and* the adapter path: protocol conformance, recorded-response fixtures, span verification, and run envelopes. A first-week outcome offered on either edge has to be walkable on either edge.
+- [ ] **Reference capacity envelope** — publish what one adjudication costs on the committed corpus and where a pure-Python reference interpreter stops being the right thing to run. Measurement, not optimization: an adopter sizing a workload needs a number before a deployment exists to produce one, and this answers the standing question in the [PRD](docs/guiding-prd.md#open-questions).
 - [ ] **Claims starter, if needed to expose a semantic gap** — a grant → exclusion → exception chain validates generality, but does not delay v1.0 merely to add a second demonstration vertical.
 
-**v1.0 exit:** an independent engineering team can install Duly, integrate its own document and extractor, author a pack, and reproduce its own receipt without a repository fork or maintainer assistance.
+Shipped so far in M5 — three demo surfaces, each of which turned out to sharpen a claim ([changelog](CHANGELOG.md#unreleased--m5)):
+
+- [x] **Rule studio** ([tour §10](docs/demo_tour.md#10-the-rule-studio)) — M4's exit criterion said a domain author *can* create, validate, test and impact-assess a rule change without touching the kernel. It was true and it took five separate command-line tools. The studio is the surface that composes them over one in-memory draft, which is also what made them productively disagree on screen: declared cases green, corpus flipped.
+- [x] **Evidence browser** ([tour §11](docs/demo_tour.md#11-the-evidence-browser)) — the store has been bitemporal since M2 and nothing showed it. The workspace answers one question from the facts a receipt cited; the browser shows the case's whole fact set at a knowledge time you choose, so supersession stops being a paragraph in the README and becomes a thing you drag a dial to watch happen.
+- [x] **Receipt viewer** ([tour §12](docs/demo_tour.md#12-the-receipt-viewer)) — the corpus proves 351 receipts replay; nobody outside this repository could check *one*. The viewer is that check made available to whoever is holding the receipt, and building it sharpened the claim: a hash proves a document was not altered after sealing, and only re-running the rules proves the seal was honest. Those are two properties, so the rail reports them separately.
+
+**v1.0 exit:** a maintainer working from the published packages on a clean machine, with no repository checkout, can integrate a new document and extractor, author a pack, and reproduce a receipt — from the written guides alone. That proves nothing required insider knowledge. That an adopter finds it usable is [v1.1](#v11--durable-deployment-and-extraction-evaluation)'s to report.
 
 ### v1.1 — durable deployment and extraction evaluation
 
-Make the toolkit dependable inside a long-running service and measure the quality of the probabilistic edge it admits.
+Make the toolkit dependable inside a long-running service and measure the quality of the probabilistic edge it admits. This is where the sequencing principle resumes: each item below names the consumer that unlocks it, and none of them is worth building for a deployment nobody has described. Only the first gates the rest; durability and extraction quality are independent tracks after it.
 
-- [ ] A Postgres implementation with migrations, transaction/concurrency behavior, and semantic parity tests against SQLite.
-- [ ] Persistent review-queue and calibration-artifact storage.
-- [ ] Deployment reference: configuration, health checks, structured logs, metrics/tracing hooks, backup/restore, and operational runbook.
+- [ ] **First adoption, reported** — an outside team runs duly over a real document-decision workflow and can explain a historical decision, and its correction history, from a receipt. Not a build item: it is the evidence that v1.0's guides worked, and it sequences everything below it.
+- [ ] A Postgres implementation with migrations, transaction/concurrency behavior, and semantic parity tests against SQLite — gated on a deployment whose durability or concurrency SQLite does not serve. The store's schema has been Postgres-portable since M2 precisely so this could wait for one.
+- [ ] Persistent review-queue and calibration-artifact storage — gated on a review workload that outlives a process.
+- [ ] Deployment reference: configuration, health checks, structured logs, metrics/tracing hooks, backup/restore, and operational runbook — written from a deployment that exists. A runbook derived from a template is a guess about someone else's failure modes.
 - [ ] A second production extraction-provider adapter, chosen by a real workload, with credential handling, recorded-response fixtures, and contract conformance tests.
-- [ ] Extraction evaluation harness: field-level accuracy, abstention/review rate, latency, and drift segmented by adapter and model version.
+- [ ] Extraction evaluation harness: field-level accuracy, abstention/review rate, latency, and drift segmented by adapter and model version — the first thing a real labeled corpus makes computable and a synthetic one structurally cannot.
 
 **Exit:** a deployment can preserve and replay decisions across processes and upgrades, while measuring extraction and review quality on its own corpus.
 
@@ -239,11 +246,12 @@ Make the toolkit dependable inside a long-running service and measure the qualit
 
 Add the controls and analysis that regulated deployments need, without moving them into the decision semantics.
 
-- [ ] Identity, role-based access control, tenant isolation, secrets/configuration guidance, and evidence-retention controls for service deployments.
-- [ ] Optional asymmetric signatures for extraction-run envelopes, adding producer authenticity to the existing integrity hashes.
-- [ ] Rule-pack lifecycle guidance and reference APIs: draft, test, approval, promotion, rollback, and auditable change history.
-- [x] Z3 what-if queries — free one input of a decided case and solve the pack backwards; every answer is verified by re-running the kernel before it is reported. Pulled forward into the M4 push ([spec/whatif.md](spec/whatif.md))
-- [ ] Customer-corpus impact analysis surfaced through a service/API integration.
+Ordered by whether the consumer already exists. The first two have one; the last two wait for a deployment to describe what it needs.
+
+- [ ] Rule-pack lifecycle guidance and reference APIs: draft, test, approval, promotion, rollback, and auditable change history. First because M5 created the need — the studio validates a draft against the corpus and then has nowhere to send it. The actor is caller-supplied, the way evaluation time already is, so this does not wait on identity below.
+- [ ] Customer-corpus impact analysis surfaced through a service/API integration — the same analysis CI already runs on pack PRs, addressed to an operator holding their own corpus rather than to a reviewer holding ours.
+- [ ] Identity, role-based access control, tenant isolation, secrets/configuration guidance, and evidence-retention controls — gated on a deployment with more than one tenant or more than one role. Built earlier, it is a guess at someone else's authorization model. Turns the lifecycle's caller-supplied actor into an enforced one.
+- [ ] Optional asymmetric signatures for extraction-run envelopes, adding producer authenticity to the existing integrity hashes — gated on cross-organization trust, where key distribution and rotation become worth their cost. Whether the frozen envelope shape can accept them additively is decided in M5's contract closeout, not here.
 
 **Exit:** operators can explain who changed a rule, what historical decisions it affected, and why a particular decision was made.
 

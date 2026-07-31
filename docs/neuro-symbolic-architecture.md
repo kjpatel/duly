@@ -145,9 +145,23 @@ more explicitly:
 |---|---|---|
 | Ontology artifact | Versioned vocabulary and type constraints supplied by the adopter | The decision logic |
 | `GroundedFact` | One assertion about one case, with evidence and uncertainty | A conclusion merely because it is well-formed |
-| Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, and calendars. Authored as YAML, or compiled from a [DMN decision table](../spec/dmn.md) — either way the kernel sees one artifact | A domain ontology or workflow definition |
+| Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, calendars, and the phrasing of each decision it can answer. Authored as YAML, or compiled from a [DMN decision table](../spec/dmn.md) — either way the kernel sees one artifact | A domain ontology or workflow definition — and its phrasing is not part of the decision's identity |
 | `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace | The facts, source rendition, or rule-pack bytes themselves |
 | Extraction run envelope | Integrity manifest for one run over one rendition | Authentication of the producer |
+
+A rule pack has two halves, and the distinction is easy to miss because one
+file holds both. The **deciding half** — rules, priorities, effective windows,
+calendars, confidence floors — reaches the receipt through the decision it
+produces and the trace it leaves, and is therefore frozen: change it and you
+change what replays, which is why every such change is a version bump and an
+impact run. The **speaking half** — the question a pack advertises and the
+phrasing of its answers — is authored by the same expert, reviewed in the same
+pull request, and versioned in the same file, yet must never enter a hashed
+body, because a wording improvement that invalidated 351 receipts would make
+the wording unimprovable. Governance and identity are not the same boundary.
+The practical test: a decision's meaning is `decision.value`, which is hashed;
+how that value reads to a human is pack data that any renderer may consume and
+no receipt records.
 
 In T-Box/A-Box terms, the ontology is T-Box-like and grounded facts are
 A-Box-like. Rule packs are a separate policy artifact. duly does not currently
@@ -716,7 +730,9 @@ A production integration should treat duly as a decision component inside a
 larger workflow:
 
 1. **Own the domain artifacts.** Version and retain the ontology, rule packs,
-   calendars, citations, and golden corpus. Never mutate a released version in
+   calendars, citations, decision phrasing, and golden corpus — the wording an
+   adjudicator reads is an adopter-owned artifact, not something inherited from
+   this repository's reference wiring. Never mutate a released version in
    place.
 2. **Wrap the extractor.** Require it to emit a content-addressed rendition,
    atomic grounded facts, confidence metadata, and a complete run envelope.
@@ -753,7 +769,7 @@ These are extension paths, not commitments or a second roadmap. The
 
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
-| Rule authors need safer tools | DMN-to-IR authoring, Z3 overlap/coverage analysis, and backward what-if queries (**all shipped** — see below); still open: stable rule IDs | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
+| Rule authors need safer tools | DMN-to-IR authoring, Z3 overlap/coverage analysis, and backward what-if queries (**all shipped** — see below), plus a rule-id convention with the pre-existing ids grandfathered rather than renamed | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
@@ -798,6 +814,8 @@ requirement without weakening replay.
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
   packs, and refuses the tables it cannot compile honestly.
+- [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) carries the
+  rule-id convention and the explicit list of ids that predate it.
 - [`whatif/duly_whatif`](../whatif/duly_whatif) solves a pack backwards for one
   freed input and verifies every answer by re-running the kernel on it.
 - [`assurance/duly_assurance/prove.py`](../assurance/duly_assurance/prove.py)

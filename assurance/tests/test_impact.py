@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from duly_assurance.impact import main
+from duly_assurance.impact import analyze, main
 from duly_kernel.api import adjudicate
 from duly_kernel.ir import load_pack
 
@@ -269,6 +269,48 @@ def test_output_is_deterministic(tmp_path, capsys):
         outputs.append((out_json.read_bytes(), out_md.read_bytes()))
     capsys.readouterr()
     assert outputs[0] == outputs[1]
+
+
+def test_pack_overrides_measure_a_candidate_that_is_not_on_disk(tmp_path):
+    """A caller holding a candidate pack can ask what it would flip before
+    writing it anywhere — the order in which the answer can still change the
+    author's mind. The override replaces the pack for cases that resolve to
+    that path and leaves every other case measured against the working tree."""
+    pristine = _write_pack(tmp_path, _load_ny_pack_dict(), "ny-pristine")
+    corpus = build_corpus(tmp_path, pack_for={c: pristine for c in ALL_CASES})
+
+    baseline = analyze(corpus)
+    assert baseline["flipCount"] == 0
+
+    candidate = copy.deepcopy(_load_ny_pack_dict())
+    rule = next(r for r in candidate["rules"] if r["id"] == "NY-NR-45")
+    rule["then"]["value"]["expr"] = "60"
+
+    report = analyze(corpus, pack_overrides={pristine.resolve(): candidate})
+    assert report["flipCount"] == 1
+    assert report["flips"][0]["caseId"] == "notice-002-ny-margin"
+    # Nothing was written: the file on disk still says 45.
+    assert "expr: '45'" in pristine.read_text() or 'expr: "45"' in pristine.read_text()
+
+
+def test_pack_overrides_do_not_touch_cases_pointing_elsewhere(tmp_path):
+    other = _write_pack(tmp_path, _load_ny_pack_dict(), "ny-other")
+    pristine = _write_pack(tmp_path, _load_ny_pack_dict(), "ny-pristine")
+    corpus = build_corpus(
+        tmp_path,
+        pack_for={
+            "notice-002-ny-margin": pristine,
+            **{c: other for c in ALL_CASES if c != "notice-002-ny-margin"},
+        },
+    )
+    candidate = copy.deepcopy(_load_ny_pack_dict())
+    next(r for r in candidate["rules"] if r["id"] == "NY-NR-45")["then"]["value"]["expr"] = "60"
+
+    report = analyze(corpus, pack_overrides={other.resolve(): candidate})
+    # The 60-day change only reaches the cases that resolve to `other`, and
+    # notice-002 — the one case that would flip — is not one of them.
+    assert report["flipCount"] == 0
+    assert "notice-002-ny-margin" in report["unchanged"]
 
 
 def test_missing_corpus_is_operational_error(tmp_path, capsys):

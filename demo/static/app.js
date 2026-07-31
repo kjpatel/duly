@@ -97,14 +97,22 @@ async function init() {
   $("download-report-pdf").addEventListener("click", () => downloadReport("pdf"));
 
   if (state.scenarios.length > 0) {
-    select.value = state.scenarios[0].id;
-    await selectScenario(state.scenarios[0].id);
+    // Deep link: ?scenario=&question=. The evidence browser links a fact's
+    // citations back to the question that used it, and "look at the answer
+    // this fact went into" is only a useful sentence if it carries a URL.
+    // An unknown scenario or question falls back to the default rather than
+    // erroring: a stale link should still land somewhere usable.
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get("scenario");
+    const start = state.scenarios.find((s) => s.id === wanted) || state.scenarios[0];
+    select.value = start.id;
+    await selectScenario(start.id, params.get("question"));
   } else {
     setWorkspaceStatus("No scenarios", "error");
   }
 }
 
-async function selectScenario(id) {
+async function selectScenario(id, wantedAttribute = null) {
   const scenario = state.scenarios.find((s) => s.id === id);
   if (!scenario) return;
   setWorkspaceStatus("Loading scenario", "loading");
@@ -143,7 +151,9 @@ async function selectScenario(id) {
   renderQuestions();
 
   if (scenario.questions.length > 0) {
-    state.activeAttribute = scenario.questions[0].attribute;
+    const wanted =
+      wantedAttribute && scenario.questions.find((q) => q.attribute === wantedAttribute);
+    state.activeAttribute = (wanted || scenario.questions[0]).attribute;
     highlightActiveQuestion();
     await runAdjudication();
   } else {

@@ -1,0 +1,857 @@
+/* Rule studio — layered on style.css, every selector scoped to `body.studio`
+   so the studio can reuse names the decision workspace already owns
+   (.rule-card, .rule-id) without either page reaching into the other. */
+
+.studio #studio {
+  width: calc(100% - 48px);
+  max-width: 1840px;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(230px, 0.62fr) minmax(520px, 2.1fr) minmax(320px, 1fr);
+  gap: 20px;
+  padding-bottom: 24px;
+}
+
+.studio .studio-toolbar .controls {
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.studio code,
+.studio .mono {
+  font-family: var(--font-mono);
+}
+
+.studio .muted {
+  margin: 4px 0;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+
+.studio .legend {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  color: var(--color-text-secondary);
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  border-radius: 9px;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.studio .empty {
+  margin: 12px 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.studio .spacer {
+  flex: 1 1 auto;
+}
+
+/* ---------- buttons and inputs ---------- */
+
+.studio .primary-btn,
+.studio .ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 570;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.studio .primary-btn {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.studio .primary-btn:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+}
+
+.studio .ghost-btn {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+}
+
+.studio .ghost-btn:hover:not(:disabled) {
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.studio .ghost-btn.danger:hover:not(:disabled) {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.studio .primary-btn:disabled,
+.studio .ghost-btn:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* A refusal example is labelled as one before it is clicked: the list reads
+   "here is one that compiles, and here is one of each way it can fail". */
+.studio .ghost-btn.refusal {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.studio .ghost-btn.small {
+  min-height: 27px;
+  padding: 4px 9px;
+  font-size: 0.68rem;
+}
+
+.studio .icon-btn {
+  padding: 2px 6px;
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.studio .icon-btn:hover {
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.studio .icon-btn.tiny {
+  font-size: 0.7rem;
+}
+
+.studio .text-input,
+.studio select.text-input {
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 8px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  font-size: 0.76rem;
+}
+
+.studio .text-input.mono {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.studio .text-input.small {
+  min-height: 27px;
+}
+
+.studio .text-input:focus-visible {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 0;
+}
+
+.studio .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin-bottom: 10px;
+}
+
+.studio .field-hint {
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.studio .row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.studio .row-actions .field {
+  flex: 1 1 160px;
+  margin-bottom: 0;
+}
+
+/* ---------- pack rail ---------- */
+
+.studio .pack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.studio .pack-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 11px;
+  text-align: left;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.studio .pack-card:hover {
+  background: var(--color-bg-card-hover);
+}
+
+.studio .pack-card.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.studio .pack-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.studio .pack-name {
+  color: var(--color-text-primary);
+  font-size: 0.79rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.studio .dot-draft {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: var(--color-warning);
+  border-radius: 50%;
+}
+
+.studio .pack-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 9px;
+  color: var(--color-text-secondary);
+  font-size: 0.66rem;
+}
+
+.studio .pack-meta.muted {
+  color: var(--color-text-muted);
+}
+
+.studio .tag-new {
+  color: var(--color-warning-strong);
+}
+
+.studio .capabilities {
+  margin: 14px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+/* The pack view switcher is `.tabs` / `.tab` in style.css, shared with the
+   evidence browser and the receipt viewer. Nothing studio-specific. */
+
+/* ---------- decision tables ---------- */
+
+.studio .table-block {
+  margin-bottom: 26px;
+}
+
+.studio .table-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.studio .table-attr {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.studio .table-question {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.studio .table-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+/* The hit policy is a derived statement about the table, not one of a set of
+   choices — an accent-filled pill beside a row of outlined entity-type pills
+   read as the selected item of a switcher. Stating it as `label value` text
+   removes the affordance while keeping it the first thing in the row, which is
+   right: it is what tells you how overlapping rows resolve. */
+.studio .table-policy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-right: 3px;
+  font-size: 0.62rem;
+  cursor: help;
+}
+
+.studio .table-policy .policy-label {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.studio .table-policy .policy-value {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.studio .tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  color: var(--color-accent-dark);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.studio .tag.subtle {
+  color: var(--color-text-secondary);
+  background: transparent;
+  border-color: var(--color-border);
+  font-weight: 500;
+}
+
+.studio .tag.warn {
+  color: var(--color-warning-strong);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+.studio .tag.receipts {
+  color: var(--color-info-strong);
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.studio .table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+}
+
+.studio .decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.studio .decision-table th {
+  padding: 7px 8px;
+  color: var(--color-text-secondary);
+  text-align: left;
+  vertical-align: bottom;
+  background: var(--accent-softer);
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.studio .decision-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.studio .decision-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.studio .decision-table .col-input {
+  min-width: 158px;
+}
+
+.studio .decision-table .col-rule {
+  min-width: 132px;
+}
+
+.studio .decision-table .col-num {
+  width: 52px;
+}
+
+.studio .decision-table .col-cite {
+  min-width: 140px;
+  font-size: 0.68rem;
+}
+
+.studio .col-name {
+  display: block;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+}
+
+.studio .col-ref,
+.studio .col-kind {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  font-weight: 500;
+}
+
+.studio .decision-table .rule-id {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.studio .cell-input {
+  width: 100%;
+  min-height: 26px;
+  padding: 3px 6px;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.studio .cell-input:hover {
+  border-color: var(--color-border);
+}
+
+.studio .cell-input:focus-visible {
+  background: var(--color-bg-card);
+  border-color: var(--color-accent);
+  outline: 2px solid var(--accent-ring);
+}
+
+.studio .cell-input.num {
+  width: 60px;
+  text-align: right;
+}
+
+.studio .cell-input.out {
+  font-weight: 600;
+}
+
+.studio .cell-input::placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Unbound is the common case, so it is marked, not shouted: a muted em dash
+   where a condition would be. The loud treatment belongs to `any` — a bound
+   input with no condition is the rarer and more consequential state, because
+   it makes the rule require a fact it never reads. */
+.studio .cell-input.unbound::placeholder {
+  color: var(--color-text-muted);
+  font-style: normal;
+}
+
+.studio .col-input.is-unbound {
+  background: var(--accent-softer);
+}
+
+.studio .cell-any,
+.studio .cell-unbound {
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  font-style: italic;
+}
+
+.studio .cell-unbound {
+  color: var(--color-warning-strong);
+  font-style: normal;
+}
+
+.studio .eff {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.studio .eff.muted {
+  color: var(--color-text-muted);
+}
+
+.studio .cross-row td {
+  padding-top: 0;
+  background: var(--accent-softer);
+}
+
+.studio .cross-label {
+  margin-right: 8px;
+  color: var(--color-accent-dark);
+  font-size: 0.62rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studio .cell-input.wide {
+  display: inline-block;
+  width: auto;
+  min-width: 280px;
+}
+
+.studio .badge-override,
+.studio .badge-defeat {
+  display: block;
+  color: var(--color-error-strong);
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.studio .badge-defeat {
+  display: inline-block;
+  margin-left: 7px;
+}
+
+.studio .table-actions {
+  margin-top: 8px;
+}
+
+/* ---------- rule cards ---------- */
+
+.studio .rule-card {
+  margin-bottom: 14px;
+  padding: 13px 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.studio .rule-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.studio .rule-card .rule-id {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 660;
+}
+
+.studio .rule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0 12px;
+}
+
+.studio .rule-sub {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.studio .rule-sub .text-input {
+  width: 100%;
+}
+
+.studio .binding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.studio .binding {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+}
+
+.studio .binding .arrow {
+  color: var(--color-text-muted);
+}
+
+.studio .conclusion {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+}
+
+.studio .overrides {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+}
+
+/* ---------- source and DMN ---------- */
+
+.studio .source-editor {
+  width: 100%;
+  min-height: 460px;
+  padding: 11px 12px;
+  color: var(--color-document-text);
+  background: var(--document-inset);
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  resize: vertical;
+  tab-size: 2;
+}
+
+.studio .example-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.studio .dmn-result {
+  margin-top: 12px;
+}
+
+.studio .pre {
+  margin: 6px 0;
+  padding: 8px 10px;
+  color: var(--color-document-text);
+  background: var(--document-inset);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.studio .pre.scroll {
+  max-height: 340px;
+  overflow: auto;
+  white-space: pre;
+}
+
+.studio .pre.diff {
+  white-space: pre;
+}
+
+/* ---------- verify rail ---------- */
+
+.studio .verify-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.studio .verify-section:last-child {
+  border-bottom: none;
+}
+
+.studio .verify-section .section-heading {
+  margin-bottom: 9px;
+}
+
+.studio .verify-section .section-heading p {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.studio .verdict-card {
+  margin: 8px 0;
+  padding: 10px 11px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.studio .verdict-card.good {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+.studio .verdict-card.bad {
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.studio .verdict-card.warn {
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+.studio .verdict-title {
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.studio .result-line {
+  margin: 8px 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.studio .result-line.good { color: var(--color-success-strong); }
+.studio .result-line.bad { color: var(--color-error-strong); }
+.studio .result-line.warn { color: var(--color-warning-strong); }
+
+.studio .case-row {
+  display: flex;
+  gap: 8px;
+  margin: 5px 0;
+  padding: 7px 9px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-size: 0.73rem;
+}
+
+.studio .case-row.good { border-color: var(--success-border); }
+.studio .case-row.bad { border-color: var(--error-border); background: var(--error-soft); }
+.studio .case-row.warn { border-color: var(--warning-border); background: var(--warning-soft); }
+
+.studio .case-mark {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.studio .case-row.good .case-mark { color: var(--color-success-strong); }
+.studio .case-row.bad .case-mark { color: var(--color-error-strong); }
+.studio .case-row.warn .case-mark { color: var(--color-warning-strong); }
+
+.studio .case-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.studio .witness {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+
+.studio .input-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0;
+}
+
+.studio .input-attr {
+  flex: 0 0 34%;
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.studio .fired-row {
+  margin: 3px 0;
+  font-size: 0.72rem;
+}
+
+.studio .fired-row code {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ---------- modal ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(11 15 26 / 0.42);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal {
+  width: min(560px, 100%);
+  max-height: 86vh;
+  overflow: auto;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 640;
+}
+
+.modal-body {
+  padding: 16px 18px;
+}
+
+.modal .icon-btn {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 1180px) {
+  .studio #studio {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.7fr);
+  }
+
+  .studio #pack-pane {
+    grid-column: 1 / -1;
+  }
+
+  .studio .pack-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .studio .pack-card {
+    flex: 1 1 210px;
+  }
+}

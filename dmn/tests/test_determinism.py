@@ -51,6 +51,47 @@ def test_amounts_and_dates_survive_the_round_trip_as_strings():
     assert isinstance(pack["pack"]["version"], str)
 
 
+def test_every_top_level_key_survives_the_round_trip():
+    """The emitter serves hand-written packs too (the demo's rule studio
+    re-emits one on every structured edit), and those carry two keys the
+    compiler never produces. Dropping either would emit a pack that validates,
+    adjudicates, and decides differently — so the round trip is asserted over
+    a pack that has them, not only over compiler output."""
+    pack = compile_source(minimal_dmn())
+    pack["abstentionPolicy"] = {"minConfidence": 0.75, "attributes": {"nc:mailed": 0.9}}
+    pack["calendars"] = {"us-federal": {"excludeWeekdays": ["Sat", "Sun"]}}
+    reparsed = yaml.safe_load(emit_pack(pack))
+    assert reparsed == pack
+    assert isinstance(reparsed["abstentionPolicy"]["minConfidence"], float)
+
+
+@pytest.mark.parametrize("value", [0.9, 0.75, 0.00001, 1e16, 1.5e-07, 1.0, -0.5])
+def test_a_float_comes_back_as_a_float_however_repr_spells_it(value):
+    """`repr` round-trips through Python, but this text is read back by PyYAML,
+    whose YAML-1.1 float pattern wants a decimal point in the mantissa. Emitted
+    bare, `repr(1e-05)` reloads as the *string* "1e-05" — a `minConfidence` the
+    kernel then rejects, which is exactly the failure quoting would have caused.
+    """
+    pack = compile_source(minimal_dmn())
+    pack["abstentionPolicy"] = {"minConfidence": value}
+    reloaded = yaml.safe_load(emit_pack(pack))["abstentionPolicy"]["minConfidence"]
+    assert isinstance(reloaded, float), f"{value!r} came back as {type(reloaded).__name__}"
+    assert reloaded == value
+
+
+@pytest.mark.parametrize("path", SOURCES, ids=lambda p: p.name)
+def test_a_replaced_header_does_not_move_the_body(path):
+    """`header=` exists so a non-DMN caller can say how *it* generated a pack.
+    It must change the comment block and nothing else — the body's
+    byte-stability is the contract, and a header parameter that reformatted
+    anything would quietly break it."""
+    default = emit_pack(compile_file(path), source=path.name)
+    custom = emit_pack(compile_file(path), header=["# Drafted elsewhere."])
+    strip = lambda text: [ln for ln in text.splitlines() if not ln.startswith("#")]  # noqa: E731
+    assert strip(default) == strip(custom)
+    assert custom.startswith("# Drafted elsewhere.\n")
+
+
 def test_hash_randomization_does_not_move_a_byte():
     """PYTHONHASHSEED perturbs set and string-hash iteration order. Two child
     interpreters with different seeds must still write the same file."""

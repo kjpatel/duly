@@ -1,0 +1,596 @@
+/* Evidence browser — layered on style.css, every selector scoped to
+   `body.evidence` so it can reuse names the decision workspace already owns
+   (.doc-text, .legend, .empty) without either page reaching into the other.
+
+   One colour decision carries meaning and is worth stating: fact state is a
+   hue, and the same hue is used everywhere that state appears — the chip in
+   the index, the mark in the rendition, the badge on the inspector. A reader
+   who learns "grey with a strike is superseded" once has learned it for the
+   whole page. */
+
+.evidence #evidence {
+  width: calc(100% - 48px);
+  max-width: 1840px;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(460px, 1.9fr) minmax(330px, 1.05fr);
+  gap: 20px;
+  padding-bottom: 24px;
+}
+
+.evidence code,
+.evidence .mono {
+  font-family: var(--font-mono);
+}
+
+.evidence .wrap {
+  overflow-wrap: anywhere;
+}
+
+.evidence .muted {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.evidence .empty {
+  margin: 10px 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.evidence .legend {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  color: var(--color-text-secondary);
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  border-radius: 9px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.evidence .legend.bad {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.evidence .error-note {
+  margin: 12px 0;
+  padding: 9px 11px;
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border: 1px solid var(--error-border);
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+
+/* ---------- the knowledge dial ---------- */
+
+.evidence .knowledge-bar {
+  width: calc(100% - 48px);
+  max-width: 1840px;
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(200px, 0.8fr) minmax(280px, 2fr) auto;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 18px;
+  padding: 14px 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.evidence .knowledge-bar.disabled {
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.evidence .knowledge-point {
+  margin-top: 2px;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 560;
+}
+
+.evidence .knowledge-caption {
+  margin: 3px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.71rem;
+}
+
+.evidence .knowledge-control {
+  min-width: 0;
+}
+
+.evidence .knowledge-control input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.evidence .knowledge-control input[type="range"]:disabled {
+  opacity: 0.4;
+}
+
+.evidence .knowledge-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+}
+
+.evidence .knowledge-tick.active {
+  color: var(--color-accent-dark);
+  font-weight: 600;
+}
+
+.evidence .knowledge-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- fact state, one hue everywhere ---------- */
+
+.evidence .state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.evidence .state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.evidence .state-chip.live {
+  color: var(--color-success-strong);
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+.evidence .state-chip.superseded {
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+}
+
+.evidence .state-chip.retracted {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.evidence .state-chip.future {
+  color: var(--color-info-strong);
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.evidence .pane-badge.state-live {
+  color: var(--color-success-strong);
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+.evidence .pane-badge.state-superseded {
+  color: var(--color-text-muted);
+}
+
+.evidence .pane-badge.state-retracted {
+  color: var(--color-error-strong);
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.evidence .pane-badge.state-future {
+  color: var(--color-info-strong);
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+/* ---------- index pane ---------- */
+
+.evidence .index-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.evidence .index-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 11px;
+  text-align: left;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.evidence .index-doc:first-child {
+  margin-top: 0;
+}
+
+.evidence .index-doc:hover {
+  background: var(--accent-softer);
+  border-color: var(--accent-border);
+}
+
+.evidence .index-doc.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.evidence .index-doc.static {
+  color: var(--color-text-muted);
+  cursor: default;
+  font-size: 0.72rem;
+}
+
+.evidence .index-doc-title {
+  font-size: 0.78rem;
+  font-weight: 580;
+}
+
+.evidence .index-doc-meta {
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+}
+
+.evidence .index-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0 2px 10px;
+  border-left: 2px solid var(--color-border);
+  margin-left: 10px;
+}
+
+.evidence .fact-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 9px;
+  text-align: left;
+  color: var(--color-text-primary);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.evidence .fact-row:hover {
+  background: var(--accent-softer);
+}
+
+.evidence .fact-row.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.evidence .fact-row-attr {
+  font-family: var(--font-mono);
+  font-size: 0.71rem;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.evidence .fact-row-value {
+  grid-column: 1;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+
+.evidence .fact-row .state-chip {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+.evidence .fact-row.superseded .fact-row-attr,
+.evidence .fact-row.superseded .fact-row-value {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.evidence .fact-row.future .fact-row-attr,
+.evidence .fact-row.future .fact-row-value {
+  opacity: 0.55;
+}
+
+.evidence .store-note {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  color: var(--color-text-secondary);
+  background: var(--info-soft);
+  border: 1px solid var(--info-border);
+  border-radius: 10px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* ---------- document pane ---------- */
+
+/* The document view switcher is `.tabs` / `.tab` in style.css, shared with the
+   rule studio and the receipt viewer — including the disabled state this pane
+   uses when a document has no source bytes to show. */
+
+.evidence .doc-text mark {
+  cursor: pointer;
+}
+
+.evidence .doc-text mark.selected {
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.evidence .doc-text mark.superseded {
+  color: var(--color-text-muted);
+  background: none;
+  border-bottom: 2px dashed var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.evidence .doc-text mark.future {
+  background: var(--info-soft);
+  border-bottom: 2px dotted var(--color-info);
+}
+
+.evidence .doc-text mark.retracted {
+  background: var(--error-soft);
+  border-bottom: 2px solid var(--color-error);
+}
+
+.evidence .doc-source {
+  width: 100%;
+  height: 640px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+/* ---------- fact inspector ---------- */
+
+.evidence .fact-headline {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
+  border-radius: 12px;
+}
+
+.evidence .fact-headline.superseded {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.evidence .fact-headline.retracted {
+  background: var(--error-soft);
+  border-color: var(--error-border);
+}
+
+.evidence .fact-headline.future {
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.evidence .fact-value {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 1.02rem;
+  font-weight: 620;
+  overflow-wrap: anywhere;
+}
+
+.evidence .fact-headline.superseded .fact-value {
+  text-decoration: line-through;
+}
+
+.evidence .fact-state-copy {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.73rem;
+}
+
+.evidence .fact-pending {
+  margin: 6px 0 0;
+  color: var(--color-info-strong);
+  font-size: 0.71rem;
+}
+
+.evidence .fact-section {
+  margin-bottom: 20px;
+}
+
+.evidence .fact-section h3 {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.evidence .kv {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.evidence .kv-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.6fr) 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.evidence .kv dt {
+  color: var(--color-text-muted);
+  font-size: 0.69rem;
+}
+
+.evidence .kv dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.72rem;
+}
+
+.evidence .fact-quote {
+  margin: 10px 0 0;
+  padding: 8px 11px;
+  color: var(--color-document-text);
+  background: var(--highlight);
+  border-left: 3px solid var(--color-warning);
+  border-radius: 0 8px 8px 0;
+  font-family: var(--font-mono);
+  font-size: 0.71rem;
+  line-height: 1.55;
+}
+
+.evidence .link-btn {
+  display: inline-block;
+  padding: 0;
+  color: var(--color-accent-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 550;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.evidence .link-btn:hover {
+  color: var(--color-accent);
+}
+
+.evidence .verdict-line {
+  margin: 0 0 8px;
+  font-size: 0.73rem;
+  font-weight: 550;
+}
+
+.evidence .verdict-line.ok {
+  color: var(--color-success-strong);
+}
+
+.evidence .verdict-line.bad {
+  color: var(--color-error-strong);
+}
+
+.evidence .issue-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--color-error-strong);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.evidence .history-list,
+.evidence .citation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence .history-event {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-size: 0.71rem;
+}
+
+.evidence .history-event.self {
+  background: var(--accent-softer);
+  border-color: var(--accent-border);
+}
+
+/* An event the selected horizon has not reached. Kept in the trail — the
+   history is the audit trail, not the projection — but never mistakable for
+   something the case already knew. */
+.evidence .history-event.future {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.evidence .history-future {
+  color: var(--color-info-strong);
+  font-size: 0.63rem;
+  font-weight: 550;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.evidence .history-when {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+}
+
+.evidence .history-what {
+  color: var(--color-text-primary);
+  font-weight: 550;
+}
+
+.evidence .citation {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+}
+
+.evidence .citation.used {
+  background: var(--accent-softer);
+  border-color: var(--accent-border);
+}
+
+.evidence .citation-role {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 1180px) {
+  .evidence #evidence {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence .knowledge-bar {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

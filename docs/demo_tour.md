@@ -13,6 +13,8 @@ uv run uvicorn demo.app:app --port 8788
 
 Open http://localhost:8788.
 
+Each of the four pages opens with a three-step orientation strip under its title — what to click, in what order. Dismiss it with **Got it** and the choice is remembered per page; **Show guide** under the page title brings it back. The strip is the short version of this tour, and the two are kept in step by hand: if a change moves what a page's first three actions are, the strip's copy in [demo/static/guide.js](../demo/static/guide.js) is part of that change. `demo/tests/test_guide.py` enforces that every page has one and that no guide is orphaned, but it cannot tell you the words went stale.
+
 ## 1. Start with the insurance scenario
 
 The scenario picker (top right) defaults to **New York homeowners nonrenewal notice timing**. The left pane shows the case's two documents as tabs — the Declarations Page and the Notice of Nonrenewal. Flip between them and note the yellow highlights: those are the exact phrases facts were extracted from. Nothing else is highlighted because nothing else was used.
@@ -69,6 +71,114 @@ Click **Review & correct**. The inline form is prefilled with the machine's valu
 A **Corrections applied** panel now records the resolution. **Export as golden case** downloads a zip in the golden corpus layout — `cases/review-NNNN/` with `case.yaml` and the post-correction fact set (a store projection at the resolution's knowledge time), plus `receipts/review-NNNN.json`, freshly adjudicated. Unzip it into `golden/` and `uv run python -m duly_assurance verify` replays it byte-for-byte. The demo never writes into the repository itself; committing the case is deliberately a human act. One resolved item also yields one labeled calibration pair — the panel says how to export such labels (`python -m duly_review pairs`) and points at the calibration module, with the censored-sample caveat attached.
 
 The committed [review-0001](../golden/cases/review-0001) golden case is this exact arc, frozen at the API level.
+
+## 10. The rule studio
+
+Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*.
+
+The left rail lists the six packs discovered under `rulepacks/`, each with its rule count, how many outcomes it declares, and how many committed golden receipts cite it. Pick **termination-notice-us-states** — 226 of the 351 golden receipts are its.
+
+### 10a. Read the rules as a decision table
+
+The centre pane opens on **Decision tables**: one grid per attribute the pack concludes, rows are rules, columns are the inputs they bind. `nc:requiredMinimumNoticeDays` is the readable one — seven rules, three inputs, and the whole state-by-state minimum-notice policy visible at once. Note three things the grid is careful about:
+
+- An empty cell is not one thing but two. *`any`* means the rule binds that input and does not constrain it — the fact must exist for the rule to fire, it is just not tested. *`—`* means the rule does not bind it at all. That is [the DMN `-` cell](../spec/dmn.md) and it is the distinction authors trip on, because it silently changes which cases a rule reaches.
+- `NC-NR-01`'s guard, `days_between(mailed, expiration) < minDays`, relates three bindings, so no column owns it. It gets its own **cross-input** row. A DMN table could not put it in a cell either; the grid says so rather than picking a column.
+- `NY-NR-45` and `NY-NR-45-LEGACY` sit at the same priority with identical cells. They are separated only by the **In force** column — the effective-dated replay from step 6, seen from the rules' side.
+
+This grid is a *view of the rule IR*, not a DMN document: `duly_dmn` compiles DMN into the IR and deliberately does not decompile. Authoring *through* DMN is §10d.
+
+### 10b. Change a rule, and find out what you did
+
+Click into `NY-NR-45`'s conclusion cell and change `45` to `60`. The **Rules** tab has the same edit as a form (with citation, version, effective window and bindings); the **pack.yaml** tab has it as text. Whichever you use, the right-hand **Verify** rail is the point:
+
+- **Validation** re-runs the kernel's own `validate_pack` on every keystroke-commit. An invalid draft is kept and reported, not discarded — an author mid-edit has an invalid pack most of the time.
+- **Declared cases** runs the pack's `expected.yaml` — the same assertions `kernel/tests/test_rulepacks.py` makes. All four still pass.
+- **Try a case** adjudicates one case by hand: pick a fact set, change an input value, watch the verdict, the rules fired and the defeat chain move. It also tells you whether your draft changed *this* case relative to the committed pack.
+- **Golden impact** re-adjudicates all 351 committed cases with your draft swapped in: **1 of 351 decisions flip**, `notice-ny-0048`, true → false.
+- **Static verification** (needs `uv sync --extra prove`) proves the same-priority rules disjoint, names the input regions no rule covers, and — the one that matters while editing — proves whether your draft and the committed pack decide alike. They do not, and it hands you the exact input where they part: `governingState = "US-NY"`, `noticeType = "Nonrenewal"`, committed 45, draft 60.
+
+Stop on the two lines that disagree. **Every declared case passes, and the corpus flips a decision.** That is not a bug in either; they answer different questions. `expected.yaml` catches a pack that *breaks*; only the corpus catches a pack whose *meaning moved*. Both are wired into CI for exactly that reason, and the studio is the first place you can watch them disagree.
+
+### 10c. Read the diff, then commit it yourself
+
+The **Diff** section shows the change twice. The first diff normalises both sides through the pack emitter, so a one-value edit is a two-line diff. The second — behind *Show the file diff* — is what `git` would see, and for a structured edit that includes every YAML comment the re-emission drops. The comments in these packs are not decoration (`DEMO-SYNTHETIC`, `TODO(verify)`, the `MODELING BOUNDARY` header in the TILA pack), so their loss is shown rather than hidden. Editing on the **pack.yaml** tab is the lossless path.
+
+**Export** downloads `pack.yaml`, or a `rulepacks/<name>/` bundle with an `expected.yaml` skeleton and a NEXT-STEPS note. The studio never writes into `rulepacks/` — same rule as the golden-case export in step 9c, for the same reason: committing an artifact into the repository is a human act, made through a diff a human read.
+
+### 10d. Compile a decision table
+
+The **DMN import** tab takes a DMN 1.3+ document and compiles it into a rule pack. Load the committed `trid-fee-tolerance` example: three rules across two decisions, validated by the kernel's pack validator before it comes back, and **Adopt** turns it into a draft that browses and tests exactly like a hand-written pack.
+
+Then click one of the red examples. Each is a minimal document that breaks one way — an uncited row, an unsupported hit policy, a non-S-FEEL cell — and each refusal names the decision, the row and the cell. A compiler that refuses is only trustworthy once you have watched it refuse.
+
+### 10e. Start a pack from nothing
+
+**New pack** drafts a skeleton that already obeys the conventions new packs most often miss: an `idPrefix`, a convention-shaped rule id, an explicit `TODO(verify)` where the citation belongs, and decision phrasing so a non-boolean answer never renders as a raw CURIE. Its Verify rail is honest about what it cannot yet do — no declared cases, and no golden case exercises it, so impact analysis literally cannot see it. That is the "0 of 351 decisions flip, forever" trap from [rulepacks/README.md](../rulepacks/README.md), said out loud before you fall into it.
+
+## 11. The evidence browser
+
+The workspace showed you the facts *this question's receipt cited*. That is the right frame for reading a decision and the wrong one for reading a case: it never shows a fact no rule needed, and it cannot show a fact that is no longer true. Click **Evidence browser** in the header (or open <http://localhost:8788/evidence>) for the other frame — every document the case holds and every fact ever asserted about it.
+
+Pick **NY nonrenewal — review arc**, the same case you corrected in step 9.
+
+### 11a. The document has two faces
+
+The centre pane offers **Rendition** and **Source PDF**, and the distinction is not cosmetic. A fact's grounding cites a `documentSha256` — the bytes — and a `charSpan` into a *rendition*, which is one extractor's reading of those bytes. The rendition tab draws the spans; the source tab serves the committed PDF and reports whether the file on disk still hashes to what the facts cite.
+
+The source tab has no highlights, and that is deliberate: character offsets are not page coordinates, and no fact carries the latter. A highlight drawn on the PDF would be a guess wearing the costume of provenance. Where two facts quote overlapping text — the TRID Closing Disclosure does — the browser says which span it could not draw rather than dropping it silently.
+
+### 11b. Everything the receipt view left out
+
+Click any highlight, or any fact in the left rail. The inspector shows the full record: the grounding (document, page, span, source hash, which extractor's rendition), the provenance (machine extractor and run, or the named human who asserted it), the confidence *with its method and calibration reference*, the content hash, and the ontology.
+
+That last panel is the conformance gate — the same one CI runs over every committed fact — narrowed to this one: the ontology its `schemaRef` pins, the class the attribute is declared on, its value kind, and for coded values the permitted code set. **Cited by** at the bottom names every question this case's pack asks and this fact's role in each: cited in the derivation, abstained on, or not in the derivation at all. That third answer is a real distinction — a live fact read by a rule that did not survive is not cited — and the panel says so rather than leaving a blank. Each question links back to the workspace at *that* question of *that* case, closing the loop the tour opened with: the workspace shows you one answer's evidence, this shows you one piece of evidence's answers.
+
+### 11c. Drag the dial
+
+This is the step the whole surface exists for. The strip under the toolbar is a **knowledge time** dial, and its stops are the moments this case's knowledge actually changed — not a free date field, because every date in between projects identically.
+
+At the last stop you see the case as it stands: four live facts and one superseded. Drag back one stop, to before you applied the correction, and the case rearranges. The reviewer's fact becomes **not yet known**. The below-floor machine fact — `noticeMailedDate = 2026-07-25`, struck through a moment ago — is **live** again, and its inspector says a later fact supersedes it, drag forward to see. The history panel keeps the whole chain, marking the events this horizon has not reached rather than hiding them, because the audit trail is not the projection.
+
+Drag to the first stop and three facts have not been extracted yet.
+
+The store has been bitemporal since M2 and every receipt has carried a knowledge time; this is where that stops being a field in a JSON document. It is also why corrections are modelled as supersession rather than mutation: an edit in place would have nothing to show here, because there would be nothing left of what was believed before.
+
+### 11d. What it will not do
+
+Without the session fact store — fixture mode, or a checkout where the extraction pipeline cannot run — there is no event log. The browser then serves the committed facts, all live, and says the timeline is *absent* rather than showing an empty one that implies knowledge never changed. A retracted fact with no replacement is not reachable from any live fact through the store's public API, so it does not appear; nothing in the demo retracts, and reaching around the API for it would be worse than the gap.
+
+Deep links carry the whole view — `?case=&fact=&k=&tab=` — because "look at this fact, as of before the correction" is only a useful sentence if it can be a URL. The workspace takes `?scenario=&question=` for the same reason, which is what the **Cited by** links use; an unknown scenario or question falls back to the default rather than erroring, so a stale link still lands somewhere usable.
+
+## 12. The receipt viewer
+
+The workspace produces a receipt. This surface reads one back. Click **Receipt viewer** in the header (or open <http://localhost:8788/receipt>) — the question it answers is the one an auditor actually arrives with: *someone handed me this receipt; does it hold?*
+
+The toolbar holds the whole committed corpus behind a search field: filter by rule pack, then type a case id or a receipt hash — arrow keys and Enter, or click. 351 receipts are searched rather than browsed, so the picker sits across the top and the width goes to the two panes that need it. Type `notice-ny-0001`. Three things happen at once, and the third is the point.
+
+### 12a. The report is the kernel's, in a third medium
+
+The centre pane is the same audit report you downloaded in step 7 — conclusion, reasoning with quoted evidence, rules applied, evidence, integrity — rendered as HTML rather than Markdown or PDF. Not a re-implementation: `duly_kernel.report` builds one list of typed sections and three renderers walk it. A new medium is a new walk, which is what keeps the browser and the PDF from drifting into two accounts of one decision. The **Receipt JSON** tab is the bytes themselves.
+
+### 12b. Verification runs on open, not on request
+
+The right rail ran three checks before the report appeared, and reports them separately because they fail for different reasons:
+
+- **Receipt hash** — recompute SHA-256 over the receipt's canonical body and compare it to the `receiptSha256` it carries. This needs nothing but the receipt, which is why a receipt from outside this repository is still worth opening.
+- **Input facts** — every fact the receipt pinned is present, and each one hashes to the content hash in its own id.
+- **Replay** — re-run `duly_kernel.api.adjudicate` over those facts, that pack version and the receipt's own asOf pair, and compare byte-for-byte. This is `python -m duly_assurance verify` narrowed to one receipt.
+
+Now **Paste a receipt**, drop in `golden/receipts/notice-ny-0001.json`, and edit one character of the verdict before verifying. The hash check fails: the document has been altered. That is the easy forgery.
+
+The instructive one takes a second step. Flip the verdict *and* recompute `receiptSha256` so the document is internally consistent again, paste it with the genuine facts from `golden/cases/notice-ny-0001/facts/`, and watch what happens: **receipt hash passes, facts pass, replay fails.** The report reads "Compliant" in full sentences with real citations and real quoted evidence, and it is a lie — because the rules, run again, do not produce it. A hash proves a document has not changed since someone sealed it. Only re-running the rules proves the seal was ever honest. That gap is the whole reason verification is three checks and not one.
+
+### 12c. What it refuses to guess
+
+Paste a receipt with no facts alongside it. The hash still verifies; the evidence and replay checks report **not checked** and say why — a receipt pins its facts by content hash, so it genuinely cannot reproduce them, and a viewer that quietly rendered a thinner report would be claiming completeness it does not have. **Rendered against** at the bottom of the rail always names what the report was built from.
+
+The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to the file now at `rulepacks/<name>/pack.yaml`: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
+
+One consequence worth knowing if you build on the API: `/api/receipts/inspect` takes raw JSON **text**, not objects. JavaScript has a single number type, so a fact's `"score": 1.0` survives a browser round trip as `1` — a different canonical body, a different content hash, and every genuine fact reported as tampered with. Content addressing is over bytes, so the bytes are what travel and Python does the only parse.
 
 ## Behind the curtain: the CLI
 

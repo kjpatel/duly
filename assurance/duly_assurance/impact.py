@@ -167,11 +167,18 @@ def _side(value: dict | None, reasoning: list[dict], error: str | None = None) -
     return side
 
 
-def analyze(golden_root: Path) -> dict:
+def analyze(golden_root: Path, *, pack_overrides: dict[Path, dict] | None = None) -> dict:
     """Run impact analysis over the corpus at `golden_root`.
 
     Returns the full machine-readable report. Raises ImpactOperationalError
     when the corpus or any pack cannot be loaded.
+
+    `pack_overrides` maps a resolved pack path to a pack dict to use *instead
+    of* the file on disk. The CLI never passes it — reading the working tree is
+    the point of the command. It exists for callers holding a candidate pack
+    that is not (and may never be) a file: the demo's Rule Studio asks "what
+    would this edit flip" before the edit is written anywhere, which is the
+    only order in which the answer can change the author's mind.
     """
     cases_dir = golden_root / "cases"
     receipts_dir = golden_root / "receipts"
@@ -181,7 +188,11 @@ def analyze(golden_root: Path) -> dict:
     if not case_dirs:
         raise ImpactOperationalError(f"golden corpus has no cases under {cases_dir}")
 
-    pack_cache: dict[Path, dict] = {}
+    # Seeding the cache is the whole override mechanism: every case that
+    # resolves to this path gets the candidate pack, and a case pointing
+    # somewhere else is unaffected, so a draft is measured against exactly the
+    # corpus slice it governs.
+    pack_cache: dict[Path, dict] = dict(pack_overrides or {})
     flips: list[dict] = []
     reasoning_changes: list[dict] = []
     unchanged: list[str] = []

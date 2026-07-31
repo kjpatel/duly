@@ -145,8 +145,9 @@ more explicitly:
 |---|---|---|
 | Ontology artifact | Versioned vocabulary and type constraints supplied by the adopter | The decision logic |
 | `GroundedFact` | One assertion about one case, with evidence and uncertainty | A conclusion merely because it is well-formed |
+| Rendition | One extractor's reading of one document's bytes, content-addressed and immutable — and the coordinate system every character span is measured in | The document, or a faithful transcription of it. Two extractors produce two renditions from identical bytes, which is why a span that resolves against one may resolve nowhere in the other |
 | Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, calendars, and the phrasing of each decision it can answer. Authored as YAML, or compiled from a [DMN decision table](../spec/dmn.md) — either way the kernel sees one artifact | A domain ontology or workflow definition — and its phrasing is not part of the decision's identity |
-| `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace | The facts, source rendition, or rule-pack bytes themselves |
+| `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace — independently checkable by its holder, to the depth the inputs they also hold allow | The facts, source rendition, or rule-pack bytes themselves — which is why it can verify its own hash alone, and needs those artifacts supplied to verify anything more |
 | Extraction run envelope | Integrity manifest for one run over one rendition | Authentication of the producer |
 
 A rule pack has two halves, and the distinction is easy to miss because one
@@ -162,6 +163,29 @@ the wording unimprovable. Governance and identity are not the same boundary.
 The practical test: a decision's meaning is `decision.value`, which is hashed;
 how that value reads to a human is pack data that any renderer may consume and
 no receipt records.
+
+There is a third part of the file, and building an editor for packs is what
+made it visible. Between the deciding half and the speaking half sits the
+**arguing** part: the prose in the YAML. `DEMO-SYNTHETIC` on an invented
+effective window, `TODO(verify)` naming what was not confirmed, the
+`MODELING BOUNDARY` header explaining what the IR could not express, the
+comment recording why an `overrides` is an authored legal exception rather
+than a workaround for a proof the validator cannot perform. None of it is
+hashed, none of it is phrasing, and every automated gate in this repository is
+blind to it: strip every comment from a pack and validation passes, the 351
+golden receipts replay byte-for-byte, and impact analysis reports zero. The
+honest-labeling invariant lives entirely in a layer nothing checks.
+
+The practical consequence, which the [rule studio](../demo/rules_api.py) had
+to answer directly: any tool that re-emits a pack from the IR — a compiler, a
+formatter, a structured editor — destroys the arguing part while leaving both
+governed halves provably intact. duly's response is neither to forbid the
+re-emission nor to pretend it is lossless, but to make the loss the thing you
+look at: the studio shows a normalised diff for *what you changed* and the raw
+file diff for *what you would be committing*, and keeps a text-editing path
+that preserves comments. That is the same move as impact analysis. A change
+that cannot be prevented mechanically is instead made impossible to make
+accidentally.
 
 In T-Box/A-Box terms, the ontology is T-Box-like and grounded facts are
 A-Box-like. Rule packs are a separate policy artifact. duly does not currently
@@ -489,11 +513,12 @@ are not current behavior.
 |---|---|---|
 | Determinism | The same supplied fact set, exact rule content, as-of pair, and engine produce the same receipt bytes | That the facts or rules are true |
 | Grounding | A verified quote resolves to an exact span in an exact rendition | That the extractor interpreted the quote correctly |
-| Content addressing | Mutation of facts, envelopes, renditions, or receipts is detectable | Producer identity, authorization, or an adversarially immutable database |
+| Content addressing | Mutation of facts, envelopes, renditions, or receipts is detectable *relative to their seal* | Producer identity, authorization, or an adversarially immutable database — nor that the sealed content is faithful, since an altered receipt can be re-sealed and only re-adjudication catches that |
+| Independent receipt verification | Whoever holds a receipt can check it without trusting its producer: its hash from its own bytes, its facts against their content hashes, and — given those facts and the pack version it names — a full re-adjudication compared byte-for-byte | That the rulebase was right about the law, or who produced the receipt. Two of the three checks require inputs the receipt does not carry, and report *not checked* rather than passing when they are absent |
 | Ontology conformance | With the registry enabled, vocabulary, attachment, value kinds, and codes conform to a pinned version | Record completeness, cross-fact consistency, or domain truth |
 | Confidence policy | Low-confidence machine facts can be excluded under versioned pack policy | A calibrated error rate unless representative labels and the calibrator's assumptions hold |
 | Defeasible rules | Defaults, exceptions, priorities, and derivations are explicit and replayable — and, where the [verifier's fragment](../spec/pack-verification.md) reaches, mechanically checkable: same-priority rules can be *proved* mutually exclusive, and the input regions where no rule concludes a decision can be enumerated with witnesses | That the encoded policy is current or legally correct. "Complete" acquires a narrow, checkable meaning here and keeps a wide unchecked one: the verifier proves a pack reaches *some* conclusion over its inputs, never that the conclusion is the right one, that the rules encode the whole of the law, or that the facts the rules need were extracted |
-| Bitemporal replay | The store can reconstruct facts known at a prior knowledge point and valid at an effective point | Correct replay if a caller bypasses the as-of projection |
+| Bitemporal replay | The store can reconstruct facts known at a prior knowledge point and valid at an effective point, and — from the same log — say what became of a fact that no longer binds | Correct replay if a caller bypasses the as-of projection |
 | Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples |
 | Impact analysis | A rule change's flips and reasoning changes are visible on the corpus | Automatic approval or rejection of the change |
 | PROV-O export | Standard lineage tools can query useful artifact relationships | A lossless mapping of duly's time, uncertainty, or rule semantics |
@@ -535,6 +560,30 @@ relax the pack validator: anything that could change a decision must live
 inside the versioned, replayable artifact, and anything that merely *reasons
 about* decisions must be provably outside it.
 
+A second claim in this document turned out to have a soft edge, and building a
+reader for the store is what found it. Immutability is usually defended as
+**preservation**: a correction supersedes rather than edits, so nothing once
+believed is lost. Preservation is the weaker half of what an append-only log
+buys. The log admits two different queries — *which facts bind at this
+horizon*, which is what adjudication needs and what `as_of` answers, and *what
+became of this fact*, which adjudication never asks and an auditor asks first.
+A mutating store can answer neither honestly. A store with a deletion-free log
+but only a survivor projection answers the first and merely *promises* the
+second, and duly was in that position from M2 until the evidence browser ran
+the second query. So the line worth drawing is not between mutable and
+immutable storage:
+
+> "Nothing is lost" becomes checkable at the point where something reads the
+> history back. Until then it is a property of the schema, which a system can
+> satisfy perfectly while remaining unable to tell you what it used to believe.
+
+Which is why the browser recomputes liveness from the event log instead of
+calling `as_of`, and why a test walks every case at every point on its timeline
+asserting the two projections agree. One implementation answering both
+questions would prove nothing; two implementations that must agree are a
+differential check, in the same spirit as `prove` standing behind the pack
+validator.
+
 That dichotomy is not exhaustive, and the gap in it is instructive. A what-if
 answer is a claim about *one execution that did not happen* — as pointwise as a
 receipt, but with no run behind it to reproduce. It cannot be established by
@@ -551,6 +600,49 @@ artifacts which enter the audit chain. `prove` honours it by never making a
 decision; `whatif` honours it by making many and keeping none. Both sit outside
 the versioned artifact; only one of them sits outside the executor, and the
 difference tells you which invariant was actually load-bearing.
+
+There is one more position in that lattice, and it belongs to whoever is
+holding the receipt rather than to anyone running this repository. Content
+addressing appears in the guarantees table above as *mutation is detectable*.
+That is true, and weaker than it sounds. A hash is computed over a document,
+so it detects mutation relative to a seal — and whoever alters the document
+can simply re-apply the seal. Flip a verdict, recompute `receiptSha256`, and
+the artifact is consistent again: the facts it pins are genuine and hash
+correctly, the derivation is well-formed, the report renders in fluent
+sentences over real statutory citations. Every integrity check that operates
+on the receipt *as a document* passes. The forgery is undetectable by
+inspection precisely because nothing about it is malformed.
+
+What it cannot survive is being run. So the sharpened claim is:
+
+> Content addressing establishes that a receipt is **unaltered since it was
+> sealed**. Only re-adjudication establishes that it is a **faithful record of
+> what the rules concluded**. Tamper-evidence and fidelity are different
+> properties, and the first does not approach the second.
+
+This is why a receipt cannot be verified by one check reporting one verdict.
+Hash, fact integrity, and replay establish three different things and fail
+independently; collapsing them into a single valid/invalid pill would hide the
+one case where they disagree, which is the case that matters. It is also why
+the middle check must be able to report *not checked*: a receipt pins its
+facts by hash rather than by value, so a receipt arriving on its own genuinely
+cannot reproduce its own evidence, and a verifier that quietly passed it would
+be converting an absence into an assurance.
+
+The last distinction is about standing rather than about computation. Golden
+replay and single-receipt verification run the same kernel over the same
+inputs and compare the same bytes; what differs is who is entitled to conclude
+something. Replay over the corpus is a claim duly makes about artifacts duly
+produced, checked by CI duly configured — real evidence of determinism, and
+structurally the same shape as any project's test suite. The identical
+computation, performed by the party *holding* a receipt, against facts and a
+pack version the receipt itself names, is a claim that needs no trust in the
+producer at all. A decision record that only its author can verify is
+documentation. One that its recipient can verify is a receipt, and the
+difference is not in the artifact — it is in whether the checking is available
+to the person with a reason to doubt. The [receipt viewer](../demo/receipts_api.py)
+exists to make that availability concrete rather than theoretical
+([tour §12](demo_tour.md#12-the-receipt-viewer)).
 
 ## The gates
 
@@ -652,6 +744,10 @@ until a workload supplies acceptance criteria.
 | Backward query over the rulebase ("what would have had to be true?") | Implemented as a validation-time tool reusing the verifier's encoding unmodified, with every answer re-adjudicated through the kernel before it is returned ([spec/whatif.md](../spec/whatif.md)). No artifact is produced and nothing reaches a receipt |
 | Static verification of the rulebase by a solver | Implemented as a validation-time tool over a documented fragment: booleans, decimals and money as reals (currency unmodeled), dates as bounded integers, strings and codes as finite domains resolved from the ontology, and the IR operators that encode faithfully ([spec/pack-verification.md](../spec/pack-verification.md)). Constructs outside it are refused by name rather than approximated. `z3-solver` is an optional extra; the kernel neither imports it nor depends on it, and no solver output reaches a receipt |
 | Business-editable decision tables compiled to the decision logic | Implemented for a deliberately narrow subset: DMN 1.3+ tables, S-FEEL cells, three of seven hit policies, mandatory per-row citation and effective date ([spec/dmn.md](../spec/dmn.md)). The compiler is an authoring surface, not a second engine — its output is an ordinary rule pack the same kernel executes |
+| Rules browsed and edited as decision tables in a UI | Implemented as a *projection* of the rule IR, computed with the kernel's own expression parser ([demo/rules_api.py](../demo/rules_api.py), [tour §10](demo_tour.md)). It is not a DMN round trip: the compiler is one-way by design, so a guard relating several bindings is shown as a cross-input condition the grid cannot hold rather than flattened into a cell that would misstate it |
+| Rule change measured before it is committed | Implemented: a candidate pack that exists only in memory is re-adjudicated over the full golden corpus, and — with the optional solver — proved decision- and trace-equivalent (or not, with a witness input) against the committed pack. The order matters more than the tooling: an impact number the author sees *before* writing the file is the only one that can change their mind |
+| Evidence browsed as objects rather than as one decision's citations | Implemented ([demo/evidence_api.py](../demo/evidence_api.py), [tour §11](demo_tour.md#11-the-evidence-browser)): a case's documents — source bytes beside the extractor's rendition — and every fact ever asserted about it, at a knowledge time the reader chooses. Spans are drawn only on the rendition they are measured in, and liveness is recomputed from the event log rather than read off `as_of`, so superseded and not-yet-known facts stay visible instead of vanishing |
+| A decision record its recipient can verify without trusting its producer | Implemented ([demo/receipts_api.py](../demo/receipts_api.py), [tour §12](demo_tour.md#12-the-receipt-viewer)): three independent checks — the receipt's hash from its own bytes, each pinned fact against its content hash, and a full re-adjudication compared byte-for-byte — reported separately, because a re-sealed forgery passes the first two. Checks whose inputs were not supplied report *not checked*; a pack whose version has moved is refused rather than substituted |
 | Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
 | Natural-language-to-formal-query interface | Possible extension; not current behavior |
 | RDF or property-graph decision core | Not implemented |
@@ -782,6 +878,9 @@ These are extension paths, not commitments or a second roadmap. The
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
 | Rule authors need safer tools | DMN-to-IR authoring, Z3 overlap/coverage analysis, and backward what-if queries (**all shipped** — see below), plus a rule-id convention with the pre-existing ids grandfathered rather than renamed | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
+| Rule authors need those tools *together* | A browsing/drafting surface that runs the validator, the pack's declared cases, an ad-hoc case, corpus impact and the solver over one draft (**shipped** — the demo's rule studio, [tour §10](demo_tour.md)) | A draft is a session artifact until a human commits it; nothing the studio does writes into `rulepacks/`, and every instrument it exposes is the shipped one called unmodified |
+| An append-only history nobody can look at is indistinguishable from one that was edited | A surface that projects the case at any point on its own event log, showing what became of every fact rather than only which ones survive (**shipped** — the demo's evidence browser, [tour §11](demo_tour.md#11-the-evidence-browser)) | The browser reads; it never writes. Its projection must agree with the store's `as_of` at every horizon, and it must degrade to "there is no event log here" rather than presenting a disk fact set as a timeline with one point |
+| A receipt is only as good as the recipient's ability to check it | A surface that opens any receipt — committed, or pasted from another deployment — and re-verifies it on open rather than on request (**shipped** — the demo's receipt viewer, [tour §12](demo_tour.md#12-the-receipt-viewer)) | Verification never renders what it cannot source: a missing fact set or a moved pack version is reported as unchecked, never approximated from whatever is on disk. The report is the kernel's own section structure in a third medium, never a second renderer |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
@@ -819,13 +918,27 @@ requirement without weakening replay.
 - [`extraction/duly_extraction`](../extraction/duly_extraction) contains the
   adapter and run-envelope boundary.
 - [`store/duly_store`](../store/duly_store) contains append-only bitemporal
-  storage.
+  storage; [`demo/evidence_api.py`](../demo/evidence_api.py) reads that log
+  back at an arbitrary horizon, which is the shortest way to see what the two
+  time axes actually do.
 - [`kernel/duly_kernel`](../kernel/duly_kernel) contains the reference
   interpreter and receipt builder.
 - [`review/duly_review`](../review/duly_review) contains the review and
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
   packs, and refuses the tables it cannot compile honestly.
+- [`demo/rules_api.py`](../demo/rules_api.py) is the rule studio: packs as
+  decision-table grids, session-only drafts, and the validator, declared
+  cases, ad-hoc adjudication, corpus impact and the solver all run over one
+  candidate pack ([tour §10](demo_tour.md)).
+- [`demo/receipts_api.py`](../demo/receipts_api.py) is the receipt viewer: the
+  corpus browsable, any receipt openable, and three independent checks — hash,
+  fact integrity, replay — run on open rather than on request
+  ([tour §12](demo_tour.md#12-the-receipt-viewer)).
+- [`kernel/duly_kernel/report.py`](../kernel/duly_kernel/report.py) builds one
+  section structure that three renderers walk — Markdown, PDF, and
+  JSON blocks for the browser — so a new medium is a new walk rather than a
+  second account of the same decision.
 - [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) carries the
   rule-id convention and the explicit list of ids that predate it.
 

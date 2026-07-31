@@ -20,9 +20,15 @@
     </span>
     <span class="brand-copy">
       <span class="brand-name">duly</span>
-      <span class="brand-sub">Decision workspace</span>
     </span>
   </a>
+
+  <nav class="app-nav" aria-label="Sections">
+    <a href="/" aria-current="page">Decision workspace</a>
+    <a href="/rules">Rule studio</a>
+    <a href="/evidence">Evidence browser</a>
+    <a href="/receipt">Receipt viewer</a>
+  </nav>
 
   <div class="header-status" id="workspace-status" role="status" aria-live="polite">
     <span class="status-dot" aria-hidden="true"></span>
@@ -64,6 +70,8 @@
     </div>
   </div>
 </section>
+
+<section class="guide" id="guide" data-guide="workspace" aria-label="How to use this page" hidden></section>
 
 <main id="workspace">
   <section class="pane" id="doc-pane" aria-labelledby="source-title">
@@ -222,6 +230,7 @@
   </section>
 </main>
 
+<script src="/guide.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

@@ -15,6 +15,10 @@ rulepacks/<pack-name>/
 
 Copy [termination-notice-us-states](termination-notice-us-states/) for a jurisdiction-scoped pack, or [trid-fee-tolerance-us-federal](trid-fee-tolerance-us-federal/) for a two-document computation. Neither is a toy; both are what shipped.
 
+## Read the packs before you write one
+
+`uv run uvicorn demo.app:app --port 8788`, then <http://localhost:8788/rules>. The **rule studio** renders every committed pack as decision-table grids — rows are rules, columns are the inputs they bind — which is the fastest way to see how a real pack is shaped before you copy one. It also drafts and tests: edit a cell, a rule form or the YAML, and the panel beside it runs the kernel's validator, this pack's `expected.yaml`, an ad-hoc case you build by changing input values, golden-corpus impact analysis, and the solver. Drafts are session-only — the studio hands you `pack.yaml` bytes and a diff and never writes into this directory, so everything below still applies. It is a good place to *understand* and *try*; it is not a shortcut past steps 2–7. Walkthrough: [demo tour §10](../docs/demo_tour.md#10-the-rule-studio).
+
 ## Most wiring is automatic. Three things are not.
 
 This is the part worth internalizing, because it is where contributions silently come up short.
@@ -29,7 +33,7 @@ This is the part worth internalizing, because it is where contributions silently
 | a `phrasing:` block on a decision | the demo, which words every verdict from the pack ([spec/rule-ir.md](../spec/rule-ir.md), "Decision phrasing") |
 | a new test directory | CI, which runs all suites listed in `.github/workflows/ci.yml` |
 
-**Not automatic** — nothing fails loudly if you skip these, which is exactly why they get skipped:
+**Not automatic** — nothing fails loudly if you skip these, which is exactly why they get skipped. All three are on the rule studio's Verify rail, where they say what they cannot see rather than reporting a comfortable zero:
 
 1. **Golden-corpus coverage.** [Impact analysis](../assurance/duly_assurance/impact.py) — the "this change flips N of M historical decisions" CI comment — runs *over the golden corpus*, not over `expected.yaml`. A pack with no generator template in [assurance/duly_assurance/generate.py](../assurance/duly_assurance/generate.py) gets a cheerful "0 of N decisions flip" for every edit, forever. `expected.yaml` catches breakage; only the corpus catches *drift*. Adding a template is a registry entry plus a fact builder — `STATE_TEMPLATES` is deliberately data, not code.
 2. **Extractor pinning for scripted confidences.** If a scenario depends on a specific confidence value — e.g. a below-floor fact that must abstain — set `"demoExtractor": "stub"` in its `scenario.json`. Docling measures its own confidence and will silently overwrite a scripted 0.58 with a passing 0.9, skipping the arc the scenario exists to demonstrate. This one has no failing test to warn you; it was found by looking at the running demo.

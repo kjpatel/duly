@@ -831,7 +831,10 @@ def render(report: PackReport, *, verbose: bool = False) -> str:
     return "\n".join(lines)
 
 
-def _report_json(report: PackReport) -> dict:
+def report_json(report: PackReport) -> dict:
+    """The machine-readable form of a pack report — `--json`'s payload, and
+    what a second consumer serialises rather than re-deriving (the demo's rule
+    studio renders it in the browser)."""
     return {
         "pack": report.name,
         "version": report.version,
@@ -937,7 +940,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.json:
-        print(json.dumps({"packs": [_report_json(r) for r in reports]},
+        print(json.dumps({"packs": [report_json(r) for r in reports]},
                          indent=2, sort_keys=True))
     else:
         for i, report in enumerate(reports):

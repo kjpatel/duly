@@ -4,10 +4,18 @@ Renders a receipt (plus the facts it consumed and, optionally, the pack that
 produced it) into a layered human-readable report: a compliance-reader
 narrative first, a technical integrity appendix last.
 
-Two output formats share one intermediate section structure:
+Three output formats share one intermediate section structure:
 
 - `render_report_markdown(receipt, facts, pack)` -> str   (canonical)
 - `render_report_pdf(receipt, facts, pack)`      -> bytes (reportlab, A4)
+- `render_report_blocks(receipt, facts, pack)`   -> list  (JSON-serializable)
+
+The third is the structure itself, made transportable: the same sections and
+blocks the other two walk, as plain dicts, for a caller that renders them in
+its own medium (the demo's receipt viewer renders them to DOM). It exists so
+that a new medium is a new *walk* of the section list rather than a second
+report implementation — the property that keeps the Markdown and the PDF
+saying the same thing is the one that has to keep holding.
 
 CRITICAL PROPERTY — determinism. Rendering is pure templating over its
 inputs: no wall clock (every date printed comes from the receipt or facts),
@@ -452,6 +460,61 @@ def _build_sections(
         _build_evidence(receipt, facts_by_id),
         _build_integrity(receipt),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Block renderer (the section structure, made transportable)
+# ---------------------------------------------------------------------------
+
+
+def render_report_blocks(
+    receipt: dict, facts: list[dict], pack: dict | None = None
+) -> list[dict]:
+    """Render the audit report as JSON-serializable sections.
+
+    Returns `[{"title": str|None, "blocks": [...]}]`, where each block is one
+    of:
+
+        {"tag": "para",    "text": str}
+        {"tag": "subhead", "text": str}
+        {"tag": "code",    "text": str}
+        {"tag": "kv",      "rows":  [{"label": str, "value": str, "mono": bool}]}
+        {"tag": "steps",   "steps": [{"lead": str, "evidence": [str]}]}
+
+    Same determinism contract as the other two renderers: pure templating over
+    the inputs, no wall clock, no randomness. The tuples become dicts and the
+    text is carried verbatim — a caller that renders these to markup is
+    responsible for escaping, and should be handing them to a text node.
+    """
+    sections: list[dict] = []
+    for section in _build_sections(receipt, facts, pack):
+        blocks: list[dict] = []
+        for block in section.blocks:
+            tag = block[0]
+            if tag in ("para", "subhead", "code"):
+                blocks.append({"tag": tag, "text": block[1]})
+            elif tag == "kv":
+                blocks.append(
+                    {
+                        "tag": "kv",
+                        "rows": [
+                            {"label": label, "value": value, "mono": bool(mono)}
+                            for label, value, mono in block[1]
+                        ],
+                    }
+                )
+            elif tag == "steps":
+                blocks.append(
+                    {
+                        "tag": "steps",
+                        "steps": [
+                            {"lead": lead, "evidence": list(evidence)}
+                            for lead, evidence in block[1]
+                        ],
+                    }
+                )
+        sections.append({"title": section.title, "blocks": blocks})
+    return sections
 
 
 # ---------------------------------------------------------------------------

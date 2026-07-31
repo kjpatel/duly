@@ -61,6 +61,6 @@ package = true
 markers = [
     "docling: exercises the live Docling converter; requires `uv sync --extra extraction` (skipped when docling is not importable)",
     "linkml: proves the committed ontologies are genuine LinkML with real tooling; run via `uv run --with linkml --with pyshacl pytest conformance/tests -m linkml` (skipped when linkml is not importable)",
-    "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests -m z3` (skipped when z3 is not importable)",
+    "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests whatif/tests demo/tests -m z3` (skipped when z3 is not importable)",
     "ortools: exercises the CP-SAT closing scheduler example; run via `uv run --with ortools pytest examples/closing-scheduler -m ortools` (skipped when ortools is not importable)",
 ]

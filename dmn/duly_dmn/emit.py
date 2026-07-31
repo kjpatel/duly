@@ -41,22 +41,40 @@ _FLOW_MAX_LEN = 84
 _ESCAPES = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
 
 
-def emit_pack(pack: dict, *, source: str | None = None) -> str:
-    """Render a rule-IR pack dict as YAML text. Ends with a newline."""
-    lines: list[str] = [
-        "# Compiled from DMN by `python -m duly_dmn compile` — do not hand-edit.",
-    ]
+def _dmn_header(source: str | None) -> list[str]:
+    lines = ["# Compiled from DMN by `python -m duly_dmn compile` — do not hand-edit."]
     if source:
         lines.append(f"# Source: {source}")
     lines += [
         "# The DMN decision table is the authored artifact; this file is its",
         "# compilation into the rule IR (spec/rule-ir.md, spec/dmn.md).",
-        "",
     ]
-    for key in ("pack", "decisions", "rules"):
-        if key not in pack:
-            continue
-        lines.extend(_block_entry(key, pack[key], 0, flow_child=False))
+    return lines
+
+
+def emit_pack(
+    pack: dict, *, source: str | None = None, header: list[str] | None = None
+) -> str:
+    """Render a rule-IR pack dict as YAML text. Ends with a newline.
+
+    `header` replaces the DMN provenance comment for callers that are not the
+    DMN compiler. It is a parameter rather than a second emitter because the
+    byte-stability contract belongs to the *body*, and forking the body
+    renderer to change four comment lines is how two renderers drift apart.
+    A generated pack must always say how it was generated, so the header is
+    replaceable but not removable.
+    """
+    lines = list(header) if header is not None else _dmn_header(source)
+    if header is not None and source:
+        lines.append(f"# Source: {source}")
+    lines.append("")
+    # Every top-level key, in the input dict's own order. Emitting a fixed
+    # allow-list was a silent-truncation bug waiting to happen: the compiler
+    # only ever produces pack/decisions/rules, but a hand-written pack also
+    # carries `abstentionPolicy` and `calendars`, and dropping either would
+    # re-emit a pack that adjudicates differently while looking fine.
+    for key, value in pack.items():
+        lines.extend(_block_entry(key, value, 0, flow_child=False))
         lines.append("")
     while lines and lines[-1] == "":
         lines.pop()
@@ -138,6 +156,24 @@ def _scalar(value) -> str:
         return "null"
     if isinstance(value, int):
         return str(value)
+    if isinstance(value, float):
+        # Confidence floors are the only floats a pack carries, and they must
+        # come back as floats: quoted, `minConfidence: "0.9"` is a string the
+        # kernel rejects. `repr` is the shortest representation that round-trips
+        # exactly, and it is deterministic across runs and platforms.
+        if value != value:
+            return ".nan"
+        if value in (float("inf"), float("-inf")):
+            return ".inf" if value > 0 else "-.inf"
+        # ...but repr round-trips through *Python*, and this text is read back
+        # by PyYAML, whose YAML-1.1 float pattern requires a decimal point in
+        # the mantissa. `repr(1e-05)` is "1e-05", which reloads as the string
+        # "1e-05" — the very failure quoting would cause. So the exponent form
+        # gets its point back.
+        mantissa, marker, exponent = repr(value).partition("e")
+        if marker and "." not in mantissa:
+            mantissa += ".0"
+        return mantissa + marker + exponent
     text = str(value)
     return text if _is_plain(text) else _quote(text)
 

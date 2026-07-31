@@ -14,6 +14,7 @@ from duly_kernel.api import adjudicate
 from duly_kernel.ir import load_pack
 from duly_kernel.report import (
     PII_REDACTION,
+    render_report_blocks,
     render_report_markdown,
     render_report_pdf,
 )
@@ -75,6 +76,58 @@ class TestDeterminism:
         assert render_report_pdf(receipt, facts, pack) == render_report_pdf(
             receipt, facts, pack
         )
+
+    def test_blocks_identical(self, ny):
+        receipt, facts, pack = ny
+        assert render_report_blocks(receipt, facts, pack) == render_report_blocks(
+            receipt, facts, pack
+        )
+
+
+class TestBlocks:
+    """The block renderer is the section structure made transportable.
+
+    Its value is that it is a third *walk* of one structure rather than a
+    third report: these tests exist to catch the day someone gives it its own
+    content, at which point the Markdown and the browser would start saying
+    different things about the same decision.
+    """
+
+    def test_sections_match_the_markdown_headings(self, ny):
+        receipt, facts, pack = ny
+        blocks = render_report_blocks(receipt, facts, pack)
+        md = render_report_markdown(receipt, facts, pack)
+        titled = [s["title"] for s in blocks if s["title"]]
+        assert titled == [line[3:] for line in md.splitlines() if line.startswith("## ")]
+
+    def test_every_block_carries_a_tag_this_repo_renders(self, ny):
+        receipt, facts, pack = ny
+        tags = {b["tag"] for s in render_report_blocks(receipt, facts, pack) for b in s["blocks"]}
+        assert tags <= {"para", "kv", "steps", "subhead", "code"}
+
+    def test_output_is_json_serializable(self, ny):
+        receipt, facts, pack = ny
+        blocks = render_report_blocks(receipt, facts, pack)
+        assert json.loads(json.dumps(blocks)) == blocks
+
+    def test_evidence_lines_survive_into_steps(self, ny):
+        receipt, facts, pack = ny
+        blocks = render_report_blocks(receipt, facts, pack)
+        reasoning = next(s for s in blocks if s["title"] == "Reasoning")
+        steps = [step for b in reasoning["blocks"] for step in b["steps"]]
+        assert steps and any(step["evidence"] for step in steps)
+
+    def test_pii_redaction_holds_in_blocks_too(self, ny):
+        # The redaction lives in the shared section builder, so it applies to
+        # every renderer — but a viewer leaking a quote the PDF redacts would
+        # be a bad way to find that out.
+        receipt, facts, pack = ny
+        redacted = copy.deepcopy(facts)
+        for fact in redacted:
+            fact["sensitivity"] = "pii"
+        rendered = json.dumps(render_report_blocks(receipt, redacted, pack), ensure_ascii=False)
+        assert PII_REDACTION in rendered
+        assert "Date of Mailing: July 25, 2026" not in rendered
 
 
 class TestNyMarkdownContent:

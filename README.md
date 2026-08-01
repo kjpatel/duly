@@ -306,7 +306,7 @@ uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ort
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```
 
-Breaking changes remain expected until v1.0. Feedback on the spec's [open questions](spec/grounded-facts.md#open-questions) and the [rule IR](spec/rule-ir.md) is the most useful contribution right now.
+Breaking changes remain expected until v1.0. The most useful contribution right now is adoption pressure: try duly against a real document workflow — your documents, your extractor, your ontology, your rules — and report where the contract fits, where it fights you, and what it would take to serve your organization's decisioning for real. The [PRD's open questions](docs/guiding-prd.md#open-questions) name exactly what only an adopter can answer; a skeptical read of the spec's [open questions](spec/grounded-facts.md#open-questions) is still welcome, but it is no longer the bottleneck.
 
 ## License
 

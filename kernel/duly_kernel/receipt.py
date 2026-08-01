@@ -10,9 +10,38 @@ from __future__ import annotations
 import hashlib
 import json
 
-from . import __version__
 from .engine import AdjudicationError, EvalResult, Firing
 from .expr import format_datetime, value_to_fact
+
+# The value of `engine.version` in every emitted receipt, and therefore inside
+# every receipt hash. It is the version of the kernel's **decision semantics**,
+# not of the `duly_kernel` package and not of the `duly` distribution.
+#
+# Three scopes, nested one way only, and each needs its own number:
+#
+#   duly (distribution)      moves on any release of anything in the wheel
+#   duly_kernel.__version__  moves when the kernel's *code* changes
+#   SEMANTICS_VERSION        moves when the kernel's *meaning* changes
+#
+# A semantics change implies a code change implies a release. Never the
+# reverse: a release can be a demo fix with the kernel byte-identical, and a
+# kernel refactor can leave every decision exactly as it was.
+#
+# All three read `0.0.1` today. That agreement is a coincidence, and this
+# constant is what keeps it a harmless one. It used to be
+# `duly_kernel.__version__` — which made the golden corpus a hostage to the
+# release cadence, since publishing under any new number would have
+# invalidated all 351 receipts without a rule, a fact, or a decision having
+# changed.
+#
+# When they do diverge, this value stays put for the same reason `NY-NR-45`
+# keeps its name: it is sealed into artifacts that are not editable, so it is a
+# handle, not a claim. What a package version is for has a correctable home in
+# the wheel metadata; what this is for does not.
+#
+# Pinned by kernel/tests/test_engine_identity.py, which proves the decoupling
+# behaviourally — while the two values agree, nothing else can see a re-coupling.
+SEMANTICS_VERSION = "0.0.1"
 
 
 def canonical(obj) -> bytes:
@@ -122,7 +151,7 @@ def build_receipt(result: EvalResult, pack: dict, decision_attribute: str) -> di
         "abstentions": list(result.conflicts) + list(result.exclusions),
         "engine": {
             "kernel": "duly-kernel",
-            "version": __version__,
+            "version": SEMANTICS_VERSION,
             "backend": "reference",
         },
     }

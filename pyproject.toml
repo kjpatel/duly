@@ -1,5 +1,14 @@
 [project]
 name = "duly"
+# The DISTRIBUTION version: it moves on any release of anything in the wheel,
+# including a release that does not touch the kernel at all. Bump it freely.
+#
+# Nothing else follows it, and nothing else should be made to. In particular
+# the receipt's `engine.version` is a decision-semantics version pinned as
+# `duly_kernel.receipt.SEMANTICS_VERSION`, sealed inside all 351 golden receipt
+# hashes; aligning it with this number would invalidate every one of them
+# without a rule, a fact, or a decision having changed. See the comment there
+# before "tidying up" the version numbers that read 0.0.1 across this repo.
 version = "0.0.1"
 description = "Auditable document decisioning for regulated workflows"
 readme = "README.md"

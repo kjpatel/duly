@@ -295,12 +295,13 @@ uv run spec/validate.py                  # spec examples: schemas + hashes
 uv run uvicorn demo.app:app --port 8788  # the interactive demo
 ```
 
-That command **skips four suites**, which need optional dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
+That command **skips every marker-gated test** — four optional-dependency markers, spread across six suites, for dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
 
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml       # ontologies are real LinkML
 uv sync --extra prove      && uv run pytest assurance/tests -q -m z3            # verifier encoding is sound
 uv sync --extra prove      && uv run pytest whatif/tests    -q -m z3            # what-if survives kernel verification
+uv sync --extra prove      && uv run pytest demo/tests      -q -m z3            # the rule studio's equivalence panel
 uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```

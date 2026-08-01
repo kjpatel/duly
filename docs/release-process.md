@@ -204,7 +204,8 @@ uv run python -m duly_conformance check starters golden/cases rulepacks spec/exa
 uv run python -m duly_assurance impact
 ```
 
-The main `pytest` line **skips five marker-gated suites**. They run in
+The main `pytest` line **skips every marker-gated test** — four
+optional-dependency markers, spread across six suites. They run in
 [optional-deps.yml](../.github/workflows/optional-deps.yml), but a release must
 not rely on a path filter having triggered:
 

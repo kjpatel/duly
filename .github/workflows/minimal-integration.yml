@@ -1,0 +1,39 @@
+# The adoption check: does duly work when it is not at home?
+#
+# Every other job in this repository runs the toolkit inside its own source
+# tree, where every assumption about where files live happens to be true.
+# This one builds a wheel, installs it into a clean virtualenv, copies the
+# minimal-integration example somewhere else entirely, and runs it with the
+# source tree off sys.path. It is the only job that can fail because of a
+# repo-relative default.
+#
+# It needs no optional dependencies, so it is a plain job rather than a
+# marker-gated one in optional-deps.yml.
+name: Minimal integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "examples/minimal-integration/**"
+      - "kernel/**"
+      - "conformance/**"
+      - "pyproject.toml"
+      - ".github/workflows/minimal-integration.yml"
+
+jobs:
+  wheel:
+    name: Run the example from an installed wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Run the example against a built wheel, outside the repository
+        run: ./examples/minimal-integration/check_wheel.sh

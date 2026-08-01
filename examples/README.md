@@ -23,9 +23,13 @@ is a supported API. An example is a directory you copy.
 
 | Example | What it demonstrates |
 |---|---|
+| [`minimal-integration/`](minimal-integration) | the whole contract at its smallest: three facts, three rules, one adjudication, one verified receipt, in about a hundred lines of author-owned code with its own ontology and its own pack. Start here — it is also the only thing in the repository proved to work with duly's source tree *absent*, from an installed wheel in a clean venv |
 | [`closing-scheduler/`](closing-scheduler) | duly as a decision component inside an OR-Tools CP-SAT optimizer: the solver picks the earliest feasible sign/fund/record dates, every hard constraint comes from an adjudication, and every chosen date cites the receipt ids that constrained it |
 
 Optional third-party dependencies belong in a `pyproject.toml` extra and a
 pytest marker (`scheduling` / `ortools` for the scheduler), with the suite wired
 into [`.github/workflows/optional-deps.yml`](../.github/workflows/optional-deps.yml).
-The kernel must never grow a dependency because an example wanted one.
+The kernel must never grow a dependency because an example wanted one. An
+example needing *no* optional dependency gets a plain workflow instead —
+[`minimal-integration.yml`](../.github/workflows/minimal-integration.yml) is
+the pattern.

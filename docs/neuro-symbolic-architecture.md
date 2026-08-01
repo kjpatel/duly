@@ -950,6 +950,11 @@ requirement without weakening replay.
 - [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) carries the
   rule-id convention and the explicit list of ids that predate it.
 
+- [`examples/minimal-integration`](../examples/minimal-integration) is the
+  shortest path from this document to running code: the five steps of an
+  integration — your ontology, your facts, your pack, the adjudication, the
+  verification — in about a hundred lines, checked against an installed wheel
+  with duly's source tree absent.
 - [`examples/closing-scheduler`](../examples/closing-scheduler) plans a mortgage
   closing with CP-SAT over adjudicated permissibility windows, and cites the
   receipt ids that constrained each date.

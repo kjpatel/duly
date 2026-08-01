@@ -24,7 +24,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `golden/` | 351 committed cases + receipts — the replay/impact baseline |
 | `whatif/` | Backward queries: free one input, solve the pack for it, verify every answer by re-running the kernel (`python -m duly_whatif`, optional z3) |
 | `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) — [dmn/README.md](dmn/README.md) |
-| `examples/` | Reference wiring: duly consumed from *outside*, by software that is not duly. First resident is the CP-SAT closing scheduler — [examples/README.md](examples/README.md) |
+| `examples/` | Reference wiring: duly consumed from *outside*, by software that is not duly. `minimal-integration` is the whole contract at its smallest (and the only thing proved to run with the source tree absent); `closing-scheduler` is the CP-SAT one — [examples/README.md](examples/README.md) |
 | `demo/` | FastAPI + vanilla-JS decision workspace (`app.py`), rule studio (`rules_api.py` + `static/rules.*`), evidence browser (`evidence_api.py` + `static/evidence.*`) and receipt viewer (`receipts_api.py` + `static/receipt.*`) |
 
 ## Verify

@@ -34,7 +34,7 @@ duly is that seam.
 ## Architecture
 
 <p align="center">
-  <img src="docs/architecture.svg" alt="duly architecture: documents flow through neural extraction adapters into the grounded fact contract, then a bitemporal fact store, adjudication kernel, and decision receipt; a review queue handles abstentions, rule packs feed the kernel, and an assurance harness replays receipts" width="680">
+  <img src="docs/architecture-glance.svg" alt="duly architecture: a source document flows through a neural extraction adapter into proposed grounded facts with a run envelope, then admission checks fed by a versioned ontology, the append-only bitemporal fact store, an as-of projection, the deterministic rule kernel fed by versioned rule packs, and a content-addressed decision receipt; abstentions route to a review queue whose human corrections re-enter the store as facts, and receipts feed golden replay and impact analysis" width="680">
 </p>
 
 Everything above the contract is probabilistic and replaceable; everything below it is deterministic and replayable. Extractors and models can be swapped at the contract line without touching the reasoning layer — the approach OpenTelemetry took for telemetry: standardize the interchange format, ship adapters, and let the ecosystem form around the format rather than around any single engine.

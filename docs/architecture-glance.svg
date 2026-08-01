@@ -1,6 +1,6 @@
-<svg width="680" height="845" viewBox="0 0 680 845" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
-  <title id="t">duly architecture at a glance</title>
-  <desc id="d">Runtime evidence flow from a source document through a neural extraction adapter, proposed grounded facts with a run envelope, admission checks, the append-only bitemporal fact store, an as-of projection, the deterministic rule kernel, and a content-addressed decision receipt. A versioned ontology feeds the admission checks; versioned rule packs feed the kernel; abstentions route to a review queue whose human corrections re-enter the store as facts; the receipt feeds golden replay and impact analysis.</desc>
+<svg width="742" height="845" viewBox="0 0 742 845" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">duly architecture</title>
+  <desc id="d">Runtime evidence flow down the centre: a source document, a neural extraction adapter, proposed grounded facts with a run envelope, admission checks, the append-only bitemporal fact store, an as-of projection, the deterministic rule kernel, and a content-addressed decision receipt. On the right, the governed artifacts: a versioned ontology feeding admission checks, versioned rule packs feeding the kernel, and an assurance harness fed by both the receipt and the rule packs. On the left, the human loop: abstentions enqueued by the integrator into a review queue, and the resulting correction re-entering the fact store as a new fact.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M1.5 1L8.5 5L1.5 9" fill="none" stroke="#8A8A85" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -13,87 +13,92 @@
     .lg { font-size: 12px; font-weight: 400; text-anchor: start; fill: #5F5E5A; }
     .ln { stroke: #8A8A85; stroke-width: 1.5; fill: none; }
   </style>
-  <rect x="0" y="0" width="680" height="845" rx="10" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="742" height="845" rx="10" fill="#FFFFFF"/>
 
-  <rect x="70" y="40" width="320" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
-  <text class="th" x="230" y="63" fill="#444441">Source document</text>
-  <text class="ts" x="230" y="82" fill="#5F5E5A">bytes, pinned by SHA-256</text>
+  <rect x="211" y="40" width="320" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text class="th" x="371" y="63" fill="#444441">Source document</text>
+  <text class="ts" x="371" y="82" fill="#5F5E5A">bytes, pinned by SHA-256</text>
 
-  <line class="ln" x1="230" y1="96" x2="230" y2="120" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="96" x2="371" y2="120" marker-end="url(#a)"/>
 
-  <rect x="70" y="126" width="320" height="56" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
-  <text class="th" x="230" y="149" fill="#3C3489">Extraction adapter (neural)</text>
-  <text class="ts" x="230" y="168" fill="#534AB7">replaceable; any document AI</text>
+  <rect x="211" y="126" width="320" height="56" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
+  <text class="th" x="371" y="149" fill="#3C3489">Extraction adapter (neural)</text>
+  <text class="ts" x="371" y="168" fill="#534AB7">replaceable; any document AI</text>
 
-  <line class="ln" x1="230" y1="182" x2="230" y2="206" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="182" x2="371" y2="206" marker-end="url(#a)"/>
 
-  <rect x="70" y="212" width="320" height="56" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
-  <text class="th" x="230" y="235" fill="#712B13">Proposed grounded facts</text>
-  <text class="ts" x="230" y="254" fill="#993C1D">rendition + spans + confidence + run envelope</text>
+  <rect x="211" y="212" width="320" height="56" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
+  <text class="th" x="371" y="235" fill="#712B13">Proposed grounded facts</text>
+  <text class="ts" x="371" y="254" fill="#993C1D">rendition + spans + confidence + envelope</text>
 
-  <line class="ln" x1="230" y1="268" x2="230" y2="292" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="268" x2="371" y2="292" marker-end="url(#a)"/>
 
-  <rect x="70" y="298" width="320" height="56" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
-  <text class="th" x="230" y="321" fill="#712B13">Admission checks</text>
-  <text class="ts" x="230" y="340" fill="#993C1D">schema, envelope, spans, ontology conformance</text>
+  <rect x="211" y="298" width="320" height="56" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
+  <text class="th" x="371" y="321" fill="#712B13">Admission checks</text>
+  <text class="ts" x="371" y="340" fill="#993C1D">schema, envelope, spans, ontology conformance</text>
 
-  <line class="ln" x1="230" y1="354" x2="230" y2="378" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="354" x2="371" y2="378" marker-end="url(#a)"/>
 
-  <rect x="70" y="384" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="th" x="230" y="407" fill="#085041">Append-only bitemporal fact store</text>
-  <text class="ts" x="230" y="426" fill="#0F6E56">supersession, never mutation</text>
+  <rect x="211" y="384" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="th" x="371" y="407" fill="#085041">Append-only bitemporal fact store</text>
+  <text class="ts" x="371" y="426" fill="#0F6E56">supersession, never mutation</text>
 
-  <line class="ln" x1="230" y1="440" x2="230" y2="464" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="440" x2="371" y2="464" marker-end="url(#a)"/>
 
-  <rect x="70" y="470" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="th" x="230" y="493" fill="#085041">As-of fact projection</text>
-  <text class="ts" x="230" y="512" fill="#0F6E56">effective time × knowledge time</text>
+  <rect x="211" y="470" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="th" x="371" y="493" fill="#085041">As-of fact projection</text>
+  <text class="ts" x="371" y="512" fill="#0F6E56">effective time × knowledge time</text>
 
-  <line class="ln" x1="230" y1="526" x2="230" y2="550" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="526" x2="371" y2="550" marker-end="url(#a)"/>
 
-  <rect x="70" y="556" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="th" x="230" y="579" fill="#085041">Deterministic rule kernel</text>
-  <text class="ts" x="230" y="598" fill="#0F6E56">defeasible, effective-dated, calendar-aware</text>
+  <rect x="211" y="556" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="th" x="371" y="579" fill="#085041">Deterministic rule kernel</text>
+  <text class="ts" x="371" y="598" fill="#0F6E56">defeasible, effective-dated, calendar-aware</text>
 
-  <line class="ln" x1="230" y1="612" x2="230" y2="636" marker-end="url(#a)"/>
+  <line class="ln" x1="371" y1="612" x2="371" y2="636" marker-end="url(#a)"/>
 
-  <rect x="70" y="642" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="th" x="230" y="665" fill="#085041">Decision receipt</text>
-  <text class="ts" x="230" y="684" fill="#0F6E56">content-addressed; derivation + abstentions</text>
+  <rect x="211" y="642" width="320" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="th" x="371" y="665" fill="#085041">Decision receipt</text>
+  <text class="ts" x="371" y="684" fill="#0F6E56">content-addressed; derivation + abstentions</text>
 
-  <line class="ln" x1="230" y1="698" x2="230" y2="722" marker-end="url(#a)"/>
+  <rect x="553" y="298" width="165" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text class="th" x="636" y="321" fill="#444441">Versioned ontology</text>
+  <text class="ts" x="636" y="340" fill="#5F5E5A">adopter-supplied, pinned</text>
 
-  <rect x="70" y="728" width="320" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
-  <text class="th" x="230" y="751" fill="#444441">Assurance harness</text>
-  <text class="ts" x="230" y="770" fill="#5F5E5A">golden replay + impact, receipts under packs</text>
+  <line class="ln" x1="553" y1="326" x2="535" y2="326" marker-end="url(#a)"/>
 
-  <rect x="450" y="298" width="190" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
-  <text class="th" x="545" y="321" fill="#444441">Versioned ontology</text>
-  <text class="ts" x="545" y="340" fill="#5F5E5A">adopter-supplied, pinned</text>
+  <rect x="553" y="556" width="165" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="th" x="636" y="579" fill="#085041">Rule packs</text>
+  <text class="ts" x="636" y="598" fill="#0F6E56">rules, floors, calendars</text>
 
-  <line class="ln" x1="450" y1="326" x2="394" y2="326" marker-end="url(#a)"/>
+  <line class="ln" x1="553" y1="584" x2="535" y2="584" marker-end="url(#a)"/>
 
-  <rect x="450" y="556" width="190" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="th" x="545" y="579" fill="#085041">Rule packs</text>
-  <text class="ts" x="545" y="598" fill="#0F6E56">rules, floors, calendars</text>
+  <rect x="553" y="728" width="165" height="56" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text class="th" x="636" y="751" fill="#444441">Assurance harness</text>
+  <text class="ts" x="636" y="770" fill="#5F5E5A">replay + impact analysis</text>
 
-  <line class="ln" x1="450" y1="584" x2="394" y2="584" marker-end="url(#a)"/>
+  <line class="ln" x1="636" y1="612" x2="636" y2="722" marker-end="url(#a)"/>
+  <path class="ln" d="M371 698 V756 H547" marker-end="url(#a)"/>
 
-  <rect x="450" y="642" width="190" height="56" rx="6" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
-  <text class="th" x="545" y="665" fill="#633806">Review queue</text>
-  <text class="ts" x="545" y="684" fill="#854F0B">abstentions to humans</text>
+  <rect x="24" y="642" width="165" height="56" rx="6" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+  <text class="th" x="106" y="665" fill="#633806">Review queue</text>
+  <text class="ts" x="106" y="684" fill="#854F0B">abstentions to humans</text>
 
-  <line class="ln" x1="390" y1="670" x2="446" y2="670" marker-end="url(#a)"/>
+  <line class="ln" x1="211" y1="670" x2="195" y2="670" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text class="ts" x="106" y="632" fill="#854F0B">abstentions (integrator-enqueued)</text>
 
-  <path class="ln" d="M640 656 H660 V412 H398" stroke-dasharray="5 4" marker-end="url(#a)"/>
-  <text class="ts" x="527" y="404" fill="#854F0B">human correction re-enters as a fact</text>
+  <path class="ln" d="M106 642 V430 H205" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text class="ts" x="106" y="412" fill="#854F0B">correction re-enters as a fact</text>
 
-  <rect x="70" y="799" width="12" height="12" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
-  <text class="lg" x="90" y="809">neural</text>
-  <rect x="160" y="799" width="12" height="12" rx="3" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
-  <text class="lg" x="180" y="809">the contract</text>
-  <rect x="290" y="799" width="12" height="12" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
-  <text class="lg" x="310" y="809">deterministic logic</text>
-  <rect x="460" y="799" width="12" height="12" rx="3" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
-  <text class="lg" x="480" y="809">supporting infra</text>
+  <rect x="24" y="799" width="12" height="12" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
+  <text class="lg" x="44" y="809">neural</text>
+  <rect x="104" y="799" width="12" height="12" rx="3" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
+  <text class="lg" x="124" y="809">the contract</text>
+  <rect x="214" y="799" width="12" height="12" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text class="lg" x="234" y="809">deterministic logic</text>
+  <rect x="359" y="799" width="12" height="12" rx="3" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+  <text class="lg" x="379" y="809">human review</text>
+  <rect x="477" y="799" width="12" height="12" rx="3" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text class="lg" x="497" y="809">supporting infra</text>
+  <text class="lg" x="612" y="809" fill="#8A8A85">- - -  integrator-driven</text>
 </svg>

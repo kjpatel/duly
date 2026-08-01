@@ -85,7 +85,7 @@
   <text class="ts" x="106" y="684" fill="#854F0B">abstentions to humans</text>
 
   <line class="ln" x1="211" y1="670" x2="195" y2="670" stroke-dasharray="5 4" marker-end="url(#a)"/>
-  <text class="ts" x="106" y="632" fill="#854F0B">abstentions (integrator-enqueued)</text>
+  <text class="ts" x="106" y="716" fill="#854F0B">abstentions (integrator-enqueued)</text>
 
   <path class="ln" d="M106 642 V430 H205" stroke-dasharray="5 4" marker-end="url(#a)"/>
   <text class="ts" x="106" y="412" fill="#854F0B">correction re-enters as a fact</text>

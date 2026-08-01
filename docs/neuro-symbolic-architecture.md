@@ -46,29 +46,9 @@ rejected, or reviewed.
 
 ## Architecture at a glance
 
-```mermaid
-flowchart LR
-    subgraph edge["Replaceable perception edge"]
-        D["Source document"] --> X["Extraction adapter"]
-        X --> P["Rendition + proposed facts + run envelope"]
-    end
-
-    subgraph core["Governed decision path"]
-        G["Admission checks"] --> S["Append-only bitemporal fact store"]
-        S --> V["As-of fact projection"]
-        V --> K["Deterministic rule kernel"]
-        K --> R["Content-addressed decision receipt"]
-    end
-
-    O["Versioned ontology"] --> G
-    P --> G
-    RP["Versioned rule pack<br/>rules, confidence policy, calendars"] --> K
-    R -->|enqueue abstentions| Q["Review queue"]
-    Q --> H["Human correction"]
-    H --> S
-    R --> A["Golden replay and impact analysis"]
-    RP --> A
-```
+<p align="center">
+  <img src="architecture-glance.svg" alt="duly architecture at a glance: a source document flows through a neural extraction adapter into proposed grounded facts with a run envelope, then admission checks fed by a versioned ontology, the append-only bitemporal fact store, an as-of projection, the deterministic rule kernel fed by versioned rule packs, and a content-addressed decision receipt; abstentions route to a review queue whose human corrections re-enter the store as facts, and receipts feed golden replay and impact analysis" width="680">
+</p>
 
 There are really two systems here:
 

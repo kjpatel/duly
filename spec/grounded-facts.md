@@ -95,7 +95,7 @@ The receipt is the product. Its schema mirrors the commitments above:
 - **`derivation`** — a tree: each node is a conclusion, the rule that produced it, and its premises (input fact ids or sub-derivations). Rendering this tree as prose is the audit report.
 - **`inputFacts`** — every consumed fact pinned by id + contentHash (D8), so replay can verify inputs byte-for-byte.
 - **`abstentions`** — attributes the decision needed but declined to use (missing, below confidence policy, or conflicting), with routing. Abstention appears on the receipt, not on the fact (D5).
-- **`engine`** — kernel version and backend, because "deterministic" is a claim about a specific engine.
+- **`engine`** — engine identity: kernel name, its **decision-semantics version**, and backend, because "deterministic" is a claim about a specific engine. The version is the semantics' own — pinned as `SEMANTICS_VERSION`, deliberately not the `duly_kernel` package version or the distribution version, which move with releases while sealed receipts cannot ([docs/release-process.md](../docs/release-process.md)).
 
 Receipts are content-addressed the same way facts are (`receiptSha256`, JCS canonical form excluding `id` and `receiptSha256`).
 

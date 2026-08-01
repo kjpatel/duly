@@ -34,7 +34,7 @@ duly is that seam.
 ## Architecture
 
 <p align="center">
-  <img src="docs/architecture.svg" alt="duly architecture: documents flow through neural extraction adapters into the grounded fact contract, then a bitemporal fact store, adjudication kernel, and decision receipt; a review queue handles abstentions, rule packs feed the kernel, and an assurance harness replays receipts" width="680">
+  <img src="docs/architecture-glance.svg" alt="duly architecture: a source document flows through a neural extraction adapter into proposed grounded facts with a run envelope, then admission checks fed by a versioned ontology, the append-only bitemporal fact store, an as-of projection, the deterministic rule kernel fed by versioned rule packs, and a content-addressed decision receipt; abstentions route to a review queue whose human corrections re-enter the store as facts, and receipts feed golden replay and impact analysis" width="680">
 </p>
 
 Everything above the contract is probabilistic and replaceable; everything below it is deterministic and replayable. Extractors and models can be swapped at the contract line without touching the reasoning layer — the approach OpenTelemetry took for telemetry: standardize the interchange format, ship adapters, and let the ecosystem form around the format rather than around any single engine.
@@ -295,17 +295,18 @@ uv run spec/validate.py                  # spec examples: schemas + hashes
 uv run uvicorn demo.app:app --port 8788  # the interactive demo
 ```
 
-That command **skips four suites**, which need optional dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
+That command **skips every marker-gated test** — four optional-dependency markers, spread across six suites, for dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
 
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml       # ontologies are real LinkML
 uv sync --extra prove      && uv run pytest assurance/tests -q -m z3            # verifier encoding is sound
 uv sync --extra prove      && uv run pytest whatif/tests    -q -m z3            # what-if survives kernel verification
+uv sync --extra prove      && uv run pytest demo/tests      -q -m z3            # the rule studio's equivalence panel
 uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```
 
-Breaking changes remain expected until v1.0. Feedback on the spec's [open questions](spec/grounded-facts.md#open-questions) and the [rule IR](spec/rule-ir.md) is the most useful contribution right now.
+Breaking changes remain expected until v1.0. The most useful contribution right now is adoption pressure: try duly against a real document workflow — your documents, your extractor, your ontology, your rules — and report where the contract fits, where it fights you, and what it would take to serve your organization's decisioning for real. The [PRD's open questions](docs/guiding-prd.md#open-questions) name exactly what only an adopter can answer; a skeptical read of the spec's [open questions](spec/grounded-facts.md#open-questions) is still welcome, but it is no longer the bottleneck.
 
 ## License
 

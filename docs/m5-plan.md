@@ -162,8 +162,8 @@ plus the code that backs its one claim needing code.
         extension point; the sidecar is the blessed mechanism; named
         candidates (`rulePack.compiledFrom`, declared disjointness proofs,
         signatures) and where each would live instead. This closes
-        [spec/dmn.md](dmn.md) open question 1 and
-        [spec/pack-verification.md](pack-verification.md) open question 1 —
+        [spec/dmn.md](../spec/dmn.md) open question 1 and
+        [spec/pack-verification.md](../spec/pack-verification.md) open question 1 —
         update both files' open-questions sections to point here.
       - **The semantics-scoped replay guarantee**: a receipt sealed under
         semantics version V replays byte-identically under any kernel
@@ -253,7 +253,7 @@ proves it.
       then just assert it still covers the final layout.)
 - [ ] **Tag `v1.0.0`** at milestone close per release-process §6 — the first
       tag that is both milestone and package release; the checklist in §7
-      of that doc runs in full, including the five marker-gated suites.
+      of that doc runs in full, including every marker-gated suite.
 
 ## 9. Phase 5 — adopter's guide + contribution path (2–3 PRs)
 
@@ -292,3 +292,5 @@ The PRD's bar: one working day.
 - 2026-08-01 — [#37](https://github.com/kjpatel/duly/pull/37) — pre-plan —
   `SEMANTICS_VERSION` pinned; `docs/release-process.md`; the version-scope
   model (D4/D5) landed with its behavioral guard.
+- 2026-08-01 — [#38](https://github.com/kjpatel/duly/pull/38) — pre-plan —
+  this plan committed; CLAUDE.md points to it.

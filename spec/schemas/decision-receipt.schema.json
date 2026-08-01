@@ -115,7 +115,7 @@
       "additionalProperties": false,
       "properties": {
         "kernel": { "type": "string" },
-        "version": { "type": "string" },
+        "version": { "type": "string", "description": "The kernel's decision-semantics version (SEMANTICS_VERSION), pinned independently of package and distribution versions; it moves only when what the kernel means changes." },
         "backend": { "type": "string", "description": "Evaluation backend, e.g. 'reference', 'souffle', 'clingo', 'z3'." }
       }
     }

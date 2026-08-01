@@ -41,7 +41,7 @@ uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml   #
 uv run uvicorn demo.app:app --port 8788   # the demo (/ decision workspace, /rules rule studio, /evidence evidence browser, /receipt receipt viewer)
 ```
 
-The three marker-gated suites are **skipped** by the command above — they need optional dependencies the kernel deliberately does not require. They run in their own workflow ([.github/workflows/optional-deps.yml](.github/workflows/optional-deps.yml)); run them locally with:
+Tests behind the four optional-dependency markers (`linkml`, `z3`, `ortools`, `docling` — six suites carry them) are **skipped** by the command above — they need optional dependencies the kernel deliberately does not require. They run in their own workflow ([.github/workflows/optional-deps.yml](.github/workflows/optional-deps.yml)); run them locally with:
 
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml   # ontologies are real LinkML

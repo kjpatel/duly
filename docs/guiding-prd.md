@@ -5,7 +5,7 @@
 **Audience:** Prospective platform-engineering collaborators, domain and rules
 contributors, extraction-adapter contributors, and early adopters  
 **Planning horizon:** Through v1.0 and the first post-v1 adoption cycle  
-**Last updated:** 2026-07-30
+**Last updated:** 2026-08-01
 
 ## Purpose
 
@@ -201,6 +201,7 @@ duly must make the following outcomes legible:
 | A rule changes | Version and effective-date the change; report impact against the golden corpus before accepting a new baseline |
 | A decision is replayed | Reproduce it from the pinned facts, rule pack, as-of pair, and engine contract |
 | A model or extractor changes | Emit new renditions and facts; preserve old receipts and evidence unchanged |
+| duly itself is released under a new version | Change no receipt byte: the receipt's engine version names the kernel's decision semantics, pinned independently of package and distribution versions, so a release alone never invalidates a decision |
 | A calendar lacks coverage | Fail loudly rather than compute a plausible but unsupported deadline |
 
 ## Success measures
@@ -220,6 +221,10 @@ duly must make the following outcomes legible:
 - Every committed fact passes schema, hash, span, and ontology checks.
 - Every automated decision has a receipt identifying its evidence, rule
   version, and as-of context.
+- A receipt can be verified by whoever holds it — its hash, its facts'
+  integrity, and a full replay, reported separately — without trusting or
+  contacting the producer. A decision record only its author can verify is
+  documentation; one its recipient can verify is a receipt.
 - Rule changes expose their historical impact before acceptance.
 - No calibration or accuracy claim is made without the labeled data and
   assumptions needed to support it.
@@ -252,7 +257,7 @@ workflow:
 | Risk | Response |
 |---|---|
 | The project becomes a collection of unrelated demos | Keep the proof surface bounded; require each new pack to prove a distinct reasoning or contribution pattern |
-| Contributors cannot safely author rules | Add DMN-to-IR authoring, static verification, clearer conventions, and complete contributor paths |
+| Contributors cannot safely author rules | DMN-to-IR authoring, static verification, the rule-id convention, and a drafting studio are shipped; the remaining response is complete contributor paths across packs, ontologies, and corpus coverage |
 | Extraction quality is confused with decision correctness | Measure extraction, calibration, abstention, and rule outcomes separately |
 | The project overclaims legal or production readiness | Preserve cited scope boundaries, synthetic labels, explicit open questions, and pre-alpha status |
 | An adopter needs scale before semantics are stable | Publish reference capacity limits and benchmarks; add alternate backends only for demonstrated workloads |

@@ -307,7 +307,10 @@ so a production integration must supply it deliberately.
 
 The reference [`FactStore`](../store/) is an append-only SQLite event store.
 It records assertions, supersessions, and retractions; it never updates the
-original fact in place.
+original fact in place. SQLite is a decision about now, not about the ceiling:
+the schema is deliberately Postgres-portable, so a server deployment changes
+the engine without changing the semantics — and that cost is deferred until a
+deployment exists to demand it, not paid in advance.
 
 This supports two independent time questions:
 
@@ -339,6 +342,16 @@ dials is a future semantic extension, not current behavior.
 The current kernel is a pure-Python reference interpreter for duly's
 [rule IR](../spec/rule-ir.md). It is not yet a Datalog, Soufflé, ASP, or solver
 backend.
+
+Everything domain-specific it consumes — rules, priorities, effective windows,
+calendars, confidence floors, even the phrasing of a verdict — arrives as
+versioned pack data. That placement is a deliberate design pressure, not an
+accident of layering: when a new need appears (business-day arithmetic,
+abstention thresholds, non-boolean verdict wording), the question asked is
+"what does the pack need to carry?" rather than "what does the kernel need to
+do?", so a domain author can create, validate, test, and impact-assess a rule
+change without touching kernel code, and the kernel changes rarely while the
+packs change often.
 
 A rule declares:
 
@@ -419,6 +432,21 @@ hash, and it is a feature rather than a limitation: a receipt is supposed to
 say which artifact decided, not merely what was decided. Any claim of
 equivalence between two rulebases is therefore a claim about *decisions*, and
 has to be stated and tested at that level.
+
+The same discipline governs `engine.version` from the other direction: what a
+sealed field says must be something that cannot drift. It is the version of
+the kernel's **decision semantics** — a pinned constant, deliberately
+decoupled from the `duly_kernel` package version and from the distribution
+version. The three scopes nest one way only: a semantics change implies a
+kernel code change implies a release, never the reverse, because a release can
+ship a demo fix with the kernel byte-identical. Coupling the sealed field to
+the release cadence would invalidate every committed receipt on the first
+published version without a rule, a fact, or a decision having changed. Like a
+rule id, the sealed value is a handle rather than a claim: everything a
+version number is tempted to say has a correctable home in package metadata,
+and the field inside the hash does not.
+[docs/release-process.md](release-process.md) is the operating procedure this
+implies.
 
 ### 7. Review closes the evidence loop
 

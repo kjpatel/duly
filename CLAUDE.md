@@ -4,6 +4,8 @@ duly is a neurosymbolic document-adjudication toolkit: extractors *propose* grou
 
 New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour.md) for the walkthrough, [rulepacks/README.md](rulepacks/README.md) before touching any rule pack.
 
+**Executing M5 work?** [docs/m5-plan.md](docs/m5-plan.md) is the execution plan: locked decisions, phase graph, per-phase tasks with acceptance criteria and landmines. Read your phase in full before touching anything; the decisions in its §1 are settled — do not re-litigate them in a PR.
+
 ## Layout
 
 | Directory | What lives there |

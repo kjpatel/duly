@@ -96,7 +96,7 @@ Three surfaces, one library:
 
 - **The extraction seam** — `verify_envelope(envelope, facts, rendition_text, registry=None)` takes an OPTIONAL `OntologyRegistry`. Provided: a nonconforming fact fails the whole run with the gate's attribution, and `ingest_envelope` writes nothing. Absent: byte-for-byte the pre-gate behavior — no existing call site changes. The gate is opt-in at the seam because the registry is the *deployment's* artifact set; the library hard-wires no repo path.
 - **Spec validation** — `uv run spec/validate.py` additively checks every committed example fact against the committed ontologies.
-- **CLI** — `uv run python -m duly_conformance check <paths...>` sweeps fact files or directories; `... list` prints the registry (every class, attribute, kind, and code set). The repo-wide guarantee — every committed fact conforms — is a standing test ([`test_repo_conformance.py`](../conformance/tests/test_repo_conformance.py)).
+- **CLI** — `uv run python -m duly_conformance --ontologies DIR check <paths...>` sweeps fact files or directories; `... list` prints the registry. The registry directory has no default (`DULY_ONTOLOGIES` also works): duly does not know where an adopter keeps their ontologies, and guessing its own layout is right exactly once (every class, attribute, kind, and code set). The repo-wide guarantee — every committed fact conforms — is a standing test ([`test_repo_conformance.py`](../conformance/tests/test_repo_conformance.py)).
 
 **Why not enforce inside the store:** the store is the system of record for *what was asserted*, including facts predating an ontology version or citing an ontology this deployment doesn't hold; refusing writes there would make the store's contents a function of registry configuration. The seam (ingestion) is where a deployment's policy belongs.
 
@@ -123,6 +123,6 @@ Every committed MISMO name and FIBO IRI was verified against public sources befo
 ## Seeing it work
 
 - **[`conformance_gate_demo.py`](conformance_gate_demo.py)** — the committed TRID fee fact passes; a misspelled attribute, a wrong value kind, and an out-of-enum code are each rejected with fact id, ontology@version, and reason. `uv run python spec/conformance_gate_demo.py`.
-- **`uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples`** — all 1514 committed facts conform.
+- **`uv run python -m duly_conformance --ontologies ontologies check starters golden/cases rulepacks spec/examples`** — all committed facts conform.
 - **`uv run --with linkml --with pyshacl pytest conformance/tests -m linkml`** — the real-tooling proof (C3).
 - **Adopting your organization's ontology** — the swap walkthrough is in [`ontologies/README.md`](../ontologies/README.md): author a LinkML overlay of the MISMO subset your shop uses, point `schemaRef` at it, and the same gate enforces it; nothing else changes.

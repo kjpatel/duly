@@ -155,7 +155,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
       the repo layout so `uvicorn demo.app:app` still works unchanged.
-- [ ] **Kernel + conformance entry points (1 PR)** — added after Phase 0
+- [x] **Kernel + conformance entry points (1 PR)** — added after Phase 0
       measured them (A1, A3), and the only Phase 1 work on the *adoption*
       path rather than the repo-layout one:
       - re-export `content_hash` from `duly_kernel`'s package root. Every
@@ -396,6 +396,33 @@ directory as an error, which is defensible. The real inconsistency is
 run. **Phase 1:** decide the trio together — missing dir, empty dir, and
 which of the two commands may fail a build.
 
+**A7 — `content_hash` is implemented seven times.** Found while fixing A1.
+`kernel/duly_kernel/receipt.py`, `store/duly_store/store.py`,
+`assurance/duly_assurance/generate.py`, `calibration/duly_calibration/facts.py`,
+`whatif/duly_whatif/casefacts.py`, `spec/validate.py` and
+`starters/tools/check_facts.py` each carry their own `canonical()` +
+`content_hash()`. **All seven agree today** — measured, not assumed — so this
+is duplication rather than a live bug. But it is the project's most
+invariant-critical function, and a drift would be silent and misattributed
+(CLAUDE.md's JS-number gotcha is the same failure: "the symptom accuses the
+wrong party").
+
+Consolidation is *not* mechanical, which is why it is not in the A1 PR.
+`duly_kernel`, `duly_store`, `duly_conformance` and `duly_calibration` are all
+leaf packages — none imports another — so pointing `duly_store` at
+`duly_kernel` means the store cannot be used without the kernel. And two of
+the seven should stay independent on purpose: `spec/validate.py` and
+`starters/tools/check_facts.py` are differential checks *on* the
+implementation, and importing it would make them tautologies (the same
+argument the evidence browser's projection makes against calling `as_of`).
+
+**ASK**, Phase 1: (a) let the leaf packages depend on `duly_kernel` and
+delete four copies; (b) add a shared low-level module and have all five
+library copies use it; or (c) keep them independent and add a *differential
+test* asserting every implementation agrees on a corpus including non-ASCII —
+which preserves the two that should stay independent and makes drift loud,
+and is the shape this repo already reaches for. Recommend (c).
+
 **A6 — the DMN compiler could emit a pack that fails at adjudication, and
 called it success.** Found by chasing A5. A money column with `> 200` in it is
 the most natural cell a business analyst writes; it is valid S-FEEL, renders
@@ -443,6 +470,13 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-03 — **Phase 1, kernel + conformance entry points** — A1 fixed
+  (`content_hash` and a new `seal_fact` exported from `duly_kernel`'s root;
+  the minimal-integration example now uses them and its receipt is
+  byte-identical), A3 fixed (no repo-relative `--ontologies` default,
+  `DULY_ONTOLOGIES` accepted, a missing registry diagnosed rather than
+  raised, exit 2 distinct from exit 1). First tests for the conformance CLI —
+  its absence is why both defects shipped. A7 recorded and routed.
 - 2026-08-03 — Phase 0 follow-up — chasing A5 found A6, a live bug: the DMN
   compiler emitted a pack that adjudication rejects and reported success.
   Fixed with the kernel's teaching type error and the spec statement (A5),

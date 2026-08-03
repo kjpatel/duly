@@ -36,7 +36,7 @@ uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-by
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
 uv run spec/validate.py                   # spec examples: schemas + hashes
 uv run python3 starters/tools/check_facts.py   # starter facts: schema, hashes, quote spans
-uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples   # every committed fact vs ontologies/
+uv run python -m duly_conformance --ontologies ontologies check starters golden/cases rulepacks spec/examples   # every committed fact
 uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml   # disjointness + coverage (optional dep)
 uv run uvicorn demo.app:app --port 8788   # the demo (/ decision workspace, /rules rule studio, /evidence evidence browser, /receipt receipt viewer)
 ```

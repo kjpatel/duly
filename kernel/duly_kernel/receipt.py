@@ -53,6 +53,28 @@ def content_hash(doc: dict, hash_field: str) -> str:
     return hashlib.sha256(canonical(body)).hexdigest()
 
 
+def seal_fact(fact: dict) -> dict:
+    """Return ``fact`` with its ``contentHash`` and content-derived ``id``.
+
+    The first thing any integration has to do, and the last place it should
+    be writing its own code: a fact's identity *is* its bytes, so a private
+    variant of this produces facts nobody else can verify. Three lines that
+    are easy to get subtly wrong — the canonical form excludes ``id`` and
+    ``contentHash``, sorts keys, uses minimal separators, and does not escape
+    non-ASCII — and every consumer everywhere recomputes them.
+
+    Idempotent: sealing an already-sealed fact recomputes the same digest,
+    because both fields are excluded from the body being hashed.
+
+    >>> sealed = seal_fact({"caseId": "c1"})
+    >>> sealed["id"] == f"urn:duly:fact:sha256:{sealed['contentHash']}"
+    True
+    """
+    digest = content_hash(fact, "contentHash")
+    body = {k: v for k, v in fact.items() if k not in ("id", "contentHash")}
+    return {"id": f"urn:duly:fact:sha256:{digest}", "contentHash": digest, **body}
+
+
 def _rule_ref(firing: Firing) -> dict:
     rule = firing.rule
     citation = {"text": rule["citation"]["text"]}

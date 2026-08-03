@@ -54,6 +54,33 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RULEPACKS_DIR = REPO_ROOT / "rulepacks"
 GOLDEN_DIR = REPO_ROOT / "golden"
 ONTOLOGIES_DIR = REPO_ROOT / "ontologies"
+
+
+def _dmn_value_kinds() -> dict[str, str]:
+    """Attribute CURIE -> duly value kind, for the DMN import panel.
+
+    Without it the compiler cannot tell that a column is money-valued, so a
+    cell like `> 200` imports cleanly and produces a draft that fails at
+    adjudication (spec/dmn.md, "Refusal classes"). The studio's whole argument
+    is that instruments should disagree on screen rather than in production, so
+    the import panel supplies what the compiler needs to refuse it here.
+
+    A missing directory is not an error — the analysis simply loses this one
+    check, exactly as it loses enum sharpening above.
+    """
+    if not ONTOLOGIES_DIR.is_dir():
+        return {}
+    # Lazy, like every other conformance/kernel reach in this module: the demo
+    # must degrade honestly when part of the toolkit is absent, not fail to
+    # import.
+    from duly_conformance.registry import load_repo_registry  # noqa: PLC0415
+
+    kinds: dict[str, str] = {}
+    for ontology in load_repo_registry(ONTOLOGIES_DIR):
+        for klass in ontology.classes.values():
+            for slot in klass.slots.values():
+                kinds[slot.curie] = slot.kind
+    return kinds
 DMN_EXAMPLES_DIR = REPO_ROOT / "dmn" / "examples"
 
 router = APIRouter(prefix="/api/rules")
@@ -1340,7 +1367,7 @@ def api_dmn_compile(body: DmnSourceRequest) -> dict[str, Any]:
         raise HTTPException(status_code=422, detail="Send either `xml` or `path`")
 
     try:
-        pack = compile_source(xml)
+        pack = compile_source(xml, _dmn_value_kinds())
     except DmnCompileError as exc:
         return {"ok": False, "error": str(exc), "xml": xml}
     except Exception as exc:

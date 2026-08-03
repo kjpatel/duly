@@ -138,11 +138,13 @@ def test_column_order_not_dict_order_drives_the_output():
 def test_refusal_examples_fail_the_same_way_every_time():
     from duly_dmn.errors import DmnCompileError
 
+    from dmntest_helpers import refusal_value_kinds
+
     for path in sorted(REFUSALS.glob("*.dmn")):
         messages = set()
         for _ in range(3):
             try:
-                compile_file(path)
+                compile_file(path, refusal_value_kinds())
             except DmnCompileError as e:
                 messages.add(str(e))
         assert len(messages) == 1, path.name

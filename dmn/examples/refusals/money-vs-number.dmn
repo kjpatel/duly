@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- REFUSAL EXAMPLE: a bare number tested against a money column.
+     Row 1 says `> 200` on an input bound to `trid:actualAmountAtClosing`,
+     which the pinned ontology declares as `money`. This is the most natural
+     cell a business analyst writes and the only refusal here the compiler
+     cannot reach from the DMN alone: it is valid S-FEEL, it renders to valid
+     duly expression source (`actual > 200`), and `validate_pack` accepts the
+     result because the rule IR type-checks nothing at load time. It fails at
+     *adjudication*, on the first real fact, with "cannot compare money with
+     decimal" — silent until production, which is the worst failure mode
+     available.
+     Catching it needs the attribute's value kind, so the compiler only makes
+     this refusal when it is given one, via the compile command's `ontologies`
+     option. The fix is never to quote the amount: duly has no money literal
+     on purpose. Conclude the
+     threshold in its own table as a `money` value and compare against that
+     column, which makes the threshold cited and effective-dated too. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="moneyVsNumber" name="money vs number"
+             namespace="urn:duly:example:refusal:money-vs-number">
+  <extensionElements>
+    <duly:pack name="refusal-money-vs-number" version="0.0.1"
+               ontology="duly-mortgage-closing" ontologyVersion="0.1.0"/>
+  </extensionElements>
+
+  <inputData id="actualAmountAtClosing" name="trid:actualAmountAtClosing"/>
+
+  <decision id="cure" name="trid:toleranceCureAmount">
+    <question>What tolerance cure is owed?</question>
+    <extensionElements>
+      <duly:decision entityType="trid:Fee" attribute="trid:toleranceCureAmount"
+                     entityVar="fee" valueKind="money" currency="USD"/>
+    </extensionElements>
+    <informationRequirement>
+      <requiredInput href="#actualAmountAtClosing"/>
+    </informationRequirement>
+
+    <decisionTable id="cureTable" hitPolicy="FIRST">
+      <input id="cActual" label="actual">
+        <inputExpression typeRef="number">
+          <text>trid:actualAmountAtClosing</text>
+        </inputExpression>
+      </input>
+      <output id="cOut" label="cure" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="row1">
+        <description>A fee over the cap owes a cure.</description>
+        <inputEntry><text>&gt; 200</text></inputEntry>
+        <outputEntry><text>25.00</text></outputEntry>
+        <annotationEntry><text>REFUSE-MONEY-01</text></annotationEntry>
+        <annotationEntry><text>12 CFR 1026.19(e)(3)(i)</text></annotationEntry>
+        <annotationEntry><text>2015-10-03</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

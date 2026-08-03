@@ -150,6 +150,12 @@ class _Parser:
         self.toks = _tokenize(src, loc)
         self.i = 0
         self.referenced: list[str] = []
+        # Every endpoint kind this cell used. The compiler needs it to catch a
+        # numeric endpoint tested against a money-valued input, which parses
+        # and renders perfectly and then fails at adjudication (spec/dmn.md,
+        # "Refusal classes"). Accumulated here for the same reason
+        # `referenced` is: the parser is the only place that knows.
+        self.endpoint_kinds: list[str] = []
 
     # -- token helpers -----------------------------------------------------
     @property
@@ -174,6 +180,11 @@ class _Parser:
 
     # -- endpoints ---------------------------------------------------------
     def endpoint(self) -> Endpoint:
+        ep = self._endpoint()
+        self.endpoint_kinds.append(ep.kind)
+        return ep
+
+    def _endpoint(self) -> Endpoint:
         tok = self.cur
         if tok.kind == "string":
             self.advance()
@@ -249,6 +260,10 @@ class InputTest:
     condition: str | None
     references: tuple[str, ...]
     equality_literal: str | None
+    # Endpoint kinds the cell used (`number`, `string`, `boolean`, `date`,
+    # `name`). Carried so the compiler can reject a numeric endpoint tested
+    # against a money-valued input without re-parsing the rendered text.
+    endpoint_kinds: tuple[str, ...] = ()
 
 
 def compile_input_entry(
@@ -257,7 +272,7 @@ def compile_input_entry(
     """Compile one input cell into a duly `when` condition over `var`."""
     stripped = (text or "").strip()
     if stripped in ("", "-"):
-        return InputTest(True, None, (), None)
+        return InputTest(True, None, (), None, ())
 
     _reject_out_of_subset(stripped, loc)
     parser = _Parser(stripped, loc, names)
@@ -284,7 +299,9 @@ def compile_input_entry(
     references = tuple(dict.fromkeys(n for n in parser.referenced if n != var))
     if not atomic:
         rendered = f"({rendered})"
-    return InputTest(False, rendered, references, equality)
+    return InputTest(
+        False, rendered, references, equality, tuple(parser.endpoint_kinds)
+    )
 
 
 def _positive_unary_tests(parser: _Parser, var: str) -> tuple[str, bool, str | None]:

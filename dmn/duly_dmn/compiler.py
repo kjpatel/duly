@@ -120,17 +120,30 @@ _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 # ---------------------------------------------------------------------------
 
 
-def compile_file(path) -> dict:
+def compile_file(path, value_kinds: dict[str, str] | None = None) -> dict:
     """Compile a .dmn file into a validated rule-IR pack dict."""
-    return compile_definitions(read_file(path))
+    return compile_definitions(read_file(path), value_kinds)
 
 
-def compile_source(source: str) -> dict:
+def compile_source(source: str, value_kinds: dict[str, str] | None = None) -> dict:
     """Compile DMN XML text into a validated rule-IR pack dict."""
-    return compile_definitions(read_string(source))
+    return compile_definitions(read_string(source), value_kinds)
 
 
-def compile_definitions(defs: Definitions) -> dict:
+def compile_definitions(
+    defs: Definitions, value_kinds: dict[str, str] | None = None
+) -> dict:
+    """Compile a parsed DMN document into a rule-IR pack.
+
+    ``value_kinds`` maps an attribute CURIE to its duly value kind, as declared
+    by the ontology the pack pins. It is optional because the compiler's job is
+    DMN, not vocabulary — but supplying it buys one check DMN cannot make for
+    itself: a numeric cell tested against a *money* input renders to
+    ``amount > 200``, which parses, validates, and then fails at adjudication
+    with ``cannot compare money with decimal``. Without the mapping the
+    compiler cannot know ``ex:amount`` is money, so it says nothing rather than
+    guessing. ``python -m duly_dmn compile --ontologies DIR`` supplies it.
+    """
     pack_meta = _pack_metadata(defs)
 
     concluded: dict[str, str] = {}
@@ -148,7 +161,7 @@ def compile_definitions(defs: Definitions) -> dict:
     seen_rule_ids: dict[str, str] = {}
 
     for decision in defs.decisions:
-        decision_entry, rules = _compile_decision(decision, concluded)
+        decision_entry, rules = _compile_decision(decision, concluded, value_kinds or {})
         decisions_out.append(decision_entry)
         for rule in rules:
             rid = rule["id"]
@@ -234,7 +247,9 @@ def _require_ext(decision: Decision, field: str) -> str:
     return value
 
 
-def _compile_decision(decision: Decision, concluded: dict[str, str]) -> tuple[dict, list[dict]]:
+def _compile_decision(
+    decision: Decision, concluded: dict[str, str], value_kinds: dict[str, str]
+) -> tuple[dict, list[dict]]:
     loc = Location(decision=decision.id)
     table = decision.table
 
@@ -274,7 +289,7 @@ def _compile_decision(decision: Decision, concluded: dict[str, str]) -> tuple[di
     for row in table.rows:
         rule, guards = _compile_row(
             decision, row, bindings, names, entity_var, entity_type, attribute,
-            value_kind, table.hit_policy, len(table.rows),
+            value_kind, table.hit_policy, len(table.rows), value_kinds,
         )
         rules.append(rule)
         row_facts.append((row, guards, rule))
@@ -380,6 +395,48 @@ def _resolve_bindings(
 # ---------------------------------------------------------------------------
 
 
+def _reject_money_against_number(
+    binding: "_Binding",
+    test: InputTest,
+    value_kinds: dict[str, str],
+    loc: Location,
+) -> None:
+    """Refuse a numeric cell tested against a money-valued input.
+
+    This is the one refusal the compiler cannot make from the DMN alone. A
+    money column with `> 200` in it is the most natural cell a business analyst
+    writes, and it is valid S-FEEL, valid duly expression source, and a pack
+    the kernel *accepts* — `validate_pack` type-checks nothing. It fails at
+    adjudication, on the first real fact, with `cannot compare money with
+    decimal`. Silent until production is the worst failure mode available, and
+    spec/dmn.md's whole posture is that the compiler refuses rather than
+    approximates.
+
+    duly has no money literal on purpose (spec/rule-ir.md, "Expressions"), so
+    the fix is never "quote the amount" — it is to conclude the threshold in
+    its own decision and reference it, which is what the message says.
+    """
+    if not value_kinds or test.irrelevant:
+        return
+    if value_kinds.get(binding.curie) != "money":
+        return
+    if "number" not in test.endpoint_kinds:
+        return
+    raise DmnCompileError(
+        UNSUPPORTED_EXPRESSION,
+        f"cell compares {binding.curie!r}, which the pinned ontology declares as "
+        f"`money`, against a bare number. duly has no money literal: money is an "
+        f"amount *and* a currency, and a number is only the first, so this cell "
+        f"would compile to source that fails at adjudication with "
+        f"\"cannot compare money with decimal\". Give the threshold its own "
+        f"decision table concluding a `money` value, and compare against that "
+        f"column instead — which also makes the threshold cited and "
+        f"effective-dated, so changing it later is one new row rather than a "
+        f"copy of this one (spec/dmn.md, \"Refusal classes\").",
+        loc,
+    )
+
+
 def _compile_row(
     decision: Decision,
     row: Row,
@@ -391,6 +448,7 @@ def _compile_row(
     value_kind: str,
     hit_policy: str,
     row_count: int,
+    value_kinds: dict[str, str],
 ) -> tuple[dict, dict[str, str]]:
     rule_id = _annotation(decision, row, ANN_RULE_ID)
     if not rule_id:
@@ -449,7 +507,9 @@ def _compile_row(
             decision=decision.id, row=row.index, rule_id=rule_id,
             column=binding.label, expression=binding.curie, text=cell,
         )
-        tests.append(compile_input_entry(cell, binding.label, names, cell_loc))
+        test = compile_input_entry(cell, binding.label, names, cell_loc)
+        _reject_money_against_number(binding, test, value_kinds, cell_loc)
+        tests.append(test)
 
     out_loc = Location(
         decision=decision.id, row=row.index, rule_id=rule_id,

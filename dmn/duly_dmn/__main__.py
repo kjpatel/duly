@@ -49,8 +49,31 @@ def _source_label(path: Path) -> str:
     return resolved.name
 
 
+def _value_kinds(ontologies: str | None) -> dict[str, str]:
+    """Attribute CURIE -> duly value kind, from an ontology directory.
+
+    Optional, and deliberately so: the compiler's subject is DMN, not
+    vocabulary. Supplying it lets the compiler refuse the one cell DMN cannot
+    self-diagnose — a bare number tested against a money column. Without it
+    that cell compiles and fails at adjudication instead.
+
+    `duly_conformance` is imported here rather than at module scope so the
+    compiler keeps working when only part of the toolkit is installed.
+    """
+    if not ontologies:
+        return {}
+    from duly_conformance import load_repo_registry
+
+    kinds: dict[str, str] = {}
+    for ontology in load_repo_registry(ontologies):
+        for klass in ontology.classes.values():
+            for slot in klass.slots.values():
+                kinds[slot.curie] = slot.kind
+    return kinds
+
+
 def _cmd_compile(args) -> int:
-    pack = compile_file(args.dmn)
+    pack = compile_file(args.dmn, _value_kinds(args.ontologies))
     text = emit_pack(pack, source=_source_label(Path(args.dmn)))
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
@@ -121,6 +144,13 @@ def main(argv: list[str] | None = None) -> int:
     p_compile = sub.add_parser("compile", help="compile a .dmn into a rule-IR pack.yaml")
     p_compile.add_argument("dmn")
     p_compile.add_argument("-o", "--output", help="write to FILE instead of stdout")
+    p_compile.add_argument(
+        "--ontologies",
+        help="directory of <name>/<version>.yaml ontologies the pack pins. "
+        "Optional; supplying it lets the compiler reject a bare number tested "
+        "against a money-valued column, which otherwise compiles and fails at "
+        "adjudication.",
+    )
     p_compile.set_defaults(func=_cmd_compile)
 
     p_verify = sub.add_parser("verify", help="check a committed pack.yaml against its .dmn")

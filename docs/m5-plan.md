@@ -345,6 +345,21 @@ directory as an error, which is defensible. The real inconsistency is
 run. **Phase 1:** decide the trio together — missing dir, empty dir, and
 which of the two commands may fail a build.
 
+**A6 — the DMN compiler could emit a pack that fails at adjudication, and
+called it success.** Found by chasing A5. A money column with `> 200` in it is
+the most natural cell a business analyst writes; it is valid S-FEEL, renders
+to valid duly source, and yields a pack `validate_pack` *accepts* — the rule
+IR type-checks nothing at load time. `compiled 1 rule(s)` was printed, and the
+pack died on the first real fact with `cannot compare money with decimal`.
+[spec/dmn.md](../spec/dmn.md)'s own posture is that a compiler emitting a pack
+the kernel rejects has compiled nothing; this was worse, because the kernel
+*accepted* it. **Fixed in this PR** rather than deferred: it is a bug, not
+phase work. `compile_definitions` now takes an optional attribute → value-kind
+mapping (`--ontologies DIR` on the CLI) and refuses the cell by name; without
+the mapping it says nothing rather than guessing, the same posture as
+conformance being optional at the envelope seam. Committed as a refusal
+example with the rest.
+
 **A5 — the IR has no money literal, and nothing says so where an author
 looks.** A money threshold cannot be written in a guard: the expression
 grammar ([`kernel/duly_kernel/expr.py`](../kernel/duly_kernel/expr.py), module
@@ -353,10 +368,15 @@ committed pack compares money to money (`actual > disclosed`). The example
 expresses its $200 limit as its own rule (`EXP-LIMIT-00`) bound through
 `derived:`. **This is an IR expressiveness boundary, not a seam defect** — and
 arguably the right one, since it turns a constant into a cited, effective-dated,
-impact-measurable rule. Not Phase 1 work. **Phase 5** (the adopter's guide)
-should teach the idiom, and [spec/rule-ir.md](../spec/rule-ir.md) should state
-the absence where the operator table is, because today it is discoverable only
-by reading the parser.
+impact-measurable rule. **Documented rather than removed, in this PR:** the
+kernel's type error now names the idiom instead of only diagnosing the
+mismatch, and [spec/rule-ir.md](../spec/rule-ir.md) states the absence where
+the operator table is with a worked example — it was previously discoverable
+only by reading the parser. No money literal was added: no consumer wants one
+(not one committed pack uses an inline numeric literal in *any* guard), and it
+would touch the parser, `prove`'s SMT fragment, the DMN compiler, the studio's
+grid projection and whatif to make packs worse at the effective-dating
+regulated domains need most.
 
 ## Appendix B — Progress log
 

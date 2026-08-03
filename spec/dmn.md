@@ -206,13 +206,19 @@ Every refusal carries a machine-readable class and a location. One minimal examp
 | `unsupported-dmn-version` | the `definitions` namespace is not DMN 1.3–1.5 | — |
 | `malformed-document` | no `decision`, no `decisionTable`, missing `duly:pack`/`duly:decision`, unknown `duly:*` annotation, duplicate rule id, or a compiled pack the kernel rejects | — |
 | `unsupported-hit-policy` | `ANY`/`COLLECT`/`RULE ORDER`/`OUTPUT ORDER`, or `PRIORITY` with `outputValues` | [`unsupported-hit-policy.dmn`](../dmn/examples/refusals/unsupported-hit-policy.dmn) |
-| `unsupported-expression` | a cell outside S-FEEL, or a literal whose type contradicts the declared `valueKind` | [`non-sfeel-cell.dmn`](../dmn/examples/refusals/non-sfeel-cell.dmn) |
+| `unsupported-expression` | a cell outside S-FEEL, or a literal whose type contradicts the declared `valueKind`, or (given value kinds) a bare number tested against a `money` column | [`non-sfeel-cell.dmn`](../dmn/examples/refusals/non-sfeel-cell.dmn), [`money-vs-number.dmn`](../dmn/examples/refusals/money-vs-number.dmn) |
 | `missing-citation` | a row with no `duly:citation` | [`uncited-row.dmn`](../dmn/examples/refusals/uncited-row.dmn) |
 | `missing-effective-date` | a row with no `duly:effectiveFrom`, or a non-ISO date | [`undated-row.dmn`](../dmn/examples/refusals/undated-row.dmn) |
 | `missing-rule-id` | a row with no `duly:ruleId` | — |
 | `unprovable-unique` | `UNIQUE` rows whose disjointness the kernel cannot prove | [`unprovable-unique.dmn`](../dmn/examples/refusals/unprovable-unique.dmn) |
 | `unsupported-table-shape` | more or fewer than one output column, or a table with no rows | [`multiple-outputs.dmn`](../dmn/examples/refusals/multiple-outputs.dmn) |
 | `binding-error` | a column label that is not a duly identifier, is reserved, collides with the entity variable, or duplicates another column | — |
+
+**One refusal needs help, and it is the only one that does.** Every class above is raised from the DMN document alone. A bare number tested against a money column is not: `> 200` on `trid:actualAmountAtClosing` is valid S-FEEL, renders to valid duly source (`actual > 200`), and produces a pack `validate_pack` **accepts**, because the rule IR does not type-check expressions at load time. It fails at adjudication, on the first real fact, with `cannot compare money with decimal` — silent until production, which is the failure mode this compiler exists to avoid.
+
+The compiler cannot see it unaided: DMN's `typeRef` is the author's own declaration and duly's value kinds are not DMN's, so nothing in the document says that attribute is money. So `compile_definitions` takes an optional attribute-CURIE → value-kind mapping, which `python -m duly_dmn compile --ontologies DIR` builds from the ontologies the pack pins. Given it, the cell is refused by name; without it, the compiler says nothing rather than guessing — the same posture as ontology conformance being optional at the envelope seam.
+
+The fix is never to quote the amount: duly has no money literal on purpose ([rule-ir.md](rule-ir.md), "A threshold is a rule, not a number in a guard"). Give the threshold its own table concluding a `money` value and compare against that column, which makes it cited and effective-dated as well.
 
 ## Equivalence, exactly
 

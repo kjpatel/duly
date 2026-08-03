@@ -89,3 +89,25 @@ def minimal_dmn(**overrides: str) -> str:
     }
     values.update(overrides)
     return MINIMAL_DMN.format(**values)
+
+
+def refusal_value_kinds() -> dict[str, str]:
+    """Attribute CURIE -> duly value kind, from the committed ontologies.
+
+    The compiler takes this mapping rather than a path, so it never reaches
+    for a directory of its own choosing. Tests and the spec demo are
+    repo-resident and may supply the repo's own `ontologies/`; a compiler
+    that did the same would be assuming a layout it cannot rely on.
+
+    One refusal example needs it: a money column tested against a bare number
+    is the only defect DMN cannot self-diagnose, because DMN's `typeRef` is
+    the author's declaration and duly's value kinds are not DMN's.
+    """
+    from duly_conformance import load_repo_registry
+
+    kinds: dict[str, str] = {}
+    for ontology in load_repo_registry(REPO / "ontologies"):
+        for klass in ontology.classes.values():
+            for slot in klass.slots.values():
+                kinds[slot.curie] = slot.kind
+    return kinds

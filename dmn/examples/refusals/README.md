@@ -18,6 +18,20 @@ compiler's source — unverified.
 | [`undated-row.dmn`](undated-row.dmn) | `missing-effective-date` | A row carries no `duly:effectiveFrom`. |
 | [`unprovable-unique.dmn`](unprovable-unique.dmn) | `unprovable-unique` | `UNIQUE` rows separated only by numeric ranges. |
 | [`multiple-outputs.dmn`](multiple-outputs.dmn) | `unsupported-table-shape` | Two output columns in one table. |
+| [`money-vs-number.dmn`](money-vs-number.dmn) | `unsupported-expression` | A bare number tested against a `money` column. Needs `--ontologies` to be caught — see below. |
+
+One of these is not like the others. Every example above is broken in a way the
+document itself reveals, so the compiler refuses it unaided. `money-vs-number.dmn`
+is refused only when the compiler is *given* the attribute's value kind, because
+DMN's own `typeRef` is the author's declaration and duly's value kinds are not
+DMN's — nothing in the file says `trid:actualAmountAtClosing` is money. Without
+`--ontologies` it compiles, and the pack it produces fails at adjudication rather
+than at compile time. That is the failure this example exists to make visible:
+
+```bash
+uv run python -m duly_dmn compile dmn/examples/refusals/money-vs-number.dmn                        # compiles
+uv run python -m duly_dmn compile dmn/examples/refusals/money-vs-number.dmn --ontologies ontologies # refuses
+```
 
 Run any of them by hand to see the message an author would get:
 

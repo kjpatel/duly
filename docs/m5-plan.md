@@ -65,6 +65,21 @@ follow-ups.
 6. When a task says **ASK**, the decision belongs to Kushan. Present the
    options in the PR or in chat; do not pick silently.
 7. Tick your checkbox here and append one line to Appendix B in the same PR.
+8. **A finding is not filed until some phase owns it.** If your work turns up
+   a defect you are not fixing, recording it in Appendix A is half the job:
+   also add or amend the task in the phase that will fix it, and say which
+   finding it answers. Appendix A is evidence; the phase task lists are the
+   work. Phase 0 recorded two findings whose subject matched none of Phase 1's
+   clusters, and they would have been skipped by an executor who read only §5.
+   If a finding fits no phase, say so explicitly in Appendix A — "not phase
+   work" is a decision, and an unrouted finding is an oversight that reads
+   identically.
+9. **Correct the plan when the work contradicts it.** These sections were
+   written before the code was measured; where a task turns out to rest on a
+   wrong assumption, fix the task in the same PR and note what moved. Phase 0
+   shipped three rules where §4 specified two, and narrowed an **ASK** that
+   had been asking the wrong question — both belong in the plan, next to the
+   ticked box, not only in a PR description nobody re-reads.
 
 ---
 

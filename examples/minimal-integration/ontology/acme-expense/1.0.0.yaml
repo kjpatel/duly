@@ -1,0 +1,97 @@
+# acme-expense 1.0.0 — the vocabulary this example's facts pin.
+#
+# This file is the "bring your own ontology" half of the example. It is not
+# duly's: duly ships no domain terms. It belongs to the fictional Acme Corp,
+# lives in this example's own directory, and is loaded from there — the
+# toolkit never looks for it in a repository location.
+#
+# It declares exactly the four terms this example uses and nothing more,
+# which is the honest size for an ontology that backs one decision.
+#
+# IMMUTABLE once published, like a rule-pack version: a fact citing 1.0.0
+# validates against 1.0.0 forever. Changes go in a new version file. See
+# spec/ontology-conformance.md (C1) for why, and for the exact LinkML subset
+# duly's gate interprets — everything else here is documentation the gate
+# deliberately ignores.
+id: https://acme.example/ontologies/acme-expense/1.0.0
+name: acme-expense
+version: 1.0.0
+description: >-
+  Employee expense claims: the amount claimed, what it was for, whether it
+  was pre-approved, and the reimbursement decision an expense policy
+  concludes about it.
+license: https://www.apache.org/licenses/LICENSE-2.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  duly: https://duly.dev/spec/v0/vocab#
+  ex: https://acme.example/ontologies/acme-expense/ex#
+  axe: https://acme.example/ontologies/acme-expense/
+default_prefix: axe
+default_range: string
+
+imports:
+  - linkml:types
+
+types:
+  Money:
+    typeof: string
+    uri: duly:money
+    description: >-
+      duly's `money` value kind: a decimal-string amount plus an ISO 4217
+      currency (spec/grounded-facts.md D2). Declared as a named type so a
+      slot's range can say "money" and the gate can hold the fact's
+      value.kind to it.
+
+enums:
+  ExpenseCategory:
+    description: >-
+      What the claim was for. A CLOSED code set — Acme's own list, so its
+      membership is enumerated here and an unlisted value is a rejection at
+      the contract line rather than a rule that silently fails to bind.
+    annotations:
+      codeSystem: acme-expense/categories
+    permissible_values:
+      Travel:
+        description: Transport, lodging, and incidentals away from the office.
+      Meals:
+        description: Food and drink, including client entertainment.
+      Equipment:
+        description: Hardware, software, and office supplies.
+
+classes:
+  ExpenseClaim:
+    class_uri: ex:ExpenseClaim
+    description: One employee's claim for reimbursement of one expense.
+    attributes:
+      amount:
+        slot_uri: ex:amount
+        range: Money
+        description: The amount claimed, from the submitted receipt.
+      category:
+        slot_uri: ex:category
+        range: ExpenseCategory
+        description: The spending category the claim was filed under.
+      preApproved:
+        slot_uri: ex:preApproved
+        range: boolean
+        description: >-
+          Whether a manager approved the spend before it was incurred, from
+          the approvals system.
+      unapprovedSpendLimit:
+        slot_uri: ex:unapprovedSpendLimit
+        range: Money
+        description: >-
+          DERIVED — the most an employee may spend in this category without
+          prior approval. Concluded by the policy pack rather than extracted,
+          because it is policy, not evidence.
+        annotations:
+          derived: true
+      reimbursable:
+        slot_uri: ex:reimbursable
+        range: boolean
+        description: >-
+          DERIVED — concluded by this example's expense policy pack, never
+          extracted. Whether Acme will reimburse the claim.
+        annotations:
+          derived: true

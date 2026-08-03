@@ -45,7 +45,7 @@ hard edges: 1 before 3 (seam before move), 2 and 3 both before 4 (you publish
 the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships).
 
-~13–15 PRs total. Every PR satisfies CLAUDE.md's definition of done
+~15–17 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what they must fix). Every PR satisfies CLAUDE.md's definition of done
 (documented, discoverable, demoable, reconciled) **in that PR**, not in
 follow-ups.
 
@@ -65,6 +65,21 @@ follow-ups.
 6. When a task says **ASK**, the decision belongs to Kushan. Present the
    options in the PR or in chat; do not pick silently.
 7. Tick your checkbox here and append one line to Appendix B in the same PR.
+8. **A finding is not filed until some phase owns it.** If your work turns up
+   a defect you are not fixing, recording it in Appendix A is half the job:
+   also add or amend the task in the phase that will fix it, and say which
+   finding it answers. Appendix A is evidence; the phase task lists are the
+   work. Phase 0 recorded two findings whose subject matched none of Phase 1's
+   clusters, and they would have been skipped by an executor who read only §5.
+   If a finding fits no phase, say so explicitly in Appendix A — "not phase
+   work" is a decision, and an unrouted finding is an oversight that reads
+   identically.
+9. **Correct the plan when the work contradicts it.** These sections were
+   written before the code was measured; where a task turns out to rest on a
+   wrong assumption, fix the task in the same PR and note what moved. Phase 0
+   shipped three rules where §4 specified two, and narrowed an **ASK** that
+   had been asking the wrong question — both belong in the plan, next to the
+   ticked box, not only in a PR description nobody re-reads.
 
 ---
 
@@ -77,19 +92,29 @@ secretly assumes the repo layout surfaces as a failure here rather than as a
 code-review opinion. This is both a deliverable and the instrument that
 produces Phase 1's defect list.
 
-- [ ] `examples/minimal-integration/`: a standalone script (or tiny package)
+- [x] `examples/minimal-integration/`: a standalone script (or tiny package)
       that defines its own ontology, three grounded facts with correct content
       hashes, a two-rule pack (a default and an override that defeats it),
       calls `duly_kernel.api.adjudicate`, and verifies the returned receipt's
       `receiptSha256` by recomputing it. A README in house style: what each
       artifact is, what the example deliberately does not do.
-- [ ] It runs against an **installed wheel, not the source tree**: `uv build`,
+      *Shipped with **three** rules, not two: the default and its override as
+      specified, plus the policy constant they measure against, because the IR
+      has no money literal (A5). The default/override defeat relation — the
+      point of the requirement — is unchanged and asserted.*
+- [x] It runs against an **installed wheel, not the source tree**: `uv build`,
       create a clean venv, `pip install dist/duly-*.whl`, run the example with
       the repo *not* on `sys.path`. A small CI job does exactly this.
-- [ ] Every friction point encountered — an import that reaches for a repo
+      *`check_wheel.sh` + `.github/workflows/minimal-integration.yml`. The
+      wheel run reproduces the in-repo `receiptSha256` byte-for-byte.*
+- [x] Every friction point encountered — an import that reaches for a repo
       root, a default path that assumes `rulepacks/` exists, a function that
       cannot be called without repo files — is recorded in Appendix A verbatim, with
       file and line. Do not fix them in this PR; the fix is Phase 1's scope.
+      *Six findings, A1–A6. Phase 1: A1, A3, A4 (each now has a task in §5).
+      Phase 4: A2. A5 was a documented IR boundary and A6 a live bug; both
+      were fixed in the same PR, since a compiler emitting a pack that fails
+      at adjudication is not phase work.*
 
 **Landmines:**
 - `examples/` is deliberately not in the main pytest paths; the example's
@@ -106,7 +131,7 @@ produces Phase 1's defect list.
 **Acceptance:** the CI job is green from a wheel in a clean venv; Appendix A is
 populated; the README exists.
 
-## 5. Phase 1 — the seam (3–4 PRs)
+## 5. Phase 1 — the seam (4–5 PRs)
 
 **Objective:** library code takes caller-supplied content roots everywhere;
 repo-layout discovery is demoted to thin convenience loaders. The pattern to
@@ -130,11 +155,27 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
       the repo layout so `uvicorn demo.app:app` still works unchanged.
-- [ ] **Empty-corpus semantics:** `verify` over a corpus with zero cases
-      currently exits 1 (missing cases dir). Recommended: exit 0, print
-      `verified 0 cases` — an adopter's day-one corpus is empty and that is
-      not an error. Mildly behavioral, so: **ASK** (a one-line confirmation
-      in the PR is enough).
+- [ ] **Kernel + conformance entry points (1 PR)** — added after Phase 0
+      measured them (A1, A3), and the only Phase 1 work on the *adoption*
+      path rather than the repo-layout one:
+      - re-export `content_hash` from `duly_kernel`'s package root. Every
+        integration must content-address its own facts before it can call
+        anything, so it is a first-contact API reachable only as
+        `duly_kernel.receipt` — a module path that reads private. Consider
+        also `seal_fact()`: `examples/minimal-integration/run.py`'s nine-line
+        `seal()` will otherwise be copied verbatim into every adopter's code.
+      - `duly_conformance`'s CLI must not default `--ontologies` to a
+        repo-relative `ontologies`, and must not surface a missing directory
+        as an uncaught `OntologySubsetError` traceback from `registry.py:61`.
+        Two defects on one line: the repo-layout default, and a stack trace
+        where a diagnostic belongs.
+- [ ] **Empty-corpus semantics.** Phase 0 measured this and it is *smaller*
+      than first written. `verify` on an empty `cases/` already exits **0**
+      (`verified 0 cases`) and only a *missing* directory exits 1, which is
+      defensible as it stands. `impact` on the same empty corpus exits **2**.
+      So the decision is not "what should verify do" but "may either command
+      fail an adopter's day-one CI run, and should the two agree?" — **ASK**,
+      one line in the PR.
 
 **Landmines:**
 - `kernel/duly_kernel/report.py` renders a `rulepacks/<name>/pack.yaml` path
@@ -230,7 +271,7 @@ proves it.
   template for how to verify a mass path move: targets + fixtures + templates
   together, `notice-*`/`review-*` proven byte-untouched.
 
-## 8. Phase 4 — distribution (2–3 PRs)
+## 8. Phase 4 — distribution (3–4 PRs)
 
 **Objective:** `pip install duly` gives an adopter the seam.
 
@@ -239,6 +280,17 @@ proves it.
       site-packages, `static/` not package data. Rename, package, ship
       static assets as package data, keep `uvicorn duly_demo.app:app`
       working, update tests. No hash implications.
+- [ ] **Dependencies (1 PR)** — added after Phase 0 measured it (A2). A
+      kernel-only `pip install duly` installs 18 packages including `fastapi`,
+      `starlette`, `uvicorn`, `pydantic`, `reportlab`, `pillow`, `click`,
+      `anyio` and `h11`. They are declared unconditionally in
+      [`pyproject.toml`](../pyproject.toml) `[project] dependencies` and serve
+      the demo server and the PDF audit report; only `pyyaml` is on the
+      document→receipt path. Move them behind extras (`demo`, `report`), keep
+      the demo working, and make the Phase 0 wheel check assert the *core*
+      install stays small — otherwise this regresses silently the next time
+      someone adds a convenience import. "The audit toolkit installed a web
+      server" is a bad first line in a security review.
 - [ ] **Packaging (1 PR).** Distribution version to `1.0.0` (release-process
       §3: distribution only — kernel stays `0.0.1` per D5, and
       `test_engine_identity.py` enforces the receipt side). Console entry
@@ -269,6 +321,13 @@ The PRD's bar: one working day.
       before it is claimed done. The model for its "not automatic" honesty is
       [rulepacks/README.md](../rulepacks/README.md)'s three-things-are-not
       section.
+      *Start from [`examples/minimal-integration`](../examples/minimal-integration/),
+      which already covers the walkthrough's first five steps in code an
+      adopter can run — the guide's job is the rest (a real extractor, the
+      store, the review loop, a corpus) plus the seams a reader trips on.
+      Carry over the idiom Phase 0 found the hard way: a threshold is a rule,
+      not a number in a guard ([spec/rule-ir.md](../spec/rule-ir.md),
+      "A threshold is a rule, not a number in a guard").*
 - [ ] **Contribution path.** Complete the authoring guide and contribution
       checks across packs, ontologies, starters, and golden-corpus coverage
       — now phrased for content living under `examples/`.
@@ -283,7 +342,92 @@ The PRD's bar: one working day.
 > Executor: append findings here verbatim — file, line, what failed, what the
 > example had to do to work around it. Do not fix in Phase 0.
 
-*(empty — probe not yet run)*
+Probe run 2026-08-01 against `duly-0.0.1-py3-none-any.whl` in a clean venv,
+example copied outside the repository, source tree off `sys.path`.
+
+**The headline is that the kernel path is clean.** `adjudicate`,
+`content_hash`, `parse_ontology`, `OntologyRegistry` and `assert_conformant`
+all work with no repository present, and the wheel-run receipt hash is
+byte-identical to the in-repo one. Every finding below is at the edges.
+
+**A1 — `content_hash` is not exported from the package root.**
+[`kernel/duly_kernel/__init__.py`](../kernel/duly_kernel/__init__.py) exports
+only `adjudicate`; `dir(duly_kernel)` shows no `content_hash`. Every
+integration must content-address its own facts before it can call anything,
+so this is a *first-contact* API, and it is reachable only as
+`from duly_kernel.receipt import content_hash` — a module path that reads
+private. The example imports it anyway because reimplementing the canonical
+form would produce facts nobody else can verify. **Phase 1:** re-export at
+the package root (and consider `seal_fact()`, which every integration writes
+by hand — `run.py`'s `seal()` is nine lines that will be copied verbatim into
+every adopter's codebase).
+
+**A2 — a kernel-only install pulls a web framework and a PDF library.**
+`pip install duly` installs 18 packages including `fastapi`, `starlette`,
+`uvicorn`, `pydantic`, `reportlab`, `pillow`, `click`, `anyio`, `h11`. They
+come from [`pyproject.toml`](../pyproject.toml) `[project] dependencies`,
+which lists `fastapi`, `uvicorn` and `reportlab` unconditionally — they serve
+the demo server and the PDF audit report, neither of which an embedding
+integration uses. Only `pyyaml` is needed on the document→receipt path.
+**Phase 4** (not Phase 1): move them behind extras (`demo`, `report`). Worth
+flagging early because it is a packaging decision D1 touches, and because
+"the audit toolkit installed a web server" is a bad first impression for a
+security review.
+
+**A3 — `duly_conformance`'s CLI defaults to a repo-relative path and
+tracebacks when it is wrong.**
+[`conformance/duly_conformance/__main__.py`](../conformance/duly_conformance/__main__.py)
+defaults `--ontologies` to `ontologies`, i.e. duly's own directory relative to
+cwd. Outside the repository both verbs fail — and fail as an *uncaught*
+`OntologySubsetError` traceback from `registry.py:61`, not as a CLI
+diagnostic. Two defects, one line: the default assumes the repo layout, and
+the failure mode is a stack trace. Passing `--ontologies <dir>` works
+perfectly, which is the shape Phase 1 wants everywhere. **Phase 1:** no
+repo-relative default (require the flag, or resolve nothing), and catch the
+error into a message with an exit code.
+
+**A4 — `verify` and `impact` disagree about what an empty corpus means.**
+Measured: `verify --golden <dir-with-empty-cases/>` → `verified 0 cases`,
+**exit 0**. `verify --golden <missing-dir>` → exit 1. `impact` on the same
+empty corpus → **exit 2**. So the Phase 1 ASK is narrower than §5 states:
+`verify` already treats an empty corpus as success and only a *missing*
+directory as an error, which is defensible. The real inconsistency is
+`impact`, which an adopter with a day-one empty corpus hits on their first CI
+run. **Phase 1:** decide the trio together — missing dir, empty dir, and
+which of the two commands may fail a build.
+
+**A6 — the DMN compiler could emit a pack that fails at adjudication, and
+called it success.** Found by chasing A5. A money column with `> 200` in it is
+the most natural cell a business analyst writes; it is valid S-FEEL, renders
+to valid duly source, and yields a pack `validate_pack` *accepts* — the rule
+IR type-checks nothing at load time. `compiled 1 rule(s)` was printed, and the
+pack died on the first real fact with `cannot compare money with decimal`.
+[spec/dmn.md](../spec/dmn.md)'s own posture is that a compiler emitting a pack
+the kernel rejects has compiled nothing; this was worse, because the kernel
+*accepted* it. **Fixed in this PR** rather than deferred: it is a bug, not
+phase work. `compile_definitions` now takes an optional attribute → value-kind
+mapping (`--ontologies DIR` on the CLI) and refuses the cell by name; without
+the mapping it says nothing rather than guessing, the same posture as
+conformance being optional at the envelope seam. Committed as a refusal
+example with the rest.
+
+**A5 — the IR has no money literal, and nothing says so where an author
+looks.** A money threshold cannot be written in a guard: the expression
+grammar ([`kernel/duly_kernel/expr.py`](../kernel/duly_kernel/expr.py), module
+docstring) admits `NUMBER | STRING | "true" | "false"` only, and every
+committed pack compares money to money (`actual > disclosed`). The example
+expresses its $200 limit as its own rule (`EXP-LIMIT-00`) bound through
+`derived:`. **This is an IR expressiveness boundary, not a seam defect** — and
+arguably the right one, since it turns a constant into a cited, effective-dated,
+impact-measurable rule. **Documented rather than removed, in this PR:** the
+kernel's type error now names the idiom instead of only diagnosing the
+mismatch, and [spec/rule-ir.md](../spec/rule-ir.md) states the absence where
+the operator table is with a worked example — it was previously discoverable
+only by reading the parser. No money literal was added: no consumer wants one
+(not one committed pack uses an inline numeric literal in *any* guard), and it
+would touch the parser, `prove`'s SMT fragment, the DMN compiler, the studio's
+grid projection and whatif to make packs worse at the effective-dating
+regulated domains need most.
 
 ## Appendix B — Progress log
 
@@ -294,3 +438,13 @@ The PRD's bar: one working day.
   model (D4/D5) landed with its behavioral guard.
 - 2026-08-01 — [#38](https://github.com/kjpatel/duly/pull/38) — pre-plan —
   this plan committed; CLAUDE.md points to it.
+- 2026-08-01 — [#39](https://github.com/kjpatel/duly/pull/39) — pre-plan —
+  architecture guide and PRD reconciled; docs accuracy sweep; one unified
+  architecture diagram.
+- 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
+  wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-03 — Phase 0 follow-up — chasing A5 found A6, a live bug: the DMN
+  compiler emitted a pack that adjudication rejects and reported success.
+  Fixed with the kernel's teaching type error and the spec statement (A5),
+  and the same gap closed in the rule studio's import panel. Phase 1 and
+  Phase 4 each gained a task; the empty-corpus ASK narrowed.

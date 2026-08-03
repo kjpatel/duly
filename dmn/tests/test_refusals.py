@@ -12,7 +12,7 @@ import pytest
 
 from duly_dmn import compile_file
 from duly_dmn.errors import DmnCompileError
-from dmntest_helpers import REFUSALS
+from dmntest_helpers import REFUSALS, refusal_value_kinds
 
 # file -> (refusal class, fragments the message must contain)
 CASES = {
@@ -40,14 +40,20 @@ CASES = {
         "unsupported-table-shape",
         ["2 output columns", "one attribute", "decision 'category'"],
     ),
+    "money-vs-number.dmn": (
+        "unsupported-expression",
+        ["trid:actualAmountAtClosing", "money", "no money literal",
+         "row 1", "REFUSE-MONEY-01", "column 'actual'", "> 200"],
+    ),
 }
+
 
 
 @pytest.mark.parametrize("filename", sorted(CASES))
 def test_refusal_example_fails_with_the_right_class_and_message(filename):
     klass, fragments = CASES[filename]
     with pytest.raises(DmnCompileError) as excinfo:
-        compile_file(REFUSALS / filename)
+        compile_file(REFUSALS / filename, refusal_value_kinds())
     assert excinfo.value.klass == klass
     message = str(excinfo.value)
     for fragment in fragments:
@@ -71,4 +77,4 @@ def test_no_refusal_example_compiles_by_accident():
     compiler change makes its defect legal."""
     for filename in CASES:
         with pytest.raises(DmnCompileError):
-            compile_file(REFUSALS / filename)
+            compile_file(REFUSALS / filename, refusal_value_kinds())

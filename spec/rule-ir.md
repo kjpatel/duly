@@ -116,8 +116,33 @@ Small, typed, deterministic. Used in `when` items and `then.value.expr`.
 - Operators: `+ - * /`, comparisons `== != < <= > >=`, boolean `and or not`, parentheses.
 - Functions: `days_between(a, b)` → decimal days from date a to date b; `abs(x)`, `min(a,b)`, `max(a,b)`; `add_business_days(d, n, "cal")` → the `n`-th business day after date `d` under the pack calendar named `"cal"` (see "Calendars" below).
 - Typing follows fact value kinds: `date`, `decimal`, `money`, `boolean`, `string`, `code`. Money arithmetic requires matching currencies (`money - money → money`; `money * decimal → money`). Comparing a `code` var to a string compares the code's `value` field. No implicit conversions; type errors fail the run loudly.
+- **There is no money literal.** `amount > 200.00 USD` does not parse and `amount > 200` is a type error, because money is an amount *and* a currency and a bare number is only the first. A money threshold is concluded by its own rule and bound with `derived:` — see below.
 
 `then.value` is either a literal fact value (`{kind: boolean, value: false}`) or a computed one (`{kind: money, currency: USD, expr: "actual - disclosed"}`).
+
+### A threshold is a rule, not a number in a guard
+
+The missing money literal is a constraint on one value kind, but the pattern it forces is the one every committed pack already follows for *all* of them: no `when:` guard in this repository contains an inline numeric literal. Thresholds are concluded by a rule and compared as bound values.
+
+```yaml
+# the constant, with its own citation and effective window
+- id: EXP-LIMIT-00
+  citation: { text: "Acme Expense Policy §4.2" }
+  effectiveFrom: "2026-01-01"
+  then: { entity: claim, attribute: ex:unapprovedSpendLimit,
+          value: { kind: money, amount: "200.00", currency: "USD" } }
+
+# the rule that measures against it
+- id: EXP-TRAVELCAP-01
+  given:
+    amount: { attribute: ex:amount }
+    limit:  { derived: ex:unapprovedSpendLimit }   # <- bound, not written inline
+  when: [ "amount > limit" ]
+```
+
+Three things this buys, none of which are available to an inline literal. The threshold **carries its own citation**, so a reader can check the number against its authority. It is **independently effective-dated**: when the limit rises, you add one rule with a new `effectiveFrom` and the rule that compares against it never changes — inline, you would clone the whole exception and close the old one's window. And it **appears in the receipt's derivation**, so whoever reads the decision sees which limit applied without opening the pack.
+
+Worked end to end in [examples/minimal-integration](../examples/minimal-integration/). The kernel's type error names this idiom directly, and — given the pinned ontology's value kinds — the [DMN compiler](dmn.md) refuses a decision-table cell that compares a money column to a bare number, because that cell compiles cleanly and then fails at adjudication.
 
 ## Calendars
 
@@ -361,3 +386,6 @@ Evaluating this pack against the four facts in `spec/examples/` with `asOf.effec
 1. Multi-entity binding (two fees on one loan) — v0 restricts to one entity per type; the TRID pack works around it with one fee entity per case. Real fix is quantified bindings in v1.
 2. Should `overrides` be allowed across packs? v0: no — packs are self-contained.
 3. Negation-as-absence (`no fact asserted for attribute X`) — deferred; default rules cover the demo cases.
+4. **Should `validate_pack` type-check expressions, and with what?** It does not today: guards are parsed for syntax and typed only when a fact binds. So `amount > 200` against a money attribute loads cleanly, passes every check between authoring and production, and raises `cannot compare money with decimal` on the first real fact. The DMN compiler closes the path that produced this in practice — given the pinned ontology's value kinds it refuses the cell ([dmn.md](dmn.md), "Refusal classes") — but a hand-written pack still reaches adjudication before anything objects.
+
+   The blocking question is *what the checker would check against*. Value kinds live in the ontology, and the kernel deliberately takes facts and a pack and no registry: making the ontology a load-time input would put a second artifact inside the trust boundary of every adjudication and every replay, for a class of error that is loud, immediate, and never silently wrong. Two narrower shapes avoid that and are worth weighing first: infer kinds from the pack's own `then.value` declarations and check only what the pack itself determines (no new input, partial coverage), or keep the check outside the kernel in `prove`, which already resolves the ontology and already reasons about the whole input space (no new kernel surface, opt-in and optional). The third option — accept it, on the grounds that a type error at first adjudication is a fast, unambiguous failure — is the status quo and needs saying out loud rather than defaulting into.

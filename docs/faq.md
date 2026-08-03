@@ -102,6 +102,12 @@ The failure this avoids is neither hypothetical nor exotic: an optimizer that en
 
 The claim is testable, which is the part that matters. [examples/closing-scheduler](../examples/closing-scheduler/README.md) perturbs the TILA pack from three business days to five, edits no line of the scheduler, and requires the funding date to move; and it opens the wire desk on Saturdays and requires the compliance floor *not* to. A scheduler with its own copy of the rule fails the first test; one that confused staffing with law fails the second. Each date in the plan also cites the receipt ids that constrained it, so the boundary is legible in the output and not only in the tests.
 
+## How much code do I actually have to write to use this?
+
+About a hundred lines, and [examples/minimal-integration](../examples/minimal-integration/) is those lines. Five steps: load your ontology, admit your facts against it, load your rule pack, adjudicate at an as-of pair you choose, verify the receipt you got back. Everything else in this repository is either a teaching artifact (the six packs, the starters, the corpus) or a tool you run rather than code you write (the studio, the verifier, impact analysis).
+
+Two things about that example are worth more than its size. It brings its own ontology and its own pack, in its own directory, so it demonstrates the bring-your-own path rather than borrowing duly's insurance vocabulary. And it is checked by building a wheel, installing it into a clean virtualenv, and running the example with duly's source tree *absent* — because a test that passes inside this repository cannot tell a toolkit from a repository with a library-shaped subdirectory. Writing it is also what surfaced the rough edges M5 is fixing; they are listed in the plan's appendix rather than smoothed over.
+
 ## Is this a product I can deploy?
 
 Not yet — it is a pre-alpha specification with a working reference implementation. What runs today: six rule packs across two domains, an interactive demo of the full extract → decide → abstain → correct loop, and a 351-case corpus that replays byte-for-byte on every push. Breaking changes are expected until v1.0. The most useful thing an early adopter can do is try it against a real document workflow and report where the contract fits and where it fights — the [PRD's open questions](guiding-prd.md#open-questions) name exactly what only an adopter can answer, and no amount of reading the spec substitutes for that report.

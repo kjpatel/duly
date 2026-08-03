@@ -29,6 +29,7 @@ import sys
 
 import yaml
 
+from duly_conformance import load_repo_registry
 from duly_dmn import DmnCompileError, compile_file
 from duly_kernel.api import adjudicate
 
@@ -135,9 +136,20 @@ def main() -> int:
     print()
 
     print("4. what the compiler refuses")
+    # The compiler takes a value-kind mapping rather than a path, so it never
+    # reaches for an ontology directory of its own choosing. This script is
+    # repo-resident and may hand it the repo's own. One refusal example needs
+    # it: a money column tested against a bare number is the only defect DMN
+    # cannot self-diagnose from the document alone.
+    kinds: dict[str, str] = {}
+    for ontology in load_repo_registry(ROOT / "ontologies"):
+        for klass in ontology.classes.values():
+            for slot in klass.slots.values():
+                kinds[slot.curie] = slot.kind
+
     for path in sorted(REFUSALS.glob("*.dmn")):
         try:
-            compile_file(path)
+            compile_file(path, kinds)
         except DmnCompileError as e:
             headline = e.message.split(". ")[0]
             print(f"     {path.name}")

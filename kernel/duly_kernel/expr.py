@@ -16,6 +16,13 @@ Grammar (lowest to highest precedence):
     unary       := "-" unary | primary
     primary     := NUMBER | STRING | "true" | "false"
                  | IDENT "(" args ")" | IDENT | "(" expr ")"
+
+There is deliberately **no money literal**: `amount > 200.00 USD` does not
+parse, and `amount > 200` is a type error, because money is an amount *and* a
+currency and a bare number is only the first. A money threshold is written as
+its own rule and bound with `derived:` — which is what every committed pack
+does anyway, and what keeps a threshold cited and effective-dated instead of
+buried in a condition. See spec/rule-ir.md, "Expressions".
 """
 
 from __future__ import annotations
@@ -538,6 +545,30 @@ def _eval_arith(op: str, lv: Value, rv: Value) -> Value:
     raise ExprTypeError(f"cannot apply {op!r} to {_kind(lv)} and {_kind(rv)}")
 
 
+def _mismatch(lv: Value, rv: Value) -> ExprTypeError:
+    """The comparison type error, and — for money against a bare number — the
+    idiom that resolves it.
+
+    There is no money literal in this grammar (see the module docstring), so
+    `amount > 200` is the one type mismatch an author reaches for on purpose.
+    Saying only "cannot compare money with decimal" leaves them to guess; the
+    answer is the pattern every committed pack already uses, which is to
+    conclude the threshold in its own rule and bind it with `derived:`. That
+    keeps the threshold cited and effective-dated, so raising it later is one
+    new rule rather than a clone of the rule that compares against it.
+    """
+    msg = f"cannot compare {_kind(lv)} with {_kind(rv)}"
+    kinds = {_kind(lv), _kind(rv)}
+    if kinds == {"money", "decimal"}:
+        msg += (
+            " — money has no literal form. Conclude the threshold in its own "
+            "rule (`then.value: {kind: money, amount: \"200.00\", currency: "
+            "\"USD\"}`) and bind it here with `derived:`. "
+            "See spec/rule-ir.md, \"Expressions\"."
+        )
+    return ExprTypeError(msg)
+
+
 def _eq(lv: Value, rv: Value) -> bool:
     # code == string compares the code's value field (either operand order).
     if isinstance(lv, CodeV) and isinstance(rv, StringV):
@@ -545,7 +576,7 @@ def _eq(lv: Value, rv: Value) -> bool:
     if isinstance(lv, StringV) and isinstance(rv, CodeV):
         return lv.value == rv.value
     if type(lv) is not type(rv):
-        raise ExprTypeError(f"cannot compare {_kind(lv)} with {_kind(rv)}")
+        raise _mismatch(lv, rv)
     if isinstance(lv, MoneyV) and isinstance(rv, MoneyV):
         _same_currency(lv, rv, "==")
         return lv.amount == rv.amount
@@ -570,7 +601,7 @@ def _eval_compare(op: str, lv: Value, rv: Value) -> BoolV:
     if op == "!=":
         return BoolV(not _eq(lv, rv))
     if type(lv) is not type(rv):
-        raise ExprTypeError(f"cannot compare {_kind(lv)} with {_kind(rv)}")
+        raise _mismatch(lv, rv)
     if isinstance(lv, MoneyV):
         _same_currency(lv, rv, op)  # type: ignore[arg-type]
     a, b = _order_key(lv), _order_key(rv)

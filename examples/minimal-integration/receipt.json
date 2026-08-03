@@ -1,0 +1,100 @@
+{
+  "abstentions": [],
+  "asOf": {
+    "effective": "2026-03-02T00:00:00Z",
+    "knowledge": "2026-03-02T14:00:00Z"
+  },
+  "caseId": "acme-claim-4471",
+  "decision": {
+    "attribute": "ex:reimbursable",
+    "entity": "claim:4471",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "derivation": {
+    "conclusion": {
+      "attribute": "ex:reimbursable",
+      "entity": "claim:4471",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:302f63b2627620933319718875c82acac89c22e5cc6c6a94cb94b3a6f1224ae3"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:46d3609003edc07bea3d2e8d1626336559f7959a59967130b1f5cd6e7890f823"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:e379d101220eb85d895b329608f0b7c2ee1cb8f47775e17343bb0f254f28dba1"
+      },
+      {
+        "conclusion": {
+          "attribute": "ex:unapprovedSpendLimit",
+          "entity": "claim:4471",
+          "value": {
+            "amount": "200.00",
+            "currency": "USD",
+            "kind": "money"
+          }
+        },
+        "premises": [],
+        "rule": "EXP-LIMIT-00"
+      }
+    ],
+    "rule": "EXP-TRAVELCAP-01"
+  },
+  "engine": {
+    "backend": "reference",
+    "kernel": "duly-kernel",
+    "version": "0.0.1"
+  },
+  "id": "urn:duly:receipt:sha256:ad89689ce947275021faf091da7b73cf85db0269c8d6ffa17982ef6cc871f4a9",
+  "inputFacts": [
+    {
+      "contentHash": "302f63b2627620933319718875c82acac89c22e5cc6c6a94cb94b3a6f1224ae3",
+      "id": "urn:duly:fact:sha256:302f63b2627620933319718875c82acac89c22e5cc6c6a94cb94b3a6f1224ae3"
+    },
+    {
+      "contentHash": "46d3609003edc07bea3d2e8d1626336559f7959a59967130b1f5cd6e7890f823",
+      "id": "urn:duly:fact:sha256:46d3609003edc07bea3d2e8d1626336559f7959a59967130b1f5cd6e7890f823"
+    },
+    {
+      "contentHash": "e379d101220eb85d895b329608f0b7c2ee1cb8f47775e17343bb0f254f28dba1",
+      "id": "urn:duly:fact:sha256:e379d101220eb85d895b329608f0b7c2ee1cb8f47775e17343bb0f254f28dba1"
+    }
+  ],
+  "receiptSha256": "ad89689ce947275021faf091da7b73cf85db0269c8d6ffa17982ef6cc871f4a9",
+  "rulePack": {
+    "name": "acme-expense-policy",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "citation": {
+        "text": "Acme Expense Policy §4.2 — pre-approval threshold"
+      },
+      "defeated": [],
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "priority": 0,
+      "ruleId": "EXP-LIMIT-00",
+      "version": "1.0.0"
+    },
+    {
+      "citation": {
+        "text": "Acme Expense Policy §4.2 — pre-approval threshold"
+      },
+      "defeated": [
+        "EXP-DEFAULT-00"
+      ],
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "priority": 100,
+      "ruleId": "EXP-TRAVELCAP-01",
+      "version": "1.0.0"
+    }
+  ]
+}

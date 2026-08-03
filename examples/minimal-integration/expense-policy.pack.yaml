@@ -1,0 +1,105 @@
+# Acme's expense policy, as a duly rule pack: a presumption, the exception
+# that defeats it, and the policy constant the exception measures against.
+#
+# This is close to the smallest pack that is still a *defeasible* one, which
+# is the point. A rulebase of independent conditions needs no duly; a receipt
+# only becomes interesting when it can show which rule beat which other rule.
+#
+# HONEST LABELING: Acme is fictional and so is this policy. A real pack cites
+# the authority each rule comes from — a statute, a regulation, a published
+# company policy with a version — or carries an explicit TODO(verify) naming
+# what was not confirmed. See rulepacks/README.md.
+pack:
+  name: acme-expense-policy
+  version: "2026.1.0"
+  idPrefix: EXP
+  ontology: acme-expense
+  ontologyVersion: "1.0.0"
+  description: Whether Acme reimburses an employee expense claim.
+
+decisions:
+  - attribute: ex:reimbursable
+    entityType: ex:ExpenseClaim
+    question: "Will this expense claim be reimbursed?"
+    # Verdict wording is pack data, never UI code: whoever owns the policy
+    # owns how its answer reads (spec/rule-ir.md, "Decision phrasing").
+    phrasing:
+      - when: { value: true }
+        verdict: "Reimbursable"
+        detail: "No rule found the claim outside policy"
+        tone: pos
+      - when: { value: false }
+        verdict: "Not reimbursable"
+        detail: "Above the {derived:ex:unapprovedSpendLimit} limit without prior approval"
+        tone: neg
+
+  - attribute: ex:unapprovedSpendLimit
+    entityType: ex:ExpenseClaim
+    question: "How much may be spent in this category without prior approval?"
+    phrasing:
+      - verdict: "{money}"
+        detail: "Limit above which prior approval is required"
+
+rules:
+  # The presumption. Priority 0 means anything else concluding ex:reimbursable
+  # beats it — which is how a default is written in this IR.
+  - id: EXP-DEFAULT-00
+    description: "An expense claim is presumed reimbursable unless a specific rule finds it outside policy."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Acme Expense Policy §1 — good-faith presumption" }
+    effectiveFrom: "2026-01-01"
+    given:
+      claim: { entityType: ex:ExpenseClaim }
+    then:
+      entity: claim
+      attribute: ex:reimbursable
+      value: { kind: boolean, value: true }
+
+  # The policy constant, as a rule rather than as a number inside a guard.
+  #
+  # This is not a workaround, it is the idiom, and it is worth understanding
+  # before writing your own pack. The IR's expression grammar has number,
+  # string and boolean literals but no *money* literal, so a money threshold
+  # cannot be written inline — and that pressure produces the better artifact.
+  # Raising the limit becomes a versioned, cited, effective-dated rule change
+  # that impact analysis can measure, instead of an edited constant inside a
+  # condition. Rules that need it bind it with `derived:`.
+  - id: EXP-LIMIT-00
+    description: "Spending above this amount requires prior manager approval."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Acme Expense Policy §4.2 — pre-approval threshold" }
+    effectiveFrom: "2026-01-01"
+    given:
+      claim: { entityType: ex:ExpenseClaim }
+    then:
+      entity: claim
+      attribute: ex:unapprovedSpendLimit
+      value: { kind: money, amount: "200.00", currency: "USD" }
+
+  # The exception. It fires only when every binding resolves and all three
+  # conditions hold; `overrides` names the rule it defeats, which is what the
+  # receipt records — so the derivation shows the presumption *losing* rather
+  # than quietly not appearing.
+  - id: EXP-TRAVELCAP-01
+    description: "Travel spending above the limit is not reimbursable without prior manager approval."
+    version: "1.0.0"
+    priority: 100
+    citation: { text: "Acme Expense Policy §4.2 — pre-approval threshold" }
+    effectiveFrom: "2026-01-01"
+    given:
+      claim:       { entityType: ex:ExpenseClaim }
+      amount:      { attribute: ex:amount }
+      category:    { attribute: ex:category }
+      preApproved: { attribute: ex:preApproved }
+      limit:       { derived: ex:unapprovedSpendLimit }
+    when:
+      - category == "Travel"
+      - amount > limit
+      - preApproved == false
+    then:
+      entity: claim
+      attribute: ex:reimbursable
+      value: { kind: boolean, value: false }
+    overrides: [EXP-DEFAULT-00]

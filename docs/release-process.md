@@ -196,11 +196,11 @@ In order. Do not reorder — the cheap checks are first on purpose.
 
 ```bash
 uv sync
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify
 uv run spec/validate.py
 uv run python3 starters/tools/check_facts.py
-uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples
+uv run python -m duly_conformance --ontologies ontologies check starters golden/cases rulepacks spec/examples
 uv run python -m duly_assurance impact
 ```
 

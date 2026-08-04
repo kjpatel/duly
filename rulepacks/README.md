@@ -101,7 +101,7 @@ uv run uvicorn demo.app:app --port 8788              # see it adjudicate
 Then the full suite, because a pack touches more than it looks like it touches:
 
 ```bash
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
+uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
 ```
 
 A useful final check that no test performs: perturb one of your rules, run `impact`, and confirm it reports the flips you expect. If it reports zero, your pack has no corpus coverage — see item 1 above.

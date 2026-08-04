@@ -173,9 +173,17 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       than first written. `verify` on an empty `cases/` already exits **0**
       (`verified 0 cases`) and only a *missing* directory exits 1, which is
       defensible as it stands. `impact` on the same empty corpus exits **2**.
-      So the decision is not "what should verify do" but "may either command
-      fail an adopter's day-one CI run, and should the two agree?" — **ASK**,
-      one line in the PR.
+      So the decision was not "what should verify do" but "may either command
+      fail an adopter's day-one CI run, and should the two agree?"
+      **DECIDED (Kushan, 2026-08-04): succeed, but say so unmissably.** `impact`
+      exits 0 on an empty corpus like `verify` already does, and both print a
+      line nobody can mistake for coverage. Exit 0 keeps day-one adoption
+      unblocked; the message exists because the alternative is the trap
+      [rulepacks/README.md](../rulepacks/README.md) already documents — a
+      cheerful "0 of N decisions flip" that means the tool could not see
+      anything, read as a pass. A `--require-cases N` flag is the natural
+      follow-on if a real workload wants CI strictness; not built until one
+      does.
 
 **Landmines:**
 - `kernel/duly_kernel/report.py` renders a `rulepacks/<name>/pack.yaml` path
@@ -416,12 +424,34 @@ the seven should stay independent on purpose: `spec/validate.py` and
 implementation, and importing it would make them tautologies (the same
 argument the evidence browser's projection makes against calling `as_of`).
 
-**ASK**, Phase 1: (a) let the leaf packages depend on `duly_kernel` and
-delete four copies; (b) add a shared low-level module and have all five
-library copies use it; or (c) keep them independent and add a *differential
-test* asserting every implementation agrees on a corpus including non-ASCII —
-which preserves the two that should stay independent and makes drift loud,
-and is the shape this repo already reaches for. Recommend (c).
+**DECIDED (Kushan, 2026-08-04): a shared `duly_core` package, plus spec test
+vectors.** The recommendation this replaces was "keep them independent and add
+a differential test", and the argument against it is worth keeping because it
+corrects a mistake in this plan's own reasoning: **copies of a function are not
+independent implementations.** duly's real differential checks have algorithmic
+diversity — `prove`'s SMT solving against `validate_pack`'s syntactic matching,
+the evidence browser's log replay against the store's survivor projection.
+Seven copies of three identical lines have none. A test asserting they agree
+proves only that nobody typo'd, while borrowing the credibility of a check that
+does much more, and it crowds out the one that would work.
+
+The oracle for a canonicalization function is a **spec**, not a sibling copy.
+Concretely: the fact schema says content hashes are "SHA-256 over RFC 8785
+(JCS) canonical JSON", and Python's `sort_keys=True` orders keys by code point
+while RFC 8785 orders by UTF-16 code unit — they disagree for non-BMP
+characters. All seven implementations agree with each other *and* are equally
+unable to say whether the RFC claim holds. Committed `(document, digest)`
+vectors are what closes that, and they double as the artifact another language
+needs to implement duly's fact contract at all.
+
+So: one implementation in `duly_core` (narrow charter — canonical form and
+content addressing, nothing else), `content_hash(doc, hash_field)` with no
+default, all seven call sites migrated including `spec/validate.py` and
+`check_facts.py`, `duly_kernel` re-exporting so adopters need not know a second
+package exists, and vectors in `spec/`. The RFC 8785 gap is resolved rather
+than left: measured across 1772 committed documents, **zero have non-ASCII
+object keys**, so adopting true UTF-16 key ordering is provably inert — the
+label becomes true instead of being weakened. Tracked as the Phase 1 A7 task.
 
 **A6 — the DMN compiler could emit a pack that fails at adjudication, and
 called it success.** Found by chasing A5. A money column with `> 200` in it is

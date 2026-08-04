@@ -82,6 +82,16 @@ def _check_resolved(receipt: dict, facts: list[dict], item: dict) -> None:
     alone is fine — in the outranking (non-superseding) flow the below-floor
     machine fact stays live and stays honestly excluded while the human
     correction binds.
+
+    That last allowance was written for a flow the queue no longer produces:
+    `ReviewQueue.resolve` requires a `low_confidence` resolution to supersede
+    the fact it rules on ([spec/compatibility.md](../../spec/compatibility.md)
+    C6), so the state is unreachable *through the queue*. It stays permissive
+    anyway. This function is handed an item by a caller it does not control —
+    including, in a deployment, items resolved before that rule existed — and
+    hardening a converter against a state its caller already prevents adds a
+    second place for the invariant to be stated, and therefore a second place
+    for it to be stated wrong.
     """
     key = (item["entity"], item["attribute"])
     entries = [

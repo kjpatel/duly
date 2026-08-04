@@ -46,11 +46,10 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships). Phase 6 measures what the others
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-**Where this stands (2026-08-04):** Phase 0 done; Phase 1 has one task left
-(§5's whatif CLI); Phase 2 has one (§6's review-resolution invariant). The 1→3
-edge is live, not ceremonial: the outstanding whatif task is *pack resolution
-for a case directory*, and Phase 3 moves `golden/` — fix the seam before the
-paths move underneath it, or the fix gets debugged against two changes at once.
+**Where this stands (2026-08-04):** Phases 0 and 1 done; Phase 2 has one task
+left (§6's review-resolution invariant). Phase 3 is unblocked — its 1→3 edge
+was the whatif CLI's pack resolution, which now shares
+`corpus.resolve_pack_path` and so moves with `golden/` rather than against it.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
@@ -150,7 +149,7 @@ produces Phase 1's defect list.
 **Acceptance:** the CI job is green from a wheel in a clean venv; Appendix A is
 populated; the README exists.
 
-## 5. Phase 1 — the seam (6 PRs merged, 1 remaining)
+## 5. Phase 1 — the seam (7 PRs, complete)
 
 **Objective:** library code takes caller-supplied content roots everywhere;
 repo-layout discovery is demoted to thin convenience loaders. The pattern to
@@ -189,7 +188,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       decision: the schemas moved into `duly_core`, and `ReviewQueue` takes an
       optional `fact_schema`. `review/duly_review/golden.py`'s `parents[2]`
       default went with it.*
-- [ ] **whatif's CLI (1 PR) — the last Phase 1 seam.** Split out of the review
+- [x] **whatif's CLI (1 PR) — the last Phase 1 seam.** Split out of the review
       task, which shipped without it. Two things in
       [`whatif/duly_whatif/__main__.py`](../whatif/duly_whatif/__main__.py):
       `_repo_root()` still resolves a case's pack against `parents[2]` of the
@@ -202,6 +201,17 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       import `duly_assurance` today, so either the resolver moves somewhere
       both can reach or whatif takes the root from its caller. Decide it in the
       PR; do not copy the function.
+      *Done. The dependency question resolved to **import it**: `duly_whatif`'s
+      `__main__` already reaches into `duly_conformance` the same way, the two
+      packages ship in one distribution (D1), and `duly_assurance.corpus`
+      imports nothing but `pathlib`. Removing the `--ontologies` default
+      exposed a second defect behind it — some packs cannot be encoded without
+      a registry (an attribute the pack never **reads** has no usage to infer a
+      kind from), and that case escaped `solve()` as an uncaught
+      `OutOfFragment` traceback, which is A3's second half in a second CLI. It
+      is an `UNSUPPORTED` exit naming the attribute now. Every documented
+      whatif invocation gained `--ontologies ontologies`, the same trade A3
+      made for `duly_conformance`.*
 - [x] **Wheel smoke for every package (1 PR)** — added after A8 showed the
       Phase 0 probe covered two packages out of nine. One real entry point per
       shipped package, run from an installed wheel outside the repo, with
@@ -709,7 +719,13 @@ the person relying on it.
 The same file's `_repo_root()` is the `parents[2]` defect A8 and the assurance
 cluster each fixed in their own package. **Phase 1**, in the whatif task split
 out of the review one in §5; fix the default, the silence, and the pack
-resolution together, since all three are the same assumption.
+resolution together, since all three are the same assumption. **DONE** — and
+the default was hiding one more thing: a pack that cannot be encoded without a
+registry raised an uncaught `OutOfFragment` from `solve()` rather than
+reporting `UNSUPPORTED`. Nothing reached that path while the default silently
+supplied duly's own ontologies, which is the general shape of this finding:
+**a default that is right in this repository hides both the wrong-path case
+and every exception behind it.**
 
 ## Appendix B — Progress log
 
@@ -787,3 +803,11 @@ resolution together, since all three are the same assumption.
   Auditing this file in the same PR found **A9** (A3's pattern surviving in
   `duly_whatif`'s CLI) and that Phase 1's "review + whatif" task had shipped
   its review half only.
+- 2026-08-04 — **Phase 1 complete, whatif's CLI** — A9 done: pack resolution
+  shared with `verify`/`impact`/`generate` instead of a fourth answer,
+  `--ontologies` with no path default, and the absent-registry weakening
+  reported in the notes rather than left silent. Removing the default exposed
+  an uncaught `OutOfFragment` traceback behind it — the general shape of the
+  finding is that a default which is right in this repository hides both the
+  wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
+  claiming whatif "has no repo-relative file reads", which was false.

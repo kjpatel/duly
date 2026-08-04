@@ -346,6 +346,31 @@ def _render_raw(raw) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _registry_note(registry) -> list[str]:
+    """Say when the answer was computed without an ontology.
+
+    A registry is optional and its absence is not an error — kinds are
+    inferred from the pack's own use. But the answer it produces is *weaker*
+    in a way the output otherwise cannot show: without a closed
+    `permissible_values` set, a code symbol's domain is the literals this pack
+    happens to mention plus anything else, so an UNSATISFIABLE verdict is
+    quantified over a domain the deployment may not actually permit.
+
+    Reporting that is the whole point. A weaker answer that looks identical to
+    a stronger one is the failure mode this note exists to remove (M5 plan,
+    finding A9), and it belongs here rather than in the CLI because a library
+    caller passing `registry=None` is in exactly the same position.
+    """
+    if registry is not None:
+        return []
+    return [
+        "no ontology registry supplied — value kinds are inferred from this "
+        "pack's own use, so a code symbol's domain is the literals it mentions "
+        "plus anything else. A registry narrows that to the permitted values, "
+        "which sharpens UNSATISFIABLE in particular."
+    ]
+
+
 def solve(query: Query, registry=None) -> WhatIfReport:
     """Answer `query`, verifying every answer against the kernel.
 
@@ -357,7 +382,22 @@ def solve(query: Query, registry=None) -> WhatIfReport:
         raise Unsupported(Z3_MISSING)
 
     meta = query.pack["pack"]
-    universe, enc = _encode(query.pack, registry)
+    try:
+        universe, enc = _encode(query.pack, registry)
+    except OutOfFragment as exc:
+        # A pack the encoder cannot represent is an UNSUPPORTED answer, not a
+        # traceback — the same treatment `decision_value` already gets below.
+        # It escaped as one until `--ontologies` lost its repo-relative
+        # default (A9) and the commonest cause became reachable: an attribute
+        # the pack never *reads* has no usage to infer a kind from, so only an
+        # ontology can supply it.
+        hint = (
+            "" if registry is not None else
+            " Supply --ontologies (or DULY_ONTOLOGIES): with no registry, a "
+            "kind can only be inferred from how the pack itself uses the "
+            "attribute, and this one is never read."
+        )
+        raise Unsupported(f"{exc}.{hint}") from exc
 
     key = _symbol_key(query.free)
     if key not in enc.symbols:
@@ -395,7 +435,7 @@ def solve(query: Query, registry=None) -> WhatIfReport:
         free=query.free, free_kind=sym.kind, as_of_effective=query.as_of_effective,
         target=target_label, verdict=UNSUPPORTED, current=current.render(),
         assumptions=list(enc.assumption_labels()),
-        notes=list(universe.notes) + list(enc.notes),
+        notes=_registry_note(registry) + list(universe.notes) + list(enc.notes),
     )
 
     pins, template = _pins(enc, query, live, key)

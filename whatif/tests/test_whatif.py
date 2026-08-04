@@ -547,7 +547,7 @@ def test_the_answer_is_byte_identical_across_hash_seeds(case_id, free, target, e
     nondeterminism. The extremal is a property of the constraint set rather
     than of the solver's search, so it must not move with PYTHONHASHSEED."""
     argv = [
-        sys.executable, "-m", "duly_whatif",
+        sys.executable, "-m", "duly_whatif", "--ontologies", "ontologies",
         "--case", f"golden/cases/{case_id}", "--free", free,
         "--target", target, "--json", *extra,
     ]

@@ -54,6 +54,8 @@ import argparse
 import datetime as _dt
 import json
 import random
+from dataclasses import dataclass
+from typing import Callable
 import shutil
 import sys
 from decimal import Decimal
@@ -62,6 +64,8 @@ from pathlib import Path
 import yaml
 
 from duly_kernel.api import adjudicate
+
+from .corpus import resolve_pack_path
 from duly_kernel.engine import AdjudicationError
 from duly_core import content_hash as _content_hash, load_schema
 
@@ -391,61 +395,61 @@ REC_STRATA: tuple[dict, ...] = (
 )
 
 
-# Template registry: adding a scenario variant is adding a data entry here,
-# not code. Notice-state entries are one line each via notice_template();
-# stratified entries point at a `strata` table above.
-STATE_TEMPLATES: dict[str, dict] = {
-    "ny": notice_template("US-NY", (5, 90)),
-    # Margin ranges cross each state's statutory threshold both ways
-    # (NY 45, FL 120, CA 75 days).
-    "fl": notice_template("US-FL", (30, 180)),
-    "ca": notice_template("US-CA", (15, 140)),
-    "trid": {
-        "kind": "trid",
-        "id_prefix": "trid",
-        "pack": TRID_PACK,
-        "question": "trid:toleranceCureAmount",
-        "ontology": "duly-mortgage-closing",
-        "as_of_effective": "2026-03-15",
-        "weight": 1,
-    },
-    "ron": {
-        "kind": "ron",
-        "id_prefix": "ron",
-        "pack": RON_PACK,
-        "question": "ron:notarizationCompliant",
-        "ontology": "duly-mortgage-closing",
-        "strata": RON_STRATA,
-        "weight": 1,
-    },
-    "esign": {
-        "kind": "esign",
-        "id_prefix": "esign",
-        "pack": ESIGN_PACK,
-        "question": "pkg:signingMethod",
-        "ontology": "duly-mortgage-closing",
-        "strata": ESIGN_STRATA,
-        "weight": 1,
-    },
-    "resc": {
-        "kind": "resc",
-        "id_prefix": "resc",
-        "pack": RESC_PACK,
-        "question": "resc:fundingPermitted",
-        "ontology": "duly-mortgage-closing",
-        "strata": RESC_STRATA,
-        "weight": 1,
-    },
-    "rec": {
-        "kind": "rec",
-        "id_prefix": "rec",
-        "pack": RECORDING_PACK,
-        "question": "rec:recordable",
-        "ontology": "duly-mortgage-closing",
-        "strata": REC_STRATA,
-        "weight": 1,
-    },
-}
+# ---------------------------------------------------------------------------
+# The template registry
+#
+# Two registries, both data. `KINDS` maps a template kind to the pair of
+# functions that make a case of it — draw parameters, then build facts.
+# `STATE_TEMPLATES` maps a template name to its parameters.
+#
+# They are registries rather than an if/elif chain and a dict literal because
+# **everything registered below is example content**. The six packs, their
+# vocabularies, and the fact builders that speak them are teaching artifacts;
+# the scheduling, seeding, validation and writing around them are the toolkit.
+# An adopter generating a corpus for their own packs registers their own kinds
+# and templates and reuses the rest — and in M5 Phase 3, duly's own can move
+# out of this package without the engine following them.
+#
+# Determinism is unaffected by registration order: each template draws from its
+# own stream seeded `f"{seed}:{name}"` (golden/README.md), so adding one never
+# disturbs another's cases. Registering a name twice is refused rather than
+# silently overwritten — a corpus whose contents depend on import order is not
+# reproducible, which is the one property this file exists to provide.
+
+
+@dataclass(frozen=True)
+class TemplateKind:
+    """How to make one case of a kind: draw parameters, then build facts."""
+
+    draw: Callable[[dict, random.Random, int], dict]
+    build: Callable[..., list[dict]]
+
+
+KINDS: dict[str, TemplateKind] = {}
+STATE_TEMPLATES: dict[str, dict] = {}
+
+
+def register_kind(name: str, *, draw, build) -> None:
+    """Register a template kind. `draw(template, rng, index)` returns the
+    parameters; `build(**params)` returns the case's facts."""
+    if name in KINDS:
+        raise ValueError(f"template kind {name!r} is already registered")
+    KINDS[name] = TemplateKind(draw=draw, build=build)
+
+
+def register_template(name: str, template: dict) -> None:
+    """Register a named template. Its `kind` must be registered first, so a
+    template naming an unknown kind fails here rather than partway through a
+    generation run."""
+    if name in STATE_TEMPLATES:
+        raise ValueError(f"template {name!r} is already registered")
+    if template.get("kind") not in KINDS:
+        raise ValueError(
+            f"template {name!r} names kind {template.get('kind')!r}, which is not "
+            f"registered; known kinds: {', '.join(sorted(KINDS)) or 'none'}"
+        )
+    STATE_TEMPLATES[name] = template
+
 
 
 def stratum_for(template: dict, index: int) -> dict:
@@ -599,7 +603,7 @@ def build_notice_facts(
     return facts, as_of_effective, as_of_knowledge
 
 
-def draw_notice_params(template: dict, rng: random.Random) -> dict:
+def draw_notice_params(template: dict, rng: random.Random, index: int = 0) -> dict:
     span = (EXPIRATION_END - EXPIRATION_START).days
     lo, hi = template["margin_days"]
     params = {
@@ -679,7 +683,7 @@ def build_trid_facts(
     return facts, as_of_effective, as_of_knowledge
 
 
-def draw_trid_params(template: dict, rng: random.Random) -> dict:
+def draw_trid_params(template: dict, rng: random.Random, index: int = 0) -> dict:
     disclosed = rng.randint(20000, 480000)  # $200.00 .. $4800.00 in cents
     r = rng.random()
     if r < 0.45:  # increase (including small ones near the baseline)
@@ -1191,14 +1195,7 @@ def draw_rec_params(template: dict, rng: random.Random, index: int) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def repo_root() -> Path:
-    root = Path(__file__).resolve().parents[2]
-    if (root / "rulepacks").is_dir():
-        return root
-    return Path.cwd()
-
-
-def _fact_validator(root: Path):
+def _fact_validator():
     from jsonschema import Draft202012Validator, FormatChecker
 
     schema = load_schema("grounded-fact")  # ships in duly_core; see A8
@@ -1229,28 +1226,79 @@ def allocate(count: int, names: list[str]) -> dict[str, int]:
     return quotas
 
 
+# Registered here rather than beside the registry above: every drawer and
+# builder must exist first, and a registration that cannot resolve its
+# functions should fail at import rather than at generation time.
+register_kind("notice", draw=draw_notice_params, build=build_notice_facts)
+register_kind("trid", draw=draw_trid_params, build=build_trid_facts)
+register_kind("ron", draw=draw_ron_params, build=build_ron_facts)
+register_kind("esign", draw=draw_esign_params, build=build_esign_facts)
+register_kind("resc", draw=draw_resc_params, build=build_resc_facts)
+register_kind("rec", draw=draw_rec_params, build=build_rec_facts)
+
+register_template("ny", notice_template("US-NY", (5, 90)))
+# Margin ranges cross each state's statutory threshold both ways
+# (NY 45, FL 120, CA 75 days).
+register_template("fl", notice_template("US-FL", (30, 180)))
+register_template("ca", notice_template("US-CA", (15, 140)))
+register_template("trid", {
+    "kind": "trid",
+    "id_prefix": "trid",
+    "pack": TRID_PACK,
+    "question": "trid:toleranceCureAmount",
+    "ontology": "duly-mortgage-closing",
+    "as_of_effective": "2026-03-15",
+    "weight": 1,
+})
+register_template("ron", {
+    "kind": "ron",
+    "id_prefix": "ron",
+    "pack": RON_PACK,
+    "question": "ron:notarizationCompliant",
+    "ontology": "duly-mortgage-closing",
+    "strata": RON_STRATA,
+    "weight": 1,
+})
+register_template("esign", {
+    "kind": "esign",
+    "id_prefix": "esign",
+    "pack": ESIGN_PACK,
+    "question": "pkg:signingMethod",
+    "ontology": "duly-mortgage-closing",
+    "strata": ESIGN_STRATA,
+    "weight": 1,
+})
+register_template("resc", {
+    "kind": "resc",
+    "id_prefix": "resc",
+    "pack": RESC_PACK,
+    "question": "resc:fundingPermitted",
+    "ontology": "duly-mortgage-closing",
+    "strata": RESC_STRATA,
+    "weight": 1,
+})
+register_template("rec", {
+    "kind": "rec",
+    "id_prefix": "rec",
+    "pack": RECORDING_PACK,
+    "question": "rec:recordable",
+    "ontology": "duly-mortgage-closing",
+    "strata": REC_STRATA,
+    "weight": 1,
+})
+
+
 def _generate_case(template: dict, case_id: str, index: int, rng: random.Random, pack: dict, validator):
+    kind = KINDS.get(template["kind"])
+    if kind is None:
+        raise ValueError(
+            f"unknown template kind {template['kind']!r}; registered: "
+            f"{', '.join(sorted(KINDS)) or 'none'}. Register it with "
+            "register_kind() before generating."
+        )
     for _ in range(20):
-        if template["kind"] == "notice":
-            params = draw_notice_params(template, rng)
-            builder = build_notice_facts
-        elif template["kind"] == "trid":
-            params = draw_trid_params(template, rng)
-            builder = build_trid_facts
-        elif template["kind"] == "ron":
-            params = draw_ron_params(template, rng, index)
-            builder = build_ron_facts
-        elif template["kind"] == "esign":
-            params = draw_esign_params(template, rng, index)
-            builder = build_esign_facts
-        elif template["kind"] == "resc":
-            params = draw_resc_params(template, rng, index)
-            builder = build_resc_facts
-        elif template["kind"] == "rec":
-            params = draw_rec_params(template, rng, index)
-            builder = build_rec_facts
-        else:  # pragma: no cover - registry entries are internal data
-            raise ValueError(f"unknown template kind: {template['kind']!r}")
+        params = kind.draw(template, rng, index)
+        builder = kind.build
         # A stratum may pick one of the pack's other declared decisions; the
         # chosen question is recorded in case.yaml so replay asks it too.
         question = params.pop("question", template["question"])
@@ -1331,9 +1379,8 @@ def main(argv: list[str] | None = None) -> int:
         print("--count must be at least 1", file=sys.stderr)
         return 2
 
-    root = repo_root()
     out = Path(args.out)
-    validator = _fact_validator(root)
+    validator = _fact_validator()
     quotas = allocate(args.count, names)
 
     # Generate everything in memory first so a failure leaves the existing
@@ -1344,7 +1391,9 @@ def main(argv: list[str] | None = None) -> int:
         template = STATE_TEMPLATES[name]
         pack_rel = template["pack"]
         if pack_rel not in packs:
-            packs[pack_rel] = yaml.safe_load((root / pack_rel).read_text())
+            packs[pack_rel] = yaml.safe_load(
+                resolve_pack_path(pack_rel, out).read_text()
+            )
         rng = random.Random(f"{args.seed}:{name}")
         for i in range(1, quotas[name] + 1):
             case_id = f"{template['id_prefix']}-{i:04d}"

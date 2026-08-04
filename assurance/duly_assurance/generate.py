@@ -63,7 +63,7 @@ import yaml
 
 from duly_kernel.api import adjudicate
 from duly_kernel.engine import AdjudicationError
-from duly_core import content_hash as _content_hash
+from duly_core import content_hash as _content_hash, load_schema
 
 GENERATOR_NAME = "duly-golden-generator"
 GENERATOR_VERSION = "0.1.0"
@@ -1193,7 +1193,7 @@ def draw_rec_params(template: dict, rng: random.Random, index: int) -> dict:
 
 def repo_root() -> Path:
     root = Path(__file__).resolve().parents[2]
-    if (root / "spec" / "schemas").is_dir():
+    if (root / "rulepacks").is_dir():
         return root
     return Path.cwd()
 
@@ -1201,7 +1201,7 @@ def repo_root() -> Path:
 def _fact_validator(root: Path):
     from jsonschema import Draft202012Validator, FormatChecker
 
-    schema = json.loads((root / "spec" / "schemas" / "grounded-fact.schema.json").read_text())
+    schema = load_schema("grounded-fact")  # ships in duly_core; see A8
     return Draft202012Validator(schema, format_checker=FormatChecker())
 
 

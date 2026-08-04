@@ -1,12 +1,24 @@
-"""Canonical form and content addressing. Nothing else, ever.
+"""What a duly document *is*: its canonical bytes, and its shape.
 
-**This package has a deliberately narrow charter.** It holds the two functions
-that decide what a duly document's bytes *are* — `canonical` and
-`content_hash` — because every other package needs them and none of them may
-disagree. It is not a utilities package, and it must not become one: the next
-"small shared helper" that lands here starts the drift toward a junk drawer,
-and the reason this package can be depended on by every other is precisely
-that it is tiny, dependency-free, and finished.
+**This package has a deliberately narrow charter.** It holds the functions
+that decide a document's bytes — `canonical` and `content_hash` — and the JSON
+Schemas that define its shape, because every other package needs them and none
+of them may disagree. It is not a utilities package, and it must not become
+one: the next "small shared helper" that lands here starts the drift toward a
+junk drawer, and the reason this package can be depended on by every other is
+precisely that it is tiny, dependency-free, and finished.
+
+*The charter was amended once, and narrowly.* It was written as "canonical
+form and content addressing, nothing else, ever" — then `duly_review` turned
+out to read `spec/schemas/grounded-fact.schema.json` from a repo-relative
+path, and `spec/` is in no wheel, so the queue's central operation raised
+`FileNotFoundError` for every adopter (M5 plan, A8). Two shipped packages read
+those schemas, so vendoring a copy into one of them would have created a
+second copy of the contract — the exact defect this package was created to
+remove for `content_hash`. The schemas moved here instead. That widens the
+charter from "the document's bytes" to "the document's bytes and its shape",
+which is one idea rather than two, and it still excludes everything the
+original wording was written to keep out.
 
 Before this existed, `content_hash` was implemented **seven times** across the
 repository, under three different signatures. They all agreed — that was
@@ -42,8 +54,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import pathlib
 
-__all__ = ["canonical", "content_hash", "canonical_key"]
+__all__ = [
+    "canonical",
+    "content_hash",
+    "canonical_key",
+    "SCHEMAS",
+    "schema_path",
+    "load_schema",
+]
 
 __version__ = "0.0.1"
 
@@ -97,3 +117,35 @@ def content_hash(doc: dict, hash_field: str) -> str:
     """
     body = {k: v for k, v in doc.items() if k not in ("id", hash_field)}
     return hashlib.sha256(canonical(body)).hexdigest()
+
+
+# --- the contract's shape ---------------------------------------------------
+
+SCHEMAS = pathlib.Path(__file__).resolve().parent / "schemas"
+"""Directory of the committed JSON Schemas, shipped inside the wheel.
+
+They live here rather than under `spec/` because two shipped packages read
+them at runtime and `spec/` is not in any wheel. A path relative to a package
+resolves identically in a checkout and in site-packages; a path relative to
+the repository resolves in exactly one of them, which is how A8 shipped.
+"""
+
+
+def schema_path(name: str) -> pathlib.Path:
+    """Path to a committed schema: ``grounded-fact``, ``decision-receipt``
+    or ``extraction-run``.
+
+    Raises ``FileNotFoundError`` naming what is available, rather than
+    returning a path that does not exist — a bad path handed back silently is
+    what turns a typo into a confusing read error somewhere else.
+    """
+    path = SCHEMAS / f"{name}.schema.json"
+    if not path.is_file():
+        available = ", ".join(sorted(p.name.split(".")[0] for p in SCHEMAS.glob("*.schema.json")))
+        raise FileNotFoundError(f"no schema {name!r}; available: {available}")
+    return path
+
+
+def load_schema(name: str) -> dict:
+    """The parsed schema. See `schema_path` for the names."""
+    return json.loads(schema_path(name).read_text(encoding="utf-8"))

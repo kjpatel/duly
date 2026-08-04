@@ -154,7 +154,12 @@ def resolved_item_to_golden_case(
             "the case's facts first"
         )
 
-    root = Path(repo_root) if repo_root is not None else Path(__file__).resolve().parents[2]
+    # The base `pack_path` is relative to. Defaults to the *caller's* working
+    # directory, which is what "repo-relative" means to whoever typed the path.
+    # It used to default to `parents[2]` — duly's own install location — which
+    # is the repository only when duly is running from a checkout, and is a
+    # directory inside site-packages otherwise (M5 plan, A8).
+    root = Path(repo_root) if repo_root is not None else Path.cwd()
     pack_file = root / pack_path
     if not pack_file.is_file():
         raise GoldenCaseError(f"pack not found at {pack_file} (pack_path must be repo-relative)")

@@ -7,7 +7,7 @@ its flags working unchanged. Given a rendition .txt, the SHA-256 of the
 source document bytes, and a targets file listing (attribute, entity, value,
 quote) tuples, the adapter finds each quote's character span in the rendition
 via substring search and emits fact JSON conforming to
-spec/schemas/grounded-fact.schema.json, with the content hash computed the
+duly_core's grounded-fact schema, with the content hash computed the
 same way spec/validate.py verifies it:
 
     sha256( json.dumps(body, sort_keys=True, separators=(",",":"),

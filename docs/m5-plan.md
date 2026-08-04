@@ -120,7 +120,7 @@ produces Phase 1's defect list.
 - `examples/` is deliberately not in the main pytest paths; the example's
   check runs in its own CI job (it needs no optional deps, so it does not
   belong in optional-deps.yml's marker pattern — a plain job is fine).
-- Facts must satisfy `spec/schemas/grounded-fact.schema.json` including
+- Facts must satisfy `duly_core`'s `grounded-fact` schema including
   `schemaRef`; check what the schema actually requires rather than assuming.
   If the conformance gate wants a registry, build one from the example's own
   ontology via `duly_conformance` — that is the bring-your-own path working.
@@ -431,14 +431,21 @@ touches one real entry point per shipped package from an installed wheel, and
 carries A8 as a *declared* known failure that fails the run if it ever starts
 passing. So the bug is pinned by CI while the design question is open.
 
-**ASK**, Phase 1 (review + whatif task): (a) `ReviewQueue` takes a
-caller-supplied validator, with a convenience loader — the seam pattern
-`load_repo_registry` already sets, and consistent with this phase's thesis;
-(b) ship `spec/schemas/*.json` as package data, since an adopter validating
-their own facts needs the contract anyway; or (c) both — (a) for the seam,
-(b) because the schemas are genuinely adopter-facing. Recommend (c); the open
-part of (b) is which package carries them, since `duly_core`'s charter was
-just declared two functions wide.
+**DECIDED (Kushan, 2026-08-04): (c), both.** `ReviewQueue` takes an optional
+`fact_schema`, defaulting to the shipped contract — a deployment may hold
+corrections to a *narrower* shape than the base contract and should be able to
+say so without forking the library. And the schemas moved into
+`core/duly_core/schemas/`, shipped in the wheel.
+
+The open sub-question was which package carries them. `duly_core`, **moved not
+copied**: two shipped packages read them, so vendoring into one would have
+created a second copy of the contract — the exact defect `duly_core` was
+created to remove for `content_hash`. A tenth package for three JSON files
+buys nothing over an existing leaf that everything already depends on. That
+widens the charter from "the document's bytes" to "the document's bytes and
+its shape", which is one idea rather than two; the amendment and its reasoning
+are recorded in the package docstring so the next widening has to argue with
+it. **DONE.**
 
 **A7 — `content_hash` is implemented seven times.** Found while fixing A1.
 `kernel/duly_kernel/receipt.py`, `store/duly_store/store.py`,

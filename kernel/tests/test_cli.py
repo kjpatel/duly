@@ -5,6 +5,7 @@ import pytest
 from duly_kernel.__main__ import main
 
 from conftest import FIXTURES, REPO_ROOT, SPEC_EXAMPLES
+from duly_core import SCHEMAS
 
 
 def run_cli(capsys, *extra: str) -> dict:
@@ -39,7 +40,7 @@ def test_cli_receipt_validates_against_schema(capsys):
 
     receipt = run_cli(capsys, "--asof-knowledge", "2026-07-30T16:00:00Z")
 
-    schemas_dir = REPO_ROOT / "spec" / "schemas"
+    schemas_dir = SCHEMAS
     registry = Registry()
     schemas = {}
     for path in sorted(schemas_dir.glob("*.schema.json")):

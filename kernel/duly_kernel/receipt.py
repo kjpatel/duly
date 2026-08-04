@@ -1,4 +1,4 @@
-"""DecisionReceipt emission (spec/schemas/decision-receipt.schema.json).
+"""DecisionReceipt emission (duly_core schemas, `decision-receipt`).
 
 Content addressing follows spec/validate.py: SHA-256 over the JCS-style
 canonical JSON (sorted keys, minimal separators, UTF-8, ensure_ascii=False)

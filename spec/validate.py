@@ -43,7 +43,7 @@ def classify(doc: dict) -> str:
 # never an independent check on the first: it has no algorithmic diversity, so
 # it could only catch a typo, while looking like it verified the definition.
 # What verifies the definition is spec/canonical-vectors.json, below.
-from duly_core import canonical, content_hash  # noqa: E402
+from duly_core import SCHEMAS, canonical, content_hash  # noqa: E402
 
 
 PROV_NS = "http://www.w3.org/ns/prov#"
@@ -116,7 +116,7 @@ def check_contexts() -> int:
 def main() -> int:
     schemas = {}
     registry = Registry()
-    for path in sorted((SPEC / "schemas").glob("*.schema.json")):
+    for path in sorted(SCHEMAS.glob("*.schema.json")):
         schema = json.loads(path.read_text())
         schemas[schema["title"]] = schema
         registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))

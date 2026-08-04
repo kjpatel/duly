@@ -11,6 +11,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from duly_assurance import generate
 from duly_kernel.api import adjudicate
+from duly_core import schema_path
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -79,7 +80,7 @@ def test_generated_facts_validate_against_schema(tmp_path):
     out = tmp_path / "g"
     assert generate.main(["--out", str(out), "--count", "8", "--seed", "11"]) == 0
     schema = json.loads(
-        (REPO / "spec" / "schemas" / "grounded-fact.schema.json").read_text()
+        schema_path("grounded-fact").read_text()
     )
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     fact_files = sorted((out / "cases").rglob("facts/*.json"))

@@ -55,9 +55,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-GOLDEN_DIR = REPO_ROOT / "golden"
-RULEPACKS_DIR = REPO_ROOT / "rulepacks"
+from .content import CONTENT
+
+GOLDEN_DIR = CONTENT.golden
+RULEPACKS_DIR = CONTENT.rulepacks
 
 router = APIRouter(prefix="/api/receipts")
 

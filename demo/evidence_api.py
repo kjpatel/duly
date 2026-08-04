@@ -47,9 +47,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-STARTERS_DIR = REPO_ROOT / "starters"
-ONTOLOGIES_DIR = REPO_ROOT / "ontologies"
+from .content import CONTENT
+
+STARTERS_DIR = CONTENT.starters
+ONTOLOGIES_DIR = CONTENT.ontologies
 
 router = APIRouter(prefix="/api/evidence")
 

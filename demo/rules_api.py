@@ -50,10 +50,11 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-RULEPACKS_DIR = REPO_ROOT / "rulepacks"
-GOLDEN_DIR = REPO_ROOT / "golden"
-ONTOLOGIES_DIR = REPO_ROOT / "ontologies"
+from .content import CONTENT
+
+RULEPACKS_DIR = CONTENT.rulepacks
+GOLDEN_DIR = CONTENT.golden
+ONTOLOGIES_DIR = CONTENT.ontologies
 
 
 def _dmn_value_kinds() -> dict[str, str]:
@@ -81,7 +82,7 @@ def _dmn_value_kinds() -> dict[str, str]:
             for slot in klass.slots.values():
                 kinds[slot.curie] = slot.kind
     return kinds
-DMN_EXAMPLES_DIR = REPO_ROOT / "dmn" / "examples"
+DMN_EXAMPLES_DIR = CONTENT.dmn_examples
 
 router = APIRouter(prefix="/api/rules")
 
@@ -611,11 +612,11 @@ def _fact_sets(slug: str, pack: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _load_facts(rel_path: str) -> list[dict[str, Any]]:
     """Facts from a repo-relative directory, refusing to leave the repo."""
-    base = (REPO_ROOT / rel_path).resolve()
-    try:
-        base.relative_to(REPO_ROOT)
-    except ValueError:
-        raise HTTPException(status_code=422, detail=f"Path escapes the repo: {rel_path}")
+    base = (CONTENT.root / rel_path).resolve()
+    if not CONTENT.contains(base):
+        raise HTTPException(
+            status_code=422, detail=f"Path escapes the content root: {rel_path}"
+        )
     if not base.is_dir():
         raise HTTPException(status_code=404, detail=f"No such facts directory: {rel_path}")
     facts = []
@@ -1322,7 +1323,7 @@ def api_dmn_examples() -> dict[str, Any]:
         for path in sorted(paths, key=lambda p: (p.parent.name == "refusals", p.stem)):
             examples.append(
                 {
-                    "path": path.relative_to(REPO_ROOT).as_posix(),
+                    "path": path.relative_to(CONTENT.root).as_posix(),
                     "name": path.stem,
                     "refusal": path.parent.name == "refusals",
                 }
@@ -1350,7 +1351,7 @@ def api_dmn_compile(body: DmnSourceRequest) -> dict[str, Any]:
             status_code=503, detail="duly_dmn is not importable in this deployment."
         )
     if body.path:
-        target = (REPO_ROOT / body.path).resolve()
+        target = (CONTENT.root / body.path).resolve()
         try:
             target.relative_to(DMN_EXAMPLES_DIR)
         except ValueError:

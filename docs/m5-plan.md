@@ -173,10 +173,18 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       shipped package, run from an installed wheel outside the repo, with
       declared known-failures that fail the run if they start passing. This is
       the check that makes Phase 1's claim testable rather than asserted.
-- [ ] **Demo (1 PR):** the four `REPO_ROOT` constants in `app.py`,
+- [x] **Demo (1 PR):** the four `REPO_ROOT` constants in `app.py`,
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
       the repo layout so `uvicorn demo.app:app` still works unchanged.
+      *Done — `demo/content.py`, `DULY_DEMO_CONTENT`. Writing the D2 test
+      immediately found the demo did **not** degrade honestly: pointed at an
+      empty root it raised `FileNotFoundError` building its built-in fixture
+      scenario, because that scenario reads `spec/examples` and is content like
+      any other. It returns `None` now, so a missing demonstration reads as
+      "no scenarios" rather than a broken server. All four pages verified 200
+      with zero items, in a real uvicorn process and not only under
+      `TestClient`.*
 - [x] **Kernel + conformance entry points (1 PR)** — added after Phase 0
       measured them (A1, A3), and the only Phase 1 work on the *adoption*
       path rather than the repo-layout one:
@@ -558,6 +566,10 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-04 — **Phase 1 complete, demo content roots** — four `REPO_ROOT`
+  constants became one configurable `CONTENT`; the D2 claim that the demo
+  surfaces are toolkit is now a test rather than an assertion, and it found a
+  crash on empty content the first time it ran.
 - 2026-08-04 — **Phase 1, assurance cluster** — one shared pack resolution for
   `verify`/`impact`/`generate`; the corpus generator's templates and kinds
   became registries example content can populate. Proved inert by regenerating

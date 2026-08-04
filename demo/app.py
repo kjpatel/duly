@@ -30,11 +30,12 @@ from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SPEC_EXAMPLES = REPO_ROOT / "spec" / "examples"
-STARTERS_DIR = REPO_ROOT / "starters"
+from .content import CONTENT
+
+SPEC_EXAMPLES = CONTENT.spec_examples
+STARTERS_DIR = CONTENT.starters
 TARGETS_DIR = STARTERS_DIR / "tools" / "targets"
-GOLDEN_DIR = REPO_ROOT / "golden"
+GOLDEN_DIR = CONTENT.golden
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 FIXTURE_RECEIPT_PATH = SPEC_EXAMPLES / "receipt-ny-nonrenewal-notice.json"
@@ -543,10 +544,21 @@ def _ingest_review_case(
 # ---------------------------------------------------------------------------
 
 
-def _build_fixture_scenario() -> dict[str, Any]:
+def _build_fixture_scenario() -> dict[str, Any] | None:
+    """The built-in NY example, or None when its facts are not present.
+
+    The fixture is content like any other — it reads the committed spec
+    examples — so a deployment pointed at its own corpus, or a toolkit with
+    `examples/` deleted, simply does not have it. Returning None lets the
+    workspace report "no scenarios", which is the honest answer; raising here
+    would have made a missing *demonstration* look like a broken server.
+    """
     facts: list[dict[str, Any]] = []
     for name in FIXTURE_FACT_FILES:
-        fact = json.loads((SPEC_EXAMPLES / name).read_text())
+        path = SPEC_EXAMPLES / name
+        if not path.is_file():
+            return None
+        fact = json.loads(path.read_text())
         grounding = fact.get("grounding", {})
         doc_id = grounding.get("documentId")
         quote = grounding.get("quote")
@@ -590,7 +602,7 @@ def _build_fixture_scenario() -> dict[str, Any]:
 
 
 def _resolve_path(raw: str, scenario_dir: Path) -> Path | None:
-    for base in (scenario_dir, REPO_ROOT):
+    for base in (scenario_dir, CONTENT.root):
         candidate = (base / raw).resolve()
         if candidate.exists():
             return candidate
@@ -732,7 +744,7 @@ def _build_review_scenario(runtime: _DemoRuntime) -> dict[str, Any] | None:
     manifest_path = STARTERS_DIR / REVIEW_SOURCE_SCENARIO / "scenario.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        pack = yaml.safe_load((REPO_ROOT / meta["packPath"]).read_text(encoding="utf-8"))
+        pack = yaml.safe_load((CONTENT.root / meta["packPath"]).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError, yaml.YAMLError):
         return None
     questions = _questions_from_pack(pack)
@@ -780,7 +792,8 @@ def load_scenarios() -> dict[str, dict[str, Any]]:
             scenarios[review_scenario["id"]] = review_scenario
     if not scenarios:
         fixture = _build_fixture_scenario()
-        scenarios[fixture["id"]] = fixture
+        if fixture is not None:
+            scenarios[fixture["id"]] = fixture
     return scenarios
 
 
@@ -1715,7 +1728,7 @@ def api_review_golden_case(itemId: str) -> Response:
                 itemId,
                 pack_path=meta["packPath"],
                 golden_dir=tmp,
-                repo_root=REPO_ROOT,
+                repo_root=CONTENT.root,
                 case_id=case_id,
             )
         except GoldenCaseError as exc:

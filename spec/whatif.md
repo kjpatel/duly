@@ -5,11 +5,20 @@ A receipt answers "what was decided, and why". [`prove`](pack-verification.md) a
 [`whatif/duly_whatif`](../whatif/duly_whatif) answers it by freeing exactly one input of a decided case and solving the pack backwards.
 
 ```bash
-uv run --with z3-solver python -m duly_whatif \
+uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
     --case golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true
-uv run --with z3-solver python -m duly_whatif \
+uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
     --case golden/cases/resc-0001 --free asOf --target true --extremal min
 ```
+
+`--ontologies` is **optional and has no default** (it also reads
+`DULY_ONTOLOGIES`). Without one the tool still runs, inferring value kinds
+from the pack's own use, and *says so in the report's notes* — because that
+answer is weaker in a way nothing else would show: a code symbol's domain
+becomes the literals the pack happens to mention plus anything else, which
+is exactly the quantifier an `UNSATISFIABLE` verdict ranges over. Some packs
+need one outright: an attribute the pack never *reads* has no usage to infer
+from, so the encoding refuses and the tool exits `UNSUPPORTED` naming it.
 
 Runnable demonstration: [`whatif_demo.py`](whatif_demo.py) — the latest compliant mailing date with its next-day refutation, the TRID maximum with no cure, TILA's earliest funding date over a computed rescission deadline, a flip, a coverage hole found by freeing a code, and the contradiction guard firing against a deliberately broken encoding.
 

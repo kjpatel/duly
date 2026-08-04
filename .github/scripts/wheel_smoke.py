@@ -19,8 +19,16 @@ files are present. What only this can catch is a package that *needs* a file
 the wheel does not carry.
 
 Deliberately not covered: `duly_whatif` needs the optional `z3-solver`, and a
-smoke test that installs a 36 MB solver stops being smoke. It has no
-repo-relative file reads.
+smoke test that installs a 36 MB solver stops being smoke.
+
+That exclusion used to carry a second justification — "it has no repo-relative
+file reads" — which was wrong, and wrong in the way this script exists to
+catch. Its CLI resolved a case's pack against `parents[2]` of the installed
+package and defaulted `--ontologies` to duly's own directory (M5 plan, A9);
+neither is a read at import, which is why the claim survived, and both are the
+assumption that duly's checkout is the content. Both are fixed. The solver size
+is now the whole reason, and it is a real one — but a package excluded for cost
+is not a package known to be clean.
 
 Exit 0 if every check passes or is a known-and-declared failure; 1 otherwise.
 """

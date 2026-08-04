@@ -1,11 +1,16 @@
 """CLI: python -m duly_whatif — solve a rule pack backwards.
 
-    uv run --with z3-solver python -m duly_whatif \
+    uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
         --case golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true
 
 Exit codes: 0 SATISFIABLE, 1 UNSATISFIABLE, 2 UNSUPPORTED (or a bad
 invocation). A solver/kernel contradiction exits 3 and prints both artifacts:
 it is not a query that failed, it is a defect.
+
+`--ontologies` has no path default — an adopter's ontologies are not in duly's
+directory — and is optional, since kinds can often be inferred from the pack.
+When it is absent the report says so, because the answer is weaker in a way
+nothing else in the output reveals.
 
 Nothing here reaches a receipt. Like `prove`, this is an analysis tool beside
 adjudication rather than inside it (spec/whatif.md).
@@ -15,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -34,23 +40,49 @@ from .render import render, report_json
 EXIT_CONTRADICTION = 3
 
 
-def _repo_root() -> Path:
-    root = Path(__file__).resolve().parents[2]
-    return root if (root / "rulepacks").is_dir() else Path.cwd()
+class BadOntologies(Exception):
+    """`--ontologies` named a directory that is not there."""
 
 
-def _registry(path: str):
+def _resolve_ontologies(args) -> str | None:
+    """The registry directory, from the flag or ``DULY_ONTOLOGIES``, or None.
+
+    **No path default.** `ontologies` used to be one — duly's own directory,
+    relative to the working directory — which is right in this repository and
+    wrong everywhere else (M5 plan, finding A9).
+
+    Unlike `duly_conformance`, absence is legal here: what-if works without a
+    registry, inferring value kinds from the pack's own use. What it must not
+    do is *stay quiet* about that, which is the half of A9 worth caring about
+    — a weaker answer that looks identical to a stronger one. `solve()` puts
+    the absence in the report's notes.
+    """
+    return args.ontologies or os.environ.get("DULY_ONTOLOGIES") or None
+
+
+def _registry(path: str | None):
     """The ontology registry, when the deployment has one.
 
     Enums sharpen the answer — a closed `permissible_values` set turns a code
     symbol's domain from "these literals plus anything else" into exactly the
-    permitted values — but the tool works without one, inferring kinds from
-    use. A missing directory is not an error.
+    permitted values.
+
+    No path is a legal state. A path that *is* given and does not exist is
+    not: it was typed on purpose, so silently proceeding without it hands
+    back the weaker answer under the appearance of the stronger one.
     """
+    if path is None:
+        return None
+    root = Path(path)
+    if not root.is_dir():
+        raise BadOntologies(
+            f"no ontology registry at {path!r}. Pass an existing directory of "
+            "<name>/<version>.yaml files, or omit --ontologies entirely — "
+            "what-if runs without one and says so in its notes."
+        )
     from duly_conformance.registry import load_repo_registry
 
-    root = Path(path)
-    return load_repo_registry(root) if root.is_dir() else None
+    return load_repo_registry(root)
 
 
 def _load_case(directory: Path) -> tuple[dict, list[dict], dict]:
@@ -58,7 +90,14 @@ def _load_case(directory: Path) -> tuple[dict, list[dict], dict]:
     facts = [
         json.loads(p.read_text()) for p in sorted((directory / "facts").glob("*.json"))
     ]
-    pack_path = _repo_root() / str(case["pack"])
+    # A case names its pack as a path, so something must say what that path is
+    # relative to. Not this package's install location, which is the repository
+    # only from a checkout — the defect `corpus.resolve_pack_path` already
+    # fixed for verify/impact/generate. Shared rather than copied: a fourth
+    # answer to one question is how the three came to disagree.
+    from duly_assurance.corpus import resolve_pack_path
+
+    pack_path = resolve_pack_path(str(case["pack"]), directory.resolve().parent.parent)
     pack = yaml.safe_load(pack_path.read_text())
     return case, facts, pack
 
@@ -150,7 +189,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="decimal grid for a freed decimal/money input (default: the scale "
              "the case's own value carries)",
     )
-    parser.add_argument("--ontologies", default="ontologies")
+    parser.add_argument(
+        "--ontologies",
+        help="a directory of <name>/<version>.yaml ontologies; may also be "
+             "given as DULY_ONTOLOGIES. No default, and optional — without one "
+             "value kinds are inferred from the pack, which the report says.",
+    )
     parser.add_argument("--verbose", action="store_true", help="print domain assumptions")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     return parser
@@ -170,6 +214,12 @@ def main(argv: list[str] | None = None) -> int:
         import z3  # noqa: F401
     except ImportError:
         print(Z3_MISSING, file=sys.stderr)
+        return 2
+
+    try:
+        registry = _registry(_resolve_ontologies(args))
+    except BadOntologies as exc:
+        print(str(exc), file=sys.stderr)
         return 2
 
     if args.case:
@@ -204,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
                 free=args.free, target=target, flip=args.flip,
                 extremal=args.extremal, scale=args.scale,
             ),
-            _registry(args.ontologies),
+            registry,
         )
     except Unsupported as exc:
         print(f"UNSUPPORTED: {exc}", file=sys.stderr)

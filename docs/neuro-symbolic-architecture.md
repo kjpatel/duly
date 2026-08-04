@@ -411,7 +411,14 @@ share a name. This is the same shape as `engine.backend` being inside the
 hash, and it is a feature rather than a limitation: a receipt is supposed to
 say which artifact decided, not merely what was decided. Any claim of
 equivalence between two rulebases is therefore a claim about *decisions*, and
-has to be stated and tested at that level.
+has to be stated and tested at that level — which is what
+[`decision_digest()`](../spec/compatibility.md) now gives it: a hash over the
+receipt's determinant fields, excluding everything that identifies the run. Two
+receipts agree when their digests match. The DMN pair above still does not,
+because the pack *name* is determinant and the two packs are two rulebases;
+what the digest makes checkable is the case the DMN paragraph could only
+gesture at — the same rulebase evaluated twice, on different machines or by
+different backends.
 
 The same discipline governs `engine.version` from the other direction: what a
 sealed field says must be something that cannot drift. It is the version of
@@ -440,9 +447,22 @@ where they become deduplicated, append-only review items. A pack may attach an
 optional `routedTo` label; the kernel does not dispatch work to a queue. A
 reviewer can:
 
-- resolve the item with a human-asserted grounded fact, usually superseding
-  the machine assertion; or
+- resolve the item with a human-asserted grounded fact that, for a
+  `low_confidence` item, **must supersede** the machine assertion it rules on;
+  or
 - dismiss it because exclusion was the correct outcome.
+
+Supersession was optional here until the contract freeze, and the argument for
+requiring it is about what a receipt is allowed to say rather than about
+tidiness. Resolving a `low_confidence` item is, by construction, a ruling on
+one specific fact. A correction that merely *outranks* leaves that fact live,
+so every subsequent receipt carries a `low_confidence` abstention for an
+attribute the decision went on to use — which contradicts what
+[the fact spec](../spec/grounded-facts.md) means by `abstentions`. The rule
+binds the queue and nothing below it: the store still accepts an independent
+human fact that supersedes nothing, because a value learned in a phone call is
+not a ruling on anybody's extraction. See
+[compatibility.md](../spec/compatibility.md) C6.
 
 The correction enters through the ordinary fact-store API, so subsequent
 adjudication needs no special "human override" execution path. A resolved case
@@ -749,11 +769,15 @@ kernel, OWL inference, general SHACL enforcement at runtime, or GraphRAG.
 LinkML can generate SHACL for standards-tooling tests, but the hot-path
 validator interprets a documented LinkML subset.
 
-That is a sensible boundary for the current workload. The v0 kernel assumes
-one entity per entity type and one live fact per attribute in a case. Its
-demonstrations ask bounded document-decision questions; adding graph
-infrastructure would create another consistency, temporal, and operational
-surface without yet simplifying those decisions.
+That is a sensible boundary for the current workload. The kernel assumes one
+entity per entity type and one live fact per attribute in a case — and that is
+now a **frozen** assumption rather than an unexamined one: quantified bindings
+were weighed at the contract freeze and deferred past v1.0, so a v1.0 pack
+states the limit rather than working around it silently
+([compatibility.md](../spec/compatibility.md) C5). Its demonstrations ask
+bounded document-decision questions; adding graph infrastructure would create
+another consistency, temporal, and operational surface without yet simplifying
+those decisions.
 
 A graph becomes justified when a real workload needs multiple same-type
 entities, explicit relationship constraints, multi-hop or cross-document
@@ -859,11 +883,24 @@ application compose it differently.
 
 ## Integration guidance for a platform team
 
-**Current maturity:** duly is pre-alpha, its contracts are v0 and may break
-before v1.0, and its SQLite stores, in-process demo, and reference wiring are
-not a production deployment blueprint. The responsibilities below describe
-how a platform team should compose the current contracts, not a claim that the
-repository already supplies enterprise operations.
+**Current maturity:** duly is pre-alpha, and its SQLite stores, in-process
+demo, and reference wiring are not a production deployment blueprint. The
+responsibilities below describe how a platform team should compose the current
+contracts, not a claim that the repository already supplies enterprise
+operations.
+
+What has changed is the contracts' standing. They are no longer "v0, may
+break": [compatibility.md](../spec/compatibility.md) states what v1.0 promises,
+per contract, and what it deliberately does not cover — the demo surfaces, CLI
+rendering, calibration interfaces, and the example content are all outside the
+freeze. Two things a platform team should read before designing against them.
+The fact and receipt schemas are **closed**: because the hash covers the whole
+body, there is no additive change to either, so anything that must travel with
+a receipt travels in a separately-hashed sidecar referencing it. And replay is
+scoped to a **semantics version** rather than to duly: a receipt names the
+semantics it was sealed under, and a kernel that does not implement that
+version refuses it instead of replaying it and possibly agreeing by accident.
+The distribution itself is not yet published; that is the remaining v1.0 work.
 
 A production integration should treat duly as a decision component inside a
 larger workflow:
@@ -973,7 +1010,12 @@ requirement without weakening replay.
   [`spec/canonical-vectors.json`](../spec/canonical-vectors.json), which is
   also what another language needs to implement the fact contract.
 - [`kernel/duly_kernel`](../kernel/duly_kernel) contains the reference
-  interpreter and receipt builder.
+  interpreter and receipt builder. Two small modules beside it carry the
+  compatibility promise's executable half:
+  [`semantics.py`](../kernel/duly_kernel/semantics.py) refuses a receipt whose
+  decision-semantics version this kernel does not implement, and
+  [`digest.py`](../kernel/duly_kernel/digest.py) says when two receipts record
+  the same adjudication.
 - [`review/duly_review`](../review/duly_review) contains the review and
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule

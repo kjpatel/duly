@@ -558,6 +558,15 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-04 — **Phase 1, assurance cluster** — one shared pack resolution for
+  `verify`/`impact`/`generate`; the corpus generator's templates and kinds
+  became registries example content can populate. Proved inert by regenerating
+  at the same seed and diffing bytes, which caught a transcribed default
+  question that changed 17 cases with the whole suite green.
+- 2026-08-04 — **Docs audit** — the roadmap had grown four retrospective
+  paragraphs that belong to the changelog (its own preamble says so), and the
+  changelog was five merged PRs behind. Roadmap trimmed to plan-plus-status;
+  changelog given the three entries it was missing.
 - 2026-08-04 — **Phase 1, wheel smoke** — every shipped package exercised from
   an installed wheel; A8 found and pinned as a declared known failure pending
   its design decision.

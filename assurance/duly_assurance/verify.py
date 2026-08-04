@@ -97,6 +97,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"MISMATCH: receipts without cases: {', '.join(orphans)}")
         return 1
 
+    if verified == 0:
+        # "verified 0 cases" is true and reads as a pass. An empty corpus is a
+        # legitimate state — an adopter's is empty on day one, which is why this
+        # exits 0 — but a caller must not be able to mistake it for evidence.
+        print(
+            "NO CASES IN CORPUS — nothing was replayed. This is not a pass: "
+            "it means there was nothing to check."
+        )
+        return 0
     print(f"verified {verified} cases")
     return 0
 

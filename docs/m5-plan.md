@@ -175,7 +175,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       defensible as it stands. `impact` on the same empty corpus exits **2**.
       So the decision was not "what should verify do" but "may either command
       fail an adopter's day-one CI run, and should the two agree?"
-      **DECIDED (Kushan, 2026-08-04): succeed, but say so unmissably.** `impact`
+      **DONE.** **DECIDED (Kushan, 2026-08-04): succeed, but say so unmissably.** `impact`
       exits 0 on an empty corpus like `verify` already does, and both print a
       line nobody can mistake for coverage. Exit 0 keeps day-one adoption
       unblocked; the message exists because the alternative is the trap
@@ -451,7 +451,8 @@ default, all seven call sites migrated including `spec/validate.py` and
 package exists, and vectors in `spec/`. The RFC 8785 gap is resolved rather
 than left: measured across 1772 committed documents, **zero have non-ASCII
 object keys**, so adopting true UTF-16 key ordering is provably inert — the
-label becomes true instead of being weakened. Tracked as the Phase 1 A7 task.
+label becomes true instead of being weakened. **DONE**, and the inertness held:
+351 receipts replay byte-for-byte with the sort order changed.
 
 **A6 — the DMN compiler could emit a pack that fails at adjudication, and
 called it success.** Found by chasing A5. A money column with `> 200` in it is
@@ -500,6 +501,12 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-04 — **Phase 1, `duly_core` + empty-corpus semantics** — A7 done:
+  one canonical implementation, seven call sites migrated, `spec/canonical-vectors.json`
+  committed as baseline and interop artifact, and RFC 8785 key ordering made
+  true rather than approximate (provably inert — 351 receipts byte-identical).
+  Empty-corpus option C done: `impact` now agrees with `verify` and both
+  refuse to let "0 of 0" read as a pass.
 - 2026-08-03 — **Phase 1, kernel + conformance entry points** — A1 fixed
   (`content_hash` and a new `seal_fact` exported from `duly_kernel`'s root;
   the minimal-integration example now uses them and its receipt is

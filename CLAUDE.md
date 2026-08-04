@@ -10,6 +10,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 | Directory | What lives there |
 |---|---|
+| `core/` | Canonical form + content addressing (`duly_core`) — the one implementation every package hashes through; charter is deliberately two functions wide |
 | `spec/` | The contract: grounded-fact + receipt specs (decision/why/rejected format), JSON Schemas, committed examples, `validate.py` |
 | `kernel/` | Reference interpreter: IR validation, evaluation, defeat semantics, receipt + audit-report emission |
 | `store/` | Append-only bitemporal fact store (SQLite, Postgres-portable) |
@@ -31,7 +32,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
 uv run spec/validate.py                   # spec examples: schemas + hashes

@@ -24,8 +24,6 @@ from __future__ import annotations
 
 import copy
 import datetime as _dt
-import hashlib
-import json
 from decimal import Decimal
 
 from duly_kernel.api import adjudicate
@@ -40,6 +38,7 @@ from duly_kernel.engine import (  # noqa: PLC2701
     _live_facts,
 )
 from duly_kernel.engine import normalize_point
+from duly_core import canonical, content_hash as _content_hash  # noqa: F401
 
 __all__ = [
     "canonical",
@@ -55,16 +54,9 @@ __all__ = [
 ]
 
 
-def canonical(obj) -> bytes:
-    """Canonical JSON, byte-identical to `spec/validate.py` and the kernel."""
-    return json.dumps(
-        obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
-
-
 def content_hash(doc: dict, hash_field: str = "contentHash") -> str:
-    body = {k: v for k, v in doc.items() if k not in ("id", hash_field)}
-    return hashlib.sha256(canonical(body)).hexdigest()
+    """Content hash, defaulting to a fact's field — this module reads facts."""
+    return _content_hash(doc, hash_field)
 
 
 def _readdress(fact: dict) -> dict:

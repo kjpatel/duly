@@ -17,14 +17,14 @@ guessed at. Resolving them is M5 Phase 2 work and lands in `spec/compatibility.m
 
 ## 1. The version surface
 
-Nine version declarations, four scopes. Only two have a reader.
+Ten version declarations, four scopes. Only two have a reader.
 
 | Site | Scope | Read by |
 |---|---|---|
 | [`pyproject.toml`](../pyproject.toml) `version` | distribution | packaging, `pip show duly` |
 | [`receipt.py`](../kernel/duly_kernel/receipt.py) `SEMANTICS_VERSION` | decision semantics | **every receipt hash** |
 | [`kernel/duly_kernel/__init__.py`](../kernel/duly_kernel/__init__.py) `__version__` | kernel package | nothing |
-| `store`, `assurance`, `calibration`, `review`, `extraction` `__init__.py` | package | nothing |
+| `store`, `assurance`, `calibration`, `review`, `extraction`, `core` `__init__.py` | package | nothing |
 | [`demo/app.py`](../demo/app.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 | [`review/duly_review/api.py`](../review/duly_review/api.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 
@@ -44,7 +44,7 @@ precisely what makes a re-coupling invisible — see
 proves the decoupling behaviourally because nothing else can while the values
 agree.
 
-**PENDING** — five of the package `__version__` strings have no reader, and
+**PENDING** — six of the package `__version__` strings have no reader, and
 three packages (`conformance`, `dmn`, `whatif`) declare none at all, so the
 convention is already inconsistent. Either give them a reader and a rule or
 delete them; a number nobody reads and nothing forces to move becomes a lie.

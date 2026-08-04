@@ -8,7 +8,6 @@ subset these documents use (object keys sorted, minimal separators, UTF-8,
 no exotic floats), computed over the document minus its `id` and hash field.
 """
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -40,13 +39,11 @@ def classify(doc: dict) -> str:
     return "GroundedFact"
 
 
-def canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
-
-def content_hash(doc: dict, hash_field: str) -> str:
-    body = {k: v for k, v in doc.items() if k not in ("id", hash_field)}
-    return hashlib.sha256(canonical(body)).hexdigest()
+# Imported rather than reimplemented. A second copy of these three lines was
+# never an independent check on the first: it has no algorithmic diversity, so
+# it could only catch a typo, while looking like it verified the definition.
+# What verifies the definition is spec/canonical-vectors.json, below.
+from duly_core import canonical, content_hash  # noqa: E402
 
 
 PROV_NS = "http://www.w3.org/ns/prov#"

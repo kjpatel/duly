@@ -32,13 +32,11 @@ STARTERS = REPO / "starters"
 SCHEMA_PATH = REPO / "spec" / "schemas" / "grounded-fact.schema.json"
 
 
-def canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+from duly_core import content_hash as _content_hash  # noqa: E402
 
 
 def content_hash(doc: dict) -> str:
-    body = {k: v for k, v in doc.items() if k not in ("id", "contentHash")}
-    return hashlib.sha256(canonical(body)).hexdigest()
+    return _content_hash(doc, "contentHash")
 
 
 def main() -> int:

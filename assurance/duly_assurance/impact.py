@@ -185,8 +185,17 @@ def analyze(golden_root: Path, *, pack_overrides: dict[Path, dict] | None = None
     if not cases_dir.is_dir():
         raise ImpactOperationalError(f"missing golden corpus: {cases_dir} is not a directory")
     case_dirs = sorted(d for d in cases_dir.iterdir() if d.is_dir())
-    if not case_dirs:
-        raise ImpactOperationalError(f"golden corpus has no cases under {cases_dir}")
+    # An empty corpus is not an error. An adopter's corpus is empty on day one,
+    # and `verify` has always treated that as success — reserving failure for a
+    # *missing* directory, which is a configuration mistake rather than a state.
+    # `impact` used to raise here, so the two commands disagreed about the same
+    # input and an adopter's first CI run failed on the second of them.
+    #
+    # What the caller must not be allowed to conclude is that nothing flipped.
+    # rulepacks/README.md already names this trap one level down: a pack with no
+    # generator template gets a cheerful "0 of N decisions flip" forever. Silence
+    # that reads as coverage is the failure mode, so callers get an explicit
+    # `corpusEmpty` flag and every renderer says so in words.
 
     # Seeding the cache is the whole override mechanism: every case that
     # resolves to this path gets the candidate pack, and a case pointing
@@ -256,6 +265,7 @@ def analyze(golden_root: Path, *, pack_overrides: dict[Path, dict] | None = None
     total = len(case_dirs)
     return {
         "golden": str(golden_root),
+        "corpusEmpty": total == 0,
         "totalCases": total,
         "flipCount": len(flips),
         "reasoningChangeCount": len(reasoning_changes),
@@ -267,7 +277,19 @@ def analyze(golden_root: Path, *, pack_overrides: dict[Path, dict] | None = None
     }
 
 
+EMPTY_CORPUS_SUMMARY = (
+    "NO CASES IN CORPUS — impact analysis could not see anything. "
+    "This is not a result: it means nothing was measured."
+)
+
+
 def _summary_line(flip_count: int, total: int, reasoning_count: int) -> str:
+    # "0 of 0 decisions flip" is a true sentence that reads as a pass. Say what
+    # actually happened instead; the exit code stays 0 so a day-one adopter is
+    # not blocked, and the words are what stop silence being mistaken for
+    # coverage (rulepacks/README.md names the same trap for an uncovered pack).
+    if total == 0:
+        return EMPTY_CORPUS_SUMMARY
     return (
         f"{flip_count} of {total} decisions flip; "
         f"{reasoning_count} reasoning-only change{'s' if reasoning_count != 1 else ''}"
@@ -295,6 +317,14 @@ def _md_rules(side: dict) -> str:
 
 def render_markdown(report: dict) -> str:
     lines = [MARKER, "## Rule-change impact analysis", ""]
+    if report.get("corpusEmpty"):
+        lines.append(f"**{report['summary']}**")
+        lines.append("")
+        lines.append(
+            "No golden cases were found, so this run measured nothing. A green "
+            "check here is not evidence that a change is safe."
+        )
+        return "\n".join(lines)
     lines.append(f"**{report['summary']}** ({report['totalCases']} golden cases analyzed)")
     lines.append("")
 

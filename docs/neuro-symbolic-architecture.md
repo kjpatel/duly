@@ -929,6 +929,11 @@ requirement without weakening replay.
   storage; [`demo/evidence_api.py`](../demo/evidence_api.py) reads that log
   back at an arbitrary horizon, which is the shortest way to see what the two
   time axes actually do.
+- [`core/duly_core`](../core/duly_core) is the canonical form and content
+  addressing — two functions every package hashes through, so no two can
+  disagree about what a document's bytes are. Its answers are frozen in
+  [`spec/canonical-vectors.json`](../spec/canonical-vectors.json), which is
+  also what another language needs to implement the fact contract.
 - [`kernel/duly_kernel`](../kernel/duly_kernel) contains the reference
   interpreter and receipt builder.
 - [`review/duly_review`](../review/duly_review) contains the review and

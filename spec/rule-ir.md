@@ -299,7 +299,7 @@ Placeholders: `{value}` (the decision value), `{money}` (amount and currency), `
 
 ## Receipt mapping
 
-The interpreter emits a `DecisionReceipt` per `spec/schemas/decision-receipt.schema.json`:
+The interpreter emits a `DecisionReceipt` per `duly_core`'s `decision-receipt` schema:
 
 - `rulesFired`: every rule whose conclusion survived, with its `citation`, `priority`, effective window, and `defeated` list.
 - `derivation`: built from binding provenance — fact bindings become `{factId}` premises; `derived` bindings become nested derivation nodes.

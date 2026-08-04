@@ -34,12 +34,12 @@ import traceback
 # Known failures, with the finding that owns them. A check listed here is
 # *expected* to fail and does not fail the run — but if it starts passing, the
 # run fails anyway, so the entry cannot outlive the bug it documents.
-KNOWN_FAILURES = {
-    "duly_review": (
-        "A8 — reads spec/schemas/grounded-fact.schema.json from a repo-relative "
-        "path that no wheel contains; pending the design decision in the M5 plan"
-    ),
-}
+# Empty, and that is the state to keep it in. It held `duly_review` for
+# exactly one PR: the queue read the grounded-fact schema from a repo-relative
+# path no wheel contains (A8). The schemas now ship inside `duly_core`, so the
+# check passes and the entry had to go — an XPASS fails the run, which is how a
+# known-failure is prevented from outliving its bug.
+KNOWN_FAILURES: dict[str, str] = {}
 
 CHECKS: list[tuple[str, str]] = []
 
@@ -161,19 +161,16 @@ def _dmn():
 
 @check("duly_review")
 def _review():
-    """The queue's central operation, which is where A8 bites."""
+    """The queue's schema load, which is where A8 bit."""
     import tempfile
     from pathlib import Path
 
-    from duly_review import queue as queue_mod
+    from duly_review.queue import ReviewQueue, _default_fact_schema
 
     with tempfile.TemporaryDirectory() as tmp:
-        q = queue_mod.ReviewQueue(str(Path(tmp) / "q.db"))
-        q.init_schema()
-        # Reading this is what `resolve()` does, and what fails from a wheel:
-        # the path is computed relative to the package, and `spec/` ships only
-        # in a git checkout.
-        queue_mod._FACT_SCHEMA_PATH.read_text(encoding="utf-8")
+        queue = ReviewQueue(str(Path(tmp) / "q.db"))
+        queue.init_schema()
+        assert _default_fact_schema()["title"] == "GroundedFact"
 
 
 def _refuse_if_running_from_the_source_tree() -> None:

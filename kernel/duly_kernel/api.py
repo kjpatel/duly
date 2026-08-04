@@ -17,7 +17,7 @@ def adjudicate(
     """Adjudicate a case: evaluate `pack` over `facts` at the given
     bitemporal point and return a DecisionReceipt dict.
 
-    - `facts`: GroundedFact dicts (spec/schemas/grounded-fact.schema.json).
+    - `facts`: GroundedFact dicts (duly_core schemas, `grounded-fact`).
     - `pack`: a rule-IR pack dict (spec/rule-ir.md); validated before use.
     - `as_of_effective` / `as_of_knowledge`: ISO dates or datetimes. A bare
       date means midnight UTC. No wall-clock defaulting — determinism is

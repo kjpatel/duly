@@ -18,6 +18,7 @@ from duly_extraction.envelope import (
 )
 
 from extractiontest_helpers import run_stub
+from duly_core import schema_path
 
 KNOWLEDGE = "2026-07-30T16:00:00Z"       # after every starter fact's recordedAt
 REVOKED_AT = "2026-07-31T09:00:00Z"
@@ -78,7 +79,7 @@ def test_envelope_validates_against_spec_schema(run):
     from extractiontest_helpers import REPO_ROOT
 
     schema = json.loads(
-        (REPO_ROOT / "spec" / "schemas" / "extraction-run.schema.json").read_text(encoding="utf-8")
+        schema_path("extraction-run").read_text(encoding="utf-8")
     )
     envelope, _facts, _text, _targets = run
     jsonschema.Draft202012Validator(schema).validate(envelope)

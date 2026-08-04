@@ -27,10 +27,11 @@ from pathlib import Path
 
 from duly_calibration.base import Pair
 from duly_calibration.facts import content_hash
+from duly_core import schema_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SPEC_EXAMPLES = REPO_ROOT / "spec" / "examples"
-FACT_SCHEMA = REPO_ROOT / "spec" / "schemas" / "grounded-fact.schema.json"
+FACT_SCHEMA = schema_path("grounded-fact")
 
 
 def sigmoid(x: float) -> float:

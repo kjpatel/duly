@@ -4,7 +4,7 @@
 For every scenario manifest under starters/*/scenario.json this checks:
 
 1. each listed document's `sha256` matches the actual PDF bytes;
-2. each fact validates against spec/schemas/grounded-fact.schema.json;
+2. each fact validates against duly_core's grounded-fact schema;
 3. each fact's contentHash matches the canonical-JSON hash (id/contentHash
    excluded) and its id ends with that hash;
 4. each fact's documentSha256 matches a manifest document, and the charSpan
@@ -22,6 +22,8 @@ import json
 import sys
 from pathlib import Path
 
+from duly_core import content_hash as _content_hash, schema_path
+
 try:
     from jsonschema import Draft202012Validator, FormatChecker
 except ImportError:
@@ -29,10 +31,9 @@ except ImportError:
 
 REPO = Path(__file__).resolve().parent.parent.parent
 STARTERS = REPO / "starters"
-SCHEMA_PATH = REPO / "spec" / "schemas" / "grounded-fact.schema.json"
+SCHEMA_PATH = schema_path("grounded-fact")
 
 
-from duly_core import content_hash as _content_hash  # noqa: E402
 
 
 def content_hash(doc: dict) -> str:

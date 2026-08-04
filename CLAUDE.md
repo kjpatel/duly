@@ -10,8 +10,8 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 | Directory | What lives there |
 |---|---|
-| `core/` | Canonical form + content addressing (`duly_core`) — the one implementation every package hashes through; charter is deliberately two functions wide |
-| `spec/` | The contract: grounded-fact + receipt specs (decision/why/rejected format), JSON Schemas, committed examples, `validate.py` |
+| `core/` | What a duly document *is*: canonical form, content addressing, and the JSON Schemas — all shipped in the wheel, so two packages cannot disagree and no path reaches for the repo. Narrow charter, amended once and only once (`duly_core`) |
+| `spec/` | The contract *argued*: grounded-fact + receipt specs (decision/why/rejected format), committed examples, canonical-form vectors, `validate.py`. The schemas themselves live in `core/` because they ship |
 | `kernel/` | Reference interpreter: IR validation, evaluation, defeat semantics, receipt + audit-report emission |
 | `store/` | Append-only bitemporal fact store (SQLite, Postgres-portable) |
 | `extraction/` | Adapter protocol, Docling adapter, scripted stub, run envelopes (verify/ingest/revoke) |

@@ -72,8 +72,15 @@ __all__ = [
 
 ITEM_URN_PREFIX = "urn:duly:review:sha256:"
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-_FACT_SCHEMA_PATH = _REPO_ROOT / "spec" / "schemas" / "grounded-fact.schema.json"
+# The grounded-fact schema ships inside `duly_core`, so this resolves
+# identically in a checkout and in site-packages. It used to be
+# `parents[2]/spec/schemas/...`, which resolves in exactly one of those: `spec/`
+# is in no wheel, so `resolve()` raised FileNotFoundError for every adopter
+# while every test here passed (M5 plan, A8).
+def _default_fact_schema() -> dict:
+    from duly_core import load_schema
+
+    return load_schema("grounded-fact")
 
 
 class ReviewQueueError(Exception):
@@ -179,11 +186,25 @@ _EVENT_COLUMNS = (
 class ReviewQueue:
     """Append-only review queue over SQLite (Postgres-portable schema)."""
 
-    def __init__(self, path: str, *, check_same_thread: bool = True):
+    def __init__(
+        self,
+        path: str,
+        *,
+        check_same_thread: bool = True,
+        fact_schema: dict | None = None,
+    ):
         """``check_same_thread=False`` allows use from threads other than the
         creating one (the FastAPI surface needs it; sqlite3 serializes
-        access internally)."""
+        access internally).
+
+        ``fact_schema`` is the JSON Schema a correction is validated against.
+        It defaults to the contract duly ships, and is a parameter because a
+        deployment may hold corrections to a *narrower* shape than the base
+        contract — required sensitivity, a house actor vocabulary — and the
+        library should take that rather than make the deployment fork it.
+        """
         self._conn = sqlite3.connect(path, check_same_thread=check_same_thread)
+        self._fact_schema = fact_schema
 
     @classmethod
     def in_memory(cls) -> "ReviewQueue":
@@ -501,7 +522,7 @@ class ReviewQueue:
 
         validator = getattr(self, "_fact_validator", None)
         if validator is None:
-            schema = json.loads(_FACT_SCHEMA_PATH.read_text(encoding="utf-8"))
+            schema = self._fact_schema if self._fact_schema is not None else _default_fact_schema()
             validator = Draft202012Validator(schema, format_checker=FormatChecker())
             self._fact_validator = validator
         errors = sorted(validator.iter_errors(correction), key=lambda e: list(e.absolute_path))

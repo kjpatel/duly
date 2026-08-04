@@ -71,6 +71,8 @@ No fact is ever edited. A correction is a new fact with `supersedes: <old fact i
 
 `contentHash` = SHA-256 over the RFC 8785 (JCS) canonical JSON of the fact, excluding `id` and `contentHash` themselves. The fact id is `urn:duly:fact:sha256:<hex>`.
 
+The canonical form is one implementation, [`duly_core`](../core/duly_core/__init__.py), and one set of committed answers: [`spec/canonical-vectors.json`](canonical-vectors.json) gives eleven `(document, canonical bytes, digest)` triples that **any** implementation in any language must reproduce, including the two cases every implementation gets wrong — RFC 8785 orders object keys by *UTF-16 code unit*, not code point (Python's `sort_keys=True` is the latter and differs above the BMP), and non-ASCII is emitted raw rather than `\u`-escaped. `spec/make_canonical_vectors.py` regenerates them; `core/tests/test_canonical_vectors.py` re-derives the RFC's properties independently, because vectors generated from an implementation can only prove it has not *changed*.
+
 **Why:** receipts pin their inputs by hash, so replay integrity is checkable byte-for-byte, identical facts deduplicate for free, and no id-issuing authority is needed across systems.
 
 ## D9. Human and machine assertions share one shape

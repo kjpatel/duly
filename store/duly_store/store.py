@@ -33,9 +33,9 @@ Known divergences to mind when porting:
 from __future__ import annotations
 
 import datetime as _dt
-import hashlib
 import json
 import sqlite3
+from duly_core import canonical, content_hash as _content_hash  # noqa: F401
 
 __all__ = [
     "FactStore",
@@ -59,17 +59,14 @@ class DuplicateFactError(FactStoreError):
     """A different payload was ingested under an already-known fact id."""
 
 
-# --- canonicalization (must match spec/validate.py exactly) -----------------
-
-def canonical(obj) -> bytes:
-    """RFC 8785-subset canonical JSON: sorted keys, minimal separators, UTF-8."""
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+# Canonicalization lives in duly_core, which exists so this comment does not
+# have to say "must match spec/validate.py exactly" — a copy pinned by a code
+# comment is a copy waiting to drift.
 
 
 def content_hash(fact: dict) -> str:
     """SHA-256 over the canonical fact, excluding ``id`` and ``contentHash``."""
-    body = {k: v for k, v in fact.items() if k not in ("id", "contentHash")}
-    return hashlib.sha256(canonical(body)).hexdigest()
+    return _content_hash(fact, "contentHash")
 
 
 # --- temporal helpers -------------------------------------------------------

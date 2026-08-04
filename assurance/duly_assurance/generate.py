@@ -52,7 +52,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
-import hashlib
 import json
 import random
 import shutil
@@ -64,6 +63,7 @@ import yaml
 
 from duly_kernel.api import adjudicate
 from duly_kernel.engine import AdjudicationError
+from duly_core import content_hash as _content_hash
 
 GENERATOR_NAME = "duly-golden-generator"
 GENERATOR_VERSION = "0.1.0"
@@ -461,13 +461,9 @@ def stratum_for(template: dict, index: int) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
-
 def content_hash(doc: dict, hash_field: str = "contentHash") -> str:
-    body = {k: v for k, v in doc.items() if k not in ("id", hash_field)}
-    return hashlib.sha256(canonical(body)).hexdigest()
+    """Content hash, defaulting to a fact's field — this module builds facts."""
+    return _content_hash(doc, hash_field)
 
 
 # ---------------------------------------------------------------------------

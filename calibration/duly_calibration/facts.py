@@ -14,26 +14,21 @@ the original superseded as a store projection — is the caller's job
 from __future__ import annotations
 
 import copy
-import hashlib
-import json
 from typing import Mapping
 
 from .base import CalibrationError, Calibrator
+from duly_core import canonical, content_hash as _content_hash  # noqa: F401
 
 __all__ = ["canonical", "content_hash", "recalibrate_fact"]
 
 
-# --- canonicalization (must match spec/validate.py exactly) -----------------
-
-def canonical(obj) -> bytes:
-    """RFC 8785-subset canonical JSON: sorted keys, minimal separators, UTF-8."""
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+# Canonicalization lives in duly_core (see its charter). This module keeps a
+# fact-shaped wrapper because that is what its callers pass.
 
 
 def content_hash(fact: dict) -> str:
     """SHA-256 over the canonical fact, excluding ``id`` and ``contentHash``."""
-    body = {k: v for k, v in fact.items() if k not in ("id", "contentHash")}
-    return hashlib.sha256(canonical(body)).hexdigest()
+    return _content_hash(fact, "contentHash")
 
 
 # Calibrated scores are rounded before entering the fact so the canonical

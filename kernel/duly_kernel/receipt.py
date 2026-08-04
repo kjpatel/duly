@@ -7,8 +7,7 @@ of the receipt excluding `id` and `receiptSha256`.
 
 from __future__ import annotations
 
-import hashlib
-import json
+from duly_core import canonical, content_hash  # noqa: F401
 
 from .engine import AdjudicationError, EvalResult, Firing
 from .expr import format_datetime, value_to_fact
@@ -44,13 +43,10 @@ from .expr import format_datetime, value_to_fact
 SEMANTICS_VERSION = "0.0.1"
 
 
-def canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
-
-def content_hash(doc: dict, hash_field: str) -> str:
-    body = {k: v for k, v in doc.items() if k not in ("id", hash_field)}
-    return hashlib.sha256(canonical(body)).hexdigest()
+# Re-exported, not reimplemented. `duly_core` owns the canonical form so that
+# no two packages can disagree about what a document's bytes are; the kernel
+# keeps the names because sealing a fact is the first thing an integration
+# does and it should not have to learn a second package to do it.
 
 
 def seal_fact(fact: dict) -> dict:

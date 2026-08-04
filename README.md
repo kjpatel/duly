@@ -288,7 +288,7 @@ Verify everything locally:
 
 ```bash
 uv sync
-uv run pytest kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify   # replay all 351 golden receipts byte-for-byte
 uv run python -m duly_assurance impact   # what your change would flip
 uv run spec/validate.py                  # spec examples: schemas + hashes

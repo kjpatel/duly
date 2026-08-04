@@ -46,9 +46,18 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships). Phase 6 measures what the others
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-~17–19 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what they must fix; two more after the 2026-08-04 audit against the roadmap). Every PR satisfies CLAUDE.md's definition of done
-(documented, discoverable, demoable, reconciled) **in that PR**, not in
-follow-ups.
+**Where this stands (2026-08-04):** Phase 0 done; Phase 1 has one task left
+(§5's whatif CLI); Phase 2 has one (§6's review-resolution invariant). The 1→3
+edge is live, not ceremonial: the outstanding whatif task is *pack resolution
+for a case directory*, and Phase 3 moves `golden/` — fix the seam before the
+paths move underneath it, or the fix gets debugged against two changes at once.
+
+~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
+they must fix; two more after the 2026-08-04 audit against the roadmap; one
+more when Phase 2's own audit found the *Contract closeout* roadmap item had no
+task). Ten are merged — see Appendix B, which is the count of record. Every PR
+satisfies CLAUDE.md's definition of done (documented, discoverable, demoable,
+reconciled) **in that PR**, not in follow-ups.
 
 ## 3. Rules for every executor
 
@@ -141,7 +150,7 @@ produces Phase 1's defect list.
 **Acceptance:** the CI job is green from a wheel in a clean venv; Appendix A is
 populated; the README exists.
 
-## 5. Phase 1 — the seam (4–5 PRs)
+## 5. Phase 1 — the seam (6 PRs merged, 1 remaining)
 
 **Objective:** library code takes caller-supplied content roots everywhere;
 repo-layout discovery is demoted to thin convenience loaders. The pattern to
@@ -173,11 +182,26 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       it caught a transcribed `question` field (`resc:fundingPermitted` typed
       as `resc:rescissionApplies`) that changed 17 cases while every test still
       passed.*
-- [ ] **Review + whatif (1 PR):** `review/duly_review/queue.py` `_REPO_ROOT`
-      — which is **A8, a live bug**, not a tidy-up: the schema it points at is
-      not in the wheel, so `ReviewQueue.resolve()` raises for every adopter.
-      Blocked on the A8 **ASK**. Also `review/duly_review/golden.py`'s
-      `parents[2]` default and `whatif/duly_whatif/__main__.py` root discovery.
+- [x] **Review (was "review + whatif", 1 PR):** `review/duly_review/queue.py`
+      `_REPO_ROOT` — **A8, a live bug**, not a tidy-up: the schema it pointed at
+      is not in the wheel, so `ReviewQueue.resolve()` raised for every adopter.
+      *Done in [#44](https://github.com/kjpatel/duly/pull/44) with the A8
+      decision: the schemas moved into `duly_core`, and `ReviewQueue` takes an
+      optional `fact_schema`. `review/duly_review/golden.py`'s `parents[2]`
+      default went with it.*
+- [ ] **whatif's CLI (1 PR) — the last Phase 1 seam.** Split out of the review
+      task, which shipped without it. Two things in
+      [`whatif/duly_whatif/__main__.py`](../whatif/duly_whatif/__main__.py):
+      `_repo_root()` still resolves a case's pack against `parents[2]` of the
+      *installed package* — the defect
+      [`assurance/duly_assurance/corpus.py`](../assurance/duly_assurance/corpus.py)
+      already fixed for `verify`/`impact`/`generate`, and the fix is to share
+      that resolution rather than write a fourth answer — and `--ontologies`
+      still defaults to a repo-relative `"ontologies"` (**A9**). Note the
+      dependency question the shared resolver raises: `duly_whatif` does not
+      import `duly_assurance` today, so either the resolver moves somewhere
+      both can reach or whatif takes the root from its caller. Decide it in the
+      PR; do not copy the function.
 - [x] **Wheel smoke for every package (1 PR)** — added after A8 showed the
       Phase 0 probe covered two packages out of nine. One real entry point per
       shipped package, run from an installed wheel outside the repo, with
@@ -209,7 +233,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
         as an uncaught `OntologySubsetError` traceback from `registry.py:61`.
         Two defects on one line: the repo-layout default, and a stack trace
         where a diagnostic belongs.
-- [ ] **Empty-corpus semantics.** Phase 0 measured this and it is *smaller*
+- [x] **Empty-corpus semantics.** Phase 0 measured this and it is *smaller*
       than first written. `verify` on an empty `cases/` already exits **0**
       (`verified 0 cases`) and only a *missing* directory exits 1, which is
       defensible as it stands. `impact` on the same empty corpus exits **2**.
@@ -240,12 +264,22 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
 `git diff -- golden/` empty, and the Phase 0 example still passes from a
 fresh wheel.
 
-## 6. Phase 2 — the freeze (2 PRs)
+## 6. Phase 2 — the freeze (1 PR merged, 1 remaining)
 
 **Objective:** `spec/compatibility.md` — the stability promise v1.0 makes —
-plus the code that backs its one claim needing code.
+plus the code that backs the two claims needing it.
 
-- [ ] **The decision memo + policy (1 PR).** `spec/compatibility.md` in house
+> **Corrected 2026-08-04, before the phase started (rule 9).** This section was
+> written from the README's *Compatibility policy* item and silently dropped
+> the *Contract closeout* item beside it, whose three named questions —
+> quantified bindings, review-resolution supersession, the envelope signature
+> affordance — had no task anywhere in this plan. Both roadmap items are Phase
+> 2; the task list below now covers both. Two smaller corrections in the same
+> pass: it is **six** reader-less `__version__` strings, not five (`duly_core`
+> arrived in Phase 1), and the objective's "one claim needing code" is two —
+> the replay guarantee needs a guard, not only `decision_digest()`.
+
+- [x] **The decision memo + policy (1 PR).** `spec/compatibility.md` in house
       style (decision / rationale / rejected alternative), covering:
       - **Option A stated normatively** (D3): the receipt schema has no
         extension point; the sidecar is the blessed mechanism; named
@@ -258,28 +292,66 @@ plus the code that backs its one claim needing code.
         semantics version V replays byte-identically under any kernel
         implementing V; a semantics change is a new V; the corpus carries
         cases at every V still promised. Resolves the PENDING in
-        release-process.md §4.
+        release-process.md §4. *Shipped as C3, plus the guard the clause
+        needed: nothing anywhere read `engine.version`, so
+        `duly_kernel.semantics.check_replayable` now refuses an unimplemented
+        version and both replay paths call it.*
       - **The version-scope policy**, resolving release-process.md's other
-        two PENDINGs: the five reader-less package `__version__` strings
-        (**ASK**: keep `duly_kernel.__version__` — it gains a reader in the
-        verifier-identity line — and drop the other five as decorative, or
-        keep all), and the rule-pack `2026.x.y` scheme (**ASK**: what the
-        components mean has never been written down; Kushan defines, the PR
-        records).
+        two PENDINGs: the six reader-less package `__version__` strings
+        (**ASK** — *answered: keep `duly_kernel.__version__`, delete the other
+        six, pin the count at one by test*), and the rule-pack `2026.x.y`
+        scheme (**ASK** — *answered:
+        `<content-year>.<substantive>.<clarifying>`; note the finding that no
+        component of any pack version has ever moved, so this is a rule
+        forward, not a description*).
       - What "frozen" means for the fact, receipt, and IR contracts, and the
-        deprecation policy for a major-version break.
-- [ ] **`decision_digest()` (1 PR).** A pure function over a receipt's
-      determinant fields (`decision`, `asOf`, `rulePack.{name,version}`,
-      `rulesFired`, `derivation`, `inputFacts`, `abstentions` — the memo
-      fixes the exact list, including where `rulePack.gitCommit`/`url` land),
-      with committed test vectors over the golden corpus. Nothing *hashes*
-      it into any document — it exists so the determinant boundary is code,
-      not prose, and so option B stays recoverable. Its consumer is the
-      compatibility policy itself; say so in the docstring.
-- [ ] **Changelog + architecture reconciliation.** The freeze sharpens claims
+        deprecation policy for a major-version break. *C1 and C9. The IR is a
+        floor, not a ceiling, which prices rule-IR open question 4: a
+        validator that gets stricter post-1.0 is a breaking change.*
+      - **Contract closeout — the three questions the README names.**
+        *Quantified bindings deferred past v1.0 (C5); the envelope reserves no
+        signature affordance (C7); a `low_confidence` review resolution must
+        supersede the fact it rules on (C6).*
+- [x] **`decision_digest()` (1 PR — landed with the memo).** A pure function
+      over a receipt's determinant fields (`decision`, `asOf`,
+      `rulePack.{name,version}`, `rulesFired`, `derivation`, `inputFacts`,
+      `abstentions`, and `engine.version`), with committed test vectors.
+      Nothing *hashes* it into any document — it exists so the determinant
+      boundary is code, not prose, and so option B stays recoverable.
+      *Landed with the memo rather than after it, because the memo's C4 states
+      the field list normatively and a policy whose one executable claim ships
+      separately is a policy nobody can check. The vectors are
+      self-contained receipts rather than a table over the corpus, so another
+      language can reproduce them; two are asserted byte-identical to
+      committed receipts so a vector cannot drift into a plausible
+      fabrication. Its consumer is the compatibility policy — and, it turned
+      out, the backend-identity question, which it answers: two receipts agree
+      iff their digests match.*
+- [ ] **The review-resolution invariant (1 PR).** C6's enforcement, the only
+      freeze decision needing code beyond the memo's own two.
+      `duly_review.ReviewQueue.resolve` refuses a `low_confidence` resolution
+      whose correction does not supersede the item's abstained fact, naming the
+      fact id it must carry. **It must not stamp the field**: a correction
+      arrives content-addressed, so writing into it changes its hash and its
+      identity — the sketch in grounded-facts open question 2 proposed
+      stamping and is wrong for that reason, which is recorded in C6. Leaves
+      `conflict` items alone. `review-0001` already uses the superseding form,
+      so the corpus is untouched; check the demo's review arc, whose facts are
+      read from disk rather than held by the store.
+- [x] **Changelog + architecture reconciliation.** The freeze sharpens claims
       the architecture doc already makes (the two-hash question, "which
       artifact decided vs what was decided") — check the five places
       CLAUDE.md's definition-of-done names.
+      *Done in the memo's PR, since a policy reconciled in a follow-up is a
+      policy the architecture doc contradicts in the meantime. All five: the
+      growth table (cross-backend equivalence had been listed as a prerequisite
+      for a second backend and is now defined; quantified bindings and the
+      signature shape corrected), the artifacts table (the receipt schema is
+      closed), the guarantees table (a decision-identity row; golden replay no
+      longer implies "any kernel"), the reading map, and — the one that carried
+      real content — the two claims the freeze sharpened: **replay by whom**,
+      and the conflation of "the same artifact" with "the same decision" that
+      this document had carried since M2.*
 
 ## 7. Phase 3 — the move (2–3 PRs)
 
@@ -292,10 +364,11 @@ proves it.
       toolkit suites that currently test through the six real packs get
       their own tiny fixture packs (extend the `kernel/tests/fixtures/`
       pattern). Otherwise the deletion test passes vacuously — suites that
-      silently skip because their subject matter left. 27 of 53 test files
-      currently touch example content; not all need fixtures (some *are*
-      example tests and move with the content), but the ones asserting
-      toolkit behavior do.
+      silently skip because their subject matter left. **27 of 63** test files
+      touch example content (measured 2026-08-04; re-measure before you start,
+      the numerator has not moved but the denominator has); not all need
+      fixtures (some *are* example tests and move with the content), but the
+      ones asserting toolkit behavior do.
 - [ ] **The move itself (1 PR).** `git mv` of `rulepacks/`, `starters/`,
       `golden/` (D8), the teaching ontologies, `dmn/examples/`, and the
       generator templates (now a registry per Phase 1) under an `examples/`
@@ -456,7 +529,8 @@ private. The example imports it anyway because reimplementing the canonical
 form would produce facts nobody else can verify. **Phase 1:** re-export at
 the package root (and consider `seal_fact()`, which every integration writes
 by hand — `run.py`'s `seal()` is nine lines that will be copied verbatim into
-every adopter's codebase).
+every adopter's codebase). **DONE** ([#41](https://github.com/kjpatel/duly/pull/41)) —
+both, and the example uses them, with a byte-identical receipt.
 
 **A2 — a kernel-only install pulls a web framework and a PDF library.**
 `pip install duly` installs 18 packages including `fastapi`, `starlette`,
@@ -468,7 +542,7 @@ integration uses. Only `pyyaml` is needed on the document→receipt path.
 **Phase 4** (not Phase 1): move them behind extras (`demo`, `report`). Worth
 flagging early because it is a packaging decision D1 touches, and because
 "the audit toolkit installed a web server" is a bad first impression for a
-security review.
+security review. **OPEN — Phase 4** (§8's dependencies task).
 
 **A3 — `duly_conformance`'s CLI defaults to a repo-relative path and
 tracebacks when it is wrong.**
@@ -480,7 +554,11 @@ diagnostic. Two defects, one line: the default assumes the repo layout, and
 the failure mode is a stack trace. Passing `--ontologies <dir>` works
 perfectly, which is the shape Phase 1 wants everywhere. **Phase 1:** no
 repo-relative default (require the flag, or resolve nothing), and catch the
-error into a message with an exit code.
+error into a message with an exit code. **DONE**
+([#41](https://github.com/kjpatel/duly/pull/41)) for `duly_conformance` —
+`DULY_ONTOLOGIES` accepted, exit 2 distinct from exit 1, and the CLI's first
+tests, whose absence is why both defects shipped. **The same pattern survived
+elsewhere: see A9.**
 
 **A4 — `verify` and `impact` disagree about what an empty corpus means.**
 Measured: `verify --golden <dir-with-empty-cases/>` → `verified 0 cases`,
@@ -490,7 +568,9 @@ empty corpus → **exit 2**. So the Phase 1 ASK is narrower than §5 states:
 directory as an error, which is defensible. The real inconsistency is
 `impact`, which an adopter with a day-one empty corpus hits on their first CI
 run. **Phase 1:** decide the trio together — missing dir, empty dir, and
-which of the two commands may fail a build.
+which of the two commands may fail a build. **DONE**
+([#42](https://github.com/kjpatel/duly/pull/42)) — both exit 0 and both print
+a line nobody can mistake for coverage; a *missing* directory still fails.
 
 **A8 — `duly_review` does not work from a wheel.** Found while sizing the
 remaining Phase 1 tasks. `review/duly_review/queue.py` computes
@@ -610,9 +690,32 @@ would touch the parser, `prove`'s SMT fragment, the DMN compiler, the studio's
 grid projection and whatif to make packs worse at the effective-dating
 regulated domains need most.
 
+**A9 — A3's pattern survived in a second CLI, and there it fails silently.**
+Found 2026-08-04 by sweeping every `__main__.py` for the A3 shape while
+auditing this plan, not by a test.
+[`whatif/duly_whatif/__main__.py:153`](../whatif/duly_whatif/__main__.py)
+declares `--ontologies` with `default="ontologies"` — the same repo-relative
+default A3 named, fixed in `duly_conformance` and nowhere else. The failure
+mode is *worse to diagnose than A3's*, because it is not a failure: A3 raised a
+traceback, while here a missing directory yields `registry=None` and the tool
+proceeds with kinds inferred from use. An adopter whose ontologies live
+anywhere else silently gets the weaker answer — a code symbol's domain becomes
+"these literals plus anything else" instead of the closed
+`permissible_values` set — and **nothing in the output says a registry was not
+found**. That last part is the defect: `duly_whatif.render` never mentions the
+registry, so the honest degradation the code comments describe is invisible to
+the person relying on it.
+
+The same file's `_repo_root()` is the `parents[2]` defect A8 and the assurance
+cluster each fixed in their own package. **Phase 1**, in the whatif task split
+out of the review one in §5; fix the default, the silence, and the pack
+resolution together, since all three are the same assumption.
+
 ## Appendix B — Progress log
 
-> One line per merged PR: date, PR #, phase, what moved.
+> One line per merged PR: date, PR #, phase, what moved. Ordered by merge, and
+> **complete** — a plan whose log skips the PRs nobody wrote up is a plan whose
+> unticked boxes cannot be trusted either.
 
 - 2026-08-01 — [#37](https://github.com/kjpatel/duly/pull/37) — pre-plan —
   `SEMANTICS_VERSION` pinned; `docs/release-process.md`; the version-scope
@@ -622,44 +725,65 @@ regulated domains need most.
 - 2026-08-01 — [#39](https://github.com/kjpatel/duly/pull/39) — pre-plan —
   architecture guide and PRD reconciled; docs accuracy sweep; one unified
   architecture diagram.
-- 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
-  wheel-check workflow; Appendix A populated with five findings (A1–A5).
-- 2026-08-04 — **Plan audited against the roadmap** — two v1.0 exit items had
-  no phase: the reference capacity envelope (none at all, now Phase 6) and the
-  adapter half of "contribution paths, both edges" (Phase 5 covered only
-  packs). Executor rule 9 added so the check is mechanical rather than
-  remembered.
-- 2026-08-04 — **Phase 1 complete, demo content roots** — four `REPO_ROOT`
-  constants became one configurable `CONTENT`; the D2 claim that the demo
-  surfaces are toolkit is now a test rather than an assertion, and it found a
-  crash on empty content the first time it ran.
-- 2026-08-04 — **Phase 1, assurance cluster** — one shared pack resolution for
-  `verify`/`impact`/`generate`; the corpus generator's templates and kinds
-  became registries example content can populate. Proved inert by regenerating
-  at the same seed and diffing bytes, which caught a transcribed default
-  question that changed 17 cases with the whole suite green.
-- 2026-08-04 — **Docs audit** — the roadmap had grown four retrospective
-  paragraphs that belong to the changelog (its own preamble says so), and the
-  changelog was five merged PRs behind. Roadmap trimmed to plan-plus-status;
-  changelog given the three entries it was missing.
-- 2026-08-04 — **Phase 1, wheel smoke** — every shipped package exercised from
-  an installed wheel; A8 found and pinned as a declared known failure pending
-  its design decision.
-- 2026-08-04 — **Phase 1, `duly_core` + empty-corpus semantics** — A7 done:
-  one canonical implementation, seven call sites migrated, `spec/canonical-vectors.json`
+- 2026-08-03 — [#40](https://github.com/kjpatel/duly/pull/40) — **Phase 0
+  complete** — `examples/minimal-integration` plus its wheel-check workflow;
+  Appendix A populated with A1–A6. Chasing A5 found A6, a live bug: the DMN
+  compiler emitted a pack that adjudication rejects and reported success.
+  Fixed here with the kernel's teaching type error and the spec statement, and
+  the same gap closed in the rule studio's import panel. Phase 1 and Phase 4
+  each gained a task; the empty-corpus ASK narrowed.
+- 2026-08-03 — [#41](https://github.com/kjpatel/duly/pull/41) — **Phase 1,
+  kernel + conformance entry points** — A1 fixed (`content_hash` and a new
+  `seal_fact` exported from `duly_kernel`'s root; the minimal-integration
+  example now uses them and its receipt is byte-identical), A3 fixed (no
+  repo-relative `--ontologies` default, `DULY_ONTOLOGIES` accepted, a missing
+  registry diagnosed rather than raised, exit 2 distinct from exit 1). First
+  tests for the conformance CLI — its absence is why both defects shipped. A7
+  recorded and routed.
+- 2026-08-04 — [#42](https://github.com/kjpatel/duly/pull/42) — **Phase 1,
+  `duly_core` + empty-corpus semantics** — A7 done: one canonical
+  implementation, seven call sites migrated, `spec/canonical-vectors.json`
   committed as baseline and interop artifact, and RFC 8785 key ordering made
   true rather than approximate (provably inert — 351 receipts byte-identical).
   Empty-corpus option C done: `impact` now agrees with `verify` and both
   refuse to let "0 of 0" read as a pass.
-- 2026-08-03 — **Phase 1, kernel + conformance entry points** — A1 fixed
-  (`content_hash` and a new `seal_fact` exported from `duly_kernel`'s root;
-  the minimal-integration example now uses them and its receipt is
-  byte-identical), A3 fixed (no repo-relative `--ontologies` default,
-  `DULY_ONTOLOGIES` accepted, a missing registry diagnosed rather than
-  raised, exit 2 distinct from exit 1). First tests for the conformance CLI —
-  its absence is why both defects shipped. A7 recorded and routed.
-- 2026-08-03 — Phase 0 follow-up — chasing A5 found A6, a live bug: the DMN
-  compiler emitted a pack that adjudication rejects and reported success.
-  Fixed with the kernel's teaching type error and the spec statement (A5),
-  and the same gap closed in the rule studio's import panel. Phase 1 and
-  Phase 4 each gained a task; the empty-corpus ASK narrowed.
+- 2026-08-04 — [#43](https://github.com/kjpatel/duly/pull/43) — **Phase 1,
+  wheel smoke** — every shipped package exercised from an installed wheel; A8
+  found and pinned as a declared known failure pending its design decision.
+- 2026-08-04 — [#44](https://github.com/kjpatel/duly/pull/44) — **Phase 1, the
+  contract ships** — A8 done: the three JSON Schemas moved (not copied) into
+  `duly_core`, `ReviewQueue` takes an optional `fact_schema`, and the queue's
+  central operation works outside this repository for the first time. The
+  known-failure entry emptied, which is what made the smoke gate honest.
+- 2026-08-04 — [#45](https://github.com/kjpatel/duly/pull/45) — **Phase 1,
+  assurance cluster** — one shared pack resolution for
+  `verify`/`impact`/`generate`; the corpus generator's templates and kinds
+  became registries example content can populate. Proved inert by regenerating
+  at the same seed and diffing bytes, which caught a transcribed default
+  question that changed 17 cases with the whole suite green.
+- 2026-08-04 — [#46](https://github.com/kjpatel/duly/pull/46) — docs — the
+  roadmap had grown four retrospective paragraphs that belong to the changelog
+  (its own preamble says so), and the changelog was five merged PRs behind.
+  Roadmap trimmed to plan-plus-status; changelog given its missing entries.
+- 2026-08-04 — [#47](https://github.com/kjpatel/duly/pull/47) — **Phase 1, demo
+  content roots** — four `REPO_ROOT` constants became one configurable
+  `CONTENT`; the D2 claim that the demo surfaces are toolkit is now a test
+  rather than an assertion, and it found a crash on empty content the first
+  time it ran. Same PR: **the plan audited against the roadmap** — two v1.0
+  exit items had no phase (the reference capacity envelope, now Phase 6, and
+  the adapter half of "contribution paths, both edges"), and executor rule 9
+  was added so the check is mechanical rather than remembered.
+- 2026-08-04 — [#48](https://github.com/kjpatel/duly/pull/48) — cross-phase —
+  every documented command executed as written; `release-process.md` was
+  telling releasers to run the conformance CLI in a form that no longer works.
+- 2026-08-04 — [#49](https://github.com/kjpatel/duly/pull/49) — **Phase 2, the
+  freeze** — `spec/compatibility.md` with eight decisions; both ASKs answered;
+  three `release-process.md` PENDINGs closed; four spec open questions closed
+  (dmn 1, pack-verification 1, grounded-facts 1 and 2) and two more priced
+  (rule-ir 1 and 4). Code: `duly_kernel.semantics` (the replay guard nothing
+  had), `duly_kernel.digest`, six `__version__` strings deleted. Inert: 351
+  replay byte-for-byte, `impact` 0 of 351. §6 corrected first — it had dropped
+  the roadmap's whole *Contract closeout* item, which rule 9 exists to catch.
+  Auditing this file in the same PR found **A9** (A3's pattern surviving in
+  `duly_whatif`'s CLI) and that Phase 1's "review + whatif" task had shipped
+  its review half only.

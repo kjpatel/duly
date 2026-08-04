@@ -27,8 +27,6 @@ from .queue import (
     values_equal,
 )
 
-__version__ = "0.0.1"
-
 __all__ = [
     "ReviewQueue",
     "ReviewQueueError",

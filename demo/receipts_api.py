@@ -38,6 +38,12 @@ rule descriptions that the receipt's rules never carried. That is refused —
 `pack-moved` is reported as its own outcome, because a plausible-looking
 misattribution is worse than a gap.
 
+The same shape governs semantics. Replay is scoped to a semantics version
+([spec/compatibility.md](../spec/compatibility.md) C3), so a receipt claiming
+an `engine.version` this kernel does not implement gets its refusal before the
+inputs are even gathered: re-adjudicating it here would answer a question
+about *these* semantics and report it as though it were about the receipt's.
+
 Deliberately not here: this module never writes. It reads `golden/` and
 `rulepacks/` and holds uploaded receipts in the request that carried them.
 """
@@ -88,6 +94,8 @@ _KERNEL_ENTRY_POINTS = {
     "adjudicate": ("duly_kernel.api", "adjudicate"),
     "content_hash": ("duly_kernel.receipt", "content_hash"),
     "render_report_blocks": ("duly_kernel.report", "render_report_blocks"),
+    "check_replayable": ("duly_kernel.semantics", "check_replayable"),
+    "UnsupportedSemantics": ("duly_kernel.semantics", "UnsupportedSemantics"),
 }
 
 KERNEL_UNAVAILABLE = "the kernel is unavailable (duly_kernel is not importable)"
@@ -406,6 +414,24 @@ def _check_replay(
     facts_status: dict,
     pack_status: dict,
 ) -> dict:
+    # Semantics first, because it is the one refusal that is not about missing
+    # inputs. Replay is scoped to a semantics version (spec/compatibility.md
+    # C3): this kernel is not entitled to an opinion about a receipt sealed
+    # under semantics it does not implement, and a coincidental pass on the
+    # cases where two semantics agree would be worse than no answer.
+    check_replayable = _kernel("check_replayable")
+    unsupported = _kernel("UnsupportedSemantics") or ()
+    if check_replayable is not None:
+        try:
+            check_replayable(receipt)
+        except unsupported as exc:
+            return {
+                "id": "replay",
+                "label": "Replay",
+                "state": "unavailable",
+                "detail": str(exc),
+            }
+
     if pack_status.get("state") == "moved":
         return {
             "id": "replay",

@@ -9,22 +9,23 @@ instinct to make them agree is the most destructive edit available in this
 repository.** Aligning `engine.version` with a package number invalidates all
 351 golden receipts without a rule, a fact, or a decision having changed.
 
-Sections marked **PENDING** record a decision that has not been made yet. They
-are here so the gap is visible at the moment it matters, not so they can be
-guessed at. Resolving them is M5 Phase 2 work and lands in `spec/compatibility.md`.
+The three sections that were marked **PENDING** are now decided;
+[spec/compatibility.md](../spec/compatibility.md) is where each is argued, and
+this document carries the resulting rule. If a future gap opens, mark it
+PENDING again rather than guessing — the point of the marker is that a
+convention nobody chose reads exactly like one somebody did.
 
 ---
 
 ## 1. The version surface
 
-Ten version declarations, four scopes. Only two have a reader.
+Five version declarations, four scopes.
 
 | Site | Scope | Read by |
 |---|---|---|
-| [`pyproject.toml`](../pyproject.toml) `version` | distribution | packaging, `pip show duly` |
-| [`receipt.py`](../kernel/duly_kernel/receipt.py) `SEMANTICS_VERSION` | decision semantics | **every receipt hash** |
-| [`kernel/duly_kernel/__init__.py`](../kernel/duly_kernel/__init__.py) `__version__` | kernel package | nothing |
-| `store`, `assurance`, `calibration`, `review`, `extraction`, `core` `__init__.py` | package | nothing |
+| [`pyproject.toml`](../pyproject.toml) `version` | distribution | packaging, `importlib.metadata.version("duly")` |
+| [`receipt.py`](../kernel/duly_kernel/receipt.py) `SEMANTICS_VERSION` | decision semantics | **every receipt hash**, and `duly_kernel.semantics` |
+| [`kernel/duly_kernel/__init__.py`](../kernel/duly_kernel/__init__.py) `__version__` | kernel package | `test_engine_identity.py`; the only package `__version__` in the repository |
 | [`demo/app.py`](../demo/app.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 | [`review/duly_review/api.py`](../review/duly_review/api.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 
@@ -44,20 +45,31 @@ precisely what makes a re-coupling invisible — see
 proves the decoupling behaviourally because nothing else can while the values
 agree.
 
-**PENDING** — six of the package `__version__` strings have no reader, and
-three packages (`conformance`, `dmn`, `whatif`) declare none at all, so the
-convention is already inconsistent. Either give them a reader and a rule or
-delete them; a number nobody reads and nothing forces to move becomes a lie.
+**Decided** ([compatibility.md](../spec/compatibility.md) C8) — there were ten
+declarations. Six package `__version__` strings had no reader and no rule
+forcing them to move, and three packages (`conformance`, `dmn`, `whatif`) had
+never declared one at all, which was the diagnosis rather than an
+inconsistency to tidy up. The six are deleted. `duly_kernel.__version__`
+stays, because it expresses a decision the project actually made — the kernel
+stays `0.0.1` while the distribution goes `1.0.0` — and there would otherwise
+be nowhere to say it. `test_engine_identity.py` pins the count at one, so the
+convention cannot quietly regrow when the next package lands.
 
 ## 2. Version schemes in use
 
 - **Distribution** — semver. `MAJOR.MINOR.PATCH`.
 - **Semantics** (`SEMANTICS_VERSION`) — semver-shaped, but it is a *handle*
   rather than an ordering claim. See §4.
-- **Rule packs** — `pack.version`, calendar-led: `2026.1.0`, `2026.2.0`,
-  `2026.3.0`. Set per pack, independent of everything above.
-  **PENDING**: the scheme is observed convention, not documented rule — what
-  the second and third components mean has never been written down.
+- **Rule packs** — `pack.version`, calendar-led and set per pack, independent
+  of everything above: **`<content-year>.<substantive>.<clarifying>`**
+  ([compatibility.md](../spec/compatibility.md) C8). The content-year is the
+  year of the *legal content* the pack states, not of its release, and moving
+  it resets the other two. `substantive` is a change that can flip a decision;
+  `clarifying` is one that reaches the receipt but cannot (citation text and
+  URLs, a rule's own `version`); a change that reaches no receipt at all
+  (`phrasing:`, `question`, comments) moves nothing. Note that all six packs
+  are still at their birth numbers — no component has ever moved, so this is a
+  rule going forward rather than a description of the past.
 - **Ontologies** — `<name>/<version>.yaml`, **immutable once committed**. New
   terms go in a new version file and the facts re-pin to it
   ([ontologies/README.md](../ontologies/README.md)).
@@ -74,8 +86,9 @@ load-bearing, not an omission.
 | A non-kernel package (`store`, `review`, `calibration`, …) | patch or minor | — | — | — |
 | Kernel code, **golden replay still green** | patch or minor | yes | **no** | — |
 | Kernel code, **golden replay breaks, packs and facts unchanged** | minor or major | yes | **yes** — see §4 | corpus regeneration |
-| A rule pack's rules | patch | — | — | `pack.version`; impact analysis |
-| A pack's `phrasing:` / `question` | patch | — | — | nothing hashed moves |
+| A rule pack's rules | patch | — | — | `pack.version` **substantive** component; impact analysis |
+| A pack's citations, or a rule's own `version` | patch | — | — | `pack.version` **clarifying** component; `impact` must show zero flips |
+| A pack's `phrasing:` / `question` | patch | — | — | nothing hashed moves, so no `pack.version` component moves |
 | Added an ontology term | patch | — | — | new ontology version file; facts re-pin; **fact hashes change ⇒ corpus churn** |
 | New optional dependency + extra | minor | — | — | pytest marker, optional-deps workflow |
 | Receipt, fact, or IR **schema** | major | — | see §4 | breaking — §5 |
@@ -131,22 +144,44 @@ is the one move this document exists to prevent.
 
 ### The replay guarantee
 
-**PENDING** — the clause that makes a rev survivable does not exist yet.
-The intended shape:
+**Decided** ([compatibility.md](../spec/compatibility.md) C3):
 
 > A receipt sealed under semantics version V replays byte-identically under any
 > kernel implementing V. A kernel MAY implement more than one V. A semantics
-> change is a new V; the corpus carries cases at every V the project still
-> promises to replay.
+> change is a new V, never a redefinition of an existing one. The project
+> promises replay for every V present in the committed corpus.
 
 That converts "the corpus breaks on a semantics change" into an ordinary
-support-window question. Until it is written down and a support window is
-chosen, **treat a semantics rev as blocked** and escalate rather than
-improvising one.
+support-window question — how many V a kernel carries, and how long. There is
+one V today, so there is no evidence with which to choose a window; the first
+rev is when that has to be answered, and it is the open question at the bottom
+of [compatibility.md](../spec/compatibility.md).
+
+The clause is enforced, not merely promised.
+[`duly_kernel.semantics.check_replayable`](../kernel/duly_kernel/semantics.py)
+refuses a receipt whose `engine.version` is not in `IMPLEMENTED`, and both
+replay paths call it — `verify` reports `UNSUPPORTED` rather than a byte diff,
+and the receipt viewer reports replay as unavailable with the version named.
+**Adding an entry to `IMPLEMENTED` is a claim that this kernel reproduces that
+version's decisions byte-for-byte**, and the corpus is what substantiates it:
+cases at every implemented V, replayed in CI. It is not a chore to be done
+while revving a number.
+
+One consequence to internalise before designing a feature: **additive
+capability is a new V too.** A kernel that grows an IR construct the previous
+version did not have cannot keep claiming the old V, because a receipt from a
+pack using that construct would be stamped with it and would not replay under
+an honest implementation of it. New expressive power is not free; it costs one
+semantics version.
 
 ## 5. What counts as breaking
 
 Per contract, because they break differently.
+[spec/compatibility.md](../spec/compatibility.md) C1 is the promise this table
+detects violations of; the row that catches people is the rule IR, which is a
+**floor, not a ceiling** — later versions may accept more syntax, never less,
+so a validator that gets *stricter* is a breaking change even though it adds
+nothing and fixes something real.
 
 | Contract | Breaking means | Detected by |
 |---|---|---|
@@ -256,6 +291,8 @@ project previously made is worth more space than the feature that found it.
 
 ## See also
 
+- [spec/compatibility.md](../spec/compatibility.md) — what v1.0 promises, per
+  contract, and the arguments behind every rule this document applies
 - [CLAUDE.md](../CLAUDE.md) — the `engine` block gotcha, stated for agents
 - [golden/README.md](../golden/README.md) — corpus contract and regeneration rules
 - [rulepacks/README.md](../rulepacks/README.md) — pack authoring and what is not auto-wired

@@ -21,6 +21,7 @@ from duly_kernel.api import adjudicate
 
 from .corpus import PackNotFound, resolve_pack_path
 from duly_kernel.engine import AdjudicationError
+from duly_kernel.semantics import UnsupportedSemantics, check_replayable
 
 
 def _differing_fields(recomputed: dict, committed: dict) -> list[str]:
@@ -57,6 +58,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"MISMATCH {case_id}: missing golden receipt {receipt_path}")
             return 1
         committed = json.loads(receipt_path.read_text())
+
+        # Replay is scoped to a semantics version, not to a kernel
+        # (spec/compatibility.md C3). A receipt claiming semantics this kernel
+        # does not implement is not a mismatch — nothing was compared — so it
+        # is reported in its own words rather than as a byte diff.
+        try:
+            check_replayable(committed)
+        except UnsupportedSemantics as exc:
+            print(f"UNSUPPORTED {case_id}: {exc}")
+            return 1
 
         fact_paths = sorted((case_dir / "facts").glob("*.json"))
         facts = [json.loads(p.read_text()) for p in fact_paths]

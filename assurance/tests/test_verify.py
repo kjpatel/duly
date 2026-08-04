@@ -57,6 +57,28 @@ def test_verify_fails_on_tampered_receipt_hash(tmp_path, capsys):
     assert "receiptSha256" in printed
 
 
+def test_verify_refuses_a_receipt_at_unimplemented_semantics(tmp_path, capsys):
+    """spec/compatibility.md C3: replay is scoped to a semantics version.
+
+    Reported as UNSUPPORTED rather than MISMATCH because nothing was compared —
+    and because the byte diff this would otherwise produce ("differing fields:
+    engine, id, receiptSha256") describes a symptom and hides the cause.
+    """
+    out = tmp_path / "g"
+    assert generate.main(["--out", str(out), "--count", "4", "--seed", "9"]) == 0
+    receipt_path = sorted((out / "receipts").glob("*.json"))[0]
+    case_id = receipt_path.stem
+    doc = json.loads(receipt_path.read_text())
+    doc["engine"]["version"] = "0.0.2"
+    receipt_path.write_text(json.dumps(doc, indent=2) + "\n")
+    capsys.readouterr()
+    assert verify.main(["--golden", str(out)]) == 1
+    printed = capsys.readouterr().out
+    assert printed.startswith("UNSUPPORTED ")
+    assert case_id in printed
+    assert "0.0.2" in printed
+
+
 def test_verify_fails_on_missing_receipt(tmp_path, capsys):
     out = tmp_path / "g"
     assert generate.main(["--out", str(out), "--count", "4", "--seed", "9"]) == 0

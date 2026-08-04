@@ -5,6 +5,12 @@ sealed before anything can consume it. It used to live only at
 `duly_kernel.receipt`, a module path that reads private, so every adopter
 either reached into it or wrote their own three-line variant — and a private
 variant produces facts nobody else can verify (docs/m5-plan.md, A1).
+
+The freeze added the other half: what an integration needs to *consume* a
+receipt someone else produced. `check_replayable` says whether this kernel is
+entitled to an opinion about it, and `decision_digest` says whether two
+receipts record the same adjudication (spec/compatibility.md C3, C4). Both are
+reached by adopters, not only by duly, so both sit at the root.
 """
 
 from __future__ import annotations
@@ -14,7 +20,15 @@ from duly_kernel import content_hash, seal_fact
 
 
 def test_the_first_contact_api_is_at_the_package_root():
-    assert duly_kernel.__all__ == ["adjudicate", "content_hash", "seal_fact"]
+    assert duly_kernel.__all__ == [
+        "adjudicate",
+        "content_hash",
+        "seal_fact",
+        "decision_digest",
+        "check_replayable",
+        "UnsupportedSemantics",
+        "IMPLEMENTED",
+    ]
 
 
 def test_seal_fact_derives_the_id_from_the_hash():

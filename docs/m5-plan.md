@@ -37,15 +37,16 @@ merged. Several sections reference both.
 
 ```
 Phase 0 (probe) ──► Phase 1 (seam) ──┬──► Phase 2 (freeze) ──┬──► Phase 4 (distribution) ──► Phase 5 (guide)
-                                     └──► Phase 3 (move) ────┘
+                                     └──► Phase 3 (move) ────┴──► Phase 6 (capacity)
 ```
 
 Phases 2 and 3 are independent of each other and may run in parallel. The
 hard edges: 1 before 3 (seam before move), 2 and 3 both before 4 (you publish
 the frozen contract and the separated layout, not the mixed state), 4 before 5
-(the guide documents what actually ships).
+(the guide documents what actually ships). Phase 6 measures what the others
+produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-~15–17 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what they must fix). Every PR satisfies CLAUDE.md's definition of done
+~17–19 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what they must fix; two more after the 2026-08-04 audit against the roadmap). Every PR satisfies CLAUDE.md's definition of done
 (documented, discoverable, demoable, reconciled) **in that PR**, not in
 follow-ups.
 
@@ -74,7 +75,16 @@ follow-ups.
    If a finding fits no phase, say so explicitly in Appendix A — "not phase
    work" is a decision, and an unrouted finding is an oversight that reads
    identically.
-9. **Correct the plan when the work contradicts it.** These sections were
+9. **Every roadmap item has a phase, and the check is mechanical.** Before
+   claiming a phase list complete, walk [README's M5 section](../README.md#m5--adoption-and-v10)
+   line by line and name the phase that owns each item. This plan was written
+   from the items its author was actively thinking about, and an audit on
+   2026-08-04 found two with no home at all: the reference capacity envelope
+   (no phase), and the adapter half of "contribution paths, **both** edges"
+   (Phase 5 covered only packs). Both are v1.0 exit items. Rule 8 says a
+   *finding* is not filed until a phase owns it; this is the same rule
+   pointing the other way, at the plan's own source.
+10. **Correct the plan when the work contradicts it.** These sections were
    written before the code was measured; where a task turns out to rest on a
    wrong assumption, fix the task in the same PR and note what moved. Phase 0
    shipped three rules where §4 specified two, and narrowed an **ASK** that
@@ -173,10 +183,18 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       shipped package, run from an installed wheel outside the repo, with
       declared known-failures that fail the run if they start passing. This is
       the check that makes Phase 1's claim testable rather than asserted.
-- [ ] **Demo (1 PR):** the four `REPO_ROOT` constants in `app.py`,
+- [x] **Demo (1 PR):** the four `REPO_ROOT` constants in `app.py`,
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
       the repo layout so `uvicorn demo.app:app` still works unchanged.
+      *Done — `demo/content.py`, `DULY_DEMO_CONTENT`. Writing the D2 test
+      immediately found the demo did **not** degrade honestly: pointed at an
+      empty root it raised `FileNotFoundError` building its built-in fixture
+      scenario, because that scenario reads `spec/examples` and is content like
+      any other. It returns `None` now, so a missing demonstration reads as
+      "no scenarios" rather than a broken server. All four pages verified 200
+      with zero items, in a real uvicorn process and not only under
+      `TestClient`.*
 - [x] **Kernel + conformance entry points (1 PR)** — added after Phase 0
       measured them (A1, A3), and the only Phase 1 work on the *adoption*
       path rather than the repo-layout one:
@@ -337,7 +355,7 @@ proves it.
       tag that is both milestone and package release; the checklist in §7
       of that doc runs in full, including every marker-gated suite.
 
-## 9. Phase 5 — adopter's guide + contribution path (2–3 PRs)
+## 9. Phase 5 — adopter's guide + contribution paths (3–4 PRs)
 
 **Objective:** the v1.0 exit criterion — an independent engineering team can
 install duly, integrate its own document and extractor, author a pack, and
@@ -358,12 +376,60 @@ The PRD's bar: one working day.
       Carry over the idiom Phase 0 found the hard way: a threshold is a rule,
       not a number in a guard ([spec/rule-ir.md](../spec/rule-ir.md),
       "A threshold is a rule, not a number in a guard").*
-- [ ] **Contribution path.** Complete the authoring guide and contribution
-      checks across packs, ontologies, starters, and golden-corpus coverage
-      — now phrased for content living under `examples/`.
+- [ ] **Contribution path — the pack edge.** Complete the authoring guide and
+      contribution checks across packs, ontologies, starters, and
+      golden-corpus coverage — now phrased for content living under
+      `examples/`.
+- [ ] **Contribution path — the adapter edge.** Added 2026-08-04: the roadmap
+      item is "contribution paths, **both** edges", and this plan had only
+      the pack one. The [contribution model](../README.md#contribution-model)
+      rests on two surfaces — rule packs and extraction adapters — and says
+      outright that only one of them has a path. An adapter contributor needs
+      what a pack author already has: what the protocol requires, how to prove
+      conformance, how to record fixtures instead of calling a live service,
+      how spans are verified, and what a run envelope must contain. The
+      shipped Docling adapter and the scripted stub are the two worked
+      examples; [extraction/duly_extraction/adapter.py](../extraction/duly_extraction/adapter.py)
+      already carries the acceptance check. **A first-week outcome offered on
+      either edge has to be walkable on either edge**, which is the PRD's
+      wording and the reason this is not optional.
 - [ ] **Close-out.** README status + roadmap updated; changelog entry written
       (what M5 turned out to mean); this file deleted, with anything durable
       graduated to its permanent home.
+
+## 10. Phase 6 — the capacity envelope (1 PR)
+
+Added 2026-08-04, after an audit of this plan against the README roadmap
+found the item had no phase at all — the failure executor rule 8 exists to
+prevent, in this file. It is last because it measures what the other phases
+produce, and it can run any time after Phase 3 settles the layout.
+
+**Objective:** publish what one adjudication costs on the committed corpus,
+and where a pure-Python reference interpreter stops being the right thing to
+run. This answers a standing [PRD open question](guiding-prd.md#open-questions)
+and is a v1.0 exit item, not a nice-to-have.
+
+- [ ] **Measure, and publish the number.** Adjudication latency across the
+      corpus — median and tail, by pack, separating pack load from evaluation
+      — plus corpus replay wall time and peak memory for the largest case.
+      Report the machine and the Python version: a number without them is not
+      a measurement.
+- [ ] **State where it stops.** The honest half. Name the shape of workload
+      the reference interpreter is the wrong tool for, in terms an adopter can
+      check against their own volume, and say what the alternative would be —
+      which is the v1.3 backend question, so this is where the *demonstrated
+      need* for it either appears or does not.
+
+**Landmines:**
+- **Measurement, not optimization.** [docs/guiding-prd.md](guiding-prd.md)'s
+  non-goals include "premature performance optimization that weakens receipt
+  fidelity or semantics". If a number looks bad, publish it; a slow honest
+  kernel is a fixable problem and a fast dishonest one is not.
+- Timing code must not reach the kernel. No wall clock in library code is an
+  invariant (CLAUDE.md); the harness times from outside.
+- Numbers are not deterministic, so they do not belong in a committed
+  artifact anything replays. Publish them in a doc with their date and
+  machine, never in a receipt or a golden file.
 
 ---
 
@@ -558,6 +624,15 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-04 — **Plan audited against the roadmap** — two v1.0 exit items had
+  no phase: the reference capacity envelope (none at all, now Phase 6) and the
+  adapter half of "contribution paths, both edges" (Phase 5 covered only
+  packs). Executor rule 9 added so the check is mechanical rather than
+  remembered.
+- 2026-08-04 — **Phase 1 complete, demo content roots** — four `REPO_ROOT`
+  constants became one configurable `CONTENT`; the D2 claim that the demo
+  surfaces are toolkit is now a test rather than an assertion, and it found a
+  crash on empty content the first time it ran.
 - 2026-08-04 — **Phase 1, assurance cluster** — one shared pack resolution for
   `verify`/`impact`/`generate`; the corpus generator's templates and kinds
   became registries example content can populate. Proved inert by regenerating

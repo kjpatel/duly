@@ -149,8 +149,16 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       make the template set a registry that example content populates from
       outside the package (auto-discovery over registration where possible);
       `impact.py` root resolution.
-- [ ] **Review + whatif (1 PR):** `review/duly_review/queue.py` `_REPO_ROOT`;
-      `whatif/duly_whatif/__main__.py` root discovery.
+- [ ] **Review + whatif (1 PR):** `review/duly_review/queue.py` `_REPO_ROOT`
+      — which is **A8, a live bug**, not a tidy-up: the schema it points at is
+      not in the wheel, so `ReviewQueue.resolve()` raises for every adopter.
+      Blocked on the A8 **ASK**. Also `review/duly_review/golden.py`'s
+      `parents[2]` default and `whatif/duly_whatif/__main__.py` root discovery.
+- [x] **Wheel smoke for every package (1 PR)** — added after A8 showed the
+      Phase 0 probe covered two packages out of nine. One real entry point per
+      shipped package, run from an installed wheel outside the repo, with
+      declared known-failures that fail the run if they start passing. This is
+      the check that makes Phase 1's claim testable rather than asserted.
 - [ ] **Demo (1 PR):** the four `REPO_ROOT` constants in `app.py`,
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
@@ -404,6 +412,34 @@ directory as an error, which is defensible. The real inconsistency is
 run. **Phase 1:** decide the trio together — missing dir, empty dir, and
 which of the two commands may fail a build.
 
+**A8 — `duly_review` does not work from a wheel.** Found while sizing the
+remaining Phase 1 tasks. `review/duly_review/queue.py` computes
+`_FACT_SCHEMA_PATH` as `<package>/../../spec/schemas/grounded-fact.schema.json`,
+and `spec/` is not in the wheel — the packages list ships only `*/duly_*`. From
+an installed venv the path resolves inside `site-packages` and does not exist,
+so `ReviewQueue.resolve()` — the queue's central operation — raises
+`FileNotFoundError` for every adopter. Measured, not inferred.
+
+This is not an ergonomics defect like A1 and A3; it is a shipped feature that
+does not work outside this repository. Every test passes because in a checkout
+the path is real, which is also why it survived Phase 0: the probe exercised
+`duly_kernel` and `duly_conformance` and nothing else.
+
+The probe gap is closed independently of the fix —
+[`.github/scripts/wheel_smoke.py`](../.github/scripts/wheel_smoke.py) now
+touches one real entry point per shipped package from an installed wheel, and
+carries A8 as a *declared* known failure that fails the run if it ever starts
+passing. So the bug is pinned by CI while the design question is open.
+
+**ASK**, Phase 1 (review + whatif task): (a) `ReviewQueue` takes a
+caller-supplied validator, with a convenience loader — the seam pattern
+`load_repo_registry` already sets, and consistent with this phase's thesis;
+(b) ship `spec/schemas/*.json` as package data, since an adopter validating
+their own facts needs the contract anyway; or (c) both — (a) for the seam,
+(b) because the schemas are genuinely adopter-facing. Recommend (c); the open
+part of (b) is which package carries them, since `duly_core`'s charter was
+just declared two functions wide.
+
 **A7 — `content_hash` is implemented seven times.** Found while fixing A1.
 `kernel/duly_kernel/receipt.py`, `store/duly_store/store.py`,
 `assurance/duly_assurance/generate.py`, `calibration/duly_calibration/facts.py`,
@@ -501,6 +537,9 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-04 — **Phase 1, wheel smoke** — every shipped package exercised from
+  an installed wheel; A8 found and pinned as a declared known failure pending
+  its design decision.
 - 2026-08-04 — **Phase 1, `duly_core` + empty-corpus semantics** — A7 done:
   one canonical implementation, seven call sites migrated, `spec/canonical-vectors.json`
   committed as baseline and interop artifact, and RFC 8785 key ordering made

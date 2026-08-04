@@ -17,10 +17,18 @@ on:
   pull_request:
     paths:
       - "examples/minimal-integration/**"
+      - "core/**"
       - "kernel/**"
       - "conformance/**"
+      - "store/**"
+      - "review/**"
+      - "calibration/**"
+      - "extraction/**"
+      - "assurance/**"
+      - "dmn/**"
       - "pyproject.toml"
       - ".github/workflows/minimal-integration.yml"
+      - ".github/scripts/wheel_smoke.py"
 
 jobs:
   wheel:
@@ -37,3 +45,33 @@ jobs:
 
       - name: Run the example against a built wheel, outside the repository
         run: ./examples/minimal-integration/check_wheel.sh
+
+  smoke:
+    # The example covers duly_kernel and duly_conformance. This covers the rest,
+    # because a package that needs a file the wheel does not carry is invisible
+    # to every other job in this repository — where the file is always there.
+    name: Every shipped package works from a wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Build the wheel
+        run: uv build --wheel --out-dir dist
+
+      - name: Install it into a clean venv
+        run: |
+          python3 -m venv /tmp/smoke-venv
+          # jsonschema is duly_review's lazily-imported validation dependency;
+          # the smoke run needs it to reach the code path that fails.
+          /tmp/smoke-venv/bin/pip install --quiet dist/duly-*.whl jsonschema
+
+      - name: Smoke every package from outside the repository
+        run: |
+          cp .github/scripts/wheel_smoke.py /tmp/wheel_smoke.py
+          cd /tmp && env -u PYTHONPATH /tmp/smoke-venv/bin/python /tmp/wheel_smoke.py

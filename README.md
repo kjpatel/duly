@@ -7,13 +7,98 @@
 ╚═════╝  ╚═════╝ ╚══════╝╚═╝
 ```
 
+### Decisions on documents that replay byte-for-byte, years later, with a receipt.
+
+<p align="center">
+  <strong>
+    <a href="#quick-start-60-seconds">Quick start</a> ·
+    <a href="docs/demo_tour.md">Demo tour</a> ·
+    <a href="docs/neuro-symbolic-architecture.md">Architecture</a> ·
+    <a href="spec/grounded-facts.md">Specs</a> ·
+    <a href="docs/faq.md">FAQ</a>
+  </strong>
+</p>
+
 [![CI](https://github.com/kjpatel/duly/actions/workflows/ci.yml/badge.svg)](https://github.com/kjpatel/duly/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
+[![Golden replay](https://img.shields.io/badge/golden_replay-351_receipts_byte--exact-brightgreen)](golden/README.md)
+[![Contracts](https://img.shields.io/badge/contracts-v1.0_policy_published-brightgreen)](spec/compatibility.md)
 
-**Auditable document decisioning for regulated workflows.**
+> [!IMPORTANT]
+> **Pre-1.0, and honest about which parts.** The fact, receipt and rule-IR
+> contracts are **frozen** — [what v1.0 promises, per contract](spec/compatibility.md),
+> including what it deliberately does not cover. Not yet on PyPI: installation is
+> `git clone` until the v1.0 release. The SQLite stores and in-process demo are a
+> reference wiring, not a deployment blueprint. Demo content that is invented
+> rather than real is labelled `DEMO-SYNTHETIC` in the file that carries it.
 
-*duly* — as in duly authorized, duly recorded, duly noted: in accordance with proper procedure. 
+*duly* — as in duly authorized, duly recorded, duly noted: in accordance with proper procedure.
 
 duly is an open-source toolkit for building neuro-symbolic document-decisioning systems: a neural layer reads unstructured documents and *proposes* structured facts; a deterministic symbolic layer applies a versioned, effective-dated rulebase to *decide* what those facts mean. Perception proposes, logic disposes. Every conclusion arrives with the rule that fired, the fact it fired on, and the clause the fact came from — an answer plus a receipt.
+
+## Quick start (60 seconds)
+
+```bash
+git clone https://github.com/kjpatel/duly && cd duly && uv sync
+```
+
+The property everything else is built on, in nine lines: **the same file, adjudicated
+under the rules in force on two different dates.**
+
+```python
+import glob, json, yaml
+from duly_kernel import adjudicate
+
+facts = [json.load(open(p)) for p in sorted(glob.glob("golden/cases/notice-ny-0010/facts/*.json"))]
+pack = yaml.safe_load(open("rulepacks/termination-notice-us-states/pack.yaml"))
+
+for effective in ("2025-06-01", "2026-06-01"):        # one file, two rulebooks
+    r = adjudicate(facts, pack, effective, "2026-08-04T12:00:00Z", "nc:noticeCompliant")
+    rules = " ".join(x["ruleId"] for x in r["rulesFired"])
+    print(f'as of {effective}   compliant={str(r["decision"]["value"]["value"]):5}'
+          f'   {rules:32} receipt {r["receiptSha256"][:12]}…')
+```
+
+```text
+as of 2025-06-01   compliant=True    NC-DEF-00 NY-NR-45-LEGACY        receipt b96da8d45106…
+as of 2026-06-01   compliant=False   NY-NR-45 NC-NR-01                receipt 5a6b701ef373…
+```
+
+Same notice, opposite answers, and neither is a guess: each receipt names the rule
+that decided, the statute it cites, the facts it consumed by content hash, and the
+presumption it defeated. Hand either receipt to someone who does not trust you and
+they can re-run it.
+
+**Then see it whole** — four browser surfaces over the same engine: the decision
+workspace, a rule studio, an evidence browser with a knowledge-time dial, and a
+receipt viewer that re-verifies anything you paste into it.
+
+```bash
+uv run uvicorn demo.app:app --port 8788     # → http://localhost:8788
+```
+
+**And check the claim**, which takes one command and about ten seconds:
+
+```bash
+uv run python -m duly_assurance verify      # → verified 351 cases
+```
+
+That is every committed decision in the repository re-adjudicated from its facts and
+its pack, and compared byte-for-byte against the receipt committed months earlier.
+
+### Where to go next
+
+| If you want | Read |
+|---|---|
+| To watch it run before reading about it | [demo tour](docs/demo_tour.md) |
+| The system mental model, for platform engineers | [architecture guide](docs/neuro-symbolic-architecture.md) |
+| The ~20 terms this repo uses precisely | [concepts](docs/concepts.md) |
+| The actual bytes: PDF text → receipt → correction | [follow one fact](docs/follow-one-fact.md) |
+| The objection you are about to raise | [FAQ](docs/faq.md) |
+| The contract, argued decision by decision | [grounded facts](spec/grounded-facts.md), [rule IR](spec/rule-ir.md) |
+| To write a rule pack | [rulepacks/README.md](rulepacks/README.md) |
+| To contribute, or to point an agent at it | [CONTRIBUTING.md](CONTRIBUTING.md), [CLAUDE.md](CLAUDE.md) |
 
 ## The problem
 
@@ -28,8 +113,6 @@ A model that is right 95% of the time and cannot show its work is unusable here,
 The individual pieces of this architecture already exist as open source: Datalog engines, document AI, rules-as-code DSLs, graph stores, provenance vocabularies. What doesn't exist is the **seam** — a standard for how a probabilistic extractor hands facts to a deterministic reasoner with source spans, calibrated confidence, abstention semantics, and bitemporal versioning intact, plus a kernel that can replay any decision as of any date. Today, every team building one of these systems writes that layer themselves.
 
 duly is that seam.
-
-**New to this space?** Suggested reading path: this page's [problem](#the-problem) and [design choices](#design-choices-and-why) → the [demo tour](docs/demo_tour.md) (watch it run before reading about it) → the [neuro-symbolic architecture guide](docs/neuro-symbolic-architecture.md) (the system mental model, written for platform engineers) → the [concepts glossary](docs/concepts.md) (the ~20 terms this repo uses precisely) → [follow one fact](docs/follow-one-fact.md) (the actual data, PDF text to receipt to human correction) → the [FAQ](docs/faq.md) → then the [specs](spec/grounded-facts.md), which argue every decision. The [guiding PRD](docs/guiding-prd.md) states the project's users, product principles, success measures, and scope. Agents and contributors: start at [CLAUDE.md](CLAUDE.md).
 
 ## Architecture
 
@@ -278,6 +361,8 @@ The project is structured so that the two largest contribution surfaces sit at t
 - **Extraction adapters** — vendors and users of a given document AI service can maintain its adapter independently, the way observability vendors maintain OpenTelemetry exporters.
 
 A small core maintains the specification and kernel; the edges grow with the ecosystem.
+
+[CONTRIBUTING.md](CONTRIBUTING.md) is the practical version: setup, the four invariants a change must not break, what "done" means here, and the changes that want an issue before any code. [SECURITY.md](SECURITY.md) states what is in scope and — as usefully — which sharp edges are documented properties rather than defects.
 
 ## Relationship to prior art
 

@@ -144,11 +144,25 @@ inert.
 
 Known seam violations (from the Phase 0-era survey; Appendix A adds more):
 
-- [ ] **Assurance cluster (1 PR):** `verify.py` `repo_root()`;
+- [x] **Assurance cluster (1 PR):** `verify.py` `repo_root()`;
       `generate.py`'s hardcoded pack-path constants and `STATE_TEMPLATES` —
       make the template set a registry that example content populates from
       outside the package (auto-discovery over registration where possible);
       `impact.py` root resolution.
+      *Done. `verify` and `generate` resolved packs against `parents[2]` of the
+      installed package — the repo only from a checkout — while `impact` used
+      working-directory-first, which was correct; all three now share
+      `corpus.resolve_pack_path`. `STATE_TEMPLATES` and the `kind` dispatch
+      became two registries (`register_kind`, `register_template`), refusing
+      duplicate names so a corpus cannot depend on import order. The six pack
+      constants stay put: they are example **data** and move in Phase 3 with
+      the templates that reference them.*
+      *Proved inert the only way that counts: `generate --count 350 --seed 7`
+      is byte-identical to the pre-refactor baseline, and differs from the
+      committed corpus by exactly `review-0001`. That check earned its keep —
+      it caught a transcribed `question` field (`resc:fundingPermitted` typed
+      as `resc:rescissionApplies`) that changed 17 cases while every test still
+      passed.*
 - [ ] **Review + whatif (1 PR):** `review/duly_review/queue.py` `_REPO_ROOT`
       — which is **A8, a live bug**, not a tidy-up: the schema it points at is
       not in the wheel, so `ReviewQueue.resolve()` raises for every adopter.

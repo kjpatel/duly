@@ -33,6 +33,8 @@ from duly_kernel.api import adjudicate
 from duly_kernel.engine import AdjudicationError
 from duly_kernel.ir import PackValidationError, load_pack
 
+from .corpus import PackNotFound, resolve_pack_path
+
 MARKER = "<!-- duly-impact -->"
 MAX_DETAILED_EXCERPTS = 5
 
@@ -88,26 +90,6 @@ def _load_receipt(receipts_dir: Path, case_id: str) -> dict:
             return json.load(f)
     except (OSError, json.JSONDecodeError) as e:
         raise ImpactOperationalError(f"unreadable golden receipt {path}: {e}") from e
-
-
-def _resolve_pack_path(pack_ref: str, golden_root: Path) -> Path:
-    """Resolve the case's pack reference against the working tree.
-
-    Absolute paths are taken as-is; relative paths are tried against the
-    current working directory (the repo root in CI), then against the golden
-    corpus root's parent.
-    """
-    p = Path(pack_ref)
-    if p.is_absolute():
-        candidates = [p]
-    else:
-        candidates = [Path.cwd() / p, golden_root.parent / p]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    raise ImpactOperationalError(
-        f"pack not found: {pack_ref} (tried {', '.join(str(c) for c in candidates)})"
-    )
 
 
 def _load_pack_cached(path: Path, cache: dict[Path, dict]) -> dict:
@@ -211,7 +193,10 @@ def analyze(golden_root: Path, *, pack_overrides: dict[Path, dict] | None = None
         case_id = str(case["id"])
         facts = _load_facts(case_dir)
         golden = _load_receipt(receipts_dir, case_id)
-        pack_path = _resolve_pack_path(str(case["pack"]), golden_root)
+        try:
+            pack_path = resolve_pack_path(str(case["pack"]), golden_root)
+        except PackNotFound as e:
+            raise ImpactOperationalError(str(e)) from e
         pack = _load_pack_cached(pack_path, pack_cache)
         attribute = _decision_attribute(case, golden, pack)
 

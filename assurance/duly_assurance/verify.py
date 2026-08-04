@@ -18,14 +18,9 @@ from pathlib import Path
 import yaml
 
 from duly_kernel.api import adjudicate
+
+from .corpus import PackNotFound, resolve_pack_path
 from duly_kernel.engine import AdjudicationError
-
-
-def repo_root() -> Path:
-    root = Path(__file__).resolve().parents[2]
-    if (root / "rulepacks").is_dir():
-        return root
-    return Path.cwd()
 
 
 def _differing_fields(recomputed: dict, committed: dict) -> list[str]:
@@ -48,7 +43,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no cases directory at {cases_dir}", file=sys.stderr)
         return 1
 
-    root = repo_root()
     packs: dict[str, dict] = {}
     case_ids: set[str] = set()
     verified = 0
@@ -69,7 +63,9 @@ def main(argv: list[str] | None = None) -> int:
 
         pack_rel = str(case["pack"])
         if pack_rel not in packs:
-            packs[pack_rel] = yaml.safe_load((root / pack_rel).read_text())
+            packs[pack_rel] = yaml.safe_load(
+                resolve_pack_path(pack_rel, golden).read_text()
+            )
 
         try:
             recomputed = adjudicate(

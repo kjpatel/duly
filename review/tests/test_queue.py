@@ -25,6 +25,7 @@ from reviewtest_helpers import (  # noqa: E402
     build_arc_facts,
     load_notice_pack,
     mailed_fact,
+    make_fact,
     make_correction,
     rehash,
 )
@@ -350,24 +351,78 @@ class TestCorrectionRoundTrip:
         assert fixed["abstentions"] == []
         assert fixed["decision"]["value"] == {"kind": "boolean", "value": False}
 
-    def test_outranking_without_supersession(self, queue, store, arc):
-        """A correction that does not supersede still wins at evaluation
-        time: the lone human assertion outranks the machine facts (spec
-        resolved question 2)."""
+    def test_resolving_without_supersession_is_refused(self, queue, store, arc):
+        """spec/compatibility.md C6. This test used to assert the opposite —
+        that a non-superseding correction still wins, by outranking — and the
+        state it pinned is the one the freeze made unrepresentable.
+
+        The receipt it produced was the argument against it: a persistent
+        `low_confidence` entry for `nc:noticeMailedDate` on every future
+        adjudication, for an attribute the decision *used*, which contradicts
+        the fact spec's own definition of `abstentions`. Outranking still works
+        in the kernel — that is resolved question 2 and it is untouched — but
+        it is no longer how a *queue resolution* may be recorded, because
+        resolving is a ruling on one specific fact.
+        """
         facts, receipt = arc
         (result,) = enqueue_receipt(queue, receipt, recorded_at=T0)
         correction = make_correction(mailed_fact(facts), supersedes=False)
-        queue.resolve(result["itemId"], correction, store, T1)
+
+        with pytest.raises(InvalidCorrectionError) as excinfo:
+            queue.resolve(result["itemId"], correction, store, T1)
+
+        message = str(excinfo.value)
+        assert mailed_fact(facts)["id"] in message, (
+            "the refusal must name the fact id the correction has to carry — "
+            "the queue cannot stamp it in, so the caller needs it"
+        )
+        assert "supersede" in message
+
+        # Refused means refused: no event, and the item is still open for
+        # somebody to resolve properly.
+        assert queue.item(result["itemId"])["status"] == "open"
+        assert len(store.as_of(ARC_CASE_ID, knowledge=T1)) == len(facts)
+
+    def test_a_conflict_item_is_not_covered(self, queue, store):
+        """C6 is `low_confidence` only, and this pins that it was a decision
+        rather than an oversight. A conflict entry names several facts, so
+        "the fact it rules on" has no referent — the analogous rule would have
+        to say which of them, and nobody has a reason yet."""
+        facts = build_arc_facts(mailed_confidence={"score": 0.95, "method": "platt"})
+        rival = make_fact(
+            ARC_CASE_ID, ARC_NOTICE_ENTITY, "nc:TerminationNotice", MAILED,
+            {"kind": "date", "value": "2026-07-20"},
+            "2026-07-26T00:00:00Z", confidence={"score": 0.95, "method": "platt"},
+        )
+        facts = facts + [rival]
+        for f in facts:
+            store.ingest(f)
+        receipt = adjudicate_arc(facts)
+        (entry,) = receipt["abstentions"]
+        assert entry["reason"] == "conflict"
+        assert len(entry["facts"]) == 2
+
+        (result,) = enqueue_receipt(queue, receipt, recorded_at=T0)
+        # No supersedes, and accepted: the carve-out.
+        item = queue.resolve(
+            result["itemId"], make_correction(rival, supersedes=False), store, T1
+        )
+        assert item["status"] == "resolved"
+
+    def test_the_store_still_takes_an_independent_human_fact(self, store, arc):
+        """The carve-out, and it is load-bearing. C6 binds the *queue*, not the
+        store: a value known from a phone call is not a ruling on anybody's
+        extraction, and the conflict policy already handles it. Enforcing
+        supersession one layer lower would make that fact unrecordable."""
+        facts, _ = arc
+        independent = make_correction(mailed_fact(facts), supersedes=False)
+        store.ingest(independent)
 
         after = store.as_of(ARC_CASE_ID, knowledge=T1)
         mailed = [f for f in after if f["attribute"] == MAILED]
         assert len(mailed) == 2  # both live: outranking, not supersession
 
         fixed = adjudicate(after, load_notice_pack(), "2026-07-25", T1, QUESTION)
-        # The still-live machine fact stays excluded (an honest, persistent
-        # low_confidence entry) but the human fact binds — no conflict entry,
-        # and the decision derives from the corrected date.
         assert [a["reason"] for a in fixed["abstentions"]] == ["low_confidence"]
         assert fixed["decision"]["value"] == {"kind": "boolean", "value": False}
-        input_ids = {f["id"] for f in fixed["inputFacts"]}
-        assert correction["id"] in input_ids
+        assert independent["id"] in {f["id"] for f in fixed["inputFacts"]}

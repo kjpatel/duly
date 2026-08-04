@@ -65,8 +65,6 @@ __all__ = [
     "load_schema",
 ]
 
-__version__ = "0.0.1"
-
 
 def canonical_key(key: str) -> bytes:
     """RFC 8785 object-key sort order: UTF-16 code units, big-endian.

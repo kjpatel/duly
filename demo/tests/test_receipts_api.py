@@ -308,6 +308,27 @@ class TestPackResolution:
         assert view["verification"]["verdict"] == "partial"
 
 
+class TestSemantics:
+    def test_a_receipt_at_unimplemented_semantics_is_not_replayed(self, client):
+        """spec/compatibility.md C3. The receipt is re-sealed, so its hash and
+        its facts check out — which is exactly the case worth getting right: a
+        pass here would be this kernel answering a question about *its* meaning
+        and reporting it as the receipt's."""
+        receipt = _receipt()
+        receipt["engine"]["version"] = "0.0.2"
+        view = _inspect(client, json.dumps(_rehash(receipt)), *_fact_texts())
+
+        checks = _checks(view)
+        assert checks["receiptHash"] == "pass"
+        assert checks["facts"] == "pass"
+        assert checks["replay"] == "unavailable"
+        assert view["verification"]["verdict"] == "partial"
+        detail = next(
+            c["detail"] for c in view["verification"]["checks"] if c["id"] == "replay"
+        )
+        assert "0.0.2" in detail
+
+
 class TestExports:
     def test_markdown_report_renders_for_a_corpus_case(self, client):
         res = client.get(f"/api/receipts/corpus/{CASE}/report?format=md")

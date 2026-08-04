@@ -32,8 +32,6 @@ from .metrics import (
 from .platt import PlattCalibrator
 from .temperature import TemperatureCalibrator
 
-__version__ = "0.0.1"
-
 __all__ = [
     "CalibrationError",
     "Calibrator",

@@ -127,7 +127,7 @@ more explicitly:
 | `GroundedFact` | One assertion about one case, with evidence and uncertainty | A conclusion merely because it is well-formed |
 | Rendition | One extractor's reading of one document's bytes, content-addressed and immutable — and the coordinate system every character span is measured in | The document, or a faithful transcription of it. Two extractors produce two renditions from identical bytes, which is why a span that resolves against one may resolve nowhere in the other |
 | Rule pack | Versioned decision policy, including defaults, exceptions, confidence floors, citations, calendars, and the phrasing of each decision it can answer. Authored as YAML, or compiled from a [DMN decision table](../spec/dmn.md) — either way the kernel sees one artifact | A domain ontology or workflow definition — and its phrasing is not part of the decision's identity |
-| `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace — independently checkable by its holder, to the depth the inputs they also hold allow | The facts, source rendition, or rule-pack bytes themselves — which is why it can verify its own hash alone, and needs those artifacts supplied to verify anything more |
+| `DecisionReceipt` | A derived decision that pins its evidence references and records its rule trace — independently checkable by its holder, to the depth the inputs they also hold allow. Its schema is **closed and has no extension point**: because the hash covers the whole body, there is no such thing as an additive receipt field, so anything that wants to travel with a receipt travels in a separately-hashed sidecar referencing it | The facts, source rendition, or rule-pack bytes themselves — which is why it can verify its own hash alone, and needs those artifacts supplied to verify anything more. Nor a record of everything a producer would like to assert: a field only a *trusting* reader benefits from does not belong inside the artifact an untrusting reader verifies |
 | Extraction run envelope | Integrity manifest for one run over one rendition | Authentication of the producer |
 
 A rule pack has two halves, and the distinction is easy to miss because one
@@ -527,7 +527,8 @@ are not current behavior.
 | Confidence policy | Low-confidence machine facts can be excluded under versioned pack policy | A calibrated error rate unless representative labels and the calibrator's assumptions hold |
 | Defeasible rules | Defaults, exceptions, priorities, and derivations are explicit and replayable — and, where the [verifier's fragment](../spec/pack-verification.md) reaches, mechanically checkable: same-priority rules can be *proved* mutually exclusive, and the input regions where no rule concludes a decision can be enumerated with witnesses | That the encoded policy is current or legally correct. "Complete" acquires a narrow, checkable meaning here and keeps a wide unchecked one: the verifier proves a pack reaches *some* conclusion over its inputs, never that the conclusion is the right one, that the rules encode the whole of the law, or that the facts the rules need were extracted |
 | Bitemporal replay | The store can reconstruct facts known at a prior knowledge point and valid at an effective point, and — from the same log — say what became of a fact that no longer binds | Correct replay if a caller bypasses the as-of projection |
-| Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples |
+| Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples. Nor that *any* kernel reproduces them: replay is scoped to the receipt's [semantics version](../spec/compatibility.md), and a kernel not implementing it refuses rather than agreeing by coincidence |
+| Decision identity | `receiptSha256` identifies the artifact; `decision_digest()` identifies the adjudication, so two runs on different machines or backends can be shown to have decided the same thing | That either receipt is authentic — the digest excludes what identifies the run, so it resists nothing. Verification is still the whole-body hash |
 | Impact analysis | A rule change's flips and reasoning changes are visible on the corpus | Automatic approval or rejection of the change |
 | PROV-O export | Standard lineage tools can query useful artifact relationships | A lossless mapping of duly's time, uncertainty, or rule semantics |
 
@@ -651,6 +652,39 @@ difference is not in the artifact — it is in whether the checking is available
 to the person with a reason to doubt. The [receipt viewer](../demo/receipts_api.py)
 exists to make that availability concrete rather than theoretical
 ([tour §12](demo_tour.md#12-the-receipt-viewer)).
+
+Freezing the contracts put a question to all of that which none of it had
+asked: **replay by whom?** Every claim above ends in "re-adjudicate and compare
+the bytes", and every one of them quietly assumes the kernel doing the
+re-adjudicating means by the rules what the kernel that sealed the receipt
+meant. While one implementation of one semantics has ever existed, the
+assumption is free and invisible. It stops being either the moment an evaluator
+bug is fixed: the corrected behaviour is *new semantics*, and a receipt sealed
+under the old ones should not reproduce under the new ones — if it did, the
+correction would be a lie about what changed.
+
+> Replay is a promise scoped to a **semantics version**, not to duly. A receipt
+> names the semantics it was sealed under, and a kernel that does not implement
+> that version refuses it rather than replaying it and possibly agreeing by
+> coincidence.
+
+Coincidental agreement is the failure worth naming, because it is silent and it
+passes: two semantics that differ on some inputs agree on most, so a kernel
+replaying receipts it has no standing to replay produces a wall of green.
+
+The second thing the freeze exposed is a conflation this document carried from
+the start. Golden replay compares *bytes*, and a receipt's bytes include which
+kernel and which evaluation backend produced it. That is right for a corpus —
+duly's cases come from one implementation, and byte identity is the strongest
+check available. It is wrong as a *definition of agreement*, because a second
+backend cannot produce identical bytes by construction, and legislating that
+away by lifting `engine.backend` out of the hash would cost the receipt its
+answer to what evaluated it.
+
+> `receiptSha256` answers **which artifact decided**. `decision_digest()`
+> answers **what was decided**. Byte identity is the second plus having been the
+> same run — which is precisely why it is the right check for a corpus and the
+> wrong one between two implementations.
 
 ## The gates
 
@@ -891,11 +925,11 @@ These are extension paths, not commitments or a second roadmap. The
 | A receipt is only as good as the recipient's ability to check it | A surface that opens any receipt — committed, or pasted from another deployment — and re-verifies it on open rather than on request (**shipped** — the demo's receipt viewer, [tour §12](demo_tour.md#12-the-receipt-viewer)) | Verification never renders what it cannot source: a missing fact set or a moved pack version is reported as unchecked, never approximated from whatever is on disk. The report is the kernel's own section structure in a third medium, never a second renderer |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
-| Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback | Integrity, authenticity, authorization, and decision semantics remain distinct |
-| Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection | Existing atomic facts and receipts remain canonical and old cases replay |
+| Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback. The signature *scheme* is still open; its **shape** is settled — a signature never goes inside a hashed body, because signing bytes and then storing the signature among them is circular | Integrity, authenticity, authorization, and decision semantics remain distinct |
+| Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection — **deferred past v1.0**, which freezes one entity per type and states the boundary rather than working around it | Existing atomic facts and receipts remain canonical and old cases replay. New IR capability is not additive-for-free: it arrives as a new *semantics version* whose kernel also implements the old one, because a receipt using a construct an honest older kernel cannot evaluate must not claim that kernel's version |
 | Conversational investigation | Typed query API, validated natural-language-to-query translation, receipt-grounded rendering | A model may translate or phrase; it does not silently create facts or decisions |
 | Governed agentic workflows | Receipt-aware action policies and idempotent orchestration adapters. The decision-consumption half now has a worked reference ([examples/closing-scheduler](../examples/closing-scheduler/README.md)); the action half — authorization, freshness, idempotency — remains open | duly remains decision authority, the orchestrator owns side effects, and the orchestrator holds no copy of the rule it just asked about |
-| Higher-volume relational reasoning | Define cross-backend equivalence, then add a Datalog/Soufflé backend and differential testing | Decision semantics and trace fidelity match the reference kernel |
+| Higher-volume relational reasoning | Cross-backend equivalence is now **defined** — two receipts agree when their [decision digests](../spec/compatibility.md) match, since `engine.backend` is inside the hashed body and byte equality was never available — so what remains is the Datalog/Soufflé backend itself and differential testing against the reference | Decision semantics and trace fidelity match the reference kernel. Equivalence is digest equality, never a relaxed byte comparison: dropping `engine.backend` from the hash to make bytes agree would cost the receipt its answer to "what evaluated this" |
 | Genuinely non-stratified rule fragments | Consider an ASP backend for the demonstrated fragment | Complexity is introduced locally, with deterministic selection and explainable receipts |
 
 The durable design principle is not "use more symbolic technology." It is:
@@ -917,6 +951,10 @@ requirement without weakening replay.
   receipt design decision.
 - [Rule IR](../spec/rule-ir.md) defines applicability, stratification,
   defeasibility, abstention, and receipt mapping.
+- [Compatibility](../spec/compatibility.md) states what v1.0 promises per
+  contract, what the freeze deliberately leaves uncovered, and why the receipt
+  has no extension point — read it before proposing a field on any hashed
+  document.
 - [Ontology conformance](../spec/ontology-conformance.md) defines the LinkML
   subset and the gate's honest boundaries.
 - [PROV-O alignment](../spec/prov-o.md) explains the partial external

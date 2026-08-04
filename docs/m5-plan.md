@@ -243,9 +243,19 @@ fresh wheel.
 ## 6. Phase 2 — the freeze (2 PRs)
 
 **Objective:** `spec/compatibility.md` — the stability promise v1.0 makes —
-plus the code that backs its one claim needing code.
+plus the code that backs the two claims needing it.
 
-- [ ] **The decision memo + policy (1 PR).** `spec/compatibility.md` in house
+> **Corrected 2026-08-04, before the phase started (rule 9).** This section was
+> written from the README's *Compatibility policy* item and silently dropped
+> the *Contract closeout* item beside it, whose three named questions —
+> quantified bindings, review-resolution supersession, the envelope signature
+> affordance — had no task anywhere in this plan. Both roadmap items are Phase
+> 2; the task list below now covers both. Two smaller corrections in the same
+> pass: it is **six** reader-less `__version__` strings, not five (`duly_core`
+> arrived in Phase 1), and the objective's "one claim needing code" is two —
+> the replay guarantee needs a guard, not only `decision_digest()`.
+
+- [x] **The decision memo + policy (1 PR).** `spec/compatibility.md` in house
       style (decision / rationale / rejected alternative), covering:
       - **Option A stated normatively** (D3): the receipt schema has no
         extension point; the sidecar is the blessed mechanism; named
@@ -258,24 +268,52 @@ plus the code that backs its one claim needing code.
         semantics version V replays byte-identically under any kernel
         implementing V; a semantics change is a new V; the corpus carries
         cases at every V still promised. Resolves the PENDING in
-        release-process.md §4.
+        release-process.md §4. *Shipped as C3, plus the guard the clause
+        needed: nothing anywhere read `engine.version`, so
+        `duly_kernel.semantics.check_replayable` now refuses an unimplemented
+        version and both replay paths call it.*
       - **The version-scope policy**, resolving release-process.md's other
-        two PENDINGs: the five reader-less package `__version__` strings
-        (**ASK**: keep `duly_kernel.__version__` — it gains a reader in the
-        verifier-identity line — and drop the other five as decorative, or
-        keep all), and the rule-pack `2026.x.y` scheme (**ASK**: what the
-        components mean has never been written down; Kushan defines, the PR
-        records).
+        two PENDINGs: the six reader-less package `__version__` strings
+        (**ASK** — *answered: keep `duly_kernel.__version__`, delete the other
+        six, pin the count at one by test*), and the rule-pack `2026.x.y`
+        scheme (**ASK** — *answered:
+        `<content-year>.<substantive>.<clarifying>`; note the finding that no
+        component of any pack version has ever moved, so this is a rule
+        forward, not a description*).
       - What "frozen" means for the fact, receipt, and IR contracts, and the
-        deprecation policy for a major-version break.
-- [ ] **`decision_digest()` (1 PR).** A pure function over a receipt's
-      determinant fields (`decision`, `asOf`, `rulePack.{name,version}`,
-      `rulesFired`, `derivation`, `inputFacts`, `abstentions` — the memo
-      fixes the exact list, including where `rulePack.gitCommit`/`url` land),
-      with committed test vectors over the golden corpus. Nothing *hashes*
-      it into any document — it exists so the determinant boundary is code,
-      not prose, and so option B stays recoverable. Its consumer is the
-      compatibility policy itself; say so in the docstring.
+        deprecation policy for a major-version break. *C1 and C9. The IR is a
+        floor, not a ceiling, which prices rule-IR open question 4: a
+        validator that gets stricter post-1.0 is a breaking change.*
+      - **Contract closeout — the three questions the README names.**
+        *Quantified bindings deferred past v1.0 (C5); the envelope reserves no
+        signature affordance (C7); a `low_confidence` review resolution must
+        supersede the fact it rules on (C6).*
+- [x] **`decision_digest()` (1 PR — landed with the memo).** A pure function
+      over a receipt's determinant fields (`decision`, `asOf`,
+      `rulePack.{name,version}`, `rulesFired`, `derivation`, `inputFacts`,
+      `abstentions`, and `engine.version`), with committed test vectors.
+      Nothing *hashes* it into any document — it exists so the determinant
+      boundary is code, not prose, and so option B stays recoverable.
+      *Landed with the memo rather than after it, because the memo's C4 states
+      the field list normatively and a policy whose one executable claim ships
+      separately is a policy nobody can check. The vectors are
+      self-contained receipts rather than a table over the corpus, so another
+      language can reproduce them; two are asserted byte-identical to
+      committed receipts so a vector cannot drift into a plausible
+      fabrication. Its consumer is the compatibility policy — and, it turned
+      out, the backend-identity question, which it answers: two receipts agree
+      iff their digests match.*
+- [ ] **The review-resolution invariant (1 PR).** C6's enforcement, the only
+      freeze decision needing code beyond the memo's own two.
+      `duly_review.ReviewQueue.resolve` refuses a `low_confidence` resolution
+      whose correction does not supersede the item's abstained fact, naming the
+      fact id it must carry. **It must not stamp the field**: a correction
+      arrives content-addressed, so writing into it changes its hash and its
+      identity — the sketch in grounded-facts open question 2 proposed
+      stamping and is wrong for that reason, which is recorded in C6. Leaves
+      `conflict` items alone. `review-0001` already uses the superseding form,
+      so the corpus is untouched; check the demo's review arc, whose facts are
+      read from disk rather than held by the store.
 - [ ] **Changelog + architecture reconciliation.** The freeze sharpens claims
       the architecture doc already makes (the two-hash question, "which
       artifact decided vs what was decided") — check the five places
@@ -633,6 +671,17 @@ regulated domains need most.
   constants became one configurable `CONTENT`; the D2 claim that the demo
   surfaces are toolkit is now a test rather than an assertion, and it found a
   crash on empty content the first time it ran.
+- 2026-08-04 — [#48](https://github.com/kjpatel/duly/pull/48) — cross-phase —
+  every documented command executed as written; `release-process.md` was
+  telling releasers to run the conformance CLI in a form that no longer works.
+- 2026-08-04 — **Phase 2, the memo** — `spec/compatibility.md` with eight
+  decisions; both ASKs answered; three `release-process.md` PENDINGs closed;
+  four spec open questions closed (dmn 1, pack-verification 1, grounded-facts
+  1 and 2) and two more priced (rule-ir 1 and 4). Code: `duly_kernel.semantics`
+  (the replay guard nothing had), `duly_kernel.digest`, six `__version__`
+  strings deleted. Inert: 351 replay byte-for-byte, `impact` 0 of 351.
+  §6 corrected first — it had dropped the roadmap's whole *Contract closeout*
+  item, which rule 9 exists to catch.
 - 2026-08-04 — **Phase 1, assurance cluster** — one shared pack resolution for
   `verify`/`impact`/`generate`; the corpus generator's templates and kinds
   became registries example content can populate. Proved inert by regenerating

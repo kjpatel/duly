@@ -46,21 +46,26 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships). Phase 6 measures what the others
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-**Where this stands (2026-08-04):** Phases 0 and 1 done; Phase 2 has one task
-left (§6's review-resolution invariant). Phase 3 is unblocked — its 1→3 edge
-was the whatif CLI's pack resolution, which now shares
-`corpus.resolve_pack_path` and so moves with `golden/` rather than against it.
+**Where this stands (2026-08-04):** Phases 0, 1 and 2 are complete. **Phase 3
+is next** and is unblocked — its 1→3 edge was the whatif CLI's pack
+resolution, which now shares `corpus.resolve_pack_path` and so moves with
+`golden/` rather than against it. Phase 4 waits on 3.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
 more when Phase 2's own audit found the *Contract closeout* roadmap item had no
-task). Ten are merged — see Appendix B, which is the count of record. Every PR
+task). Twelve are merged — see Appendix B, which is the count of record. Every PR
 satisfies CLAUDE.md's definition of done (documented, discoverable, demoable,
 reconciled) **in that PR**, not in follow-ups.
 
 ## 3. Rules for every executor
 
-1. **Branch, PR, squash-merge. Never commit to `main`.**
+1. **Branch, PR, squash-merge. Never commit to `main`.** Branch off `main`
+   unless a PR genuinely depends on an unmerged one. If you do stack, the base
+   PR merging does **not** re-target yours: merge it then and the work lands on
+   a branch `main` has already left behind, silently. Re-target to `main` and
+   rebase the moment the base merges, and confirm with `git log main` before
+   ticking anything — that check is what caught [#51](https://github.com/kjpatel/duly/pull/51).
 2. Before every commit: the full suite, `python -m duly_assurance verify`,
    `spec/validate.py`. `git diff -- golden/` must be empty (D6) — if it is
    not, your change was not inert; fix the change, do not regenerate.
@@ -274,7 +279,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
 `git diff -- golden/` empty, and the Phase 0 example still passes from a
 fresh wheel.
 
-## 6. Phase 2 — the freeze (1 PR merged, 1 remaining)
+## 6. Phase 2 — the freeze (2 PRs, complete)
 
 **Objective:** `spec/compatibility.md` — the stability promise v1.0 makes —
 plus the code that backs the two claims needing it.
@@ -337,7 +342,7 @@ plus the code that backs the two claims needing it.
       fabrication. Its consumer is the compatibility policy — and, it turned
       out, the backend-identity question, which it answers: two receipts agree
       iff their digests match.*
-- [ ] **The review-resolution invariant (1 PR).** C6's enforcement, the only
+- [x] **The review-resolution invariant (1 PR).** C6's enforcement, the only
       freeze decision needing code beyond the memo's own two.
       `duly_review.ReviewQueue.resolve` refuses a `low_confidence` resolution
       whose correction does not supersede the item's abstained fact, naming the
@@ -348,6 +353,13 @@ plus the code that backs the two claims needing it.
       `conflict` items alone. `review-0001` already uses the superseding form,
       so the corpus is untouched; check the demo's review arc, whose facts are
       read from disk rather than held by the store.
+      *Done. One committed test had to be inverted rather than adapted —
+      `test_outranking_without_supersession` asserted exactly the state C6
+      makes unrepresentable, and the receipt it produced was the argument
+      against itself: a persistent `low_confidence` entry for an attribute the
+      decision used. It now asserts the refusal, and a second test keeps the
+      store's carve-out honest. `review-0001` regenerates byte-identically,
+      and the demo's arc already superseded.*
 - [x] **Changelog + architecture reconciliation.** The freeze sharpens claims
       the architecture doc already makes (the two-hash question, "which
       artifact decided vs what was decided") — check the five places
@@ -803,7 +815,8 @@ and every exception behind it.**
   Auditing this file in the same PR found **A9** (A3's pattern surviving in
   `duly_whatif`'s CLI) and that Phase 1's "review + whatif" task had shipped
   its review half only.
-- 2026-08-04 — **Phase 1 complete, whatif's CLI** — A9 done: pack resolution
+- 2026-08-04 — [#50](https://github.com/kjpatel/duly/pull/50) — **Phase 1
+  complete, whatif's CLI** — A9 done: pack resolution
   shared with `verify`/`impact`/`generate` instead of a fourth answer,
   `--ontologies` with no path default, and the absent-registry weakening
   reported in the notes rather than left silent. Removing the default exposed
@@ -811,3 +824,19 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-04 — [#52](https://github.com/kjpatel/duly/pull/52) — **Phase 2
+  complete, the review-resolution invariant** — C6 enforced at the queue
+  boundary: a `low_confidence` resolution must supersede the fact it rules on,
+  and the refusal names the id because a content-addressed correction cannot be
+  stamped. One committed test was inverted rather than adapted — it asserted
+  the state C6 makes unrepresentable — and a new one keeps the store's
+  carve-out honest. `review-0001` regenerates byte-identically.
+  *Landed twice: [#51](https://github.com/kjpatel/duly/pull/51) merged into
+  the stacked branch `m5-phase1-whatif-cli` **after** #50 had already merged to
+  `main`, so main never took it. Recorded here rather than tidied away because
+  the log is what corroborates the checkboxes above, and a tick with no PR that
+  main can show is exactly the drift the 2026-08-04 audit found. The mechanism
+  is worth knowing: GitHub does not re-target a stacked PR when its base
+  branch merges, and merging it then puts the work somewhere `main` will never
+  see. The check is `git log main` containing the commit — cheap, and it is
+  the one that failed here.*

@@ -38,8 +38,19 @@ The fact store remains the system of record. The queue stores abstention
 entries and receipts (already content-addressed artifacts), never fact
 documents; a correction reaches the store only through ``FactStore.ingest``,
 and the durable correction mechanism is the fact's own ``supersedes`` field
-(spec D7). The conflict-resolution policy (spec resolved question 2) means a
-lone live human assertion outranks machine facts even without supersession.
+(spec D7).
+
+**Resolving a ``low_confidence`` item requires supersession**
+(`spec/compatibility.md <../../spec/compatibility.md>`_ C6): resolving one is,
+by construction, a ruling on one specific fact. The queue refuses a correction
+that does not carry it, and names the id it must carry — see
+``_require_supersession`` for why it cannot simply write the field in.
+
+The rule binds *this* boundary and no other. ``FactStore.ingest`` still takes
+an independent human fact that supersedes nothing, and the conflict-resolution
+policy (spec resolved question 2) still makes a lone live human assertion
+outrank machine facts without it — because a value known from a phone call is
+not a ruling on anybody's extraction.
 
 Postgres portability: same conventions as duly_store.store — ANSI types,
 TEXT ISO-8601 timestamps, ``INTEGER PRIMARY KEY`` needs
@@ -563,11 +574,56 @@ class ReviewQueue:
                 f"correction attribute {correction['attribute']!r} does not match "
                 f"the item's attribute {item['attribute']!r}"
             )
+        abstained = item["entry"].get("facts") or []
         supersedes = correction.get("supersedes")
-        if supersedes is not None and supersedes not in (item["entry"].get("facts") or []):
+        if supersedes is not None and supersedes not in abstained:
             raise InvalidCorrectionError(
                 "correction supersedes a fact that is not among the item's abstained facts"
             )
+        self._require_supersession(item, supersedes, abstained)
+
+    @staticmethod
+    def _require_supersession(item: dict, supersedes, abstained: list) -> None:
+        """A `low_confidence` resolution must supersede the fact it rules on.
+
+        [spec/compatibility.md](../../spec/compatibility.md) C6, and
+        [grounded-facts.md](../../spec/grounded-facts.md) open question 2 before
+        it. Resolving one of these items is, by construction, a ruling on one
+        specific fact, so `supersedes` is the truthful record of the act. The
+        coexisting form — a human fact that merely outranks — leaves the
+        below-floor fact live, so every future receipt carries a persistent
+        `low_confidence` entry for an attribute the decision *did* use, which
+        contradicts the fact spec's own definition of `abstentions`.
+
+        **The queue refuses; it does not stamp.** The obvious implementation is
+        to write `supersedes` in from the entry's own fact id rather than trust
+        the caller, and it is not available: a correction arrives
+        content-addressed, so writing a field into it changes its hash and
+        therefore its identity, and the queue would be handing the store a
+        document its author never sealed. Naming the required id is the same
+        invariant without any component rewriting a hashed document behind its
+        author's back.
+
+        Deliberately narrow, on three axes. Only `low_confidence` items —
+        `conflict` entries carry several facts and the analogous rule is not
+        obvious. Only the *queue*: `FactStore.ingest` still accepts independent
+        human facts, because a value known from a phone call is not a ruling on
+        an extraction. And only where the entry names exactly one fact, since
+        an entry naming none has nothing to rule on.
+        """
+        if item.get("reason") != "low_confidence" or supersedes is not None:
+            return
+        if len(abstained) != 1:
+            return
+        raise InvalidCorrectionError(
+            f"resolving a low_confidence item is a ruling on the fact it "
+            f"abstained over, so the correction must supersede it: set "
+            f'"supersedes": "{abstained[0]}" and re-seal. Without it the fact '
+            f"stays live and every future receipt carries a low_confidence "
+            f"entry for an attribute the decision used (spec/compatibility.md "
+            f"C6). A human fact that is not a ruling on this extraction "
+            f"belongs in the store directly, not through the queue."
+        )
 
 
 # --- module-level conveniences (the names the roadmap promises) ---------------

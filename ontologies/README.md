@@ -40,8 +40,8 @@ it" and "it is what we say it is".
 ## Useful commands
 
 ```bash
-uv run python -m duly_conformance list                                   # registry contents
-uv run python -m duly_conformance check starters golden/cases rulepacks spec/examples
+uv run python -m duly_conformance --ontologies . list                    # registry contents
+uv run python -m duly_conformance --ontologies . check ../starters ../golden/cases ../rulepacks ../spec/examples
 uv run python spec/conformance_gate_demo.py                              # the gate, loudly
 ```
 

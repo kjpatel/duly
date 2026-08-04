@@ -155,7 +155,7 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       `rules_api.py`, `evidence_api.py`, `receipts_api.py` become one
       configurable content root (env var or explicit config), defaulting to
       the repo layout so `uvicorn demo.app:app` still works unchanged.
-- [ ] **Kernel + conformance entry points (1 PR)** — added after Phase 0
+- [x] **Kernel + conformance entry points (1 PR)** — added after Phase 0
       measured them (A1, A3), and the only Phase 1 work on the *adoption*
       path rather than the repo-layout one:
       - re-export `content_hash` from `duly_kernel`'s package root. Every
@@ -173,9 +173,17 @@ Known seam violations (from the Phase 0-era survey; Appendix A adds more):
       than first written. `verify` on an empty `cases/` already exits **0**
       (`verified 0 cases`) and only a *missing* directory exits 1, which is
       defensible as it stands. `impact` on the same empty corpus exits **2**.
-      So the decision is not "what should verify do" but "may either command
-      fail an adopter's day-one CI run, and should the two agree?" — **ASK**,
-      one line in the PR.
+      So the decision was not "what should verify do" but "may either command
+      fail an adopter's day-one CI run, and should the two agree?"
+      **DECIDED (Kushan, 2026-08-04): succeed, but say so unmissably.** `impact`
+      exits 0 on an empty corpus like `verify` already does, and both print a
+      line nobody can mistake for coverage. Exit 0 keeps day-one adoption
+      unblocked; the message exists because the alternative is the trap
+      [rulepacks/README.md](../rulepacks/README.md) already documents — a
+      cheerful "0 of N decisions flip" that means the tool could not see
+      anything, read as a pass. A `--require-cases N` flag is the natural
+      follow-on if a real workload wants CI strictness; not built until one
+      does.
 
 **Landmines:**
 - `kernel/duly_kernel/report.py` renders a `rulepacks/<name>/pack.yaml` path
@@ -396,6 +404,55 @@ directory as an error, which is defensible. The real inconsistency is
 run. **Phase 1:** decide the trio together — missing dir, empty dir, and
 which of the two commands may fail a build.
 
+**A7 — `content_hash` is implemented seven times.** Found while fixing A1.
+`kernel/duly_kernel/receipt.py`, `store/duly_store/store.py`,
+`assurance/duly_assurance/generate.py`, `calibration/duly_calibration/facts.py`,
+`whatif/duly_whatif/casefacts.py`, `spec/validate.py` and
+`starters/tools/check_facts.py` each carry their own `canonical()` +
+`content_hash()`. **All seven agree today** — measured, not assumed — so this
+is duplication rather than a live bug. But it is the project's most
+invariant-critical function, and a drift would be silent and misattributed
+(CLAUDE.md's JS-number gotcha is the same failure: "the symptom accuses the
+wrong party").
+
+Consolidation is *not* mechanical, which is why it is not in the A1 PR.
+`duly_kernel`, `duly_store`, `duly_conformance` and `duly_calibration` are all
+leaf packages — none imports another — so pointing `duly_store` at
+`duly_kernel` means the store cannot be used without the kernel. And two of
+the seven should stay independent on purpose: `spec/validate.py` and
+`starters/tools/check_facts.py` are differential checks *on* the
+implementation, and importing it would make them tautologies (the same
+argument the evidence browser's projection makes against calling `as_of`).
+
+**DECIDED (Kushan, 2026-08-04): a shared `duly_core` package, plus spec test
+vectors.** The recommendation this replaces was "keep them independent and add
+a differential test", and the argument against it is worth keeping because it
+corrects a mistake in this plan's own reasoning: **copies of a function are not
+independent implementations.** duly's real differential checks have algorithmic
+diversity — `prove`'s SMT solving against `validate_pack`'s syntactic matching,
+the evidence browser's log replay against the store's survivor projection.
+Seven copies of three identical lines have none. A test asserting they agree
+proves only that nobody typo'd, while borrowing the credibility of a check that
+does much more, and it crowds out the one that would work.
+
+The oracle for a canonicalization function is a **spec**, not a sibling copy.
+Concretely: the fact schema says content hashes are "SHA-256 over RFC 8785
+(JCS) canonical JSON", and Python's `sort_keys=True` orders keys by code point
+while RFC 8785 orders by UTF-16 code unit — they disagree for non-BMP
+characters. All seven implementations agree with each other *and* are equally
+unable to say whether the RFC claim holds. Committed `(document, digest)`
+vectors are what closes that, and they double as the artifact another language
+needs to implement duly's fact contract at all.
+
+So: one implementation in `duly_core` (narrow charter — canonical form and
+content addressing, nothing else), `content_hash(doc, hash_field)` with no
+default, all seven call sites migrated including `spec/validate.py` and
+`check_facts.py`, `duly_kernel` re-exporting so adopters need not know a second
+package exists, and vectors in `spec/`. The RFC 8785 gap is resolved rather
+than left: measured across 1772 committed documents, **zero have non-ASCII
+object keys**, so adopting true UTF-16 key ordering is provably inert — the
+label becomes true instead of being weakened. Tracked as the Phase 1 A7 task.
+
 **A6 — the DMN compiler could emit a pack that fails at adjudication, and
 called it success.** Found by chasing A5. A money column with `> 200` in it is
 the most natural cell a business analyst writes; it is valid S-FEEL, renders
@@ -443,6 +500,13 @@ regulated domains need most.
   architecture diagram.
 - 2026-08-01 — **Phase 0 complete** — `examples/minimal-integration` plus its
   wheel-check workflow; Appendix A populated with five findings (A1–A5).
+- 2026-08-03 — **Phase 1, kernel + conformance entry points** — A1 fixed
+  (`content_hash` and a new `seal_fact` exported from `duly_kernel`'s root;
+  the minimal-integration example now uses them and its receipt is
+  byte-identical), A3 fixed (no repo-relative `--ontologies` default,
+  `DULY_ONTOLOGIES` accepted, a missing registry diagnosed rather than
+  raised, exit 2 distinct from exit 1). First tests for the conformance CLI —
+  its absence is why both defects shipped. A7 recorded and routed.
 - 2026-08-03 — Phase 0 follow-up — chasing A5 found A6, a live bug: the DMN
   compiler emitted a pack that adjudication rejects and reported success.
   Fixed with the kernel's teaching type error and the spec statement (A5),

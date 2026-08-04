@@ -25,8 +25,7 @@ from pathlib import Path
 import yaml
 
 from duly_conformance import OntologyRegistry, assert_conformant, parse_ontology
-from duly_kernel.api import adjudicate
-from duly_kernel.receipt import content_hash
+from duly_kernel import adjudicate, content_hash, seal_fact
 
 HERE = Path(__file__).resolve().parent
 
@@ -37,19 +36,6 @@ CLAIM = {"id": "claim:4471", "type": "ex:ExpenseClaim"}
 # the wall clock: that is what makes the answer reproducible forever.
 AS_OF_EFFECTIVE = "2026-03-02"
 AS_OF_KNOWLEDGE = "2026-03-02T14:00:00Z"
-
-
-def seal(fact: dict) -> dict:
-    """Content-address a fact: hash its bytes, derive its id from the hash.
-
-    Every artifact duly produces is identified by what it contains, so the
-    id cannot disagree with the content. `content_hash` is duly's own — do
-    not reimplement it, because the canonical form (sorted keys, minimal
-    separators, `id` and the hash field excluded) is what every verifier
-    everywhere will recompute.
-    """
-    digest = content_hash(fact, "contentHash")
-    return {"id": f"urn:duly:fact:sha256:{digest}", "contentHash": digest, **fact}
 
 
 def facts() -> list[dict]:
@@ -88,7 +74,7 @@ def facts() -> list[dict]:
     }
 
     return [
-        seal({
+        seal_fact({
             **common,
             "attribute": "ex:amount",
             "value": {"kind": "money", "amount": "312.40", "currency": "USD"},
@@ -96,7 +82,7 @@ def facts() -> list[dict]:
             "assertion": machine,
             "confidence": {"score": 0.97, "method": "raw"},
         }),
-        seal({
+        seal_fact({
             **common,
             "attribute": "ex:category",
             "value": {
@@ -111,7 +97,7 @@ def facts() -> list[dict]:
         # No document says "nobody approved this" — absence is not a span. A
         # fact with no document behind it is grounded by attestation instead,
         # naming who says so and how it was established.
-        seal({
+        seal_fact({
             **common,
             "attribute": "ex:preApproved",
             "value": {"kind": "boolean", "value": False},

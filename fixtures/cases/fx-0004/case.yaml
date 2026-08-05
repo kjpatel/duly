@@ -1,0 +1,6 @@
+# fx-0003 after review: the correction supersedes the below-floor fact
+id: fx-0004
+pack: fixtures/pack.yaml
+question: fx:permitted
+asOfEffective: "2026-06-01"
+asOfKnowledge: "2026-03-03T09:00:00Z"

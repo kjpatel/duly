@@ -31,63 +31,94 @@
   },
   "vectors": [
     {
-      "description": "the committed golden receipt esign-0005, unmodified",
-      "equivalenceClass": "esign-0005-as-decided",
+      "description": "the committed fixture receipt fx-0001, unmodified",
+      "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -95,66 +126,97 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "49fb4491856b22d1cd8ed637ef28b177b50af362e809a27a8905836b73b5065d"
+      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
     },
     {
       "description": "same adjudication, different case id — caseId is bookkeeping",
-      "equivalenceClass": "esign-0005-as-decided",
+      "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
         "caseId": "case:acme:loan-4471",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -162,68 +224,99 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "49fb4491856b22d1cd8ed637ef28b177b50af362e809a27a8905836b73b5065d"
+      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
     },
     {
       "description": "same adjudication, pack provenance added — where a pack was fetched from is not what it says",
-      "equivalenceClass": "esign-0005-as-decided",
+      "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0",
           "gitCommit": "9f1c0b2",
-          "url": "https://example.invalid/packs/esign-closing-package"
+          "url": "https://example.invalid/packs/duly-fixture-pack"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -231,66 +324,97 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "49fb4491856b22d1cd8ed637ef28b177b50af362e809a27a8905836b73b5065d"
+      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
     },
     {
       "description": "same adjudication, different evaluation backend — this is the cross-backend agreement claim, executable",
-      "equivalenceClass": "esign-0005-as-decided",
+      "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -298,66 +422,97 @@
           "backend": "souffle"
         }
       },
-      "decisionDigest": "49fb4491856b22d1cd8ed637ef28b177b50af362e809a27a8905836b73b5065d"
+      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
     },
     {
       "description": "same adjudication, different kernel implementation, and the artifact identity fields deliberately wrong — the digest is over what was decided, not over a correctly sealed document",
-      "equivalenceClass": "esign-0005-as-decided",
+      "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
         "id": "urn:duly:receipt:sha256:0000000000000000000000000000000000000000000000000000000000000000",
         "receiptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "caseId": "case:golden:esign-0005",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "acme-kernel",
@@ -365,66 +520,97 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "49fb4491856b22d1cd8ed637ef28b177b50af362e809a27a8905836b73b5065d"
+      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
     },
     {
       "description": "different decision semantics — engine.version is determinant because different semantics can mean different decisions",
-      "equivalenceClass": "esign-0005-under-other-semantics",
+      "equivalenceClass": "fx-0001-under-other-semantics",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -432,66 +618,97 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "abbe5707eebfc51537033e1f470cca571befe671df865095c028535a1eb4aab1"
+      "decisionDigest": "a1b7e18ec2190c8ebb97a8be645e17e8d4f1df19856b1561e1ff2cc673f8d457"
     },
     {
       "description": "different pack version — a pack's identity is its name and version",
-      "equivalenceClass": "esign-0005-under-later-pack",
+      "equivalenceClass": "fx-0001-under-later-pack",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": false
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.2.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": false
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -499,66 +716,97 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "92b3431235cb739c9779c9e5c20b2ca3f1df8350ba092c4d8892a40c342a88f1"
+      "decisionDigest": "95c1ac248475a516c3cd66f6e9683ea4f38bc6ed3dade6c2d9c7d92c34fd366f"
     },
     {
       "description": "the opposite conclusion (synthetic: the value flipped in both the decision and the derivation)",
-      "equivalenceClass": "esign-0005-flipped",
+      "equivalenceClass": "fx-0001-flipped",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "receiptSha256": "2f7c6536dc817ac775e5c09c36315193c024e21f95df2b081d5d9bc31fe4740c",
-        "caseId": "case:golden:esign-0005",
+        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "caseId": "case:fixture:fx-0001",
         "decision": {
-          "entity": "task:esign-0005",
-          "attribute": "pkg:eSignEligible",
+          "entity": "widget:fx-0001",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": true
           }
         },
         "asOf": {
-          "effective": "2026-08-14T00:00:00Z",
-          "knowledge": "2026-08-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "esign-closing-package",
+          "name": "duly-fixture-pack",
           "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "PKG-DEF-00",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
-            "priority": 0,
-            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "priority": 100,
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "PKG-DEF-01",
+            "ruleId": "FX-EXCEPTION-01",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption (fail-safe to wet ink)"
+              "text": "Fixture exception (fictional)",
+              "url": "https://example.invalid/fixture/exception-01"
             },
-            "priority": 0,
+            "priority": 200,
             "effectiveFrom": "1900-01-01T00:00:00Z",
-            "defeated": []
+            "defeated": [
+              "FX-DEFAULT-00"
+            ]
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "task:esign-0005",
-            "attribute": "pkg:eSignEligible",
+            "entity": "widget:fx-0001",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": true
             }
           },
-          "rule": "PKG-DEF-01",
-          "premises": []
+          "rule": "FX-EXCEPTION-01",
+          "premises": [
+            {
+              "factId": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+            },
+            {
+              "factId": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+            },
+            {
+              "conclusion": {
+                "entity": "widget:fx-0001",
+                "attribute": "fx:requiredMinimumScore",
+                "value": {
+                  "kind": "decimal",
+                  "value": "50"
+                }
+              },
+              "rule": "FX-THRESHOLD-02",
+              "premises": []
+            }
+          ]
         },
-        "inputFacts": [],
+        "inputFacts": [
+          {
+            "id": "urn:duly:fact:sha256:b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4",
+            "contentHash": "b723d6643d0d02de52b13632b198ebfaeb12d85a4d582a14cde10e1f805c11d4"
+          },
+          {
+            "id": "urn:duly:fact:sha256:cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10",
+            "contentHash": "cdd7ab8dfa247c365a58acdc8102bb0d48bb65d3b02a05249f8ccdae44f14b10"
+          }
+        ],
         "abstentions": [],
         "engine": {
           "kernel": "duly-kernel",
@@ -566,86 +814,85 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "1c2b0573eff8f9fd9b4bbe6884e564c0213221b494ebc1c2f4e3e99b2a5b436c"
+      "decisionDigest": "d8abbfa3e090420845024600628d18cb21788c0b2162d624fcdf5a78d42aaf49"
     },
     {
-      "description": "the committed golden receipt notice-ny-0007, unmodified — nested derivation, four input facts, one abstention",
-      "equivalenceClass": "notice-ny-0007-as-decided",
+      "description": "the committed fixture receipt fx-0003, unmodified — a live low_confidence abstention alongside a decision",
+      "equivalenceClass": "fx-0003-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:480b63fc7dac1144437590cb8c81701c6402d55a1fa796dc19f57d58341877d3",
-        "receiptSha256": "480b63fc7dac1144437590cb8c81701c6402d55a1fa796dc19f57d58341877d3",
-        "caseId": "case:golden:notice-ny-0007",
+        "id": "urn:duly:receipt:sha256:ee0ea3326592b3ba538d3747ef4df34c2d78ae66936372749eeedd02ea419e1b",
+        "receiptSha256": "ee0ea3326592b3ba538d3747ef4df34c2d78ae66936372749eeedd02ea419e1b",
+        "caseId": "case:fixture:fx-0003",
         "decision": {
-          "entity": "notice:notice-ny-0007",
-          "attribute": "nc:noticeCompliant",
+          "entity": "widget:fx-0003",
+          "attribute": "fx:permitted",
           "value": {
             "kind": "boolean",
             "value": true
           }
         },
         "asOf": {
-          "effective": "2025-10-14T00:00:00Z",
-          "knowledge": "2025-10-16T12:00:00Z"
+          "effective": "2026-06-01T00:00:00Z",
+          "knowledge": "2026-03-02T12:00:00Z"
         },
         "rulePack": {
-          "name": "termination-notice-us-states",
-          "version": "2026.3.0"
+          "name": "duly-fixture-pack",
+          "version": "2026.1.0"
         },
         "rulesFired": [
           {
-            "ruleId": "NC-DEF-00",
+            "ruleId": "FX-DEFAULT-00",
             "version": "1.0.0",
             "citation": {
-              "text": "Default presumption"
+              "text": "Fixture default presumption (fictional)"
             },
             "priority": 0,
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": []
           },
           {
-            "ruleId": "NY-NR-45-LEGACY",
+            "ruleId": "FX-THRESHOLD-02",
             "version": "1.0.0",
             "citation": {
-              "text": "N.Y. Ins. Law § 3425(d)(1)",
-              "url": "https://www.nysenate.gov/legislation/laws/ISC/3425"
+              "text": "Fixture threshold, 2026 edition (fictional)"
             },
             "priority": 100,
-            "effectiveFrom": "1986-01-01T00:00:00Z",
-            "effectiveTo": "2026-01-01T00:00:00Z",
+            "effectiveFrom": "2026-01-01T00:00:00Z",
             "defeated": []
           }
         ],
         "derivation": {
           "conclusion": {
-            "entity": "notice:notice-ny-0007",
-            "attribute": "nc:noticeCompliant",
+            "entity": "widget:fx-0003",
+            "attribute": "fx:permitted",
             "value": {
               "kind": "boolean",
               "value": true
             }
           },
-          "rule": "NC-DEF-00",
+          "rule": "FX-DEFAULT-00",
           "premises": []
         },
         "inputFacts": [],
         "abstentions": [
           {
-            "entity": "notice:notice-ny-0007",
-            "attribute": "nc:noticeMailedDate",
+            "entity": "widget:fx-0003",
+            "attribute": "fx:score",
             "reason": "low_confidence",
             "facts": [
-              "urn:duly:fact:sha256:f87fab34d4732e9942b2ccc39b3b44bab21473801f8ecda8febedb60d892adbb"
+              "urn:duly:fact:sha256:2cb587ebabe1d96ea739636015d0ca13cfc8cd1535fb2466ccca4ac8cdcab4b9"
             ],
             "confidence": {
-              "score": 0.6,
-              "method": "platt"
+              "score": 0.62,
+              "method": "raw"
             },
             "threshold": {
-              "minConfidence": 0.9,
-              "source": "attribute",
-              "pack": "termination-notice-us-states",
-              "packVersion": "2026.3.0"
-            }
+              "minConfidence": 0.8,
+              "source": "default",
+              "pack": "duly-fixture-pack",
+              "packVersion": "2026.1.0"
+            },
+            "routedTo": "fixture-review"
           }
         ],
         "engine": {
@@ -654,7 +901,7 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "9227b74af78d80528d29d3e1a3522648eb41f9099ae25b3dd80bca83dcd5ff5c"
+      "decisionDigest": "c9a676847e6d3b0ccd3fb3c66680bca76d080cdc330266b7828d2cf5ca93fce5"
     }
   ]
 }

@@ -1,0 +1,69 @@
+# FICTIONAL. The vocabulary duly's own test fixtures pin — see
+# fixtures/README.md. It models nothing real and is not a demonstration of
+# bring-your-own-ontology; ontologies/ holds the artifacts that are.
+#
+# IMMUTABLE once committed, like every ontology version here: the fixture facts
+# pin `schemaRef: {ontology: duly-fixture, version: "0.1.0"}` inside their
+# content hashes, so editing this file would change hashes the toolkit suites
+# assert on. Changes go in a new version file.
+id: https://duly.dev/ontologies/duly-fixture/0.1.0
+name: duly-fixture
+version: 0.1.0
+description: >-
+  An invented widget domain, sized to exactly what duly's toolkit suites need:
+  one entity type, one code enum, one measured value, and the derived
+  attributes fixtures/pack.yaml concludes.
+license: https://www.apache.org/licenses/LICENSE-2.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  duly: https://duly.dev/spec/v0/vocab#
+  fx: https://duly.dev/ontologies/duly-fixture/fx#
+  dfx: https://duly.dev/ontologies/duly-fixture/
+default_prefix: dfx
+default_range: string
+
+imports:
+  - linkml:types
+
+enums:
+  WidgetCategory:
+    description: >-
+      A CLOSED code set, on purpose: the conformance gate's membership check
+      is one of the behaviours these fixtures exist to exercise.
+    annotations:
+      codeSystem: duly-fixture/widget-categories
+    permissible_values:
+      restricted:
+        description: Subject to the exception rule.
+      ordinary:
+        description: Not subject to it.
+
+classes:
+  Widget:
+    class_uri: fx:Widget
+    description: The only entity type in the fixture domain.
+    attributes:
+      score:
+        slot_uri: fx:score
+        range: decimal
+        description: The measured value the threshold is compared against.
+      category:
+        slot_uri: fx:category
+        range: WidgetCategory
+        description: Which regime the widget falls under.
+      requiredMinimumScore:
+        slot_uri: fx:requiredMinimumScore
+        range: decimal
+        description: >-
+          DERIVED — concluded by fixtures/pack.yaml, never extracted. The
+          effective-dated threshold in force at the evaluation point.
+        annotations:
+          derived: true
+      permitted:
+        slot_uri: fx:permitted
+        range: boolean
+        description: >-
+          DERIVED — the fixture pack's decision attribute.
+        annotations:
+          derived: true

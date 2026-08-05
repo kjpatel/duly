@@ -1,0 +1,6 @@
+# one fact is below the pack's floor: a low_confidence abstention
+id: fx-0003
+pack: fixtures/pack.yaml
+question: fx:permitted
+asOfEffective: "2026-06-01"
+asOfKnowledge: "2026-03-02T12:00:00Z"

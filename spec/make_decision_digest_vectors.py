@@ -10,6 +10,12 @@ plausible fabrication); the rest are derived from one of those by changing
 exactly one thing, which is how they demonstrate the equivalence relation
 rather than merely asserting it.
 
+They are drawn from [`fixtures/`](../fixtures/README.md), the toolkit's own
+corpus, and not from `golden/`. A contract artifact under `spec/` must not rest
+on content an adopter is invited to delete — `golden/` is example content that
+M5 relocates under `examples/`, and vectors sourced from it would have made
+this file's byte-identity check disappear along with its subject.
+
 Run after changing the determinant set — which is a breaking change to the
 digest and wants arguing in spec/compatibility.md C4 first, not regenerating.
 
@@ -32,18 +38,18 @@ from duly_kernel.digest import (  # noqa: E402
     decision_digest,
 )
 
-GOLDEN = REPO / "golden" / "receipts"
+RECEIPTS = REPO / "fixtures" / "receipts"
 OUT = REPO / "spec" / "decision-digest-vectors.json"
 
-# A minimal real receipt (no input facts, no abstentions) and a fuller one
-# (nested derivation, four input facts, a live abstention). Between them the
-# determinant set is exercised whole.
-BASE_CASE = "esign-0005"
-FULL_CASE = "notice-ny-0007"
+# A receipt with a nested derivation and a defeated presumption, and one
+# carrying a live abstention. Between them the determinant set is exercised
+# whole.
+BASE_CASE = "fx-0001"
+FULL_CASE = "fx-0003"
 
 
 def _load(case: str) -> dict:
-    return json.loads((GOLDEN / f"{case}.json").read_text())
+    return json.loads((RECEIPTS / f"{case}.json").read_text())
 
 
 def _variant(base: dict, description: str, cls: str, mutate) -> dict:
@@ -74,7 +80,7 @@ def build() -> dict:
     vectors = [
         {
             "description": (
-                f"the committed golden receipt {BASE_CASE}, unmodified"
+                f"the committed fixture receipt {BASE_CASE}, unmodified"
             ),
             "equivalenceClass": cls,
             "receipt": base,
@@ -94,7 +100,7 @@ def build() -> dict:
             lambda r: r["rulePack"].update(
                 {
                     "gitCommit": "9f1c0b2",
-                    "url": "https://example.invalid/packs/esign-closing-package",
+                    "url": "https://example.invalid/packs/duly-fixture-pack",
                 }
             ),
         ),
@@ -135,8 +141,8 @@ def build() -> dict:
         ),
         {
             "description": (
-                f"the committed golden receipt {FULL_CASE}, unmodified — "
-                "nested derivation, four input facts, one abstention"
+                f"the committed fixture receipt {FULL_CASE}, unmodified — "
+                "a live low_confidence abstention alongside a decision"
             ),
             "equivalenceClass": f"{FULL_CASE}-as-decided",
             "receipt": full,

@@ -1,0 +1,40 @@
+{
+  "id": "urn:duly:fact:sha256:89c0aebb7e29111e1ab6977b890eec187551031721059cc87de624333b7e5c74",
+  "contentHash": "89c0aebb7e29111e1ab6977b890eec187551031721059cc87de624333b7e5c74",
+  "caseId": "case:fixture:fx-0002",
+  "entity": {
+    "id": "widget:fx-0002",
+    "type": "fx:Widget"
+  },
+  "attribute": "fx:category",
+  "value": {
+    "kind": "code",
+    "value": "ordinary",
+    "codeSystem": "duly-fixture/widget-categories",
+    "codeSystemVersion": "0.1.0"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "duly-fixture-builder",
+    "channel": "synthetic",
+    "at": "2026-03-01T00:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-01T00:00:00Z",
+    "extractor": {
+      "name": "duly-fixture-builder",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-01T00:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-fixture",
+    "version": "0.1.0"
+  }
+}

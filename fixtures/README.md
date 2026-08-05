@@ -1,0 +1,74 @@
+# `fixtures/` — the corpus the toolkit owns
+
+Everything here exists so that **duly's own test suites do not depend on duly's
+teaching content**. It is deliberately boring: one invented domain, one pack,
+three cases, three receipts, one ontology. Nobody should learn anything from it.
+
+## Why it exists
+
+`rulepacks/`, `starters/`, `golden/` and `dmn/examples/` are *example content* —
+they demonstrate the toolkit, and M5 relocates them under an `examples/`
+umbrella that an adopter can delete. The claim being tested is that
+`git rm -r examples/` leaves a **working, empty toolkit**.
+
+A test suite that reaches into example content cannot check that claim. Delete
+the content and such a test does not fail — it stops being collected, skips, or
+quietly asserts nothing, which reads exactly like success. So every suite
+asserting *toolkit* behaviour moves onto this fixture corpus, and what stays
+pointed at `examples/` is the set of tests whose subject genuinely is the
+example content (that the six packs load, that their declared outcomes hold,
+that every committed fact conforms) — those move with it.
+
+The rule, stated once: **a test that would still pass if its subject were
+deleted is not a test.**
+
+## What is here
+
+| Path | What it is |
+|---|---|
+| `ontology/duly-fixture/0.1.0.yaml` | The vocabulary the fixture facts pin. Invented; models nothing real |
+| `pack.yaml` | One rule pack: a default, an exception that defeats it, a derived intermediate, an effective-dated pair, and an abstention floor |
+| `cases/fx-000N/` | Three cases: `case.yaml` plus content-addressed facts |
+| `receipts/fx-000N.json` | The receipt each case produces, committed |
+| `build.py` | Regenerates the facts and receipts deterministically |
+
+Three cases, chosen to cover what the toolkit's own tests need rather than to
+teach anything:
+
+- **`fx-0001`** — the exception fires and defeats the default. A derived value
+  feeds the deciding rule, so the derivation tree has depth.
+- **`fx-0002`** — nothing overrides, so the default presumption stands. Empty
+  `inputFacts` on the deciding rule, which is a shape worth having.
+- **`fx-0003`** — one fact scores below the pack's confidence floor, so the
+  receipt carries a `low_confidence` abstention and still reaches a decision.
+
+## Regenerating
+
+```bash
+uv run python fixtures/build.py
+```
+
+Deterministic: no wall clock, no randomness, every timestamp fixed in the
+script. Re-running it on an unchanged tree rewrites the same bytes, and
+`git diff -- fixtures/` is the check that it did.
+
+**Regenerating is a deliberate act, exactly as it is for `golden/`.** These
+receipts are pinned by toolkit tests — replay, decision digests, the semantics
+guard — so a diff here means one of two things: you changed the fixture
+content on purpose, or you changed what the kernel *means*. The second is a
+semantics change ([docs/release-process.md](../docs/release-process.md) §4) and
+this corpus is not the place to discover it; `golden/` is.
+
+## Rules for adding to it
+
+- **Keep it minimal.** Add a case only when a toolkit behaviour cannot be
+  asserted with the three that exist. This corpus is a test dependency, not a
+  second demonstration vertical.
+- **Invent nothing that looks real.** No statute numbers, no jurisdictions, no
+  plausible citations. `FX-` rule ids, `fx:` attributes, a `citation.text` that
+  says it is fictional. A reader must never mistake this for domain content —
+  which is the same honest-labeling discipline the packs follow, pointed the
+  other way.
+- **It is toolkit, so it never moves.** `fixtures/` stays put when `examples/`
+  is deleted. Anything here that only one suite needs belongs in that suite's
+  own `tests/fixtures/` instead.

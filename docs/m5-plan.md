@@ -46,10 +46,9 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships). Phase 6 measures what the others
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-**Where this stands (2026-08-04):** Phases 0, 1 and 2 are complete. **Phase 3
-is next** and is unblocked — its 1→3 edge was the whatif CLI's pack
-resolution, which now shares `corpus.resolve_pack_path` and so moves with
-`golden/` rather than against it. Phase 4 waits on 3.
+**Where this stands (2026-08-05):** Phases 0, 1 and 2 are complete. **Phase 3
+is in progress** — the toolkit fixture corpus exists and the kernel runs on it;
+two more fixture PRs, then the move and the deletion gate. Phase 4 waits on 3.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
@@ -382,7 +381,43 @@ directories contain zero example content; `git rm -r examples/` leaves a
 working, empty toolkit. Mechanical, **no behavior change**, golden replay
 proves it.
 
-- [ ] **Toolkit-owned fixtures first (1 PR).** Before anything moves, the
+> **Corrected 2026-08-05, mid-phase (rule 10).** "Toolkit-owned fixtures
+> (1 PR)" was one task and is **three**, because the work is per-suite and the
+> suites are not alike. Re-measured on the day: **26 of 63** test files touch
+> example content, spread across nine suites, and the conversion is not
+> mechanical — `test_report.py` asserts the *content* of the teaching packs
+> (citations, verdict phrasing, a TRID cure amount), so splitting it needs the
+> fixture corpus to grow a document-grounded PII fact and a money decision.
+> Doing all nine in one PR would be a diff nobody can review against a corpus
+> that grew to fit it. Split below; the first is merged.
+
+- [x] **Fixtures, part 1: the corpus and the kernel (1 PR).** Creates
+      [`fixtures/`](../fixtures/README.md) — one invented domain, one pack,
+      four cases with committed receipts, one ontology, and a deterministic
+      `build.py` — and moves the kernel's toolkit assertions onto it
+      (`test_semantics`, `test_engine_identity`, `test_decision_digest`,
+      `test_provo`).
+      *One finding worth the trip: `spec/decision-digest-vectors.json` was a
+      **contract artifact built from `golden/`**. Self-contained, so it would
+      have survived the deletion — but the test proving its two "real" receipts
+      are real would not, and a spec artifact resting on content an adopter is
+      invited to delete is the same category error this phase exists to fix.
+      Rebuilt from `fixtures/`. Also: the corpus needed a human-asserted
+      correction (PROV-O's attribution and revision mapping is unreachable
+      without one), which produced `fx-0004` — `fx-0003` after review, the
+      arc `review-0001` demonstrates, in toolkit-owned form.*
+- [ ] **Fixtures, part 2: assurance and whatif (1 PR).** `verify`, `generate`,
+      `impact` and `prove` over fixture packs and a fixture corpus; whatif's
+      two suites over a fixture case. Watch `test_generate.py`: the generator
+      is toolkit and its six templates are example content, so the test splits
+      rather than moves.
+- [ ] **Fixtures, part 3: demo, dmn, conformance, review, extraction (1 PR).**
+      Ten files. `demo/tests/test_content_roots.py` already proves the empty
+      state, so the rest is pointing the others at fixture content; `dmn/`
+      needs a fixture decision table, and `kernel/tests/test_report.py` lands
+      here with the fixture growth it needs.
+- [ ] ~~**Toolkit-owned fixtures first (1 PR).**~~ *Superseded by the three
+      above.* Before anything moves, the
       toolkit suites that currently test through the six real packs get
       their own tiny fixture packs (extend the `kernel/tests/fixtures/`
       pattern). Otherwise the deletion test passes vacuously — suites that
@@ -824,6 +859,11 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-05 — **Phase 3, fixtures part 1** — `fixtures/` created and the
+  kernel's toolkit suites moved onto it. Found that
+  `spec/decision-digest-vectors.json`, a contract artifact, was generated from
+  `golden/`; rebuilt from the fixture corpus. §7 corrected first: the
+  one-PR fixtures task is three.
 - 2026-08-04 — [#52](https://github.com/kjpatel/duly/pull/52) — **Phase 2
   complete, the review-resolution invariant** — C6 enforced at the queue
   boundary: a `low_confidence` resolution must supersede the fact it rules on,

@@ -156,40 +156,40 @@ def test_machine_fact_export_attributes_software_agent(machine_fact):
 @pytest.fixture()
 def human_fact():
     return _load(
-        REPO_ROOT / "golden" / "cases" / "review-0001" / "facts" / "nc-noticeMailedDate.json"
+        REPO_ROOT / "fixtures" / "cases" / "fx-0004" / "facts" / "fx-score-corrected.json"
     )
 
 
 def test_human_fact_attribution_and_revision_direction(human_fact):
     node = _expand_stored(human_fact, "fact")
     # the asserting human is an identified agent
-    assert _ids(node, PROV + "wasAttributedTo") == {"reviewer:rq-demo"}
+    assert _ids(node, PROV + "wasAttributedTo") == {"reviewer:fx-demo"}
     actor = next(
         n for n in node[PROV + "wasAttributedTo"] if (DULY + "role") in n
     )
-    assert _values(actor, DULY + "role") == ["compliance-review"]
+    assert _values(actor, DULY + "role") == ["fixture-review"]
     # supersedes → wasRevisionOf: subject is the correcting (newer) fact,
     # object the corrected (older) one — same direction as the stored field
     assert _ids(node, PROV + "wasRevisionOf") == {human_fact["supersedes"]}
     assert _values(node, DULY + "assertionKind") == ["human"]
     assert _values(node, DULY + "groundingKind") == ["attestation"]
-    assert _values(node, DULY + "channel") == ["review-queue"]
+    assert _values(node, DULY + "channel") == ["fixture-review"]
 
 
 def test_human_fact_export_adds_no_synthetic_agent(human_fact):
     nodes = _expand_exported(human_fact, "fact")
     fact = next(n for n in nodes if n["@id"] == human_fact["id"])
-    assert _ids(fact, PROV + "wasAttributedTo") == {"reviewer:rq-demo"}
+    assert _ids(fact, PROV + "wasAttributedTo") == {"reviewer:fx-demo"}
 
 
 # ---------------------------------------------------------------------------
-# DecisionReceipt — golden/receipts/notice-ny-0001.json (full derivation)
+# DecisionReceipt — fixtures/receipts/fx-0001.json (nested derivation)
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture()
 def receipt_ny():
-    return _load(REPO_ROOT / "golden" / "receipts" / "notice-ny-0001.json")
+    return _load(REPO_ROOT / "fixtures" / "receipts" / "fx-0001.json")
 
 
 def test_receipt_activity_used_the_input_facts(receipt_ny):
@@ -209,14 +209,14 @@ def test_receipt_activity_used_the_input_facts(receipt_ny):
     assoc = next(n for n in nodes if n["@id"] == assoc_ref["@id"])
     assert assoc["@type"] == [PROV + "Association"]
     assert _ids(assoc, PROV + "hadPlan") == {
-        "urn:duly:rulepack:termination-notice-us-states:2026.3.0"
+        "urn:duly:rulepack:duly-fixture-pack:2026.1.0"
     }
     plan = next(
         n for n in nodes
-        if n["@id"] == "urn:duly:rulepack:termination-notice-us-states:2026.3.0"
+        if n["@id"] == "urn:duly:rulepack:duly-fixture-pack:2026.1.0"
     )
     assert plan["@type"] == [PROV + "Plan"]
-    assert _values(plan, DULY + "version") == ["2026.3.0"]
+    assert _values(plan, DULY + "version") == ["2026.1.0"]
     assert _ids(assoc, PROV + "agent") == {"urn:duly:agent:duly-kernel:0.0.1"}
     assert _ids(activity, PROV + "wasAssociatedWith") == {"urn:duly:agent:duly-kernel:0.0.1"}
 
@@ -224,7 +224,7 @@ def test_receipt_activity_used_the_input_facts(receipt_ny):
 def test_receipt_out_of_band_expansion_needs_no_exporter(receipt_ny):
     node = _expand_stored(receipt_ny, "receipt")
     assert _ids(node, PROV + "wasDerivedFrom") == {f["id"] for f in receipt_ny["inputFacts"]}
-    assert _ids(node, DULY + "caseId") == {"case:golden:notice-ny-0001"}
+    assert _ids(node, DULY + "caseId") == {"case:fixture:fx-0001"}
     # the derivation tree rides along losslessly as a JSON literal
     (derivation,) = node[DULY + "derivation"]
     assert derivation["@type"] == "@json"
@@ -232,23 +232,22 @@ def test_receipt_out_of_band_expansion_needs_no_exporter(receipt_ny):
 
 
 # ---------------------------------------------------------------------------
-# DecisionReceipt — golden/receipts/rec-0015.json (low_confidence abstention)
+# DecisionReceipt — fixtures/receipts/fx-0003.json (low_confidence abstention)
 # ---------------------------------------------------------------------------
 
 
 def test_receipt_abstention_links_considered_fact():
-    receipt = _load(REPO_ROOT / "golden" / "receipts" / "rec-0015.json")
+    receipt = _load(REPO_ROOT / "fixtures" / "receipts" / "fx-0003.json")
     node = _expand_stored(receipt, "receipt")
     (abstention,) = node[DULY + "abstention"]
     assert _values(abstention, DULY + "reason") == ["low_confidence"]
-    # Pinned to the committed corpus: this is rec-0015's below-floor
-    # measurement fact (its hash moved with the M4 duly-mortgage-closing
-    # schemaRef consolidation — schemaRef is inside the fact hash).
+    # Pinned to the fixture corpus: fx-0003's below-floor score fact, which
+    # fx-0004's correction supersedes.
     assert _ids(abstention, DULY + "consideredFact") == {
-        "urn:duly:fact:sha256:0742db5923d2a989e2bb66cae18a1d4230b9522c169119819e3952293467c52b"
+        "urn:duly:fact:sha256:2cb587ebabe1d96ea739636015d0ca13cfc8cd1535fb2466ccca4ac8cdcab4b9"
     }
     (threshold,) = abstention[DULY + "threshold"]
-    assert _values(threshold, DULY + "minConfidence") == [0.85]
+    assert _values(threshold, DULY + "minConfidence") == [0.8]
 
 
 # ---------------------------------------------------------------------------
@@ -291,8 +290,8 @@ def test_envelope_export_types_activity_and_adapter_agent(envelope):
     "relpath,kind",
     [
         ("spec/examples/fact-decpage-expiration.json", "fact"),
-        ("golden/cases/review-0001/facts/nc-noticeMailedDate.json", "fact"),
-        ("golden/receipts/notice-ny-0001.json", "receipt"),
+        ("fixtures/cases/fx-0004/facts/fx-score-corrected.json", "fact"),
+        ("fixtures/receipts/fx-0001.json", "receipt"),
         ("golden/receipts/rec-0015.json", "receipt"),
         ("spec/examples/envelopes/envelope-decpage-run.json", "envelope"),
     ],

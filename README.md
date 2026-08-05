@@ -25,14 +25,6 @@
 [![Golden replay](https://img.shields.io/badge/golden_replay-351_receipts_byte--exact-brightgreen)](golden/README.md)
 [![Contracts](https://img.shields.io/badge/contracts-v1.0_policy_published-brightgreen)](spec/compatibility.md)
 
-> [!IMPORTANT]
-> **Pre-1.0, and honest about which parts.** The fact, receipt and rule-IR
-> contracts are **frozen** — [what v1.0 promises, per contract](spec/compatibility.md),
-> including what it deliberately does not cover. Not yet on PyPI: installation is
-> `git clone` until the v1.0 release. The SQLite stores and in-process demo are a
-> reference wiring, not a deployment blueprint. Demo content that is invented
-> rather than real is labelled `DEMO-SYNTHETIC` in the file that carries it.
-
 *duly* — as in duly authorized, duly recorded, duly noted: in accordance with proper procedure.
 
 duly is an open-source toolkit for building neuro-symbolic document-decisioning systems: a neural layer reads unstructured documents and *proposes* structured facts; a deterministic symbolic layer applies a versioned, effective-dated rulebase to *decide* what those facts mean. Perception proposes, logic disposes. Every conclusion arrives with the rule that fired, the fact it fired on, and the clause the fact came from — an answer plus a receipt.
@@ -86,6 +78,15 @@ uv run python -m duly_assurance verify      # → verified 351 cases
 
 That is every committed decision in the repository re-adjudicated from its facts and
 its pack, and compared byte-for-byte against the receipt committed months earlier.
+
+> [!IMPORTANT]
+> **Before you build on it — pre-1.0, and honest about which parts.** The fact,
+> receipt and rule-IR contracts are **frozen**:
+> [what v1.0 promises, per contract](spec/compatibility.md), including what it
+> deliberately does not cover. Not yet on PyPI — installation is `git clone`
+> until the v1.0 release. The SQLite stores and in-process demo are a reference
+> wiring, not a deployment blueprint. Demo content that is invented rather than
+> real is labelled `DEMO-SYNTHETIC` in the file that carries it.
 
 ### Where to go next
 

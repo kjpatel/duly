@@ -1,0 +1,35 @@
+{
+  "id": "urn:duly:fact:sha256:da87fb5fc0a7268e749175f301098bc40a8884055c692a576df46bcb264174ce",
+  "contentHash": "da87fb5fc0a7268e749175f301098bc40a8884055c692a576df46bcb264174ce",
+  "caseId": "case:fixture:fx-0003",
+  "entity": {
+    "id": "widget:fx-0003",
+    "type": "fx:Widget"
+  },
+  "attribute": "fx:score",
+  "value": {
+    "kind": "decimal",
+    "value": "12"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "reviewer:fx-demo",
+    "channel": "fixture-review",
+    "at": "2026-03-03T09:00:00Z"
+  },
+  "assertion": {
+    "kind": "human",
+    "at": "2026-03-03T09:00:00Z",
+    "actor": {
+      "id": "reviewer:fx-demo",
+      "role": "fixture-review"
+    }
+  },
+  "supersedes": "urn:duly:fact:sha256:2cb587ebabe1d96ea739636015d0ca13cfc8cd1535fb2466ccca4ac8cdcab4b9",
+  "recordedAt": "2026-03-03T09:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-fixture",
+    "version": "0.1.0"
+  }
+}

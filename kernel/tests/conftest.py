@@ -11,6 +11,36 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SPEC_EXAMPLES = REPO_ROOT / "spec" / "examples"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
+# The toolkit-owned corpus (fixtures/README.md). Kernel behaviour is asserted
+# against this rather than against `golden/`, because `golden/` is example
+# content that M5 relocates under `examples/` — and a test whose subject can be
+# deleted without the test failing is not testing anything.
+FIXTURE_CORPUS = REPO_ROOT / "fixtures"
+
+
+def fixture_pack() -> dict:
+    return load_pack(FIXTURE_CORPUS / "pack.yaml")
+
+
+def fixture_case(case_id: str) -> tuple[list[dict], dict, dict]:
+    """(facts, case, receipt) for one fixture case."""
+    import yaml
+
+    case_dir = FIXTURE_CORPUS / "cases" / case_id
+    facts = [
+        json.loads(p.read_text()) for p in sorted((case_dir / "facts").glob("*.json"))
+    ]
+    case = yaml.safe_load((case_dir / "case.yaml").read_text())
+    receipt = json.loads((FIXTURE_CORPUS / "receipts" / f"{case_id}.json").read_text())
+    return facts, case, receipt
+
+
+def fixture_receipts() -> list[dict]:
+    return [
+        json.loads(p.read_text())
+        for p in sorted((FIXTURE_CORPUS / "receipts").glob("*.json"))
+    ]
+
 
 @pytest.fixture()
 def spec_facts() -> list[dict]:

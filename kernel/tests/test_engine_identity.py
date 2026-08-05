@@ -12,15 +12,14 @@ them, which is the natural thing to do while packaging the toolkit for release.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import duly_kernel
+from conftest import fixture_receipts
 from duly_kernel.api import adjudicate
 from duly_kernel.receipt import SEMANTICS_VERSION
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-GOLDEN_RECEIPTS = REPO_ROOT / "golden" / "receipts"
 
 AS_OF_EFFECTIVE = "2026-07-25"
 AS_OF_KNOWLEDGE = "2026-07-30T16:00:00Z"
@@ -83,12 +82,17 @@ def test_the_kernels_is_the_only_package_version_in_the_repository():
     )
 
 
-def test_the_committed_corpus_carries_the_pinned_semantics_version():
-    """Whatever the packages are versioned at, the corpus says 0.0.1."""
-    receipts = sorted(GOLDEN_RECEIPTS.glob("*.json"))
-    assert receipts, "no golden receipts found"
-    versions = {json.loads(p.read_text())["engine"]["version"] for p in receipts}
+def test_every_sealed_receipt_carries_the_pinned_semantics_version():
+    """Whatever the packages are versioned at, sealed receipts say 0.0.1.
+
+    Asserted over the toolkit's own fixture corpus rather than `golden/`: the
+    property belongs to the kernel, and a check that vanishes when the example
+    content is deleted would be proving something about the examples.
+    """
+    receipts = fixture_receipts()
+    assert receipts, "no fixture receipts found"
+    versions = {r["engine"]["version"] for r in receipts}
     assert versions == {SEMANTICS_VERSION}, (
-        f"golden receipts carry {sorted(versions)}, kernel emits "
+        f"fixture receipts carry {sorted(versions)}, kernel emits "
         f"{SEMANTICS_VERSION!r}; replay cannot survive this"
     )

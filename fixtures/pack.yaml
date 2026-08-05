@@ -1,0 +1,89 @@
+# FICTIONAL. This pack governs an invented domain and cites no real authority.
+# It exists so duly's own suites can test toolkit behaviour without reaching
+# into the teaching content under examples/ — see fixtures/README.md.
+#
+# Deliberately not realistic: a reader who mistook this for a demonstration
+# would learn something false. Every citation says so in its own text.
+
+pack:
+  name: duly-fixture-pack
+  version: "2026.1.0"
+  ontology: duly-fixture
+  ontologyVersion: "0.1.0"
+  idPrefix: FX
+
+abstentionPolicy:
+  minConfidence: 0.80
+  routeTo: fixture-review
+
+decisions:
+  - attribute: fx:permitted
+    entityType: fx:Widget
+    question: "Is this widget permitted?"
+
+rules:
+  # The default presumption. Lowest priority, fires for every widget.
+  - id: FX-DEFAULT-00
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Fixture default presumption (fictional)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+    then:
+      entity: widget
+      attribute: fx:permitted
+      value: { kind: boolean, value: true }
+
+  # A derived intermediate, so the derivation tree has depth: the threshold a
+  # widget is measured against is itself concluded by a rule rather than
+  # written into a guard as a literal.
+  - id: FX-THRESHOLD-01
+    version: "1.0.0"
+    priority: 100
+    citation: { text: "Fixture threshold, pre-2026 edition (fictional)" }
+    effectiveFrom: "1900-01-01"
+    effectiveTo: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+    then:
+      entity: widget
+      attribute: fx:requiredMinimumScore
+      value: { kind: decimal, value: "10" }
+
+  # The effective-dated pair of the rule above: same conclusion, later window,
+  # stricter number. This is what makes as-of replay testable here.
+  - id: FX-THRESHOLD-02
+    version: "1.0.0"
+    priority: 100
+    citation: { text: "Fixture threshold, 2026 edition (fictional)" }
+    effectiveFrom: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+    then:
+      entity: widget
+      attribute: fx:requiredMinimumScore
+      value: { kind: decimal, value: "50" }
+
+  # The exception. Outranks the default and defeats it explicitly, so every
+  # receipt it appears in carries a non-empty `defeated` list.
+  - id: FX-EXCEPTION-01
+    version: "1.0.0"
+    priority: 200
+    citation:
+      text: "Fixture exception (fictional)"
+      url: "https://example.invalid/fixture/exception-01"
+    effectiveFrom: "1900-01-01"
+    overrides: [FX-DEFAULT-00]
+    given:
+      widget:   { entityType: fx:Widget }
+      score:    { attribute: fx:score }
+      category: { attribute: fx:category }
+      minimum:  { derived: fx:requiredMinimumScore }
+    when:
+      - score < minimum
+      - category == "restricted"
+    then:
+      entity: widget
+      attribute: fx:permitted
+      value: { kind: boolean, value: false }

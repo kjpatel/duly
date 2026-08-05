@@ -1,0 +1,93 @@
+{
+  "id": "urn:duly:receipt:sha256:9a7f6d8bbf803d42d9b85cf3164777ea9a3f903c1469332952a343c8020d4bd9",
+  "receiptSha256": "9a7f6d8bbf803d42d9b85cf3164777ea9a3f903c1469332952a343c8020d4bd9",
+  "caseId": "case:fixture:fx-0003",
+  "decision": {
+    "entity": "widget:fx-0003",
+    "attribute": "fx:permitted",
+    "value": {
+      "kind": "boolean",
+      "value": false
+    }
+  },
+  "asOf": {
+    "effective": "2026-06-01T00:00:00Z",
+    "knowledge": "2026-03-03T09:00:00Z"
+  },
+  "rulePack": {
+    "name": "duly-fixture-pack",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "FX-THRESHOLD-02",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture threshold, 2026 edition (fictional)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "FX-EXCEPTION-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture exception (fictional)",
+        "url": "https://example.invalid/fixture/exception-01"
+      },
+      "priority": 200,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": [
+        "FX-DEFAULT-00"
+      ]
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "widget:fx-0003",
+      "attribute": "fx:permitted",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    "rule": "FX-EXCEPTION-01",
+    "premises": [
+      {
+        "factId": "urn:duly:fact:sha256:da87fb5fc0a7268e749175f301098bc40a8884055c692a576df46bcb264174ce"
+      },
+      {
+        "factId": "urn:duly:fact:sha256:e5f442b3ae47bbd9cdc6e8f47f22b61e20fad401e71855fd3d825f02b5823cba"
+      },
+      {
+        "conclusion": {
+          "entity": "widget:fx-0003",
+          "attribute": "fx:requiredMinimumScore",
+          "value": {
+            "kind": "decimal",
+            "value": "50"
+          }
+        },
+        "rule": "FX-THRESHOLD-02",
+        "premises": []
+      }
+    ]
+  },
+  "inputFacts": [
+    {
+      "id": "urn:duly:fact:sha256:da87fb5fc0a7268e749175f301098bc40a8884055c692a576df46bcb264174ce",
+      "contentHash": "da87fb5fc0a7268e749175f301098bc40a8884055c692a576df46bcb264174ce"
+    },
+    {
+      "id": "urn:duly:fact:sha256:e5f442b3ae47bbd9cdc6e8f47f22b61e20fad401e71855fd3d825f02b5823cba",
+      "contentHash": "e5f442b3ae47bbd9cdc6e8f47f22b61e20fad401e71855fd3d825f02b5823cba"
+    }
+  ],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

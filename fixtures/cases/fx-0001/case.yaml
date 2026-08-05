@@ -1,0 +1,6 @@
+# the exception fires and defeats the default; the threshold is derived
+id: fx-0001
+pack: fixtures/pack.yaml
+question: fx:permitted
+asOfEffective: "2026-06-01"
+asOfKnowledge: "2026-03-02T12:00:00Z"

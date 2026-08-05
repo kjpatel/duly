@@ -1,0 +1,62 @@
+{
+  "id": "urn:duly:receipt:sha256:fcfdab074e4f194c74aa8e8c215161b3f24d4df8ee5ef1cacab006f7b2521734",
+  "receiptSha256": "fcfdab074e4f194c74aa8e8c215161b3f24d4df8ee5ef1cacab006f7b2521734",
+  "caseId": "case:fixture:fx-0002",
+  "decision": {
+    "entity": "widget:fx-0002",
+    "attribute": "fx:permitted",
+    "value": {
+      "kind": "boolean",
+      "value": true
+    }
+  },
+  "asOf": {
+    "effective": "2026-06-01T00:00:00Z",
+    "knowledge": "2026-03-02T12:00:00Z"
+  },
+  "rulePack": {
+    "name": "duly-fixture-pack",
+    "version": "2026.1.0"
+  },
+  "rulesFired": [
+    {
+      "ruleId": "FX-DEFAULT-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture default presumption (fictional)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "FX-THRESHOLD-02",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture threshold, 2026 edition (fictional)"
+      },
+      "priority": 100,
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "defeated": []
+    }
+  ],
+  "derivation": {
+    "conclusion": {
+      "entity": "widget:fx-0002",
+      "attribute": "fx:permitted",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    "rule": "FX-DEFAULT-00",
+    "premises": []
+  },
+  "inputFacts": [],
+  "abstentions": [],
+  "engine": {
+    "kernel": "duly-kernel",
+    "version": "0.0.1",
+    "backend": "reference"
+  }
+}

@@ -14,11 +14,16 @@ vectors sharing a class must agree, vectors in different classes must differ.
 That is the claim spec/compatibility.md C4 actually makes, and a table of
 digests does not state it.
 
-**The corpus aggregate** is the regression net. One digest over all 351 golden
-digests catches any change to the determinant set or the canonical form without
-committing 351 values — and it is a *different* failure signal from `verify`,
-which compares whole receipts: a change that moves only excluded fields breaks
-`verify` and must leave this untouched.
+**The corpus aggregate** is the regression net: one digest over every receipt in
+[`fixtures/`](../../fixtures/README.md), catching any change to the determinant
+set or the canonical form. It is a *different* failure signal from replay, which
+compares whole receipts — a change that moves only excluded fields breaks replay
+and must leave this untouched.
+
+All three run against the toolkit's own fixture corpus rather than `golden/`.
+The kernel's behaviour is not a property of the teaching content, and a test
+that stops running when `examples/` is deleted would report success by
+disappearing.
 """
 
 from __future__ import annotations
@@ -34,7 +39,7 @@ from duly_core import canonical
 from duly_kernel.digest import DETERMINANT_FIELDS, decision_digest, determinant_projection
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-GOLDEN_RECEIPTS = REPO_ROOT / "golden" / "receipts"
+FIXTURE_RECEIPTS = REPO_ROOT / "fixtures" / "receipts"
 VECTORS_PATH = REPO_ROOT / "spec" / "decision-digest-vectors.json"
 
 VECTORS = json.loads(VECTORS_PATH.read_text())["vectors"]
@@ -57,7 +62,7 @@ def test_the_vectors_claiming_to_be_committed_receipts_are_committed_receipts():
     assert len(claimed) == 2, "expected two real receipts among the vectors"
     for vector in claimed:
         case_id = str(vector["receipt"]["caseId"]).rsplit(":", 1)[-1]
-        committed = json.loads((GOLDEN_RECEIPTS / f"{case_id}.json").read_text())
+        committed = json.loads((FIXTURE_RECEIPTS / f"{case_id}.json").read_text())
         assert vector["receipt"] == committed, case_id
 
 
@@ -80,7 +85,7 @@ def test_vectors_in_one_class_agree_and_vectors_across_classes_do_not():
 
 @pytest.fixture()
 def receipt() -> dict:
-    return json.loads((GOLDEN_RECEIPTS / "notice-ny-0007.json").read_text())
+    return json.loads((FIXTURE_RECEIPTS / "fx-0003.json").read_text())
 
 
 @pytest.mark.parametrize(
@@ -145,27 +150,27 @@ def test_the_projection_is_the_hashed_input(receipt):
 
 # --- the corpus -------------------------------------------------------------
 
-#: SHA-256 over the newline-joined digests of every golden receipt, in case-id
+#: SHA-256 over the newline-joined digests of every fixture receipt, in case-id
 #: order. Regenerate deliberately: this moving means the determinant set or the
 #: canonical form changed, which is a breaking change to the digest (C4), not a
 #: corpus event. `verify` is what notices a corpus event.
-CORPUS_AGGREGATE = "151056117659df528a6cc4af415b85b870d0f2ab90f11aadb2faad5cd7e59963"
+CORPUS_AGGREGATE = "266bc35ad2c083cb5afcfc8c24e606c977fa201eff2fc0115da9587a3ce99cbb"
 
 
 def _corpus_aggregate() -> tuple[str, int]:
-    receipts = sorted(GOLDEN_RECEIPTS.glob("*.json"))
+    receipts = sorted(FIXTURE_RECEIPTS.glob("*.json"))
     digests = [decision_digest(json.loads(p.read_text())) for p in receipts]
     joined = "\n".join(digests).encode("utf-8")
     return hashlib.sha256(joined).hexdigest(), len(digests)
 
 
-def test_every_golden_receipt_has_a_stable_digest():
+def test_every_fixture_receipt_has_a_stable_digest():
     aggregate, count = _corpus_aggregate()
-    assert count == 351
+    assert count == 4
     assert aggregate == CORPUS_AGGREGATE, (
-        "decision digests over the golden corpus moved. If `verify` is still "
-        "green, the corpus did not change and the digest definition did — "
-        "which is a breaking change to spec/compatibility.md C4."
+        "decision digests over the fixture corpus moved. If `fixtures/build.py` "
+        "reproduces the receipts unchanged, the corpus did not move and the "
+        "digest definition did — a breaking change to spec/compatibility.md C4."
     )
 
 
@@ -186,10 +191,10 @@ def test_the_demo_is_executed_not_merely_present():
     assert "refuses semantics it does not implement" in result.stdout
 
 
-def test_no_two_golden_receipts_share_a_digest():
+def test_no_two_fixture_receipts_share_a_digest():
     """Not a property the digest promises — two genuinely identical
-    adjudications *should* collide — but the corpus has none, so a collision
-    appearing here means a determinant field stopped being determinant."""
-    receipts = sorted(GOLDEN_RECEIPTS.glob("*.json"))
+    adjudications *should* collide — but these three decide differently, so a
+    collision here means a determinant field stopped being determinant."""
+    receipts = sorted(FIXTURE_RECEIPTS.glob("*.json"))
     digests = [decision_digest(json.loads(p.read_text())) for p in receipts]
     assert len(set(digests)) == len(digests)

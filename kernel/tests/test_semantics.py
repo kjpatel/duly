@@ -14,10 +14,9 @@ So the check is on the *claim*, before any adjudication runs.
 from __future__ import annotations
 
 import copy
-import json
-from pathlib import Path
 
 import pytest
+from conftest import fixture_case, fixture_receipts
 
 from duly_kernel.receipt import SEMANTICS_VERSION
 from duly_kernel.semantics import (
@@ -28,12 +27,11 @@ from duly_kernel.semantics import (
     receipt_semantics,
 )
 
-GOLDEN_RECEIPTS = Path(__file__).resolve().parents[2] / "golden" / "receipts"
-
 
 @pytest.fixture()
 def receipt() -> dict:
-    return json.loads((GOLDEN_RECEIPTS / "notice-ny-0007.json").read_text())
+    _, _, doc = fixture_case("fx-0001")
+    return doc
 
 
 def test_the_kernel_implements_exactly_the_version_it_emits():
@@ -87,11 +85,11 @@ def test_implements_is_exact_not_a_prefix_or_a_range():
     assert not implements(None)
 
 
-def test_every_committed_receipt_passes_the_guard():
-    """The guard is inert against the corpus — it must be, since all 351 were
-    sealed under the one version that has ever existed. A guard that changed a
-    verdict here would be a defect in the guard."""
-    receipts = sorted(GOLDEN_RECEIPTS.glob("*.json"))
-    assert len(receipts) == 351
-    for path in receipts:
-        check_replayable(json.loads(path.read_text()))
+def test_every_fixture_receipt_passes_the_guard():
+    """The guard is inert against receipts this kernel actually sealed — it
+    must be, since there has only ever been one semantics version. A guard that
+    changed a verdict here would be a defect in the guard."""
+    receipts = fixture_receipts()
+    assert len(receipts) == 4
+    for doc in receipts:
+        check_replayable(doc)

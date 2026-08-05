@@ -47,8 +47,9 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
 **Where this stands (2026-08-05):** Phases 0, 1 and 2 are complete. **Phase 3
-is in progress** — the toolkit fixture corpus exists and the kernel runs on it;
-two more fixture PRs, then the move and the deletion gate. Phase 4 waits on 3.
+is in progress** — the fixture corpus exists and the kernel, assurance and
+whatif's CLI run on it; one more fixture PR, then the move and the deletion
+gate. Phase 4 waits on 3.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
@@ -406,16 +407,38 @@ proves it.
       correction (PROV-O's attribution and revision mapping is unreachable
       without one), which produced `fx-0004` — `fx-0003` after review, the
       arc `review-0001` demonstrates, in toolkit-owned form.*
-- [ ] **Fixtures, part 2: assurance and whatif (1 PR).** `verify`, `generate`,
-      `impact` and `prove` over fixture packs and a fixture corpus; whatif's
-      two suites over a fixture case. Watch `test_generate.py`: the generator
-      is toolkit and its six templates are example content, so the test splits
-      rather than moves.
+- [x] **Fixtures, part 2: assurance and whatif (1 PR).** `verify`, `impact`
+      and `prove` over fixture packs and a fixture corpus; whatif's CLI suite
+      over a fixture case.
+      *`fixtures/` turned out to be a corpus in its own right —
+      `verify --golden fixtures` replays four cases — which is what let the
+      verifier suite drop its dependency on `generate` entirely and copy the
+      committed fixtures into `tmp_path` instead. `test_impact.py` needed
+      nothing: it already owned `assurance/tests/fixtures/mini-golden`.*
+      *Two corrections to this task as written. `test_generate.py` does not
+      split: `allocate()` reads `STATE_TEMPLATES` directly, so the generator's
+      arithmetic cannot be exercised without registered templates, and the
+      registry has no scoping to register throwaway ones into. It is an example
+      test and moves whole — unless someone first gives `allocate` a weights
+      argument, which is the smaller change and is not this phase's. And
+      `test_whatif.py`'s deep conversion moved to part 3: its assertions are
+      boundary answers about the teaching packs, which is a split rather than a
+      path swap.*
+      *Found on the way: **A10**, `prove`'s `--ontologies` defaulting to a
+      repo-relative path — the same defect as A3 and A9, in a CLI that is not a
+      `__main__.py` and so survived the sweep that found A9. Fixed here.*
 - [ ] **Fixtures, part 3: demo, dmn, conformance, review, extraction (1 PR).**
       Ten files. `demo/tests/test_content_roots.py` already proves the empty
       state, so the rest is pointing the others at fixture content; `dmn/`
       needs a fixture decision table, and `kernel/tests/test_report.py` lands
-      here with the fixture growth it needs.
+      here with the fixture growth it needs (a document-grounded PII fact, a
+      money decision). Two carried over from part 2: `whatif/tests/test_whatif.py`,
+      whose boundary assertions are about the teaching packs and want splitting
+      rather than repointing; and one whatif CLI test that needs a fixture pack
+      whose value kinds are *all* inferable from use, which today's is not —
+      its widest guard compares two bound variables, so `fx:score` has no
+      inferable kind. Adding an inferable rule to `fixtures/pack.yaml` moves
+      every fixture receipt, so it is a deliberate rebuild, not a tweak.
 - [ ] ~~**Toolkit-owned fixtures first (1 PR).**~~ *Superseded by the three
       above.* Before anything moves, the
       toolkit suites that currently test through the six real packs get
@@ -747,6 +770,20 @@ would touch the parser, `prove`'s SMT fragment, the DMN compiler, the studio's
 grid projection and whatif to make packs worse at the effective-dating
 regulated domains need most.
 
+**A10 — and in a third, which a sweep aimed at exactly this missed.**
+`assurance/duly_assurance/prove.py` declared `--ontologies` with
+`default="ontologies"` — A3 and A9's defect, a third time. It survived the
+2026-08-04 sweep that found A9 because that sweep read every `__main__.py`,
+and `prove`'s CLI lives in `prove.py`. The lesson is not "sweep harder", it is
+**sweep by behaviour rather than by filename**: `argparse` calls, not module
+names, are where a path default can hide.
+
+Its failure mode is the mildest of the three, and worth recording as the
+counter-example: `prove` without a registry reports `OUT-OF-FRAGMENT` naming
+the symbol it could not type, so the degradation is already loud — which is
+why the fix needed no equivalent of what-if's absent-registry note. **DONE**
+in Phase 3 part 2, along with every documented invocation.
+
 **A9 — A3's pattern survived in a second CLI, and there it fails silently.**
 Found 2026-08-04 by sweeping every `__main__.py` for the A3 shape while
 auditing this plan, not by a test.
@@ -859,6 +896,12 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-05 — **Phase 3, fixtures part 2** — `verify`, `impact` and `prove`
+  onto the fixture corpus, which turned out to be a corpus in its own right
+  (`verify --golden fixtures` replays four cases), so the verifier suite could
+  drop `generate` entirely. Found **A10**: `prove`'s `--ontologies` had the
+  same repo-relative default as A3 and A9, and survived the sweep that found
+  A9 because that sweep read `__main__.py` files and this CLI is not one.
 - 2026-08-05 — **Phase 3, fixtures part 1** — `fixtures/` created and the
   kernel's toolkit suites moved onto it. Found that
   `spec/decision-digest-vectors.json`, a contract artifact, was generated from

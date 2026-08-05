@@ -46,8 +46,8 @@ def test_the_help_text_describes_the_verification_contract():
 
 def test_target_and_flip_are_mutually_exclusive():
     result = run_cli(
-        "--case", "golden/cases/trid-0001", "--free", "trid:actualAmountAtClosing",
-        "--target", "0.00", "--flip", expect=2,
+        "--case", "fixtures/cases/fx-0001", "--free", "fx:score",
+        "--target", "true", "--flip", expect=2,
     )
     assert "exactly one of --target and --flip" in result.stderr
 
@@ -79,9 +79,9 @@ def test_a_case_resolves_its_pack_without_this_package_knowing_where_it_lives(tm
     shares `corpus.resolve_pack_path` with verify/impact/generate, so an
     absolute case path resolves from any working directory at all."""
     result = run_cli(
-        "--ontologies", str(REPO_ROOT / "ontologies"),
-        "--case", str(REPO_ROOT / "golden" / "cases" / "notice-ny-0001"),
-        "--free", "nc:noticeMailedDate", "--target", "true",
+        "--ontologies", str(REPO_ROOT / "fixtures" / "ontology"),
+        "--case", str(REPO_ROOT / "fixtures" / "cases" / "fx-0001"),
+        "--free", "fx:score", "--target", "true",
         cwd=tmp_path, expect=0,
     )
     assert "SATISFIABLE" in result.stdout
@@ -92,7 +92,14 @@ def test_a_case_resolves_its_pack_without_this_package_knowing_where_it_lives(tm
 def test_without_a_registry_the_report_says_so():
     """The A9 defect proper. Absence is legal — kinds are inferred from use —
     but the answer is weaker in a way nothing else in the output reveals, so
-    silence would hand back the weaker answer looking like the stronger."""
+    silence would hand back the weaker answer looking like the stronger.
+
+    Still on example content, and deliberately: reaching this note requires a
+    pack whose kinds are *all* inferable from use, and the fixture pack is not
+    one (its widest guard compares two bound variables, so `fx:score` has no
+    inferable kind — which is what the next test exercises). Phase 3 part 3
+    gives the fixtures an inferable pack; until then this moves with `golden/`.
+    """
     result = run_cli(
         "--case", "golden/cases/notice-ny-0001",
         "--free", "nc:noticeMailedDate", "--target", "true", "--json", expect=0,
@@ -105,9 +112,9 @@ def test_without_a_registry_the_report_says_so():
 @pytest.mark.z3
 def test_with_a_registry_it_does_not():
     result = run_cli(
-        "--ontologies", "ontologies",
-        "--case", "golden/cases/notice-ny-0001",
-        "--free", "nc:noticeMailedDate", "--target", "true", "--json", expect=0,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", "--json", expect=0,
     )
     notes = json.loads(result.stdout)["notes"]
     assert not any("no ontology registry" in n for n in notes)
@@ -117,9 +124,9 @@ def test_with_a_registry_it_does_not():
 @pytest.mark.z3
 def test_the_registry_may_come_from_the_environment():
     result = run_cli(
-        "--case", "golden/cases/notice-ny-0001",
-        "--free", "nc:noticeMailedDate", "--target", "true", "--json",
-        env={"DULY_ONTOLOGIES": str(REPO_ROOT / "ontologies")}, expect=0,
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", "--json",
+        env={"DULY_ONTOLOGIES": str(REPO_ROOT / "fixtures" / "ontology")}, expect=0,
     )
     assert not any(
         "no ontology registry" in n for n in json.loads(result.stdout)["notes"]
@@ -132,8 +139,8 @@ def test_an_ontologies_path_that_is_not_there_is_refused():
     this whole task is about, one level up."""
     result = run_cli(
         "--ontologies", "no/such/place",
-        "--case", "golden/cases/notice-ny-0001",
-        "--free", "nc:noticeMailedDate", "--target", "true", expect=2,
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", expect=2,
     )
     assert "no ontology registry at" in result.stderr
 
@@ -141,17 +148,17 @@ def test_an_ontologies_path_that_is_not_there_is_refused():
 @needs_z3
 @pytest.mark.z3
 def test_a_pack_needing_a_registry_says_which_attribute_and_why():
-    """Some packs cannot be encoded without one: an attribute the pack never
-    *reads* has no usage to infer a kind from. This escaped as an uncaught
+    """Some packs cannot be encoded without one: an attribute whose kind no
+    guard reveals has nothing to infer from. This escaped as an uncaught
     `OutOfFragment` traceback until the repo-relative default stopped hiding
     it — a diagnostic's job, done by a stack trace, which is A3's second half
     in a second CLI."""
     result = run_cli(
-        "--case", "golden/cases/trid-0001",
-        "--free", "trid:actualAmountAtClosing", "--target", "0.00", expect=2,
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", expect=2,
     )
     assert "UNSUPPORTED" in result.stderr
-    assert "trid:disclosedAmountAtBaseline" in result.stderr
+    assert "fx:score" in result.stderr
     assert "--ontologies" in result.stderr
 
 
@@ -164,21 +171,21 @@ def test_a_pack_needing_a_registry_says_which_attribute_and_why():
 @pytest.mark.z3
 def test_a_satisfiable_query_exits_zero():
     result = run_cli(
-        "--ontologies", "ontologies",
-        "--case", "golden/cases/trid-0001",
-        "--free", "trid:actualAmountAtClosing", "--target", "0.00", expect=0,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", expect=0,
     )
     assert "SATISFIABLE" in result.stdout
-    assert "2984.02" in result.stdout
+    assert "50" in result.stdout
 
 
 @needs_z3
 @pytest.mark.z3
 def test_an_unsatisfiable_query_exits_one_and_prints_the_caveat():
     result = run_cli(
-        "--ontologies", "ontologies",
-        "--case", "golden/cases/resc-0001",
-        "--free", "resc:consummationDate", "--target", "true", expect=1,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0002",
+        "--free", "fx:score", "--target", "false", expect=1,
     )
     assert "UNSATISFIABLE" in result.stdout
     assert "WEAKER" in result.stdout
@@ -188,12 +195,12 @@ def test_an_unsatisfiable_query_exits_one_and_prints_the_caveat():
 @pytest.mark.z3
 def test_an_unsupported_query_exits_two_and_names_the_construct():
     result = run_cli(
-        "--ontologies", "ontologies",
-        "--case", "golden/cases/resc-0001",
-        "--free", "resc:statedRescissionDeadline", "--target", "true", expect=2,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:requiredMinimumScore", "--target", "true", expect=2,
     )
     assert "UNSUPPORTED" in result.stderr
-    assert "resc:statedRescissionDeadline" in result.stderr
+    assert "fx:requiredMinimumScore" in result.stderr
 
 
 # ---------------------------------------------------------------------------
@@ -205,17 +212,18 @@ def test_an_unsupported_query_exits_two_and_names_the_construct():
 @pytest.mark.z3
 def test_the_json_output_marks_every_answer_as_kernel_verified():
     result = run_cli(
-        "--case", "golden/cases/notice-ny-0001",
-        "--free", "nc:noticeMailedDate", "--target", "true", "--json", expect=0,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0001",
+        "--free", "fx:score", "--target", "true", "--json", expect=0,
     )
     payload = json.loads(result.stdout)
 
     assert payload["verdict"] == "SATISFIABLE"
-    assert payload["extremal"]["value"] == "2026-04-24"
+    assert payload["extremal"]["value"] == "50"
     assert payload["extremal"]["verifiedByKernel"] is True
-    assert payload["extremal"]["factValue"] == {"kind": "date", "value": "2026-04-24"}
+    assert payload["extremal"]["factValue"] == {"kind": "decimal", "value": "50"}
     assert payload["boundary"] == {
-        "value": "2026-04-25",
+        "value": "49",
         "decision": "false",
         "refutedByKernel": True,
         "note": None,
@@ -226,9 +234,9 @@ def test_the_json_output_marks_every_answer_as_kernel_verified():
 @pytest.mark.z3
 def test_the_json_output_flags_an_unsat_verdict_as_the_weaker_one():
     result = run_cli(
-        "--ontologies", "ontologies",
-        "--case", "golden/cases/resc-0001",
-        "--free", "resc:consummationDate", "--target", "true", "--json", expect=1,
+        "--ontologies", "fixtures/ontology",
+        "--case", "fixtures/cases/fx-0002",
+        "--free", "fx:score", "--target", "false", "--json", expect=1,
     )
     payload = json.loads(result.stdout)
     assert payload["verdict"] == "UNSATISFIABLE"

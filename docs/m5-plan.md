@@ -599,6 +599,51 @@ proves it.
       verify commands, every README path reference. `review-0001` is
       preserved-forever and pins `duly-starter-notice` — it moves intact;
       `schemaRef` is a name, not a path, so no hash moves.
+
+      **Also in this PR: split CLAUDE.md's gotchas, and give them a lifecycle.**
+      Measured 2026-08-06 — the file is **5,352 words** (~7k tokens, loaded
+      every session) and has grown **5× in one week** (1,029 → 5,352). The
+      gotchas are **3,139 of those words, 59% of the file**, in 27 bullets, the
+      longest 295 words. Phases 4–6 are still ahead of it.
+
+      *Two things to get right, and the second is the one that stops the
+      growth.*
+
+      *First, **route by directory, using nested `CLAUDE.md` files** — which
+      Claude Code loads when work touches that directory. The obvious fix, a
+      `docs/gotchas.md` linked from the root, is wrong for this repository's own
+      stated reason: a gotcha in a file nothing auto-loads is a gotcha nobody
+      reads, which is the doc form of "a test that would still pass with its
+      subject deleted". The clustering pays for the split on its own:
+      `demo/` is **5 bullets and 896 words, 28.5% of the gotchas**, relevant to
+      roughly one session in five; `rulepacks/` is 8 bullets and 503 words and
+      folds into `rulepacks/README.md`, which CLAUDE.md already mandates before
+      touching a pack; `assurance/` + `whatif/` is 3 and 277; `examples/` is 2
+      and 158. That leaves **9 bullets and 1,305 words in root**, and a file
+      around 3,500 words instead of 5,352.*
+
+      *What stays root-level is what is genuinely cross-cutting: the
+      deleted-subject rule, package-vs-repo paths, the `engine` block,
+      semantics-scoped replay, `schemaRef` inside the fact hash, one entity per
+      case. Root keeps a one-line pointer per nested file (~30 words) so an
+      agent planning a change **before** opening a file in that directory still
+      knows the gotchas exist — the split's one real failure mode.*
+
+      *Second, **a graduation rule**. A gotcha exists because nothing catches
+      the defect; when something starts catching it, the bullet collapses to one
+      line naming the check. Several already qualify — the rule-id convention is
+      enforced by `validate_pack`, the semantics/package re-coupling by
+      `kernel/tests/test_engine_identity.py`, the demo reload leak by
+      `demo/tests/demotest_helpers.py` — and each is currently a 110–295-word
+      narrative explaining a trap that now fails loudly. Add a sixth question to
+      CLAUDE.md's documentation pass: **did this work turn a gotcha into a
+      test?** If so, shrink it in the same PR. That is the repo's own principle
+      — an executable check beats prose — turned on the prose.*
+
+      *Why here rather than its own PR: the move rewrites the `examples/`
+      gotchas and creates the directory a nested file belongs in. Splitting
+      first means splitting twice, and the second pass is the one that gets
+      skipped.*
 - [ ] **The deletion gate (1 PR).** A CI job: `git rm -r examples/`, run the
       toolkit suites, run `verify` (expect `verified 0 cases` per Phase 1),
       **boot the demo and assert the honest empty state** — the surfaces
@@ -618,6 +663,12 @@ proves it.
 - The M4 ontology consolidation (CLAUDE.md's `schemaRef` gotcha) is the
   template for how to verify a mass path move: targets + fixtures + templates
   together, `notice-*`/`review-*` proven byte-untouched.
+- **`examples/CLAUDE.md` is deleted by the gate**, one PR later. That is
+  correct for the two gotchas routed there — CP-SAT's nondeterminism and the
+  pytest-paths carve-out are both about content the adopter removes, and they
+  should leave with it. It is a trap for anything else: a gotcha placed there
+  for tidiness disappears silently, and the gate reports success. Route to
+  `examples/` only what dies with `examples/`.
 
 ## 8. Phase 4 — distribution (3–4 PRs)
 

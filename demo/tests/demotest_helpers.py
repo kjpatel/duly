@@ -22,6 +22,7 @@ seeing why.
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -38,6 +39,12 @@ CASE = "fx-0001"
 
 #: The case carrying a live `low_confidence` abstention.
 ABSTAINING_CASE = "fx-0003"
+
+#: The scenario: one document, its rendition, and two facts grounded in
+#: character spans of that rendition — one of them below the pack's confidence
+#: floor, so the review arc has something to resolve. The corpus cases use
+#: attestation grounding, which leaves the span machinery untested.
+SCENARIO = "fx-0005"
 
 
 def build_content_root(root: Path) -> Path:
@@ -60,4 +67,17 @@ def build_content_root(root: Path) -> Path:
     shutil.copy(FIXTURES / "pack.yaml", pack_dir / "pack.yaml")
 
     shutil.copytree(FIXTURES / "ontology", root / "ontologies")
+
+    # The scenario, under the name the demo discovers starters by. Its
+    # `rulePack` is repo-relative (`fixtures/pack.yaml`) in the committed
+    # artifact, because that is what it resolves to when the demo serves this
+    # repository; inside a content root the pack lives where a receipt's
+    # `rulePack.name` resolves, so the reference is rewritten to match.
+    scenario_dir = root / "starters" / SCENARIO
+    shutil.copytree(FIXTURES / "scenario", scenario_dir)
+    manifest = json.loads((scenario_dir / "scenario.json").read_text())
+    manifest["rulePack"] = f"rulepacks/{pack_name}/pack.yaml"
+    (scenario_dir / "scenario.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+    )
     return root

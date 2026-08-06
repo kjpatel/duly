@@ -1,0 +1,25 @@
+{
+  "id": "fx-0005",
+  "title": "Widget inspection (fixture)",
+  "domain": "fixture",
+  "caseId": "case:fixture:fx-0005",
+  "ontology": {
+    "ontology": "duly-fixture",
+    "version": "0.1.0"
+  },
+  "demoExtractor": "stub",
+  "documents": [
+    {
+      "id": "doc:widget-report:FX-INSPECTION-0005",
+      "title": "Widget Inspection Report",
+      "pdf": "documents/widget-report.pdf",
+      "rendition": "renditions/widget-report.txt",
+      "sha256": "7630e16fa840a9fec24cc8f6e9584544d83ee66c95f3dd9cb35ae9c436109b3e"
+    }
+  ],
+  "facts": [
+    "facts/fx-score.json",
+    "facts/fx-category.json"
+  ],
+  "rulePack": "fixtures/pack.yaml"
+}

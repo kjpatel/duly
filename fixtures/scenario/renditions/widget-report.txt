@@ -1,0 +1,9 @@
+WIDGET INSPECTION REPORT
+
+Report reference: FX-INSPECTION-0005
+Inspected under: fixture regime (fictional)
+
+Measured score: 12
+Assigned category: restricted
+
+This document is a fixture. It describes nothing real.

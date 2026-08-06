@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
+import os
 import sys
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -54,7 +55,8 @@ except ImportError:  # pragma: no cover
 Z3_MISSING = (
     "z3-solver is not installed. `prove` is an optional analysis behind an "
     "optional dependency:\n"
-    "    uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml\n"
+    "    uv run --with z3-solver python -m duly_assurance prove \\\n"
+    "        --ontologies ontologies rulepacks/*/pack.yaml\n"
     "or `uv sync --extra prove`."
 )
 
@@ -879,19 +881,47 @@ def report_json(report: PackReport) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _registry(path: str):
+class BadOntologies(Exception):
+    """`--ontologies` named a directory that is not there."""
+
+
+def _resolve_ontologies(args) -> str | None:
+    """The registry directory, from the flag or ``DULY_ONTOLOGIES``, or None.
+
+    **No path default.** It used to be `ontologies` — duly's own directory,
+    relative to the working directory — which is right in this repository and
+    wrong everywhere else. The same defect was fixed in `duly_conformance`
+    (finding A3) and `duly_whatif` (A9); this was the third instance, and it
+    survived the sweep that found A9 because that sweep read `__main__.py`
+    files and this CLI does not live in one (M5 plan, A10).
+    """
+    return args.ontologies or os.environ.get("DULY_ONTOLOGIES") or None
+
+
+def _registry(path: str | None):
     """The ontology registry, when the deployment has one.
 
     Enums sharpen every answer — a closed `permissible_values` set turns a
     string symbol's domain from "these literals plus anything else" into
     exactly the permitted values — but the tool works without one, inferring
-    kinds from use. A missing directory is not an error.
-    """
-    from duly_conformance.registry import load_repo_registry
+    kinds from use, and says OUT-OF-FRAGMENT where it cannot.
 
+    No path is a legal state. A path that *is* given and does not exist is not:
+    it was typed on purpose, so proceeding without it would quietly weaken
+    every verdict in the report.
+    """
+    if path is None:
+        return None
     root = Path(path)
     if not root.is_dir():
-        return None
+        raise BadOntologies(
+            f"no ontology registry at {path!r}. Pass an existing directory of "
+            "<name>/<version>.yaml files, or omit --ontologies entirely — "
+            "prove runs without one and reports OUT-OF-FRAGMENT where a kind "
+            "could not be inferred."
+        )
+    from duly_conformance.registry import load_repo_registry
+
     return load_repo_registry(root)
 
 
@@ -914,8 +944,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("packs", nargs="+", help="pack.yaml paths")
     parser.add_argument(
-        "--ontologies", default="ontologies",
-        help="ontology registry directory (default: ontologies); enums sharpen the analysis",
+        "--ontologies",
+        help="ontology registry directory; may also be given as DULY_ONTOLOGIES. "
+             "No default, and optional — without one, kinds are inferred from the "
+             "pack and unencodable symbols are reported OUT-OF-FRAGMENT.",
     )
     parser.add_argument(
         "--all-pairs", action="store_true",
@@ -929,7 +961,11 @@ def main(argv: list[str] | None = None) -> int:
         print(Z3_MISSING, file=sys.stderr)
         return 2
 
-    registry = _registry(args.ontologies)
+    try:
+        registry = _registry(_resolve_ontologies(args))
+    except BadOntologies as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     reports = []
     for raw in args.packs:
         pack = _load(raw)

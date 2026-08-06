@@ -313,8 +313,8 @@ def test_the_report_is_byte_identical_under_different_hash_seeds():
         "from duly_assurance.prove import analyze_pack, render;"
         "from duly_kernel.ir import load_pack;"
         "from duly_conformance.registry import load_repo_registry;"
-        "r = load_repo_registry('ontologies');"
-        "p = load_pack('rulepacks/esign-closing-package/pack.yaml');"
+        "r = load_repo_registry('fixtures/ontology');"
+        "p = load_pack('fixtures/pack.yaml');"
         "sys.stdout.write(render(analyze_pack(Path('x'), p, r, all_pairs=True), verbose=True))"
     )
     outputs = []
@@ -336,11 +336,25 @@ def test_the_report_is_byte_identical_under_different_hash_seeds():
 
 @needs_z3
 @pytest.mark.z3
-def test_the_committed_packs_exit_zero(capsys, monkeypatch):
+def test_the_fixture_pack_exits_zero(capsys, monkeypatch):
+    """The CLI contract, over the toolkit's own pack: a pack the kernel
+    accepted cannot make `prove` fail, so exit zero is the expected shape."""
     from duly_assurance.prove import main
 
     monkeypatch.chdir(REPO_ROOT)
-    assert main([f"rulepacks/{name}/pack.yaml" for name in COMMITTED_PACKS]) == 0
+    assert main(["--ontologies", "fixtures/ontology", "fixtures/pack.yaml"]) == 0
+    assert "unresolved ambiguity" not in capsys.readouterr().out
+
+
+@needs_z3
+@pytest.mark.z3
+def test_the_committed_packs_exit_zero(capsys, monkeypatch):
+    """Example content: the subject is the six teaching packs, so this moves
+    with them."""
+    from duly_assurance.prove import main
+
+    monkeypatch.chdir(REPO_ROOT)
+    assert main(["--ontologies", "ontologies", *[f"rulepacks/{name}/pack.yaml" for name in COMMITTED_PACKS]]) == 0
     out = capsys.readouterr().out
     assert "PROVED-DISJOINT" in out
     assert "unresolved ambiguity" not in out
@@ -417,10 +431,10 @@ def test_json_output_is_machine_readable(capsys, monkeypatch):
     from duly_assurance.prove import main
 
     monkeypatch.chdir(REPO_ROOT)
-    assert main(["rulepacks/esign-closing-package/pack.yaml", "--json"]) == 0
+    assert main(["--ontologies", "fixtures/ontology", "fixtures/pack.yaml", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
     (pack,) = payload["packs"]
-    assert pack["pack"] == "esign-closing-package"
+    assert pack["pack"] == "duly-fixture-pack"
     assert {p["verdict"] for p in pack["pairs"]} <= {
         "PROVED-DISJOINT", "NOT-PROVED", "OUT-OF-FRAGMENT"
     }

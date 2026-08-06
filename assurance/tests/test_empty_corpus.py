@@ -65,10 +65,15 @@ def test_both_renderers_say_nothing_was_measured(empty_corpus):
 
 
 def test_a_populated_corpus_keeps_the_ordinary_summary():
-    """The empty-corpus wording must not leak into a real run."""
+    """The empty-corpus wording must not leak into a real run.
+
+    Measured over `fixtures/`, the toolkit's own corpus, rather than `golden/`:
+    what is being asserted is that `analyze` distinguishes empty from populated,
+    which is not a property of the teaching content.
+    """
     from pathlib import Path
 
-    report = analyze(Path("golden"))
+    report = analyze(Path(__file__).resolve().parents[2] / "fixtures")
     assert report["corpusEmpty"] is False
     assert "decisions flip" in report["summary"]
 

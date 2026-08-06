@@ -68,8 +68,16 @@ All verified against the kernel, not folklore:
   Before you reach for that `overrides`, run the static verifier — it answers the question the validator cannot:
 
   ```bash
-  uv run --with z3-solver python -m duly_assurance prove rulepacks/your-pack/pack.yaml
+  uv run --with z3-solver python -m duly_assurance prove \
+      --ontologies ontologies rulepacks/your-pack/pack.yaml
   ```
+
+  `--ontologies` has no default — your ontologies are yours, and duly does not
+  know where you keep them (`DULY_ONTOLOGIES` works too). It is optional, and
+  passing it is worth doing anyway: without a registry the verifier infers value
+  kinds from use and reports `OUT-OF-FRAGMENT` for what it cannot infer, which
+  is a weaker answer honestly labelled. Across the six committed packs the
+  registry is the difference between 23 pairs proved disjoint and 25.
 
   If the pair comes back `PROVED-DISJOINT`, your rules genuinely never overlap and the `overrides` is a workaround for the validator's narrow proof set — say so in a comment on the rule, so the next author knows which kind it is. If it comes back `NOT-PROVED`, you get the exact input assignment under which both rules fire, and the `overrides` is a real legal exception. The same run reports which input regions your rules leave with no conclusion at all. See [spec/pack-verification.md](../spec/pack-verification.md).
 - **The IR has no calendar arithmetic.** Expressions cover boolean logic, `min`/`max`, `abs`, `days_between`, comparisons, and typed literals — there is no date-plus-N, no day-of-week, no holiday calendar. If your rule needs business-day math, model the honestly expressible slice and document the boundary, as [tila-rescission](tila-rescission-us-federal/pack.yaml) does in its `MODELING BOUNDARY` header. A documented limitation is a contribution; a silent approximation is a defect.

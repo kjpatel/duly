@@ -92,8 +92,14 @@ jobs:
       # That makes it a differential check between two proof systems, worth
       # running whenever the validator changes (kernel/ is in paths) and on
       # every merge to main, but pointless as a per-pack-PR checkbox.
+      # `--ontologies` is explicit because the flag has no path default: it
+      # used to resolve to duly's own `ontologies/` relative to the working
+      # directory, which is right here and wrong for every adopter (M5 plan,
+      # A10). Passing it is also what keeps this a differential check rather
+      # than a weaker one — without the registry two packs cannot be typed at
+      # all, and the run reports OUT-OF-FRAGMENT instead of proving anything.
       - name: Differential check — Z3 against the validator's own proofs
-        run: uv run python -m duly_assurance prove rulepacks/*/pack.yaml
+        run: uv run python -m duly_assurance prove --ontologies ontologies rulepacks/*/pack.yaml
 
   ortools:
     name: closing-scheduler example

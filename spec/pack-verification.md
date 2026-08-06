@@ -3,7 +3,8 @@
 [Rule IR](rule-ir.md) makes rule packs checkable: same-attribute conclusions at one priority are a validation error unless the validator can *prove* the rules never both apply. The proof set it accepts is deliberately tiny — disjoint effective windows, or contradictory quoted-string equality guards on the same bound attribute — and everything else falls back to an authored `overrides` or a manufactured priority gap. [`assurance/duly_assurance/prove.py`](../assurance/duly_assurance/prove.py) is the larger proof system: it encodes a pack as SMT and asks Z3.
 
 ```bash
-uv run --with z3-solver python -m duly_assurance prove rulepacks/*/pack.yaml
+uv run --with z3-solver python -m duly_assurance prove \
+    --ontologies ontologies rulepacks/*/pack.yaml
 uv run --with z3-solver python -m duly_assurance prove-equivalent packA/pack.yaml packB/pack.yaml
 ```
 
@@ -194,6 +195,8 @@ It also makes witnesses readable. `toy:balance 10000`, not `20001/2`. Existence 
 `z3-solver` sits in a `prove` extra with a `z3` pytest marker, exactly as `docling` sits behind `extraction` and `linkml` behind its own marker. Importing `duly_assurance.prove` without z3 installed does not raise; running it prints the install line and exits 2.
 
 The reason is the same one that kept the DMN compiler and the conformance gate on zero new runtime dependencies: nothing on the path from a document to a receipt may acquire a dependency that a deployment has to vet, and a 36 MB solver binary is a real thing to vet. `prove` is a tool an author runs, not a component a decision passes through.
+
+`--ontologies` is optional and has **no path default** (it also reads `DULY_ONTOLOGIES`). It used to default to `ontologies`, duly's own directory relative to the working directory, which is right in this repository and wrong everywhere else — the third instance of that defect, after the conformance gate and what-if. Without a registry the analysis still runs, inferring kinds from use and reporting `OUT-OF-FRAGMENT` for what it cannot infer; **that report is the honest degradation**, and it is why `prove` needed no equivalent of what-if's absent-registry note. A path that *is* given and does not exist is refused, because it was typed on purpose.
 
 ## Open questions (v0)
 

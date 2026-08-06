@@ -52,6 +52,12 @@ def _load(case: str) -> dict:
     return json.loads((RECEIPTS / f"{case}.json").read_text())
 
 
+def _later_version(version: str) -> str:
+    """A pack version that is certainly not `version`: bump the content year."""
+    year, _, rest = version.partition(".")
+    return f"{int(year) + 1}.{rest}"
+
+
 def _variant(base: dict, description: str, cls: str, mutate) -> dict:
     receipt = copy.deepcopy(base)
     mutate(receipt)
@@ -130,7 +136,14 @@ def build() -> dict:
             base,
             "different pack version — a pack's identity is its name and version",
             f"{BASE_CASE}-under-later-pack",
-            lambda r: r["rulePack"].__setitem__("version", "2026.2.0"),
+            # Derived from the receipt's own version rather than written out.
+            # A literal here silently became the *current* version when the
+            # fixture pack was rebuilt, which collapsed this class into the
+            # base one — the equivalence test caught it, and deriving means it
+            # cannot recur.
+            lambda r: r["rulePack"].__setitem__(
+                "version", _later_version(r["rulePack"]["version"])
+            ),
         ),
         _variant(
             base,

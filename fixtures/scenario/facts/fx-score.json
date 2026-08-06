@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:a31ad31f37cfce52792891686907dc65ca475da63c081f286fa85729b218906a",
-  "contentHash": "a31ad31f37cfce52792891686907dc65ca475da63c081f286fa85729b218906a",
+  "id": "urn:duly:fact:sha256:2e1c6e06b3f79eb4a4ac690fbf52fb54e06c4d2606c3f1c5332176cd50d3a567",
+  "contentHash": "2e1c6e06b3f79eb4a4ac690fbf52fb54e06c4d2606c3f1c5332176cd50d3a567",
   "caseId": "case:fixture:fx-0005",
   "entity": {
     "id": "widget:fx-0005",
@@ -14,7 +14,7 @@
   "grounding": {
     "kind": "document",
     "documentId": "doc:widget-report:FX-INSPECTION-0005",
-    "documentSha256": "7630e16fa840a9fec24cc8f6e9584544d83ee66c95f3dd9cb35ae9c436109b3e",
+    "documentSha256": "63374b03b3091d5c6132249ce651f338942ee93da9b04347b6f2a92e851f2159",
     "renditionId": "rendition:widget-report:0.1.0",
     "locator": {
       "kind": "charSpan",

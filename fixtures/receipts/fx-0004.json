@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:9a7f6d8bbf803d42d9b85cf3164777ea9a3f903c1469332952a343c8020d4bd9",
-  "receiptSha256": "9a7f6d8bbf803d42d9b85cf3164777ea9a3f903c1469332952a343c8020d4bd9",
+  "id": "urn:duly:receipt:sha256:bc00dd016ec73ce8b7420f87376fb1344b9d829897c5668a8fcfe6351b87e063",
+  "receiptSha256": "bc00dd016ec73ce8b7420f87376fb1344b9d829897c5668a8fcfe6351b87e063",
   "caseId": "case:fixture:fx-0003",
   "decision": {
     "entity": "widget:fx-0003",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "duly-fixture-pack",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -40,6 +40,18 @@
       "effectiveFrom": "1900-01-01T00:00:00Z",
       "defeated": [
         "FX-DEFAULT-00"
+      ]
+    },
+    {
+      "ruleId": "FX-FEE-01",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture fee for a restricted widget (fictional)"
+      },
+      "priority": 100,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
+      "defeated": [
+        "FX-FEE-00"
       ]
     }
   ],

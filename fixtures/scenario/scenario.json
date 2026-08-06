@@ -14,12 +14,13 @@
       "title": "Widget Inspection Report",
       "pdf": "documents/widget-report.pdf",
       "rendition": "renditions/widget-report.txt",
-      "sha256": "7630e16fa840a9fec24cc8f6e9584544d83ee66c95f3dd9cb35ae9c436109b3e"
+      "sha256": "63374b03b3091d5c6132249ce651f338942ee93da9b04347b6f2a92e851f2159"
     }
   ],
   "facts": [
     "facts/fx-score.json",
-    "facts/fx-category.json"
+    "facts/fx-category.json",
+    "facts/fx-inspector.json"
   ],
   "rulePack": "fixtures/pack.yaml"
 }

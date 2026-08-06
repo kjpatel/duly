@@ -49,8 +49,10 @@ produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 **Where this stands (2026-08-06):** Phases 0, 1 and 2 are complete. **Phase 3
 is in progress and is the whole current front.** The fixture corpus exists;
 the kernel, the assurance commands, whatif's CLI and the receipt viewer run on
-it; and the fixture *scenario* — a document, its rendition, span-grounded
-facts — now exists, which was the shared blocker for everything left.
+it; and the fixtures now carry everything the remaining suites need — a
+scenario with span-grounded facts, a PII-marked fact, and a non-boolean
+decision with phrasing. **No conversion left is blocked on a missing
+artifact**, which was not true of any earlier part.
 
 Remaining, in order: the rest of the demo (part 4b(ii), 63 failures under
 deletion), then kernel report + whatif + dmn + extraction (part 5), then the
@@ -511,7 +513,29 @@ proves it.
       `starters/<id>/`, rewriting the scenario's repo-relative `rulePack` to
       the content root's layout — the committed manifest is correct for serving
       *this* repository, and the two are not the same path.
-- [ ] **Fixtures, part 4b(ii): the rest of the demo (1 PR).** 63 failures:
+- [x] **Fixtures, part 4b(ii)a: grow the pack to what the surfaces need.**
+      *Attempted the four demo suites and stopped at the first one, because
+      `test_api` splits on a fixture the pack could not supply: half its tests
+      assert that verdict wording is **pack data** (`phrasing:` blocks,
+      placeholders, tones), and `fx:permitted` is boolean — so it takes the
+      kernel's Yes/No fallback and never reaches that machinery at all. The
+      whole phrasing path was untestable except through the teaching packs.*
+      *So the pack grew a non-boolean decision (`fx:assessedFee`, money, with a
+      phrasing block and a default/exception rule pair) and the scenario grew a
+      `sensitivity: pii` fact for the report renderer's redaction path. That is
+      part 5's stated prerequisite, delivered early because part 4b(ii) hit it
+      first — which is the argument for measuring: the blocker was one artifact,
+      not two suites' worth of work.*
+      *A rebuild, not an edit: `pack.version` is inside every receipt, so this
+      moved all four receipts, the digest vectors and the corpus aggregate.
+      Two literals turned out to be pinned where they should have been derived
+      — the "later pack version" vector had hardcoded `2026.2.0`, which the
+      rebuild made the **current** version and collapsed an equivalence class
+      into the base one; and a PROV-O test pinned the pack URN. Both now derive
+      from the receipt. The equivalence test caught the first, which is what it
+      is for.*
+- [ ] **Fixtures, part 4b(ii)b: the four demo suites (1 PR).** 63 failures:
+
       `test_rules_api` 31, `test_evidence_api` 13, `test_api` 10,
       `test_review_arc` 8, and one in `test_content_roots`
       (`test_the_repo_default_still_finds_everything`, which asserts six packs
@@ -520,14 +544,12 @@ proves it.
       spans), which is the fixture growth part 5 also wants; do them together
       or accept building it twice.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
-      `kernel/tests/test_report.py` — **part of its blocker is now gone**:
-      `fixtures/scenario/` supplies the document-grounded facts with quotes and
-      spans that the report renderer needs. What it still wants is a *PII*
-      fact (for the redaction tests) and a *money* decision, and those two do
-      require rebuilding `fixtures/pack.yaml` at a new version, which moves
-      every fixture receipt and re-pins the digest vectors and aggregates.
-      Decide whether the redaction and money tests are toolkit or example
-      before paying that: `test_trid_*` is plainly example and moves.
+      `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
+      supplies document-grounded facts with quotes and spans, a
+      `sensitivity: pii` fact for the redaction tests, and the pack now carries
+      a money decision with phrasing. The rebuild that cost is already paid.
+      What remains is the split itself: `test_trid_*` is plainly example and
+      moves with the packs.
       Also: `whatif/tests/test_whatif.py` split (a) from (b); the whatif CLI
       test needing a pack whose kinds are all inferable, which the same rebuild
       supplies; a fixture decision table for `dmn/`; and `extraction/tests` off
@@ -985,6 +1007,13 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-06 — **Phase 3, part 4b(ii)a: the pack grown** — a non-boolean
+  money decision with phrasing, and a `sensitivity: pii` fact, because
+  `test_api` splits on machinery a boolean decision never reaches. Part 5's
+  prerequisite, delivered early because 4b(ii) hit it first. The rebuild moved
+  every receipt and found two literals that should have been derived: a
+  digest vector hardcoding what became the current pack version, and a PROV-O
+  test pinning the pack URN.
 - 2026-08-06 — [#60](https://github.com/kjpatel/duly/pull/60) — **Phase 3, part 4b(i): the fixture scenario** — the shared
   prerequisite for the remaining demo suites and part 5. A generated PDF, its
   rendition, and two span-grounded facts; spans found by the builder rather

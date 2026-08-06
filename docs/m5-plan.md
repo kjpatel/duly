@@ -489,7 +489,17 @@ proves it.
       `monkeypatch` unsets the variable and un-reloads nothing. Converting one
       suite turned 0 failures into 50 across the others until the teardown
       reload went in. Every remaining conversion needs it.*
-- [ ] **Fixtures, part 4b: the rest of the demo (1 PR).** 63 failures:
+- [x] **Fixtures, part 4b(i): the fixture scenario (1 PR).** The shared
+      prerequisite every remaining demo suite and part 5 needed, built and
+      verified rather than assumed: `fixtures/scenario/` — a generated PDF, its
+      rendition, and two span-grounded facts, one below the confidence floor.
+      Spans are found in the rendition by the builder, not typed; a check
+      asserts every quote equals the slice it claims and that the document hash
+      matches the PDF's bytes. `build_content_root` now assembles it under
+      `starters/<id>/`, rewriting the scenario's repo-relative `rulePack` to
+      the content root's layout — the committed manifest is correct for serving
+      *this* repository, and the two are not the same path.
+- [ ] **Fixtures, part 4b(ii): the rest of the demo (1 PR).** 63 failures:
       `test_rules_api` 31, `test_evidence_api` 13, `test_api` 10,
       `test_review_arc` 8, and one in `test_content_roots`
       (`test_the_repo_default_still_finds_everything`, which asserts six packs
@@ -958,6 +968,12 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-06 — **Phase 3, part 4b(i): the fixture scenario** — the shared
+  prerequisite for the remaining demo suites and part 5. A generated PDF, its
+  rendition, and two span-grounded facts; spans found by the builder rather
+  than typed, with quote-equals-slice and document-hash checks. The content
+  root assembles it under `starters/` and rewrites the manifest's
+  repo-relative `rulePack` to the root's own layout.
 - 2026-08-05 — **Phase 3, part 4a: the receipt viewer** — 35 tests onto a
   content root assembled from `fixtures/`; demo failures under deletion fall
   from 89 to 63. Established the two things the remaining suites reuse: the

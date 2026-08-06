@@ -28,9 +28,10 @@ deleted is not a test.**
 |---|---|
 | `ontology/duly-fixture/0.1.0.yaml` | The vocabulary the fixture facts pin. Invented; models nothing real |
 | `pack.yaml` | One rule pack: a default, an exception that defeats it, a derived intermediate, an effective-dated pair, and an abstention floor |
-| `cases/fx-000N/` | Three cases: `case.yaml` plus content-addressed facts |
+| `cases/fx-000N/` | Four cases: `case.yaml` plus content-addressed facts |
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
-| `build.py` | Regenerates the facts and receipts deterministically |
+| `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
+| `build.py` | Regenerates every artifact above, deterministically |
 
 Three cases, chosen to cover what the toolkit's own tests need rather than to
 teach anything:
@@ -41,6 +42,21 @@ teach anything:
   `inputFacts` on the deciding rule, which is a shape worth having.
 - **`fx-0003`** — one fact scores below the pack's confidence floor, so the
   receipt carries a `low_confidence` abstention and still reaches a decision.
+- **`fx-0004`** — `fx-0003` after review: the correction supersedes the
+  below-floor fact, the abstention is answered and the decision flips. It
+  commits the *post-correction projection*, because supersession is a
+  store-level projection and `adjudicate` is handed a fact list, not a store.
+
+And one scenario, which is a different artifact from a case:
+
+- **`fx-0005`** (`scenario/`) — a generated PDF, its rendition, and two facts
+  grounded in **character spans** of that rendition, one below the confidence
+  floor. The cases above all use attestation grounding, which is honest for
+  synthetic data and leaves the span machinery — the evidence browser's
+  highlighting, quotes in the audit report, span verification itself — with
+  nothing to exercise. Spans are *found* in the rendition text by the builder,
+  never typed: a hand-counted offset is a fact that lies about its own
+  evidence.
 
 ## Regenerating
 

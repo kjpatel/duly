@@ -7,6 +7,16 @@
     "ontology": "duly-starter-notice",
     "version": "0.1.0"
   },
+  "reviewArc": {
+    "attribute": "nc:noticeMailedDate",
+    "confidence": {
+      "score": 0.62,
+      "method": "platt"
+    },
+    "title": "NY nonrenewal — review arc (low-confidence extraction)",
+    "caseId": "case:policy:HO-77401-NY:review-demo",
+    "defaultAsOf": "2026-07-25"
+  },
   "documents": [
     {
       "id": "doc:dec-page:HO-77401-NY:2025-09-01",

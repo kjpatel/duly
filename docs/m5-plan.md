@@ -552,34 +552,33 @@ proves it.
       exercises `{daysBetween:…}` and `{fact:…|day}`, so the pack needs a
       **date** attribute. Cheap, but it is another rebuild — do it with part 5's
       other growth rather than alone.*
-- [ ] **Fixtures, part 4b(ii)c-0: the demo's review arc names a starter, and
-      that is toolkit code holding example content (1 PR).** **Found while
-      scoping the evidence suite, and it blocks both remaining suites.**
-      [`demo/app.py`](../demo/app.py) declares `REVIEW_SOURCE_SCENARIO =
-      "notice-ny"`, plus `REVIEW_SCENARIO_ID`, `REVIEW_CASE_ID` and
-      `REVIEW_SCENARIO_TITLE` naming that same starter. The demo is toolkit
-      (D2), so this is a teaching scenario's name compiled into it: point the
-      demo at any other content and the arc simply does not appear, because
-      `_ingest_review_case` is wrapped in `except Exception: pass`.
-
-      Degrading quietly is right for a missing *demonstration*; hardcoding
-      *which* demonstration is not, and the silence is what makes it invisible.
-      Derive the arc instead — from whichever scenario carries a below-floor
-      extraction, preferring `notice-ny` when present so this repository's demo
-      is byte-unchanged. Roughly nine call sites in `app.py` and one constant
-      `test_review_arc.py` imports; the derived values move onto the runtime.
-
-      *Attempted inside part 4b(ii)c and backed out deliberately: a
-      half-refactored `app.py` is worse than a routed finding, and the four
-      constants are load-bearing for two suites at once.*
+- [x] **Fixtures, part 4b(ii)c-0: the review arc becomes content (1 PR).**
+      The four constants naming `notice-ny` are gone. A scenario opts into the
+      arc by carrying a `reviewArc` block in its manifest — which attribute to
+      script below the floor, at what confidence, and what to call the result —
+      exactly as it opts into the stub extractor with `demoExtractor`. The demo
+      finds the first scenario declaring one, in sorted order.
+      *This repository's arc is unchanged in every field: same id, title, case
+      id, default as-of, domain. That is the check that mattered, because the
+      point was to remove a name from toolkit code, not to change what the demo
+      shows.*
+      *One thing the derivation exposed and did not fix: a fixture-only
+      deployment still gets **no** arc, because store-backed ingest needs
+      extraction **targets** (`starters/tools/targets`) and the fixture
+      scenario has none — it falls back to disk-backed, and the arc is
+      store-only by construction. The hardcoded name was hiding a second
+      dependency behind it. Fixture targets are part of 4b(ii)c below.*
 - [ ] **Fixtures, part 4b(ii)c: the last three demo suites (1 PR).** 52
       failures: `test_rules_api` 31, `test_evidence_api` 13, `test_review_arc`
       8, plus the one in `test_content_roots` that asserts six packs and moves.
       All three want the content root `demotest_helpers` already builds.
-      `test_evidence_api` and `test_review_arc` also want c-0 above — both
-      assert on the review arc, which cannot exist in a fixture deployment
-      until it stops naming a starter. `test_rules_api` (31, the largest)
-      does not, and can go first.
+      `test_evidence_api` and `test_review_arc` assert on the review arc, which
+      c-0 made content-declared but which a fixture deployment still cannot
+      produce: store-backed ingest needs extraction **targets**, and the
+      fixture scenario has none. Add them here — the shape is
+      `starters/tools/targets/<doc-id>.json`, and `fixtures/build.py` should
+      emit them beside the scenario it already builds. `test_rules_api` (31,
+      the largest) needs none of this and can go first.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
@@ -600,6 +599,51 @@ proves it.
       verify commands, every README path reference. `review-0001` is
       preserved-forever and pins `duly-starter-notice` — it moves intact;
       `schemaRef` is a name, not a path, so no hash moves.
+
+      **Also in this PR: split CLAUDE.md's gotchas, and give them a lifecycle.**
+      Measured 2026-08-06 — the file is **5,352 words** (~7k tokens, loaded
+      every session) and has grown **5× in one week** (1,029 → 5,352). The
+      gotchas are **3,139 of those words, 59% of the file**, in 27 bullets, the
+      longest 295 words. Phases 4–6 are still ahead of it.
+
+      *Two things to get right, and the second is the one that stops the
+      growth.*
+
+      *First, **route by directory, using nested `CLAUDE.md` files** — which
+      Claude Code loads when work touches that directory. The obvious fix, a
+      `docs/gotchas.md` linked from the root, is wrong for this repository's own
+      stated reason: a gotcha in a file nothing auto-loads is a gotcha nobody
+      reads, which is the doc form of "a test that would still pass with its
+      subject deleted". The clustering pays for the split on its own:
+      `demo/` is **5 bullets and 896 words, 28.5% of the gotchas**, relevant to
+      roughly one session in five; `rulepacks/` is 8 bullets and 503 words and
+      folds into `rulepacks/README.md`, which CLAUDE.md already mandates before
+      touching a pack; `assurance/` + `whatif/` is 3 and 277; `examples/` is 2
+      and 158. That leaves **9 bullets and 1,305 words in root**, and a file
+      around 3,500 words instead of 5,352.*
+
+      *What stays root-level is what is genuinely cross-cutting: the
+      deleted-subject rule, package-vs-repo paths, the `engine` block,
+      semantics-scoped replay, `schemaRef` inside the fact hash, one entity per
+      case. Root keeps a one-line pointer per nested file (~30 words) so an
+      agent planning a change **before** opening a file in that directory still
+      knows the gotchas exist — the split's one real failure mode.*
+
+      *Second, **a graduation rule**. A gotcha exists because nothing catches
+      the defect; when something starts catching it, the bullet collapses to one
+      line naming the check. Several already qualify — the rule-id convention is
+      enforced by `validate_pack`, the semantics/package re-coupling by
+      `kernel/tests/test_engine_identity.py`, the demo reload leak by
+      `demo/tests/demotest_helpers.py` — and each is currently a 110–295-word
+      narrative explaining a trap that now fails loudly. Add a sixth question to
+      CLAUDE.md's documentation pass: **did this work turn a gotcha into a
+      test?** If so, shrink it in the same PR. That is the repo's own principle
+      — an executable check beats prose — turned on the prose.*
+
+      *Why here rather than its own PR: the move rewrites the `examples/`
+      gotchas and creates the directory a nested file belongs in. Splitting
+      first means splitting twice, and the second pass is the one that gets
+      skipped.*
 - [ ] **The deletion gate (1 PR).** A CI job: `git rm -r examples/`, run the
       toolkit suites, run `verify` (expect `verified 0 cases` per Phase 1),
       **boot the demo and assert the honest empty state** — the surfaces
@@ -619,6 +663,12 @@ proves it.
 - The M4 ontology consolidation (CLAUDE.md's `schemaRef` gotcha) is the
   template for how to verify a mass path move: targets + fixtures + templates
   together, `notice-*`/`review-*` proven byte-untouched.
+- **`examples/CLAUDE.md` is deleted by the gate**, one PR later. That is
+  correct for the two gotchas routed there — CP-SAT's nondeterminism and the
+  pytest-paths carve-out are both about content the adopter removes, and they
+  should leave with it. It is a trap for anything else: a gotcha placed there
+  for tidiness disappears silently, and the gate reports success. Route to
+  `examples/` only what dies with `examples/`.
 
 ## 8. Phase 4 — distribution (3–4 PRs)
 

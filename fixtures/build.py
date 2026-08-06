@@ -266,6 +266,16 @@ def _build_scenario() -> None:
             "caseId": f"case:fixture:{SCENARIO_CASE}",
             "ontology": dict(ONTOLOGY),
             "demoExtractor": "stub",
+            # Opt into the demo's review arc. The arc is content, not code:
+            # a scenario names the attribute to script below the pack's floor
+            # and the demo derives the rest (see demo/app.py `_review_spec`).
+            "reviewArc": {
+                "attribute": "fx:score",
+                "confidence": {"score": 0.55, "method": "platt"},
+                "title": "Widget inspection — review arc (fixture)",
+                "caseId": f"case:fixture:{SCENARIO_CASE}:review-demo",
+                "defaultAsOf": "2026-06-01",
+            },
             "documents": [
                 {
                     "id": doc["id"],

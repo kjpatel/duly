@@ -48,8 +48,10 @@ produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
 **Where this stands (2026-08-05):** Phases 0, 1 and 2 are complete. **Phase 3
 is in progress** — the fixture corpus exists and the kernel, assurance and
-whatif's CLI run on it; one more fixture PR, then the move and the deletion
-gate. Phase 4 waits on 3.
+whatif's CLI run on it. Part 3 measured the deletion gate instead of guessing
+at it and re-sequenced the rest: two more fixture PRs (the demo surfaces, then
+kernel report + whatif + dmn + extraction), then the move, then the gate —
+which the measurement showed cannot pass before the move. Phase 4 waits on 3.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
@@ -435,28 +437,56 @@ proves it.
       *Found on the way: **A10**, `prove`'s `--ontologies` defaulting to a
       repo-relative path — the same defect as A3 and A9, in a CLI that is not a
       `__main__.py` and so survived the sweep that found A9. Fixed here.*
-- [ ] **Fixtures, part 3: demo, dmn, conformance, review, extraction (1 PR).**
-      Ten files. `demo/tests/test_content_roots.py` already proves the empty
-      state, so the rest is pointing the others at fixture content; `dmn/`
-      needs a fixture decision table, and `kernel/tests/test_report.py` lands
-      here with the fixture growth it needs (a document-grounded PII fact, a
-      money decision). Two carried over from part 2: `whatif/tests/test_whatif.py`,
-      whose boundary assertions are about the teaching packs and want splitting
-      rather than repointing; and one whatif CLI test that needs a fixture pack
-      whose value kinds are *all* inferable from use, which today's is not —
-      its widest guard compares two bound variables, so `fx:score` has no
-      inferable kind. Adding an inferable rule to `fixtures/pack.yaml` moves
-      every fixture receipt, so it is a deliberate rebuild, not a tweak.
-- [ ] ~~**Toolkit-owned fixtures first (1 PR).**~~ *Superseded by the three
-      above.* Before anything moves, the
-      toolkit suites that currently test through the six real packs get
-      their own tiny fixture packs (extend the `kernel/tests/fixtures/`
-      pattern). Otherwise the deletion test passes vacuously — suites that
-      silently skip because their subject matter left. **27 of 63** test files
-      touch example content (measured 2026-08-04; re-measure before you start,
-      the numerator has not moved but the denominator has); not all need
-      fixtures (some *are* example tests and move with the content), but the
-      ones asserting toolkit behavior do.
+- [x] **Fixtures, part 3: measure the gate, and re-sequence on what it says.**
+      *This task was written as "ten files"; it was measured instead, by doing
+      the deletion in a throwaway worktree and running the toolkit suites
+      against it. The result is **220 failures and 93 errors across eight
+      suites** — demo 89, assurance 39, whatif 25, dmn 25, review 20,
+      extraction 12, conformance 6, kernel 4.*
+
+      *The number is not the finding. The finding is that it conflates two
+      populations the plan had treated as one:*
+
+      *(a) **toolkit tests that must stay and be repointed at `fixtures/`** —
+      the demo's suites above all, since D2 makes those surfaces toolkit; and*
+
+      *(b) **example tests whose subject is the example content**, which should
+      physically move under `examples/` and be deleted with it —
+      `test_the_trid_maximum_fee_that_owes_no_cure`, the DMN equivalence
+      suite, the conformance sweep over committed facts, the six-pack
+      parametrizations.*
+
+      *Most of the 220 are (b). So **the deletion gate cannot pass before the
+      move**, and no amount of fixture work will make it: the move is what
+      makes those tests disappear correctly, alongside their subject. Writing
+      guards to keep them alive would be scaffolding for a state the move
+      removes.*
+
+      *One fix that is right regardless of sequencing, and shipped here:
+      `assurance/tests/provetest_helpers.py` scanned `rulepacks/` at module
+      scope, so a missing directory was a **collection error** — every test in
+      `test_prove.py` and `test_prove_equivalence.py` stopped existing,
+      including the ones that never touch a pack. `prove` is toolkit and those
+      files stay after the move, so the scan had to tolerate absence. A test
+      that cannot be collected is worse than one that fails: pytest reports the
+      count that remains, and nothing says what left.*
+
+- [ ] **Fixtures, part 4: the demo surfaces (1 PR).** The largest genuine (a)
+      block — 89 failures across `test_api`, `test_receipts_api`,
+      `test_rules_api`, `test_review_arc`. `test_content_roots` already proves
+      the empty state and needs nothing. The demo reads content through
+      `CONTENT` (Phase 1), so most of this is pointing a fixture deployment at
+      `fixtures/` rather than rewriting assertions — but the assertions name
+      scenarios and packs, so it is real work.
+- [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
+      `kernel/tests/test_report.py` with the fixture growth it needs (a
+      document-grounded PII fact, a money decision — a deliberate rebuild of
+      `fixtures/pack.yaml` at a new version, which moves every fixture
+      receipt); `whatif/tests/test_whatif.py` split (a) from (b); the whatif
+      CLI test that needs a pack whose kinds are all inferable, which the same
+      rebuild supplies; a fixture decision table for `dmn/`; and
+      `extraction/tests` off `starters/tools`.
+
 - [ ] **The move itself (1 PR).** `git mv` of `rulepacks/`, `starters/`,
       `golden/` (D8), the teaching ontologies, `dmn/examples/`, and the
       generator templates (now a registry per Phase 1) under an `examples/`
@@ -470,6 +500,11 @@ proves it.
       **boot the demo and assert the honest empty state** — the surfaces
       must stand up and say "no scenarios", not crash. "Tests pass" alone is
       weaker than the roadmap's claim.
+      **Sequencing, measured rather than assumed:** this cannot pass until
+      after the move, because most of what breaks under deletion today is
+      example tests that the move deletes alongside their subject (see part 3).
+      Run the measurement the same way it was run there — a detached worktree,
+      `git rm -r` the content, run the suites — rather than reasoning about it.
 
 **Landmines:**
 - The closing scheduler's `test_the_plan_is_the_committed_demo_output` and
@@ -904,6 +939,14 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-05 — **Phase 3, part 3: the gate measured** — ran the deletion in a
+  detached worktree instead of estimating it: 220 failures, 93 errors, eight
+  suites. The finding is that the count mixes toolkit tests needing fixtures
+  with example tests that must *move*, and most are the latter — so the gate
+  cannot pass before the move, and fixture work alone will never get it there.
+  Phase 3 re-sequenced into parts 4 and 5. Shipped the one fix that is right
+  either way: `provetest_helpers` scanned `rulepacks/` at module scope, making
+  a missing directory a collection error rather than a failure.
 - 2026-08-05 — **Phase 3, fixtures part 2** — `verify`, `impact` and `prove`
   onto the fixture corpus, which turned out to be a corpus in its own right
   (`verify --golden fixtures` replays four cases), so the verifier suite could

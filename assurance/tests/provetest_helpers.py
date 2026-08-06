@@ -23,7 +23,18 @@ RULEPACKS = REPO_ROOT / "rulepacks"
 ONTOLOGIES = REPO_ROOT / "ontologies"
 DMN_PACK = REPO_ROOT / "dmn" / "examples" / "trid-fee-tolerance.pack.yaml"
 
-COMMITTED_PACKS = sorted(p.name for p in RULEPACKS.iterdir() if (p / "pack.yaml").is_file())
+# Example content, discovered rather than listed — and **absent is a legal
+# state**. `rulepacks/` is teaching content an adopter deletes, and a
+# module-level `iterdir()` on it turns that deletion into a *collection error*:
+# every test in this file stops existing, including the ones that have nothing
+# to do with the packs. A test that cannot be collected is worse than one that
+# fails, because pytest reports the count that remains and nothing says what
+# left.
+COMMITTED_PACKS = (
+    sorted(p.name for p in RULEPACKS.iterdir() if (p / "pack.yaml").is_file())
+    if RULEPACKS.is_dir()
+    else []
+)
 
 z3_only = pytest.mark.z3
 

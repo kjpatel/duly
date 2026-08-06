@@ -22,6 +22,7 @@ seeing why.
 
 from __future__ import annotations
 
+import importlib
 import json
 import shutil
 from pathlib import Path
@@ -58,6 +59,19 @@ def build_content_root(root: Path) -> Path:
     shutil.copytree(FIXTURES / "cases", root / "golden" / "cases")
     shutil.copytree(FIXTURES / "receipts", root / "golden" / "receipts")
 
+    # Each case names the pack it was decided under. In `fixtures/` that is the
+    # repo-relative `fixtures/pack.yaml`; in a content root it is where the pack
+    # actually sits. The studio matches this string exactly to decide which
+    # corpus cases a pack governs, so leaving it un-rewritten does not error —
+    # it silently offers zero golden fact sets, which looks like a pack nothing
+    # cites rather than like a broken path.
+    for case_yaml in (root / "golden" / "cases").glob("*/case.yaml"):
+        case_yaml.write_text(
+            case_yaml.read_text().replace(
+                "pack: fixtures/pack.yaml", f"pack: rulepacks/{pack_name}/pack.yaml"
+            )
+        )
+
     # A receipt names its pack by name, and the surfaces resolve that name to
     # `rulepacks/<name>/pack.yaml`. Placing it anywhere else would make every
     # receipt here report `pack-moved`, which is a real outcome and not the one
@@ -66,7 +80,22 @@ def build_content_root(root: Path) -> Path:
     pack_dir.mkdir(parents=True)
     shutil.copy(FIXTURES / "pack.yaml", pack_dir / "pack.yaml")
 
+    # The pack's declared cases, with their `factsFrom` rewritten from
+    # repo-relative (`fixtures/cases/...`, correct where the file is committed)
+    # to the content root's layout. Same rewrite, same reason, as the scenario
+    # manifest's `rulePack` below.
+    expected = (FIXTURES / "expected.yaml").read_text()
+    (pack_dir / "expected.yaml").write_text(
+        expected.replace("factsFrom: fixtures/cases/", "factsFrom: golden/cases/")
+    )
+
     shutil.copytree(FIXTURES / "ontology", root / "ontologies")
+
+    # The DMN inputs the rule studio's import panel reads, under the name it
+    # discovers them by. One table that compiles and one that is refused: the
+    # refusal is the more important of the two, because "a refusal is a result,
+    # not a 500" is the claim the panel exists to make.
+    shutil.copytree(FIXTURES / "dmn", root / "dmn" / "examples")
 
     # The scenario, under the name the demo discovers starters by. Its
     # `rulePack` is repo-relative (`fixtures/pack.yaml`) in the committed
@@ -81,3 +110,29 @@ def build_content_root(root: Path) -> Path:
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
     )
     return root
+
+
+def reload_demo() -> None:
+    """Rebind every demo module's content roots to the current environment.
+
+    The surfaces read `DULY_DEMO_CONTENT` at *import*, which is right for a
+    server — import is startup — so moving the environment after import moves
+    nothing until the modules are reloaded, in dependency order.
+
+    Shared rather than copied per suite, and that is the whole point. This
+    teardown is the reason converting one suite to a fixture content root once
+    turned 0 failures into 50 across the rest of the directory: `monkeypatch`
+    unsets the variable and un-reloads nothing, so a suite that reloads on setup
+    and not on teardown leaves every later file serving a temp directory that no
+    longer exists. A guard rewritten per call site is a guard that will
+    eventually be rewritten wrong.
+    """
+    import demo.app
+    import demo.content
+    import demo.evidence_api
+    import demo.receipts_api
+    import demo.rules_api
+
+    importlib.reload(demo.content)
+    for module in (demo.rules_api, demo.evidence_api, demo.receipts_api, demo.app):
+        importlib.reload(module)

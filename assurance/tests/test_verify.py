@@ -55,7 +55,7 @@ def test_verify_passes_on_the_committed_golden_corpus(capsys):
 def test_verify_passes_on_a_copied_corpus(corpus, capsys):
     """Replay does not depend on where the corpus lives."""
     assert verify.main(["--golden", str(corpus)]) == 0
-    assert "verified 4 cases" in capsys.readouterr().out
+    assert "verified 5 cases" in capsys.readouterr().out
 
 
 def test_verify_fails_on_tampered_receipt_body(corpus, capsys):

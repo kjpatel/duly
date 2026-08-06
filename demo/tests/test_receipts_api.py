@@ -1,9 +1,11 @@
 """API tests for the demo's receipt viewer (demo/receipts_api.py).
 
-These run against the *committed* golden corpus rather than fixtures, for the
-same reason the Rule Studio's tests run against the committed packs: the
-viewer's job is to open receipts that actually exist, and a verifier that only
-works on a hand-made receipt would tell us nothing.
+These run against a content root assembled from
+[`fixtures/`](../../fixtures/README.md) — the viewer is toolkit (M5 plan, D2),
+so its suite must survive `git rm -r examples/` rather than stop being
+collected. The receipts it opens are real ones, built and sealed by
+`fixtures/build.py`; what changed is who owns them, not whether they are
+genuine.
 
 The forgery cases below are the ones that earn the module. A receipt that has
 been edited fails the hash check; a receipt that has been edited *and*
@@ -29,7 +31,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demotest_helpers import CASE, build_content_root  # noqa: E402
+from demotest_helpers import CASE, build_content_root, reload_demo  # noqa: E402
 from duly_kernel.receipt import content_hash  # noqa: E402
 
 GOLDEN: Path  # the content root's corpus, bound per session by `client`
@@ -54,7 +56,7 @@ def client(content_root, monkeypatch):
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     GOLDEN = content_root / "golden"
 
-    _reload_demo()
+    reload_demo()
     import demo.app
 
     with TestClient(demo.app.app) as c:
@@ -64,21 +66,7 @@ def client(content_root, monkeypatch):
     # pointed at a temp directory — the import-time binding cuts both ways,
     # and `monkeypatch` unsets the variable without un-reloading anything.
     monkeypatch.undo()
-    _reload_demo()
-
-
-def _reload_demo() -> None:
-    import importlib
-
-    import demo.app
-    import demo.content
-    import demo.evidence_api
-    import demo.receipts_api
-    import demo.rules_api
-
-    importlib.reload(demo.content)
-    for module in (demo.rules_api, demo.evidence_api, demo.receipts_api, demo.app):
-        importlib.reload(module)
+    reload_demo()
 
 
 def _receipt(case_id: str = CASE) -> dict:

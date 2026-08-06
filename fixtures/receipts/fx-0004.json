@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:bc00dd016ec73ce8b7420f87376fb1344b9d829897c5668a8fcfe6351b87e063",
-  "receiptSha256": "bc00dd016ec73ce8b7420f87376fb1344b9d829897c5668a8fcfe6351b87e063",
+  "id": "urn:duly:receipt:sha256:30bd784cfeeb2b4c00df7118e4da43aa8b5424bc97a1bb63c2fcba0d850cf4ec",
+  "receiptSha256": "30bd784cfeeb2b4c00df7118e4da43aa8b5424bc97a1bb63c2fcba0d850cf4ec",
   "caseId": "case:fixture:fx-0003",
   "decision": {
     "entity": "widget:fx-0003",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "duly-fixture-pack",
-    "version": "2026.2.0"
+    "version": "2026.3.0"
   },
   "rulesFired": [
     {

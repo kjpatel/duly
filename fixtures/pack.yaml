@@ -7,7 +7,7 @@
 
 pack:
   name: duly-fixture-pack
-  version: "2026.2.0"
+  version: "2026.3.0"
   ontology: duly-fixture
   ontologyVersion: "0.1.0"
   idPrefix: FX
@@ -15,6 +15,16 @@ pack:
 abstentionPolicy:
   minConfidence: 0.80
   routeTo: fixture-review
+  # A per-attribute floor, and the only *nested* structure in this pack's
+  # top-level keys. That is what it is here for: the rule studio re-emits a
+  # structured edit through `duly_dmn.emit.emit_pack`, and a key dropped there
+  # produces a draft that validates, adjudicates, and answers differently —
+  # silently. Two scalars cannot catch a flattening; a mapping under a mapping
+  # can. Set above the global floor so it is the binding constraint for this
+  # attribute, and above every committed fixture's category confidence (1.0),
+  # so raising it is a decision change rather than a no-op.
+  attributes:
+    fx:category: 0.95
 
 decisions:
   - attribute: fx:permitted

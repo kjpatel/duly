@@ -167,6 +167,22 @@ that preserves comments. That is the same move as impact analysis. A change
 that cannot be prevented mechanically is instead made impossible to make
 accidentally.
 
+Which sharpens why the studio runs a solver and the corpus *beside* the diff,
+rather than trusting a careful reader to the diff alone. The instructive case
+is not a large change but a one-line one: move the value a rule concludes, and
+every rule that reads it as a `derived` binding changes what it decides —
+while its own text, its own guards and its own row in the grid stay
+byte-identical. The toolkit's fixture pack is built so this is reproducible:
+editing the threshold from 50 to 70 leaves both downstream rules untouched on
+the page, and the equivalence panel reports all three decisions as
+NOT-PROVED, with a witness naming a widget scoring exactly 50 — the boundary
+where the two packs part. The diff is complete and honest, and it is still not
+where the change's effect lives. That is the general shape: **in a defeasible
+rule system, the blast radius of an edit is not a syntactic property of the
+edit**, so no amount of reading discipline substitutes for re-running the
+rules. The panel is not a convenience for careless authors; it is the only
+instrument that answers the question the diff cannot be asked.
+
 In T-Box/A-Box terms, the ontology is T-Box-like and grounded facts are
 A-Box-like. Rule packs are a separate policy artifact. duly does not currently
 use an RDF/OWL knowledge base or an OWL reasoner, so the analogy should not be

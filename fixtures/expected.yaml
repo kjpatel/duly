@@ -1,0 +1,76 @@
+# Declared outcomes for duly-fixture-pack.
+#
+# FICTIONAL, like the pack itself — these assert what the fixture rules do, not
+# what any law requires.
+#
+# Why this file exists at all: a pack's declared cases and the golden corpus
+# answer *different* questions, and the rule studio runs both side by side.
+# `expected.yaml` catches a pack that **breaks** — a rule that stops firing, a
+# defeat chain that comes apart. Only the corpus catches a pack whose
+# **meaning moved** — every declared case still green while a real decision
+# flips (rulepacks/README.md). A fixture corpus without declared cases left the
+# studio's whole left-hand panel with nothing to run.
+#
+# `factsFrom` paths are written relative to **this repository**, which is where
+# they resolve when the fixtures are read in place. A demo content root lays the
+# same cases out under `golden/cases/<id>/facts`, so
+# demo/tests/demotest_helpers.py rewrites them on assembly — the same treatment,
+# and for the same reason, as the scenario manifest's `rulePack`. The committed
+# artifact is correct for the tree it sits in; the two paths are not the same
+# path and pretending otherwise is how a fixture starts lying about itself.
+
+cases:
+  # The exception fires: score 12 is below the 2026 threshold of 50 and the
+  # widget is restricted, so FX-EXCEPTION-01 concludes not-permitted and
+  # defeats the FX-DEFAULT-00 presumption. The threshold itself is *derived*
+  # (FX-THRESHOLD-02), which is what gives the derivation depth.
+  - name: restricted-below-threshold-not-permitted
+    factsFrom: fixtures/cases/fx-0001/facts
+    asOfEffective: "2026-06-01"
+    question: fx:permitted
+    expectDecision: { kind: boolean, value: false }
+    # Both chains, because the kernel fires every rule whose guards hold — not
+    # only those concluding the attribute asked about. The fee rules appear
+    # here for the same reason they appear on the receipt.
+    expectRulesFired: [FX-EXCEPTION-01, FX-FEE-01, FX-THRESHOLD-02]
+    expectDefeated:
+      FX-EXCEPTION-01: [FX-DEFAULT-00]
+      FX-FEE-01: [FX-FEE-00]
+
+  # Nothing overrides: score 80 clears the threshold and the category is
+  # ordinary, so the default presumption survives as the decision. The pair
+  # with the case above is the point — same pack, opposite outcome, and the
+  # difference is in the facts rather than in the rules.
+  - name: ordinary-above-threshold-permitted
+    factsFrom: fixtures/cases/fx-0002/facts
+    asOfEffective: "2026-06-01"
+    question: fx:permitted
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [FX-DEFAULT-00, FX-FEE-00, FX-THRESHOLD-02]
+    expectDefeated: {}
+
+  # Effective-dated replay. The same facts as the first case, read as of
+  # 2025-12-15, when FX-THRESHOLD-01 was in force with its looser minimum of
+  # 10. Score 12 clears it, the exception does not fire, and the presumption
+  # stands. This is the as-of dial doing the one thing no re-run of today's
+  # rules can reproduce.
+  - name: restricted-under-the-pre-2026-threshold-permitted
+    factsFrom: fixtures/cases/fx-0001/facts
+    asOfEffective: "2025-12-15"
+    question: fx:permitted
+    expectDecision: { kind: boolean, value: true }
+    expectRulesFired: [FX-DEFAULT-00, FX-FEE-00, FX-THRESHOLD-01]
+    expectDefeated: {}
+
+  # The non-boolean decision, so the declared cases cover the money path and
+  # not only the boolean one. Same facts as the first case; a restricted widget
+  # below the threshold owes the fee FX-FEE-01 assesses.
+  - name: restricted-below-threshold-owes-the-fee
+    factsFrom: fixtures/cases/fx-0001/facts
+    asOfEffective: "2026-06-01"
+    question: fx:assessedFee
+    expectDecision: { kind: money, amount: "250.00", currency: USD }
+    expectRulesFired: [FX-EXCEPTION-01, FX-FEE-01, FX-THRESHOLD-02]
+    expectDefeated:
+      FX-EXCEPTION-01: [FX-DEFAULT-00]
+      FX-FEE-01: [FX-FEE-00]

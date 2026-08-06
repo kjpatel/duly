@@ -154,7 +154,7 @@ def test_the_projection_is_the_hashed_input(receipt):
 #: order. Regenerate deliberately: this moving means the determinant set or the
 #: canonical form changed, which is a breaking change to the digest (C4), not a
 #: corpus event. `verify` is what notices a corpus event.
-CORPUS_AGGREGATE = "c0361067e2f84939b4bcb1c08e8a72e8120825d8adac63733758d587be54b90f"
+CORPUS_AGGREGATE = "4fd1edab3a6b49043356fa0db34bf6c00e2fe0dc9f730fcd13e80e6ffe8237fc"
 
 
 def _corpus_aggregate() -> tuple[str, int]:
@@ -166,7 +166,7 @@ def _corpus_aggregate() -> tuple[str, int]:
 
 def test_every_fixture_receipt_has_a_stable_digest():
     aggregate, count = _corpus_aggregate()
-    assert count == 4
+    assert count == 5
     assert aggregate == CORPUS_AGGREGATE, (
         "decision digests over the fixture corpus moved. If `fixtures/build.py` "
         "reproduces the receipts unchanged, the corpus did not move and the "

@@ -1,8 +1,9 @@
 # `fixtures/` — the corpus the toolkit owns
 
 Everything here exists so that **duly's own test suites do not depend on duly's
-teaching content**. It is deliberately boring: one invented domain, one pack,
-three cases, three receipts, one ontology. Nobody should learn anything from it.
+teaching content**. It is deliberately boring: one invented domain, one pack
+with its declared cases, five cases, five receipts, one ontology, one scenario
+and two DMN inputs. Nobody should learn anything from it.
 
 ## Why it exists
 
@@ -28,12 +29,14 @@ deleted is not a test.**
 |---|---|
 | `ontology/duly-fixture/0.1.0.yaml` | The vocabulary the fixture facts pin. Invented; models nothing real |
 | `pack.yaml` | One rule pack: a default, an exception that defeats it, a derived intermediate, an effective-dated pair, an abstention floor, and a **non-boolean decision with a `phrasing:` block** |
-| `cases/fx-000N/` | Four cases: `case.yaml` plus content-addressed facts |
+| `expected.yaml` | The pack's **declared outcomes**, run by the rule studio beside impact analysis. Declared cases catch a pack that *breaks*; only the corpus catches one whose *meaning moved* — the studio shows both, so the fixtures have to supply both |
+| `cases/fx-000N/` | Five cases: `case.yaml` plus content-addressed facts |
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
 | `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
-| `build.py` | Regenerates every artifact above, deterministically |
+| `dmn/` | Two DMN decision tables: one that compiles, one that is refused. The studio's import panel and the compiler's happy path were reachable only through `dmn/examples/`, which an adopter deletes |
+| `build.py` | Regenerates the cases, receipts and scenario, deterministically |
 
-Three cases, chosen to cover what the toolkit's own tests need rather than to
+Five cases, chosen to cover what the toolkit's own tests need rather than to
 teach anything:
 
 - **`fx-0001`** — the exception fires and defeats the default. A derived value
@@ -46,10 +49,18 @@ teach anything:
   below-floor fact, the abstention is answered and the decision flips. It
   commits the *post-correction projection*, because supersession is a
   store-level projection and `adjudicate` is handed a fact list, not a store.
+- **`fx-0006`** — restricted *and* above the threshold, so the category matches
+  and the exception still does not fire. It exists for one reason: its score
+  (60) is the only one in the corpus that sits **between** the two thresholds
+  this pack has ever declared. Every other case scores 12 or 80, so an edit to
+  the threshold moves all three restricted cases together or none — and a
+  corpus that can only answer "everything moved" cannot demonstrate what impact
+  analysis is *for*, which is a pack whose meaning moved while every declared
+  outcome stayed green.
 
 And one scenario, which is a different artifact from a case:
 
-- **`fx-0005`** (`scenario/`) — a generated PDF, its rendition, and two facts
+- **`fx-0005`** (`scenario/`) — a generated PDF, its rendition, and three facts
   grounded in **character spans** of that rendition — one below the confidence
   floor, and one marked `sensitivity: pii` so the report renderer's redaction
   path has something to redact (the name is invented and refers to nobody). The cases above all use attestation grounding, which is honest for
@@ -84,12 +95,16 @@ this corpus is not the place to discover it; `golden/` is.
   is boolean, so it takes the kernel's Yes/No fallback and never reaches a
   `phrasing:` block — the *whole* phrasing machinery was unreachable until the
   pack grew `fx:assessedFee`. That is what "cannot be asserted otherwise"
-  looks like.
+  looks like. `fx-0006` met the same bar from the other direction: not a
+  behaviour that was unreachable, but a *distinction* the corpus could not
+  draw, since every existing case moved together under the edit that mattered.
 - **Growing the pack is a rebuild, not an edit.** `pack.version` is inside
-  every receipt, so adding a rule moves all four receipts, the decision-digest
+  every receipt, so adding a rule moves every receipt, the decision-digest
   vectors and the corpus aggregate. Bump the version, re-run both builders, and
   re-pin what moved — the tests name what they are pinning, so the failures
-  read as instructions.
+  read as instructions. Batch growth into one rebuild where you can: two
+  separate additions cost two rounds of re-pinning across four files, and the
+  second round is the one where a pinned literal quietly becomes wrong.
 - **Invent nothing that looks real.** No statute numbers, no jurisdictions, no
   plausible citations. `FX-` rule ids, `fx:` attributes, a `citation.text` that
   says it is fictional. A reader must never mistake this for domain content —

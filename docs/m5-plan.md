@@ -552,11 +552,34 @@ proves it.
       exercises `{daysBetween:…}` and `{fact:…|day}`, so the pack needs a
       **date** attribute. Cheap, but it is another rebuild — do it with part 5's
       other growth rather than alone.*
+- [ ] **Fixtures, part 4b(ii)c-0: the demo's review arc names a starter, and
+      that is toolkit code holding example content (1 PR).** **Found while
+      scoping the evidence suite, and it blocks both remaining suites.**
+      [`demo/app.py`](../demo/app.py) declares `REVIEW_SOURCE_SCENARIO =
+      "notice-ny"`, plus `REVIEW_SCENARIO_ID`, `REVIEW_CASE_ID` and
+      `REVIEW_SCENARIO_TITLE` naming that same starter. The demo is toolkit
+      (D2), so this is a teaching scenario's name compiled into it: point the
+      demo at any other content and the arc simply does not appear, because
+      `_ingest_review_case` is wrapped in `except Exception: pass`.
+
+      Degrading quietly is right for a missing *demonstration*; hardcoding
+      *which* demonstration is not, and the silence is what makes it invisible.
+      Derive the arc instead — from whichever scenario carries a below-floor
+      extraction, preferring `notice-ny` when present so this repository's demo
+      is byte-unchanged. Roughly nine call sites in `app.py` and one constant
+      `test_review_arc.py` imports; the derived values move onto the runtime.
+
+      *Attempted inside part 4b(ii)c and backed out deliberately: a
+      half-refactored `app.py` is worse than a routed finding, and the four
+      constants are load-bearing for two suites at once.*
 - [ ] **Fixtures, part 4b(ii)c: the last three demo suites (1 PR).** 52
       failures: `test_rules_api` 31, `test_evidence_api` 13, `test_review_arc`
       8, plus the one in `test_content_roots` that asserts six packs and moves.
-      All three want the content root `demotest_helpers` already builds; none is
-      blocked on a missing artifact.
+      All three want the content root `demotest_helpers` already builds.
+      `test_evidence_api` and `test_review_arc` also want c-0 above — both
+      assert on the review arc, which cannot exist in a fixture deployment
+      until it stops naming a starter. `test_rules_api` (31, the largest)
+      does not, and can go first.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
@@ -1021,6 +1044,12 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-06 — **Phase 3, part 4b(ii)c scoped** — found that the demo's review
+  arc names a starter (`REVIEW_SOURCE_SCENARIO = "notice-ny"`) inside toolkit
+  code and fails silently when it is absent, which blocks two of the three
+  remaining suites. Routed as its own task rather than half-refactored;
+  recorded as a CLAUDE.md gotcha so it cannot be rediscovered by surprise. The
+  one example test in `test_content_roots` is labelled as such.
 - 2026-08-06 — **Phase 3, part 4b(ii)b: `test_api`** — 10 failures under
   deletion down to 4, three of which are example tests that move. Found a
   mis-authored phrasing guard in the pack added one PR earlier: `value:` on a

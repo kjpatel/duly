@@ -129,7 +129,14 @@ def test_the_built_in_fixture_scenario_is_content_too(empty_content):
 
 
 def test_the_repo_default_still_finds_everything():
-    """The other half of the claim: configurable did not mean broken here."""
+    """The other half of the claim: configurable did not mean broken here.
+
+    Example content, and the *only* test in this file that is: its subject is
+    what this repository happens to ship, so it moves under `examples/` with
+    the six packs rather than being repointed at a fixture. Everything above
+    asserts the toolkit behaviour — that the roots are configurable and that
+    the surfaces stand up against nothing — and stays.
+    """
     assert CONTENT.rulepacks.is_dir()
     assert CONTENT.golden.is_dir()
     assert len(list(CONTENT.rulepacks.glob("*/pack.yaml"))) == 6

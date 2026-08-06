@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:receipt:sha256:fcfdab074e4f194c74aa8e8c215161b3f24d4df8ee5ef1cacab006f7b2521734",
-  "receiptSha256": "fcfdab074e4f194c74aa8e8c215161b3f24d4df8ee5ef1cacab006f7b2521734",
+  "id": "urn:duly:receipt:sha256:1445e6b8df22f3f69808869ceb74c12e4f4bfabb20740d6f9b5a941326127b31",
+  "receiptSha256": "1445e6b8df22f3f69808869ceb74c12e4f4bfabb20740d6f9b5a941326127b31",
   "caseId": "case:fixture:fx-0002",
   "decision": {
     "entity": "widget:fx-0002",
@@ -16,7 +16,7 @@
   },
   "rulePack": {
     "name": "duly-fixture-pack",
-    "version": "2026.1.0"
+    "version": "2026.2.0"
   },
   "rulesFired": [
     {
@@ -37,6 +37,16 @@
       },
       "priority": 100,
       "effectiveFrom": "2026-01-01T00:00:00Z",
+      "defeated": []
+    },
+    {
+      "ruleId": "FX-FEE-00",
+      "version": "1.0.0",
+      "citation": {
+        "text": "Fixture fee schedule (fictional)"
+      },
+      "priority": 0,
+      "effectiveFrom": "1900-01-01T00:00:00Z",
       "defeated": []
     }
   ],

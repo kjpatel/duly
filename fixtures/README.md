@@ -27,7 +27,7 @@ deleted is not a test.**
 | Path | What it is |
 |---|---|
 | `ontology/duly-fixture/0.1.0.yaml` | The vocabulary the fixture facts pin. Invented; models nothing real |
-| `pack.yaml` | One rule pack: a default, an exception that defeats it, a derived intermediate, an effective-dated pair, and an abstention floor |
+| `pack.yaml` | One rule pack: a default, an exception that defeats it, a derived intermediate, an effective-dated pair, an abstention floor, and a **non-boolean decision with a `phrasing:` block** |
 | `cases/fx-000N/` | Four cases: `case.yaml` plus content-addressed facts |
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
 | `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
@@ -50,8 +50,9 @@ teach anything:
 And one scenario, which is a different artifact from a case:
 
 - **`fx-0005`** (`scenario/`) — a generated PDF, its rendition, and two facts
-  grounded in **character spans** of that rendition, one below the confidence
-  floor. The cases above all use attestation grounding, which is honest for
+  grounded in **character spans** of that rendition — one below the confidence
+  floor, and one marked `sensitivity: pii` so the report renderer's redaction
+  path has something to redact (the name is invented and refers to nobody). The cases above all use attestation grounding, which is honest for
   synthetic data and leaves the span machinery — the evidence browser's
   highlighting, quotes in the audit report, span verification itself — with
   nothing to exercise. Spans are *found* in the rendition text by the builder,
@@ -78,8 +79,17 @@ this corpus is not the place to discover it; `golden/` is.
 ## Rules for adding to it
 
 - **Keep it minimal.** Add a case only when a toolkit behaviour cannot be
-  asserted with the three that exist. This corpus is a test dependency, not a
-  second demonstration vertical.
+  asserted with the ones that exist. This corpus is a test dependency, not a
+  second demonstration vertical. The bar that has been met twice: `fx:permitted`
+  is boolean, so it takes the kernel's Yes/No fallback and never reaches a
+  `phrasing:` block — the *whole* phrasing machinery was unreachable until the
+  pack grew `fx:assessedFee`. That is what "cannot be asserted otherwise"
+  looks like.
+- **Growing the pack is a rebuild, not an edit.** `pack.version` is inside
+  every receipt, so adding a rule moves all four receipts, the decision-digest
+  vectors and the corpus aggregate. Bump the version, re-run both builders, and
+  re-pin what moved — the tests name what they are pinning, so the failures
+  read as instructions.
 - **Invent nothing that looks real.** No statute numbers, no jurisdictions, no
   plausible citations. `FX-` rule ids, `fx:` attributes, a `citation.text` that
   says it is fictional. A reader must never mistake this for domain content —

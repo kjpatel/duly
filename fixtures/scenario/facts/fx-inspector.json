@@ -1,17 +1,15 @@
 {
-  "id": "urn:duly:fact:sha256:c34e1cefc9eaec0521a57a0cdb7dfd7be8f85c78c3dcf94001a0331c73eb7202",
-  "contentHash": "c34e1cefc9eaec0521a57a0cdb7dfd7be8f85c78c3dcf94001a0331c73eb7202",
+  "id": "urn:duly:fact:sha256:f2bd201851f757a94c82b5a52284312a72ec0eac819d21eefeeca9b700d27c98",
+  "contentHash": "f2bd201851f757a94c82b5a52284312a72ec0eac819d21eefeeca9b700d27c98",
   "caseId": "case:fixture:fx-0005",
   "entity": {
     "id": "widget:fx-0005",
     "type": "fx:Widget"
   },
-  "attribute": "fx:category",
+  "attribute": "fx:inspector",
   "value": {
-    "kind": "code",
-    "value": "restricted",
-    "codeSystem": "duly-fixture/widget-categories",
-    "codeSystemVersion": "0.1.0"
+    "kind": "string",
+    "value": "Dana Okafor"
   },
   "grounding": {
     "kind": "document",
@@ -20,10 +18,10 @@
     "renditionId": "rendition:widget-report:0.1.0",
     "locator": {
       "kind": "charSpan",
-      "start": 127,
-      "end": 156
+      "start": 157,
+      "end": 203
     },
-    "quote": "Assigned category: restricted"
+    "quote": "Inspector of record: Dana Okafor, 41 Alder Row"
   },
   "assertion": {
     "kind": "machine",
@@ -34,7 +32,7 @@
     }
   },
   "confidence": {
-    "score": 0.97,
+    "score": 0.99,
     "method": "raw"
   },
   "recordedAt": "2026-03-01T00:00:00Z",
@@ -42,5 +40,6 @@
   "schemaRef": {
     "ontology": "duly-fixture",
     "version": "0.1.0"
-  }
+  },
+  "sensitivity": "pii"
 }

@@ -52,6 +52,13 @@ classes:
         slot_uri: fx:category
         range: WidgetCategory
         description: Which regime the widget falls under.
+      inspector:
+        slot_uri: fx:inspector
+        range: string
+        description: >-
+          Who signed the inspection. Carried only so a fact can be marked
+          `sensitivity: pii` and exercise the report renderer's redaction —
+          the name is invented and refers to nobody.
       requiredMinimumScore:
         slot_uri: fx:requiredMinimumScore
         range: decimal
@@ -64,6 +71,17 @@ classes:
         slot_uri: fx:permitted
         range: boolean
         description: >-
-          DERIVED — the fixture pack's decision attribute.
+          DERIVED — the fixture pack's boolean decision attribute.
         annotations:
           derived: true
+      assessedFee:
+        slot_uri: fx:assessedFee
+        range: decimal
+        description: >-
+          DERIVED — the fixture pack's *non-boolean* decision attribute, so the
+          fixtures reach the phrasing machinery a boolean decision never does.
+          Money in duly is an amount and a currency; the ontology range names
+          the amount's kind.
+        annotations:
+          derived: true
+          valueKind: money

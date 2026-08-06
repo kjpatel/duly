@@ -141,6 +141,7 @@ DOC_LINES = [
     ("", ""),
     ("body", "Measured score: 12"),
     ("body", "Assigned category: restricted"),
+    ("body", "Inspector of record: Dana Okafor, 41 Alder Row"),
     ("", ""),
     ("body", "This document is a fixture. It describes nothing real."),
 ]
@@ -161,10 +162,15 @@ def _span(text: str, quote: str) -> dict:
 
 
 def _grounded_fact(
-    attribute: str, value: dict, quote: str, score: float, doc: dict, rendition: str
+    attribute: str,
+    value: dict,
+    quote: str,
+    score: float,
+    doc: dict,
+    rendition: str,
+    sensitivity: str | None = None,
 ) -> dict:
-    return seal_fact(
-        {
+    body = {
             "caseId": f"case:fixture:{SCENARIO_CASE}",
             "entity": {"id": f"widget:{SCENARIO_CASE}", "type": "fx:Widget"},
             "attribute": attribute,
@@ -182,8 +188,10 @@ def _grounded_fact(
             "recordedAt": ASSERTED_AT,
             "status": "asserted",
             "schemaRef": dict(ONTOLOGY),
-        }
-    )
+    }
+    if sensitivity is not None:
+        body["sensitivity"] = sensitivity
+    return seal_fact(body)
 
 
 def _build_scenario() -> None:
@@ -234,6 +242,16 @@ def _build_scenario() -> None:
                 "codeSystemVersion": "0.1.0",
             },
             "Assigned category: restricted", 0.97, doc, rendition,
+        ),
+        # `sensitivity: pii` so the report renderer's redaction path has
+        # something to redact. The quote is invented and names nobody; a
+        # fixture that carried real personal data to test PII handling would
+        # be the joke that writes itself.
+        _grounded_fact(
+            "fx:inspector",
+            {"kind": "string", "value": "Dana Okafor"},
+            "Inspector of record: Dana Okafor, 41 Alder Row", 0.99, doc,
+            rendition, sensitivity="pii",
         ),
     ]
     for fact in facts:

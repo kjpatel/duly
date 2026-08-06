@@ -34,8 +34,8 @@
       "description": "the committed fixture receipt fx-0001, unmodified",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -51,7 +51,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -75,6 +75,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -126,14 +138,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
+      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
     },
     {
       "description": "same adjudication, different case id — caseId is bookkeeping",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:acme:loan-4471",
         "decision": {
           "entity": "widget:fx-0001",
@@ -149,7 +161,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -173,6 +185,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -224,14 +248,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
+      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
     },
     {
       "description": "same adjudication, pack provenance added — where a pack was fetched from is not what it says",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -247,7 +271,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0",
+          "version": "2026.2.0",
           "gitCommit": "9f1c0b2",
           "url": "https://example.invalid/packs/duly-fixture-pack"
         },
@@ -274,6 +298,18 @@
             "defeated": [
               "FX-DEFAULT-00"
             ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
+            ]
           }
         ],
         "derivation": {
@@ -324,14 +360,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
+      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
     },
     {
       "description": "same adjudication, different evaluation backend — this is the cross-backend agreement claim, executable",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -347,7 +383,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -371,6 +407,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -422,7 +470,7 @@
           "backend": "souffle"
         }
       },
-      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
+      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
     },
     {
       "description": "same adjudication, different kernel implementation, and the artifact identity fields deliberately wrong — the digest is over what was decided, not over a correctly sealed document",
@@ -445,7 +493,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -469,6 +517,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -520,14 +580,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "7d1eb5df440338f5b2daa35cd744f42df2d334ed73ab87c66115f6ae0ce447b9"
+      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
     },
     {
       "description": "different decision semantics — engine.version is determinant because different semantics can mean different decisions",
       "equivalenceClass": "fx-0001-under-other-semantics",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -543,7 +603,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -567,6 +627,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -618,14 +690,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "a1b7e18ec2190c8ebb97a8be645e17e8d4f1df19856b1561e1ff2cc673f8d457"
+      "decisionDigest": "01ec30ef120fea5881f3768070cf3749bfd3c7d96012972ba360a13d32de2576"
     },
     {
       "description": "different pack version — a pack's identity is its name and version",
       "equivalenceClass": "fx-0001-under-later-pack",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -641,7 +713,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2027.2.0"
         },
         "rulesFired": [
           {
@@ -665,6 +737,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -716,14 +800,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "95c1ac248475a516c3cd66f6e9683ea4f38bc6ed3dade6c2d9c7d92c34fd366f"
+      "decisionDigest": "51e83c2c3206c8cd3581868ba9802c022e10a221db653fc91e5a6efc13ec349c"
     },
     {
       "description": "the opposite conclusion (synthetic: the value flipped in both the decision and the derivation)",
       "equivalenceClass": "fx-0001-flipped",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
-        "receiptSha256": "7283363b1ee857f21f7109f070085d9d503da8ac819add724f30f070c0a5f5e1",
+        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -739,7 +823,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -763,6 +847,18 @@
             "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": [
               "FX-DEFAULT-00"
+            ]
+          },
+          {
+            "ruleId": "FX-FEE-01",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee for a restricted widget (fictional)"
+            },
+            "priority": 100,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
+            "defeated": [
+              "FX-FEE-00"
             ]
           }
         ],
@@ -814,14 +910,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "d8abbfa3e090420845024600628d18cb21788c0b2162d624fcdf5a78d42aaf49"
+      "decisionDigest": "fedfcb0630d7ec82c52fd73695348af11b20c34e1bdb5af47123efe19f8189ee"
     },
     {
       "description": "the committed fixture receipt fx-0003, unmodified — a live low_confidence abstention alongside a decision",
       "equivalenceClass": "fx-0003-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:ee0ea3326592b3ba538d3747ef4df34c2d78ae66936372749eeedd02ea419e1b",
-        "receiptSha256": "ee0ea3326592b3ba538d3747ef4df34c2d78ae66936372749eeedd02ea419e1b",
+        "id": "urn:duly:receipt:sha256:d10aea516c5b47966774ef9811a4abe1ae022bd631ac1143d3631c7de098e14c",
+        "receiptSha256": "d10aea516c5b47966774ef9811a4abe1ae022bd631ac1143d3631c7de098e14c",
         "caseId": "case:fixture:fx-0003",
         "decision": {
           "entity": "widget:fx-0003",
@@ -837,7 +933,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.1.0"
+          "version": "2026.2.0"
         },
         "rulesFired": [
           {
@@ -858,6 +954,16 @@
             },
             "priority": 100,
             "effectiveFrom": "2026-01-01T00:00:00Z",
+            "defeated": []
+          },
+          {
+            "ruleId": "FX-FEE-00",
+            "version": "1.0.0",
+            "citation": {
+              "text": "Fixture fee schedule (fictional)"
+            },
+            "priority": 0,
+            "effectiveFrom": "1900-01-01T00:00:00Z",
             "defeated": []
           }
         ],
@@ -890,7 +996,7 @@
               "minConfidence": 0.8,
               "source": "default",
               "pack": "duly-fixture-pack",
-              "packVersion": "2026.1.0"
+              "packVersion": "2026.2.0"
             },
             "routedTo": "fixture-review"
           }
@@ -901,7 +1007,7 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "c9a676847e6d3b0ccd3fb3c66680bca76d080cdc330266b7828d2cf5ca93fce5"
+      "decisionDigest": "bc38ba0eeb9451cc5e3b0ea77ceac168096e50d8715414271e9b9f2c96f211e3"
     }
   ]
 }

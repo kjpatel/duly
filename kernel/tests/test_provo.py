@@ -208,15 +208,16 @@ def test_receipt_activity_used_the_input_facts(receipt_ny):
     (assoc_ref,) = activity[PROV + "qualifiedAssociation"]
     assoc = next(n for n in nodes if n["@id"] == assoc_ref["@id"])
     assert assoc["@type"] == [PROV + "Association"]
+    pack = receipt_ny["rulePack"]
     assert _ids(assoc, PROV + "hadPlan") == {
-        "urn:duly:rulepack:duly-fixture-pack:2026.1.0"
+        f'urn:duly:rulepack:{pack["name"]}:{pack["version"]}'
     }
     plan = next(
         n for n in nodes
-        if n["@id"] == "urn:duly:rulepack:duly-fixture-pack:2026.1.0"
+        if n["@id"] == f'urn:duly:rulepack:{pack["name"]}:{pack["version"]}'
     )
     assert plan["@type"] == [PROV + "Plan"]
-    assert _values(plan, DULY + "version") == ["2026.1.0"]
+    assert _values(plan, DULY + "version") == [pack["version"]]
     assert _ids(assoc, PROV + "agent") == {"urn:duly:agent:duly-kernel:0.0.1"}
     assert _ids(activity, PROV + "wasAssociatedWith") == {"urn:duly:agent:duly-kernel:0.0.1"}
 

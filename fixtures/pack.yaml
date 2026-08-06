@@ -7,7 +7,7 @@
 
 pack:
   name: duly-fixture-pack
-  version: "2026.1.0"
+  version: "2026.2.0"
   ontology: duly-fixture
   ontologyVersion: "0.1.0"
   idPrefix: FX
@@ -20,6 +20,26 @@ decisions:
   - attribute: fx:permitted
     entityType: fx:Widget
     question: "Is this widget permitted?"
+
+  # A NON-BOOLEAN decision, carried so the fixtures exercise the phrasing path.
+  # A boolean decision gets the kernel's Yes/No fallback and never reaches a
+  # `phrasing:` block, so a fixture pack without one of these leaves every
+  # placeholder, tone and guard in that machinery untested — and the demo's
+  # rule that verdict wording is *pack data* untestable except through the
+  # teaching packs.
+  - attribute: fx:assessedFee
+    entityType: fx:Widget
+    question: "What fee is assessed?"
+    phrasing:
+      - when: { value: "0.00" }
+        verdict: "No fee"
+        detail: "Nothing is owed on this widget"
+        tone: pos
+      - verdict: "{value} assessed"
+        detail:
+          - "Score {fact:fx:score} against a minimum of {derived:fx:requiredMinimumScore|int}"
+          - ""
+        tone: warn
 
 rules:
   # The default presumption. Lowest priority, fires for every widget.
@@ -87,3 +107,37 @@ rules:
       entity: widget
       attribute: fx:permitted
       value: { kind: boolean, value: false }
+
+  # The fee the non-boolean decision reports. A default and its exception, at
+  # differing priorities with an explicit `overrides` — the same shape as the
+  # pair above, because that is the shape the IR is built around.
+  - id: FX-FEE-00
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Fixture fee schedule (fictional)" }
+    effectiveFrom: "1900-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+    then:
+      entity: widget
+      attribute: fx:assessedFee
+      value: { kind: money, amount: "0.00", currency: USD }
+
+  - id: FX-FEE-01
+    version: "1.0.0"
+    priority: 100
+    citation: { text: "Fixture fee for a restricted widget (fictional)" }
+    effectiveFrom: "1900-01-01"
+    overrides: [FX-FEE-00]
+    given:
+      widget:   { entityType: fx:Widget }
+      score:    { attribute: fx:score }
+      category: { attribute: fx:category }
+      minimum:  { derived: fx:requiredMinimumScore }
+    when:
+      - score < minimum
+      - category == "restricted"
+    then:
+      entity: widget
+      attribute: fx:assessedFee
+      value: { kind: money, amount: "250.00", currency: USD }

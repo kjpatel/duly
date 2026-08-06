@@ -154,7 +154,7 @@ def test_the_projection_is_the_hashed_input(receipt):
 #: order. Regenerate deliberately: this moving means the determinant set or the
 #: canonical form changed, which is a breaking change to the digest (C4), not a
 #: corpus event. `verify` is what notices a corpus event.
-CORPUS_AGGREGATE = "266bc35ad2c083cb5afcfc8c24e606c977fa201eff2fc0115da9587a3ce99cbb"
+CORPUS_AGGREGATE = "c0361067e2f84939b4bcb1c08e8a72e8120825d8adac63733758d587be54b90f"
 
 
 def _corpus_aggregate() -> tuple[str, int]:

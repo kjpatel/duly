@@ -103,6 +103,14 @@ reconciled) **in that PR**, not in follow-ups.
    shipped three rules where §4 specified two, and narrowed an **ASK** that
    had been asking the wrong question — both belong in the plan, next to the
    ticked box, not only in a PR description nobody re-reads.
+11. **Never truncate a completeness sweep.** If the question is "where else
+   does this appear", `| head` turns a correct answer into a wrong one and
+   leaves no trace that it did. A10's fix changed `prove`'s CLI contract and
+   the sweep for its documented invocations had **16** hits; it was piped
+   through `head`, ten were read, and the two that mattered — the CI workflow
+   and [rulepacks/README.md](../rulepacks/README.md) — sat past the cutoff. CI
+   caught the first. Nothing would have caught the second. Pipe a sweep to
+   `wc -l` first, or to a file, and read all of it.
 
 ---
 

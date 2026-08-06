@@ -29,21 +29,56 @@ if str(REPO_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demo.app import app  # noqa: E402
+from demotest_helpers import CASE, build_content_root  # noqa: E402
 from duly_kernel.receipt import content_hash  # noqa: E402
 
-GOLDEN = REPO_ROOT / "golden"
+GOLDEN: Path  # the content root's corpus, bound per session by `client`
 
-# A case whose decision rests on real extracted evidence: four pinned facts,
-# a defeated default, quoted grounding. The esign cases fire on the pack's
-# default presumption alone and pin nothing, which is a different shape.
-CASE = "notice-ny-0001"
+
+@pytest.fixture(scope="session")
+def content_root(tmp_path_factory) -> Path:
+    """The demo's content, built from `fixtures/` — see demotest_helpers."""
+    return build_content_root(tmp_path_factory.mktemp("content"))
 
 
 @pytest.fixture
-def client():
-    with TestClient(app) as c:
+def client(content_root, monkeypatch):
+    """A viewer serving the fixture content root rather than this repository.
+
+    The surfaces bind their roots at *import*, which is right for a server —
+    import is startup — so the modules are reloaded in dependency order after
+    the environment moves, exactly as `test_content_roots` does it.
+    """
+    global GOLDEN
+    monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    GOLDEN = content_root / "golden"
+
+    _reload_demo()
+    import demo.app
+
+    with TestClient(demo.app.app) as c:
         yield c
+
+    # Restore, or every later module in the directory run inherits a demo
+    # pointed at a temp directory — the import-time binding cuts both ways,
+    # and `monkeypatch` unsets the variable without un-reloading anything.
+    monkeypatch.undo()
+    _reload_demo()
+
+
+def _reload_demo() -> None:
+    import importlib
+
+    import demo.app
+    import demo.content
+    import demo.evidence_api
+    import demo.receipts_api
+    import demo.rules_api
+
+    importlib.reload(demo.content)
+    for module in (demo.rules_api, demo.evidence_api, demo.receipts_api, demo.app):
+        importlib.reload(module)
 
 
 def _receipt(case_id: str = CASE) -> dict:
@@ -85,11 +120,11 @@ class TestCorpusIndex:
         assert row["receiptSha256"] == receipt["receiptSha256"]
         assert row["pack"] == receipt["rulePack"]["name"]
         assert row["attribute"] == receipt["decision"]["attribute"]
-        assert row["attributeShort"] == "noticeCompliant"
+        assert row["attributeShort"] == "permitted"
 
     def test_packs_are_offered_as_filters(self, client):
         body = client.get("/api/receipts/corpus").json()
-        assert "termination-notice-us-states" in body["packs"]
+        assert "duly-fixture-pack" in body["packs"]
         assert body["packs"] == sorted(set(body["packs"]))
 
 
@@ -129,19 +164,16 @@ class TestGoldenCaseView:
         evidence = [e for b in reasoning["blocks"] for s in b["steps"] for e in s["evidence"]]
         assert evidence, "a case with pinned facts should cite them in its reasoning"
 
-    def test_every_committed_case_replays(self, client):
-        # The corpus verifier proves this for all 351; here it is proved
-        # through the viewer for a sample of each pack, so a bug in this
-        # module's resolution cannot hide behind a green `duly_assurance
-        # verify`.
+    def test_every_case_in_the_corpus_replays(self, client):
+        # `duly_assurance verify` proves replay for the corpus directly; this
+        # proves it *through the viewer*, so a bug in this module's own
+        # resolution — the pack it picks, the facts it gathers — cannot hide
+        # behind a green verifier run.
         body = client.get("/api/receipts/corpus").json()
-        seen: dict[str, str] = {}
+        assert body["count"] >= 4
         for row in body["cases"]:
-            seen.setdefault(row["pack"], row["caseId"])
-        assert len(seen) >= 6
-        for pack, case_id in seen.items():
-            view = client.get(f"/api/receipts/corpus/{case_id}").json()
-            assert view["verification"]["verdict"] == "pass", f"{pack}/{case_id}"
+            view = client.get(f"/api/receipts/corpus/{row['caseId']}").json()
+            assert view["verification"]["verdict"] == "pass", row["caseId"]
 
     def test_an_unknown_case_is_404(self, client):
         assert client.get("/api/receipts/corpus/no-such-case").status_code == 404
@@ -171,8 +203,8 @@ class TestTampering:
 
     def test_an_altered_fact_is_caught_by_its_content_hash(self, client):
         facts = [json.loads(t) for t in _fact_texts()]
-        target = next(f for f in facts if f["value"].get("kind") == "date")
-        target["value"]["value"] = "2099-01-01"
+        target = next(f for f in facts if f["value"].get("kind") == "decimal")
+        target["value"]["value"] = "9999"
         view = _inspect(client, json.dumps(_receipt()), json.dumps(facts))
         assert _checks(view)["facts"] == "fail"
         check = next(c for c in view["verification"]["checks"] if c["id"] == "facts")
@@ -336,15 +368,16 @@ class TestExports:
         assert res.text.startswith("# Decision audit report")
         assert "Integrity and replay" in res.text
 
-    def test_the_markdown_matches_the_kernel_renderer(self, client):
-        # Same inputs, same renderer: this route resolves them from golden/
+    def test_the_markdown_matches_the_kernel_renderer(self, client, content_root):
+        # Same inputs, same renderer: this route resolves them from the corpus
         # rather than from a live scenario, and must not differ otherwise.
-        from duly_kernel.report import render_report_markdown
-
         import yaml
 
+        from duly_kernel.report import render_report_markdown
+
+        pack_name = _receipt()["rulePack"]["name"]
         pack = yaml.safe_load(
-            (REPO_ROOT / "rulepacks" / "termination-notice-us-states" / "pack.yaml").read_text()
+            (content_root / "rulepacks" / pack_name / "pack.yaml").read_text()
         )
         expected = render_report_markdown(
             _receipt(), [json.loads(t) for t in _fact_texts()], pack

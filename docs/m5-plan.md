@@ -49,9 +49,10 @@ produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 **Where this stands (2026-08-05):** Phases 0, 1 and 2 are complete. **Phase 3
 is in progress** — the fixture corpus exists and the kernel, assurance and
 whatif's CLI run on it. Part 3 measured the deletion gate instead of guessing
-at it and re-sequenced the rest: two more fixture PRs (the demo surfaces, then
-kernel report + whatif + dmn + extraction), then the move, then the gate —
-which the measurement showed cannot pass before the move. Phase 4 waits on 3.
+at it and re-sequenced the rest; part 4a converted the receipt viewer and set
+the pattern. Remaining: the rest of the demo, then kernel report + whatif +
+dmn + extraction, then the move, then the gate — which the measurement showed
+cannot pass before the move. Phase 4 waits on 3.
 
 ~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
 they must fix; two more after the 2026-08-04 audit against the roadmap; one
@@ -471,13 +472,31 @@ proves it.
       that cannot be collected is worse than one that fails: pytest reports the
       count that remains, and nothing says what left.*
 
-- [ ] **Fixtures, part 4: the demo surfaces (1 PR).** The largest genuine (a)
-      block — 89 failures across `test_api`, `test_receipts_api`,
-      `test_rules_api`, `test_review_arc`. `test_content_roots` already proves
-      the empty state and needs nothing. The demo reads content through
-      `CONTENT` (Phase 1), so most of this is pointing a fixture deployment at
-      `fixtures/` rather than rewriting assertions — but the assertions name
-      scenarios and packs, so it is real work.
+- [x] **Fixtures, part 4a: the receipt viewer, and the pattern (1 PR).**
+      `test_receipts_api.py` (35 tests) now survives deletion completely;
+      demo failures under deletion fall from **89 to 63**.
+      *Two things this established that the remaining suites reuse.*
+      *`demo/tests/demotest_helpers.py` builds a **content root** from
+      `fixtures/` at test time — `golden/cases`, `golden/receipts`,
+      `rulepacks/<pack.name>/pack.yaml`, `ontologies/` — rather than committing
+      a second copy of the fixtures in a second layout. A committed copy would
+      be two artifacts that must not disagree; assembling it in code also makes
+      the mapping readable, since `rulepacks/<name>/pack.yaml` is not an
+      arbitrary path but what a receipt's `rulePack.name` resolves to.*
+      *And the `client` fixture **restores the modules on teardown**. The demo
+      binds its roots at import, which is right for a server, so pointing it at
+      a temp root leaks into every later file in the directory run —
+      `monkeypatch` unsets the variable and un-reloads nothing. Converting one
+      suite turned 0 failures into 50 across the others until the teardown
+      reload went in. Every remaining conversion needs it.*
+- [ ] **Fixtures, part 4b: the rest of the demo (1 PR).** 63 failures:
+      `test_rules_api` 31, `test_evidence_api` 13, `test_api` 10,
+      `test_review_arc` 8, and one in `test_content_roots`
+      (`test_the_repo_default_still_finds_everything`, which asserts six packs
+      — an example test by nature, and it moves). `test_rules_api` and
+      `test_review_arc` need a fixture *scenario* (documents, renditions,
+      spans), which is the fixture growth part 5 also wants; do them together
+      or accept building it twice.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` with the fixture growth it needs (a
       document-grounded PII fact, a money decision — a deliberate rebuild of
@@ -939,6 +958,13 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-05 — **Phase 3, part 4a: the receipt viewer** — 35 tests onto a
+  content root assembled from `fixtures/`; demo failures under deletion fall
+  from 89 to 63. Established the two things the remaining suites reuse: the
+  content-root builder, and a `client` fixture that reloads the demo modules
+  back on teardown — without which converting one suite broke fifty tests in
+  the others, because the demo binds its roots at import and `monkeypatch`
+  un-reloads nothing.
 - 2026-08-05 — **Phase 3, part 3: the gate measured** — ran the deletion in a
   detached worktree instead of estimating it: 220 failures, 93 errors, eight
   suites. The finding is that the count mixes toolkit tests needing fixtures

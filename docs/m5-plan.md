@@ -534,15 +534,29 @@ proves it.
       into the base one; and a PROV-O test pinned the pack URN. Both now derive
       from the receipt. The equivalence test caught the first, which is what it
       is for.*
-- [ ] **Fixtures, part 4b(ii)b: the four demo suites (1 PR).** 63 failures:
-
-      `test_rules_api` 31, `test_evidence_api` 13, `test_api` 10,
-      `test_review_arc` 8, and one in `test_content_roots`
-      (`test_the_repo_default_still_finds_everything`, which asserts six packs
-      — an example test by nature, and it moves). `test_rules_api` and
-      `test_review_arc` need a fixture *scenario* (documents, renditions,
-      spans), which is the fixture growth part 5 also wants; do them together
-      or accept building it twice.
+- [x] **Fixtures, part 4b(ii)b: `test_api` (1 PR).** 10 failures under deletion
+      → **4**, and three of the four remaining are genuine example tests
+      (`test_render_answer_describes_tolerance_cure`,
+      `test_rescission_deadline_cross_checks_the_printed_notice_date`,
+      `test_every_committed_pack_phrases_every_decision_it_advertises`) whose
+      subject *is* a teaching pack — they move rather than convert.
+      *`_pack()` now defaults to the fixture pack and takes a name only for
+      those three. Writing the money phrasing found a mis-authored guard in the
+      pack I had just added: `when: { value: "0.00" }` matches nothing on a
+      money decision, whose value is an amount and a currency — the correct
+      form is `amount: positive`, and the demo **silently fell through** to the
+      unguarded case rather than complaining. A fixture that exercises that
+      quiet mis-authoring once is worth having; the comment on it says so.*
+      *One remaining toolkit test needs fixture growth:
+      `test_every_placeholder_the_validator_accepts_is_one_the_demo_renders`
+      exercises `{daysBetween:…}` and `{fact:…|day}`, so the pack needs a
+      **date** attribute. Cheap, but it is another rebuild — do it with part 5's
+      other growth rather than alone.*
+- [ ] **Fixtures, part 4b(ii)c: the last three demo suites (1 PR).** 52
+      failures: `test_rules_api` 31, `test_evidence_api` 13, `test_review_arc`
+      8, plus the one in `test_content_roots` that asserts six packs and moves.
+      All three want the content root `demotest_helpers` already builds; none is
+      blocked on a missing artifact.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
@@ -1007,6 +1021,13 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
+- 2026-08-06 — **Phase 3, part 4b(ii)b: `test_api`** — 10 failures under
+  deletion down to 4, three of which are example tests that move. Found a
+  mis-authored phrasing guard in the pack added one PR earlier: `value:` on a
+  money decision matches nothing, and the demo falls through silently rather
+  than complaining. Also: CLAUDE.md's definition of done now *requires* a
+  documentation pass as the last step of every PR, so it stops being something
+  Kushan has to ask for.
 - 2026-08-06 — **Phase 3, part 4b(ii)a: the pack grown** — a non-boolean
   money decision with phrasing, and a `sensitivity: pii` fact, because
   `test_api` splits on machinery a boolean decision never reaches. Part 5's

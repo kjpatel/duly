@@ -97,6 +97,18 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 A feature is not shipped when the code merges. It is shipped when it is **documented, discoverable, demoable, and reconciled** — all four in the PR that introduces it, not in follow-ups.
 
+**Every PR ends with a documentation pass, and it is the last thing you do.** Not a follow-up PR, not a checkbox ticked while the code is still moving — a deliberate pass over the docs *after* the change is written and verified, in the same PR. Do not wait to be asked for it.
+
+The ordering is the point. Documentation written before the work is finished describes what you intended; the interesting part is almost always what the work *taught*, and that is only knowable at the end. Several of this repo's most useful paragraphs exist because a doc pass came last and found the claim the code had just falsified — the architecture guide describing a review resolution as "usually" superseding after C6 made that state unrepresentable; `fixtures/README.md` never mentioning a case the corpus had grown two PRs earlier.
+
+The pass is mechanical enough to run every time:
+
+1. **Does any doc now say something false?** Grep for the thing you changed — the flag, the path, the count, the command — and read every hit. **Never `| head` a completeness sweep**: it turns a correct answer into a wrong one and leaves no trace. Pipe to `wc -l` first.
+2. **Does the newcomer path still lead here?** README components table, `docs/concepts.md`, `docs/faq.md` if a skeptic would ask, and the component README a practitioner actually reads.
+3. **Does [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) still model the system?** Check its five places, and especially whether the work *sharpened a claim it already makes* — that paragraph is usually worth more than the corrections around it.
+4. **Does [CHANGELOG.md](CHANGELOG.md) say what this turned out to mean?** Not what you did; what it taught. A correction to a claim the project previously made is worth more space than the feature that found it.
+5. **Do the executable docs still execute?** Run any command you touched, exactly as written.
+
 - **Documented** — spec/README coverage in house style, including the honest "deliberately does not do" boundaries.
 - **Discoverable** — audit the newcomer entry points and update the ones that should now lead here: README components table and roadmap bullet, `docs/concepts.md` glossary, `docs/faq.md` if a skeptic would ask, this file's gotchas if agents will trip on it, and the component README a practitioner actually reads (`rulepacks/README.md` for anything touching pack authoring).
 - **Demoable** — something runnable that shows the benefit, executed before you claim it works.

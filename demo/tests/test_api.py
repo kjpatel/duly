@@ -26,18 +26,30 @@ from demo.app import _determination, _render_answer, app  # noqa: E402
 client = TestClient(app)
 
 
-def _pack(name: str) -> dict:
-    """A committed rule pack, loaded as the demo loads it.
+FIXTURE_PACK = REPO_ROOT / "fixtures" / "pack.yaml"
 
-    Determination tests build their scenario around the real pack because the
-    wording under test lives *in* the pack (its `phrasing:` block), not in
-    demo/app.py. Fabricating a pack here would only test the renderer.
+
+def _pack(name: str | None = None) -> dict:
+    """A rule pack, loaded as the demo loads it.
+
+    Determination tests build their scenario around a *real* pack because the
+    wording under test lives in the pack's `phrasing:` block, not in
+    demo/app.py — fabricating one inline would only test the renderer.
+
+    That pack is now the toolkit's own fixture, which grew a non-boolean
+    decision (`fx:assessedFee`, money, with phrasing) precisely so these tests
+    stop depending on the teaching content. A boolean decision takes the
+    kernel's Yes/No fallback and never reaches the phrasing path at all, which
+    is why the fixture could not serve them until it did.
+
+    `name` selects a committed pack instead, for the few tests below whose
+    subject genuinely *is* a teaching pack; those move with `rulepacks/`.
     """
-    path = REPO_ROOT / "rulepacks" / name / "pack.yaml"
+    path = FIXTURE_PACK if name is None else REPO_ROOT / "rulepacks" / name / "pack.yaml"
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def _scenario(pack_name: str, facts: list[dict] | None = None) -> dict:
+def _scenario(pack_name: str | None = None, facts: list[dict] | None = None) -> dict:
     return {"pack": _pack(pack_name), "facts": facts or []}
 
 
@@ -188,16 +200,18 @@ def test_determination_is_the_only_place_verdict_wording_lives():
     """The client renders determination verbatim, so it must be self-sufficient."""
     receipt = {
         "decision": {
-            "attribute": "trid:toleranceCategory",
-            "value": {"kind": "code", "value": "ZeroTolerance"},
+            "attribute": "fx:assessedFee",
+            "value": {"kind": "money", "amount": "0.00", "currency": "USD"},
         },
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
 
-    found = _determination(receipt, _scenario("trid-fee-tolerance-us-federal"), "2026-07-29")
+    found = _determination(receipt, _scenario(), "2026-07-29")
 
-    assert found["verdict"] == "Zero tolerance"
-    assert found["detail"] == "The disclosed amount may not increase at closing"
+    # The fixture pack's unguarded fallback case; the guarded one is asserted
+    # by the money receipt below.
+    assert found["verdict"] == "No fee"
+    assert found["detail"] == "Nothing is owed on this widget"
     # No as-of date in the structured fields: the client renders that separately.
     assert "2026-07-29" not in found["verdict"] + found["detail"]
 
@@ -261,7 +275,7 @@ def test_unmapped_attributes_fall_back_without_claiming_a_verdict():
         },
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
-    scenario = _scenario("termination-notice-us-states")
+    scenario = _scenario()
 
     found = _determination(receipt, scenario, "2026-07-29")
 
@@ -281,9 +295,9 @@ def test_a_boolean_decision_needs_no_phrasing_block():
         },
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
-    scenario = _scenario("termination-notice-us-states")
+    scenario = _scenario()
     scenario["pack"]["decisions"].append(
-        {"attribute": "nc:someFutureFlag", "entityType": "nc:TerminationNotice"}
+        {"attribute": "nc:someFutureFlag", "entityType": "fx:Widget"}
     )
 
     found = _determination(receipt, scenario, "2026-07-29")
@@ -300,21 +314,21 @@ def test_verdict_wording_is_pack_data_not_demo_code():
     """
     receipt = {
         "decision": {
-            "attribute": "trid:toleranceCategory",
-            "value": {"kind": "code", "value": "ZeroTolerance"},
+            "attribute": "fx:assessedFee",
+            "value": {"kind": "money", "amount": "250.00", "currency": "USD"},
         },
         "asOf": {"effective": "2026-07-29T00:00:00Z"},
     }
-    scenario = _scenario("trid-fee-tolerance-us-federal")
+    scenario = _scenario()
     for decision in scenario["pack"]["decisions"]:
-        if decision["attribute"] == "trid:toleranceCategory":
+        if decision["attribute"] == "fx:assessedFee":
             decision["phrasing"] = [
-                {"verdict": "Nulltoleranz", "detail": "{value}", "tone": "neg"}
+                {"verdict": "Gebühr fällig", "detail": "{money}", "tone": "neg"}
             ]
 
     assert _determination(receipt, scenario, "2026-07-29") == {
-        "verdict": "Nulltoleranz",
-        "detail": "ZeroTolerance",
+        "verdict": "Gebühr fällig",
+        "detail": "250.00 USD",
         "tone": "neg",
     }
 

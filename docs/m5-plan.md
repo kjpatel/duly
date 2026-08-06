@@ -46,20 +46,28 @@ the frozen contract and the separated layout, not the mixed state), 4 before 5
 (the guide documents what actually ships). Phase 6 measures what the others
 produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 
-**Where this stands (2026-08-05):** Phases 0, 1 and 2 are complete. **Phase 3
-is in progress** — the fixture corpus exists and the kernel, assurance and
-whatif's CLI run on it. Part 3 measured the deletion gate instead of guessing
-at it and re-sequenced the rest; part 4a converted the receipt viewer and set
-the pattern. Remaining: the rest of the demo, then kernel report + whatif +
-dmn + extraction, then the move, then the gate — which the measurement showed
-cannot pass before the move. Phase 4 waits on 3.
+**Where this stands (2026-08-06):** Phases 0, 1 and 2 are complete. **Phase 3
+is in progress and is the whole current front.** The fixture corpus exists;
+the kernel, the assurance commands, whatif's CLI and the receipt viewer run on
+it; and the fixture *scenario* — a document, its rendition, span-grounded
+facts — now exists, which was the shared blocker for everything left.
 
-~19–21 PRs total (two added in Phase 1 and Phase 4 after Phase 0 measured what
-they must fix; two more after the 2026-08-04 audit against the roadmap; one
-more when Phase 2's own audit found the *Contract closeout* roadmap item had no
-task). Twelve are merged — see Appendix B, which is the count of record. Every PR
-satisfies CLAUDE.md's definition of done (documented, discoverable, demoable,
-reconciled) **in that PR**, not in follow-ups.
+Remaining, in order: the rest of the demo (part 4b(ii), 63 failures under
+deletion), then kernel report + whatif + dmn + extraction (part 5), then the
+move, then the deletion gate — which the part-3 measurement showed **cannot
+pass before the move**, because most of what breaks under deletion is example
+tests that the move deletes alongside their subject. Phases 4, 5 and 6 all
+wait on Phase 3.
+
+**Twenty M5 PRs are merged** (#40–#59), plus three pre-plan ones — see
+Appendix B, which is the count of record. The original estimate was ~19–21
+*total*, and it is already spent with Phase 3 unfinished and Phases 4–6 not
+started. That is not drift to be tidied away: every overrun came from a
+measurement replacing a guess (§7's note lists them), and the honest current
+estimate is **~32–36**. Treat the original number as what it was — an estimate
+made before anything had been measured. Every PR satisfies CLAUDE.md's
+definition of done (documented, discoverable, demoable, reconciled) **in that
+PR**, not in follow-ups.
 
 ## 3. Rules for every executor
 
@@ -386,22 +394,26 @@ plus the code that backs the two claims needing it.
       and the conflation of "the same artifact" with "the same decision" that
       this document had carried since M2.*
 
-## 7. Phase 3 — the move (2–3 PRs)
+## 7. Phase 3 — the move (5 fixture PRs merged, 2 + move + gate remaining)
 
 **Objective:** teaching content relocates under `examples/`; toolkit
 directories contain zero example content; `git rm -r examples/` leaves a
 working, empty toolkit. Mechanical, **no behavior change**, golden replay
 proves it.
 
-> **Corrected 2026-08-05, mid-phase (rule 10).** "Toolkit-owned fixtures
-> (1 PR)" was one task and is **three**, because the work is per-suite and the
-> suites are not alike. Re-measured on the day: **26 of 63** test files touch
-> example content, spread across nine suites, and the conversion is not
-> mechanical — `test_report.py` asserts the *content* of the teaching packs
-> (citations, verdict phrasing, a TRID cure amount), so splitting it needs the
-> fixture corpus to grow a document-grounded PII fact and a money decision.
-> Doing all nine in one PR would be a diff nobody can review against a corpus
-> that grew to fit it. Split below; the first is merged.
+> **Corrected repeatedly, mid-phase (rule 10), and the pattern is the point.**
+> "Toolkit-owned fixtures (1 PR)" became three on 2026-08-05, then six. Each
+> split came from a *measurement*, not from the work feeling large: 26 of 63
+> test files touch example content (part 1); the deletion gate produces 220
+> failures across nine suites and most are example tests that must move rather
+> than be repointed (part 3); converting one demo suite breaks fifty tests in
+> the others through import-time binding (part 4a); every remaining suite is
+> blocked on one missing artifact (part 4b(i)).
+>
+> The estimate was wrong by 6× and each correction was cheap, because each was
+> made against a number. **The lesson for whoever picks up part 4b(ii): run the
+> deletion in a detached worktree first.** It costs a minute and it is the only
+> thing here that has ever produced a right estimate.
 
 - [x] **Fixtures, part 1: the corpus and the kernel (1 PR).** Creates
       [`fixtures/`](../fixtures/README.md) — one invented domain, one pack,
@@ -508,13 +520,18 @@ proves it.
       spans), which is the fixture growth part 5 also wants; do them together
       or accept building it twice.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
-      `kernel/tests/test_report.py` with the fixture growth it needs (a
-      document-grounded PII fact, a money decision — a deliberate rebuild of
-      `fixtures/pack.yaml` at a new version, which moves every fixture
-      receipt); `whatif/tests/test_whatif.py` split (a) from (b); the whatif
-      CLI test that needs a pack whose kinds are all inferable, which the same
-      rebuild supplies; a fixture decision table for `dmn/`; and
-      `extraction/tests` off `starters/tools`.
+      `kernel/tests/test_report.py` — **part of its blocker is now gone**:
+      `fixtures/scenario/` supplies the document-grounded facts with quotes and
+      spans that the report renderer needs. What it still wants is a *PII*
+      fact (for the redaction tests) and a *money* decision, and those two do
+      require rebuilding `fixtures/pack.yaml` at a new version, which moves
+      every fixture receipt and re-pins the digest vectors and aggregates.
+      Decide whether the redaction and money tests are toolkit or example
+      before paying that: `test_trid_*` is plainly example and moves.
+      Also: `whatif/tests/test_whatif.py` split (a) from (b); the whatif CLI
+      test needing a pack whose kinds are all inferable, which the same rebuild
+      supplies; a fixture decision table for `dmn/`; and `extraction/tests` off
+      `starters/tools`.
 
 - [ ] **The move itself (1 PR).** `git mv` of `rulepacks/`, `starters/`,
       `golden/` (D8), the teaching ontologies, `dmn/examples/`, and the
@@ -968,20 +985,20 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
-- 2026-08-06 — **Phase 3, part 4b(i): the fixture scenario** — the shared
+- 2026-08-06 — [#60](https://github.com/kjpatel/duly/pull/60) — **Phase 3, part 4b(i): the fixture scenario** — the shared
   prerequisite for the remaining demo suites and part 5. A generated PDF, its
   rendition, and two span-grounded facts; spans found by the builder rather
   than typed, with quote-equals-slice and document-hash checks. The content
   root assembles it under `starters/` and rewrites the manifest's
   repo-relative `rulePack` to the root's own layout.
-- 2026-08-05 — **Phase 3, part 4a: the receipt viewer** — 35 tests onto a
+- 2026-08-05 — [#59](https://github.com/kjpatel/duly/pull/59) — **Phase 3, part 4a: the receipt viewer** — 35 tests onto a
   content root assembled from `fixtures/`; demo failures under deletion fall
   from 89 to 63. Established the two things the remaining suites reuse: the
   content-root builder, and a `client` fixture that reloads the demo modules
   back on teardown — without which converting one suite broke fifty tests in
   the others, because the demo binds its roots at import and `monkeypatch`
   un-reloads nothing.
-- 2026-08-05 — **Phase 3, part 3: the gate measured** — ran the deletion in a
+- 2026-08-05 — [#58](https://github.com/kjpatel/duly/pull/58) — **Phase 3, part 3: the gate measured** — ran the deletion in a
   detached worktree instead of estimating it: 220 failures, 93 errors, eight
   suites. The finding is that the count mixes toolkit tests needing fixtures
   with example tests that must *move*, and most are the latter — so the gate
@@ -989,13 +1006,25 @@ and every exception behind it.**
   Phase 3 re-sequenced into parts 4 and 5. Shipped the one fix that is right
   either way: `provetest_helpers` scanned `rulepacks/` at module scope, making
   a missing directory a collection error rather than a failure.
-- 2026-08-05 — **Phase 3, fixtures part 2** — `verify`, `impact` and `prove`
+- 2026-08-05 — [#57](https://github.com/kjpatel/duly/pull/57) — **Phase 3, fixtures part 2** — `verify`, `impact` and `prove`
   onto the fixture corpus, which turned out to be a corpus in its own right
   (`verify --golden fixtures` replays four cases), so the verifier suite could
   drop `generate` entirely. Found **A10**: `prove`'s `--ontologies` had the
   same repo-relative default as A3 and A9, and survived the sweep that found
   A9 because that sweep read `__main__.py` files and this CLI is not one.
-- 2026-08-05 — **Phase 3, fixtures part 1** — `fixtures/` created and the
+- 2026-08-04 — [#53](https://github.com/kjpatel/duly/pull/53) — cross-phase —
+  the architecture guide audited against every M5 decision: one correction (it
+  still described a review resolution as "usually" superseding, the state C6
+  had made unrepresentable) and three claims it already made, finished.
+- 2026-08-05 — [#54](https://github.com/kjpatel/duly/pull/54) — cross-phase —
+  the README restructured so the first runnable command is at line 42 rather
+  than 132, plus CONTRIBUTING, SECURITY and CODE_OF_CONDUCT, which did not
+  exist in a repository whose README invites contributions.
+- 2026-08-05 — [#55](https://github.com/kjpatel/duly/pull/55) — cross-phase —
+  the status callout moved below the quick start. Logged separately because it
+  is the commit #54 merged without: pushed to the branch after the merge, which
+  is executor rule 1's failure mode a second time.
+- 2026-08-05 — [#56](https://github.com/kjpatel/duly/pull/56) — **Phase 3, fixtures part 1** — `fixtures/` created and the
   kernel's toolkit suites moved onto it. Found that
   `spec/decision-digest-vectors.json`, a contract artifact, was generated from
   `golden/`; rebuilt from the fixture corpus. §7 corrected first: the

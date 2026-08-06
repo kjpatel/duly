@@ -31,15 +31,18 @@ decisions:
     entityType: fx:Widget
     question: "What fee is assessed?"
     phrasing:
-      - when: { value: "0.00" }
-        verdict: "No fee"
+      # `amount: positive` is how a *money* decision is guarded — its value is
+      # an amount and a currency, not a scalar, so `value:` matches nothing
+      # here. Written the wrong way first, and the demo silently fell through
+      # to the unguarded case rather than complaining, which is exactly the
+      # kind of quiet mis-authoring a fixture should exercise once.
+      - when: { amount: positive }
+        verdict: "Fee assessed"
+        detail: "{money} owed on this widget"
+        tone: warn
+      - verdict: "No fee"
         detail: "Nothing is owed on this widget"
         tone: pos
-      - verdict: "{value} assessed"
-        detail:
-          - "Score {fact:fx:score} against a minimum of {derived:fx:requiredMinimumScore|int}"
-          - ""
-        tone: warn
 
 rules:
   # The default presumption. Lowest priority, fires for every widget.

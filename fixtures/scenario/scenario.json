@@ -8,6 +8,16 @@
     "version": "0.1.0"
   },
   "demoExtractor": "stub",
+  "reviewArc": {
+    "attribute": "fx:score",
+    "confidence": {
+      "score": 0.55,
+      "method": "platt"
+    },
+    "title": "Widget inspection — review arc (fixture)",
+    "caseId": "case:fixture:fx-0005:review-demo",
+    "defaultAsOf": "2026-06-01"
+  },
   "documents": [
     {
       "id": "doc:widget-report:FX-INSPECTION-0005",

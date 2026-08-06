@@ -30,7 +30,11 @@ if str(REPO_ROOT) not in sys.path:
 from fastapi.testclient import TestClient  # noqa: E402
 
 import demo.app as demo_app  # noqa: E402
-from demo.app import REVIEW_SCENARIO_ID, app  # noqa: E402
+from demo.app import REVIEW_ID_SUFFIX, app  # noqa: E402
+
+# Derived, not imported: the arc's id follows whichever scenario opts into it,
+# so a fixture deployment gets its own rather than this repository's.
+REVIEW_SCENARIO_ID = f"notice-ny{REVIEW_ID_SUFFIX}"
 
 client = TestClient(app)
 

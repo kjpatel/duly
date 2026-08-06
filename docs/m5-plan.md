@@ -552,34 +552,33 @@ proves it.
       exercises `{daysBetween:…}` and `{fact:…|day}`, so the pack needs a
       **date** attribute. Cheap, but it is another rebuild — do it with part 5's
       other growth rather than alone.*
-- [ ] **Fixtures, part 4b(ii)c-0: the demo's review arc names a starter, and
-      that is toolkit code holding example content (1 PR).** **Found while
-      scoping the evidence suite, and it blocks both remaining suites.**
-      [`demo/app.py`](../demo/app.py) declares `REVIEW_SOURCE_SCENARIO =
-      "notice-ny"`, plus `REVIEW_SCENARIO_ID`, `REVIEW_CASE_ID` and
-      `REVIEW_SCENARIO_TITLE` naming that same starter. The demo is toolkit
-      (D2), so this is a teaching scenario's name compiled into it: point the
-      demo at any other content and the arc simply does not appear, because
-      `_ingest_review_case` is wrapped in `except Exception: pass`.
-
-      Degrading quietly is right for a missing *demonstration*; hardcoding
-      *which* demonstration is not, and the silence is what makes it invisible.
-      Derive the arc instead — from whichever scenario carries a below-floor
-      extraction, preferring `notice-ny` when present so this repository's demo
-      is byte-unchanged. Roughly nine call sites in `app.py` and one constant
-      `test_review_arc.py` imports; the derived values move onto the runtime.
-
-      *Attempted inside part 4b(ii)c and backed out deliberately: a
-      half-refactored `app.py` is worse than a routed finding, and the four
-      constants are load-bearing for two suites at once.*
+- [x] **Fixtures, part 4b(ii)c-0: the review arc becomes content (1 PR).**
+      The four constants naming `notice-ny` are gone. A scenario opts into the
+      arc by carrying a `reviewArc` block in its manifest — which attribute to
+      script below the floor, at what confidence, and what to call the result —
+      exactly as it opts into the stub extractor with `demoExtractor`. The demo
+      finds the first scenario declaring one, in sorted order.
+      *This repository's arc is unchanged in every field: same id, title, case
+      id, default as-of, domain. That is the check that mattered, because the
+      point was to remove a name from toolkit code, not to change what the demo
+      shows.*
+      *One thing the derivation exposed and did not fix: a fixture-only
+      deployment still gets **no** arc, because store-backed ingest needs
+      extraction **targets** (`starters/tools/targets`) and the fixture
+      scenario has none — it falls back to disk-backed, and the arc is
+      store-only by construction. The hardcoded name was hiding a second
+      dependency behind it. Fixture targets are part of 4b(ii)c below.*
 - [ ] **Fixtures, part 4b(ii)c: the last three demo suites (1 PR).** 52
       failures: `test_rules_api` 31, `test_evidence_api` 13, `test_review_arc`
       8, plus the one in `test_content_roots` that asserts six packs and moves.
       All three want the content root `demotest_helpers` already builds.
-      `test_evidence_api` and `test_review_arc` also want c-0 above — both
-      assert on the review arc, which cannot exist in a fixture deployment
-      until it stops naming a starter. `test_rules_api` (31, the largest)
-      does not, and can go first.
+      `test_evidence_api` and `test_review_arc` assert on the review arc, which
+      c-0 made content-declared but which a fixture deployment still cannot
+      produce: store-backed ingest needs extraction **targets**, and the
+      fixture scenario has none. Add them here — the shape is
+      `starters/tools/targets/<doc-id>.json`, and `fixtures/build.py` should
+      emit them beside the scenario it already builds. `test_rules_api` (31,
+      the largest) needs none of this and can go first.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a

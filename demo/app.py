@@ -237,10 +237,19 @@ def _fmt_score(value: Any) -> str:
 # the server restarts, and the fixture fallback path keeps working without a
 # store at all.
 
-REVIEW_SCENARIO_ID = "notice-ny-review"
-REVIEW_SOURCE_SCENARIO = "notice-ny"
-REVIEW_CASE_ID = "case:policy:HO-77401-NY:review-demo"
-REVIEW_SCENARIO_TITLE = "NY nonrenewal — review arc (low-confidence extraction)"
+# The review arc is **content, not code**. A scenario opts in by carrying a
+# `reviewArc` block in its manifest — which attribute to script below the
+# floor, at what confidence, and what to call the result — exactly as it opts
+# into the stub extractor with `demoExtractor`.
+#
+# This used to be four constants naming `notice-ny`: a teaching scenario's id
+# compiled into the toolkit. Pointing `DULY_DEMO_CONTENT` anywhere else made
+# the arc silently not appear, because the ingest is wrapped in
+# `except Exception: pass` — and "this deployment has no review scenario" and
+# "it has one but we only look for notice-ny" are indistinguishable from
+# outside. That is the failure mode that hid the hardcoding.
+REVIEW_ID_SUFFIX = "-review"
+REVIEW_RUN_ID_TEMPLATE = "run:{scenario}:review-demo"
 
 # Scenario domains group the picker by regulated vertical. The slug comes from
 # the starter manifest's optional `domain` field — presentation metadata only,
@@ -258,12 +267,29 @@ def _domain_fields(slug: str | None) -> dict[str, str]:
     slug = (slug or DEFAULT_DOMAIN).strip().lower() or DEFAULT_DOMAIN
     label = DOMAIN_LABELS.get(slug, slug.replace("-", " ").title())
     return {"domain": slug, "domainLabel": label}
-REVIEW_MAILED_ATTRIBUTE = "nc:noticeMailedDate"
-# Mirrors golden/cases/review-0001: 0.62 sits below the notice pack 2026.3.0
-# per-attribute floor of 0.9, so the mailed date abstains with low_confidence.
-REVIEW_MAILED_CONFIDENCE = {"score": 0.62, "method": "platt"}
-REVIEW_RUN_ID = "run:review-demo:001"
-REVIEW_DEFAULT_AS_OF = "2026-07-25"
+
+
+def _review_spec(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    """A scenario's `reviewArc` block, validated enough to build from.
+
+    `attribute` and `confidence` are required — without them there is nothing
+    to script below the floor, and an arc that abstains over nothing is not a
+    demonstration. Everything else has a defensible default.
+    """
+    block = manifest.get("reviewArc")
+    if not isinstance(block, dict):
+        return None
+    attribute = block.get("attribute")
+    confidence = block.get("confidence")
+    if not isinstance(attribute, str) or not isinstance(confidence, dict):
+        return None
+    return {
+        "attribute": attribute,
+        "confidence": dict(confidence),
+        "title": block.get("title") or f"{manifest.get('title', manifest['id'])} — review arc",
+        "caseId": block.get("caseId") or f"{manifest['caseId']}:review-demo",
+        "defaultAsOf": block.get("defaultAsOf"),
+    }
 
 SESSION_NOTE = (
     "Corrections live in this demo process only — the in-memory fact store "
@@ -486,6 +512,29 @@ def _ingest_starter_case(
     return meta
 
 
+def _find_review_source() -> tuple[Path, dict[str, Any], dict[str, Any]] | None:
+    """The first scenario whose manifest opts into the review arc.
+
+    Sorted, so a deployment with two of them gets a stable answer rather than
+    a filesystem-order one — the same reason every other discovery here is
+    sorted.
+    """
+    if not STARTERS_DIR.is_dir():
+        return None
+    for scenario_dir in sorted(STARTERS_DIR.iterdir()):
+        manifest_path = scenario_dir / "scenario.json"
+        if not scenario_dir.is_dir() or not manifest_path.exists():
+            continue
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        spec = _review_spec(manifest)
+        if spec is not None:
+            return scenario_dir, manifest, spec
+    return None
+
+
 def _ingest_review_case(
     runtime: _DemoRuntime,
     targets_by_doc: dict[str, dict[str, Any]],
@@ -501,13 +550,16 @@ def _ingest_review_case(
     confidence would clear the floor and defeat the demonstration. The UI
     labels the extractor, so the scripting is visible, not hidden.
     """
-    source_dir = STARTERS_DIR / REVIEW_SOURCE_SCENARIO
-    manifest_path = source_dir / "scenario.json"
-    if not manifest_path.exists():
+    found = _find_review_source()
+    if found is None:
         return
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    source_dir, manifest, spec_block = found
+    scenario_id = f'{manifest["id"]}{REVIEW_ID_SUFFIX}'
+    review_case_id = spec_block["caseId"]
     meta: dict[str, Any] = {
-        "caseId": REVIEW_CASE_ID,
+        "caseId": review_case_id,
+        "reviewSpec": spec_block,
+        "sourceId": manifest["id"],
         "packPath": manifest["rulePack"],
         "renditions": {},
         "extraction": None,
@@ -524,11 +576,11 @@ def _ingest_review_case(
         if spec is None or pdf_path is None or rend_path is None:
             return
         spec = copy.deepcopy(spec)
-        spec["caseId"] = REVIEW_CASE_ID
-        spec["runId"] = REVIEW_RUN_ID
+        spec["caseId"] = review_case_id
+        spec["runId"] = REVIEW_RUN_ID_TEMPLATE.format(scenario=manifest["id"])
         for target in spec.get("facts", []):
-            if target.get("attribute") == REVIEW_MAILED_ATTRIBUTE:
-                target["confidence"] = dict(REVIEW_MAILED_CONFIDENCE)
+            if target.get("attribute") == spec_block["attribute"]:
+                target["confidence"] = dict(spec_block["confidence"])
         document = source_document_cls.from_bytes(doc["id"], pdf_path.read_bytes())
         rendition_text = rend_path.read_text(encoding="utf-8")
         result = stub_cls(rendition_text).extract(document, spec)
@@ -536,7 +588,7 @@ def _ingest_review_case(
         meta["renditions"][doc["id"]] = result.rendition.text
         meta["extraction"] = _extraction_meta(result, "stub")
     if meta["renditions"]:
-        runtime.cases[REVIEW_SCENARIO_ID] = meta
+        runtime.cases[scenario_id] = meta
 
 
 # ---------------------------------------------------------------------------
@@ -738,10 +790,14 @@ def _build_review_scenario(runtime: _DemoRuntime) -> dict[str, Any] | None:
     """The review-arc scenario, synthesized from the runtime's ingested case
     (never from starters/ — the below-floor fact set exists only in the
     session store)."""
-    meta = runtime.cases.get(REVIEW_SCENARIO_ID)
-    if meta is None:
+    scenario_id = next(
+        (k for k, v in runtime.cases.items() if v.get("reviewArc")), None
+    )
+    if scenario_id is None:
         return None
-    manifest_path = STARTERS_DIR / REVIEW_SOURCE_SCENARIO / "scenario.json"
+    meta = runtime.cases[scenario_id]
+    spec_block = meta["reviewSpec"]
+    manifest_path = STARTERS_DIR / meta["sourceId"] / "scenario.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         pack = yaml.safe_load((CONTENT.root / meta["packPath"]).read_text(encoding="utf-8"))
@@ -756,15 +812,15 @@ def _build_review_scenario(runtime: _DemoRuntime) -> dict[str, Any] | None:
         for doc_id, text in meta["renditions"].items()
     }
     return {
-        "id": REVIEW_SCENARIO_ID,
-        "title": REVIEW_SCENARIO_TITLE,
-        **_domain_fields("insurance"),
-        "caseId": REVIEW_CASE_ID,
+        "id": scenario_id,
+        "title": spec_block["title"],
+        **_domain_fields(manifest.get("domain")),
+        "caseId": meta["caseId"],
         "documents": documents,
-        "facts": runtime.store.as_of(REVIEW_CASE_ID, knowledge=_now_knowledge()),
+        "facts": runtime.store.as_of(meta["caseId"], knowledge=_now_knowledge()),
         "pack": pack,
         "questions": questions,
-        "defaultAsOf": REVIEW_DEFAULT_AS_OF,
+        "defaultAsOf": spec_block.get("defaultAsOf") or manifest.get("defaultAsOf"),
         "source": "review-demo",
         "extraction": meta.get("extraction"),
         "review": {"available": True, "note": None},

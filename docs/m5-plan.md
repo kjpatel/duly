@@ -49,19 +49,28 @@ produce and needs only Phase 3's layout, so it can run alongside 4 or 5.
 **Where this stands (2026-08-06):** Phases 0, 1 and 2 are complete. **Phase 3
 is in progress and is the whole current front.** The fixture corpus exists;
 the kernel, the assurance commands, whatif's CLI and the receipt viewer run on
-it; and the fixtures now carry everything the remaining suites need — a
-scenario with span-grounded facts, a PII-marked fact, and a non-boolean
-decision with phrasing. **No conversion left is blocked on a missing
-artifact**, which was not true of any earlier part.
+it; and the fixtures carry a scenario with span-grounded facts, a PII-marked
+fact, a non-boolean decision with phrasing, declared outcomes, DMN inputs and a
+threshold-boundary case.
 
-Remaining, in order: the rest of the demo (part 4b(ii), 63 failures under
-deletion), then kernel report + whatif + dmn + extraction (part 5), then the
-move, then the deletion gate — which the part-3 measurement showed **cannot
-pass before the move**, because most of what breaks under deletion is example
-tests that the move deletes alongside their subject. Phases 4, 5 and 6 all
-wait on Phase 3.
+*This paragraph used to claim **"no conversion left is blocked on a missing
+artifact."** It has since been falsified twice — c-0 found that the review arc
+needs extraction targets the fixture scenario lacks, and c-1 found the studio
+needs declared cases and DMN inputs that did not exist. Both were invisible
+until the conversion was attempted. The claim is not repaired here, because the
+lesson is that it is not the kind of claim this plan can make in advance:
+**what a suite needs is discovered by running it under deletion, not by reading
+it.** Assume the next conversion is blocked on something, and find out by
+measuring.*
 
-**Twenty M5 PRs are merged** (#40–#59), plus three pre-plan ones — see
+Remaining, in order: the evidence browser and review arc (part 4b(ii)c-2, 21 of
+the 28 demo failures left under deletion), then kernel report + whatif + dmn +
+extraction (part 5), then the move, then the deletion gate — which the part-3
+measurement showed **cannot pass before the move**, because most of what breaks
+under deletion is example tests that the move deletes alongside their subject.
+Phases 4, 5 and 6 all wait on Phase 3.
+
+**Twenty-six M5 PRs are merged** (#40–#65), plus three pre-plan ones — see
 Appendix B, which is the count of record. The original estimate was ~19–21
 *total*, and it is already spent with Phase 3 unfinished and Phases 4–6 not
 started. That is not drift to be tidied away: every overrun came from a
@@ -396,7 +405,7 @@ plus the code that backs the two claims needing it.
       and the conflation of "the same artifact" with "the same decision" that
       this document had carried since M2.*
 
-## 7. Phase 3 — the move (5 fixture PRs merged, 2 + move + gate remaining)
+## 7. Phase 3 — the move (9 fixture PRs merged, 1 + part 5 + move + gate remaining)
 
 **Objective:** teaching content relocates under `examples/`; toolkit
 directories contain zero example content; `git rm -r examples/` leaves a
@@ -568,17 +577,57 @@ proves it.
       scenario has none — it falls back to disk-backed, and the arc is
       store-only by construction. The hardcoded name was hiding a second
       dependency behind it. Fixture targets are part of 4b(ii)c below.*
-- [ ] **Fixtures, part 4b(ii)c: the last three demo suites (1 PR).** 52
-      failures: `test_rules_api` 31, `test_evidence_api` 13, `test_review_arc`
-      8, plus the one in `test_content_roots` that asserts six packs and moves.
-      All three want the content root `demotest_helpers` already builds.
-      `test_evidence_api` and `test_review_arc` assert on the review arc, which
-      c-0 made content-declared but which a fixture deployment still cannot
-      produce: store-backed ingest needs extraction **targets**, and the
-      fixture scenario has none. Add them here — the shape is
-      `starters/tools/targets/<doc-id>.json`, and `fixtures/build.py` should
-      emit them beside the scenario it already builds. `test_rules_api` (31,
-      the largest) needs none of this and can go first.
+- [x] **Fixtures, part 4b(ii)c-1: `test_rules_api` (1 PR).** 29 failures under
+      deletion → **0**; the demo directory falls from 57 to 28.
+      *The count was re-measured rather than trusted, and the plan was wrong
+      three ways. The suite is 29 failures, not the 31 recorded here — though
+      31 is coincidentally the number of tests that needed converting, because
+      two of them were not failing (below). The two 31s are unrelated; do not
+      read the old estimate as having been right. `test_api` has **6**
+      residual failures, not 4 — two example tests were never counted, and
+      checking `#62` confirmed they were there all along rather than regressions
+      from c-0. And this task's stated prerequisite for part 5 —
+      "`test_every_placeholder…` needs a **date** attribute in the fixture pack"
+      — is false: placeholder validation is syntactic and that test builds its
+      own facts, so it needs no pack growth at all.*
+      *Two of the 29 were not failures. `test_declared_cases_run_green…` looped
+      over an empty glob and `test_every_refusal_example…` was
+      `@pytest.mark.parametrize`d over one, so under deletion the first passed
+      vacuously and the second collected **zero cases**. Both read as success;
+      neither appeared in the failure count. That is the sharpest instance of
+      this phase's founding rule the repository has produced, and it is now a
+      named form in CLAUDE.md's gotcha.*
+      *Three artifacts the fixtures lacked, each added because a test needed it
+      and not for completeness: `fixtures/expected.yaml` (declared outcomes —
+      the studio runs them beside impact, so a corpus without them left half
+      the surface untestable), `fixtures/dmn/` (one table that compiles, one
+      that is refused), and a nested `abstentionPolicy.attributes`, since two
+      scalars cannot catch a re-emitter that flattens. Also `fx-0006`, a
+      restricted widget scoring 60 — the only case in the corpus that sits
+      between the two thresholds the pack has declared, and therefore the only
+      one an edit can move on its own. Without it, impact analysis over these
+      fixtures could only ever answer "everything moved", which cannot
+      demonstrate what impact analysis is for.*
+      *`reload_demo()` moved into `demotest_helpers`, where the content-root
+      assembly already lives. It had been copied into a second suite, which is
+      one copy short of the version that gets edited wrong. The assembly now
+      performs three path rewrites — `case.yaml`'s pack, `expected.yaml`'s
+      `factsFrom`, the scenario's `rulePack` — and every one of them fails
+      **silently** if skipped, by offering an empty list rather than raising.*
+      *Found on the way, and worth more than the conversion: the equivalence
+      panel's real subject. Editing the derived threshold moves all three
+      decisions while two of the three rules stay byte-identical on the page —
+      the blast radius of an edit is not a syntactic property of the edit.
+      Sharpened into [docs/neuro-symbolic-architecture.md](neuro-symbolic-architecture.md).*
+- [ ] **Fixtures, part 4b(ii)c-2: the evidence browser and the review arc
+      (1 PR).** 21 failures: `test_evidence_api` 13, `test_review_arc` 8, plus
+      the one in `test_content_roots` that asserts six packs and moves. Both
+      assert on the review arc, which c-0 made content-declared but which a
+      fixture deployment still cannot produce: store-backed ingest needs
+      extraction **targets**, and the fixture scenario has none. Add them here —
+      the shape is `starters/tools/targets/<doc-id>.json`, and
+      `fixtures/build.py` should emit them beside the scenario it already
+      builds.
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
@@ -588,8 +637,12 @@ proves it.
       moves with the packs.
       Also: `whatif/tests/test_whatif.py` split (a) from (b); the whatif CLI
       test needing a pack whose kinds are all inferable, which the same rebuild
-      supplies; a fixture decision table for `dmn/`; and `extraction/tests` off
-      `starters/tools`.
+      supplies; and `extraction/tests` off `starters/tools`.
+      **Two prerequisites this task listed are already delivered.** The fixture
+      decision table exists — `fixtures/dmn/widget-fee.dmn`, two decisions and
+      four rules, plus a refusal — because `test_rules_api` needed it in c-1;
+      `dmn/tests` only has to point at it. And the "date attribute" this task
+      inherited was never needed: see c-1.
 
 - [ ] **The move itself (1 PR).** `git mv` of `rulepacks/`, `starters/`,
       `golden/` (D8), the teaching ontologies, `dmn/examples/`, and the
@@ -1094,20 +1147,20 @@ and every exception behind it.**
   finding is that a default which is right in this repository hides both the
   wrong-path case and every exception behind it. `wheel_smoke.py` also stopped
   claiming whatif "has no repo-relative file reads", which was false.
-- 2026-08-06 — **Phase 3, part 4b(ii)c scoped** — found that the demo's review
+- 2026-08-06 — [#63](https://github.com/kjpatel/duly/pull/63) — **Phase 3, part 4b(ii)c scoped** — found that the demo's review
   arc names a starter (`REVIEW_SOURCE_SCENARIO = "notice-ny"`) inside toolkit
   code and fails silently when it is absent, which blocks two of the three
   remaining suites. Routed as its own task rather than half-refactored;
   recorded as a CLAUDE.md gotcha so it cannot be rediscovered by surprise. The
   one example test in `test_content_roots` is labelled as such.
-- 2026-08-06 — **Phase 3, part 4b(ii)b: `test_api`** — 10 failures under
+- 2026-08-06 — [#62](https://github.com/kjpatel/duly/pull/62) — **Phase 3, part 4b(ii)b: `test_api`** — 10 failures under
   deletion down to 4, three of which are example tests that move. Found a
   mis-authored phrasing guard in the pack added one PR earlier: `value:` on a
   money decision matches nothing, and the demo falls through silently rather
   than complaining. Also: CLAUDE.md's definition of done now *requires* a
   documentation pass as the last step of every PR, so it stops being something
   Kushan has to ask for.
-- 2026-08-06 — **Phase 3, part 4b(ii)a: the pack grown** — a non-boolean
+- 2026-08-06 — [#61](https://github.com/kjpatel/duly/pull/61) — **Phase 3, part 4b(ii)a: the pack grown** — a non-boolean
   money decision with phrasing, and a `sensitivity: pii` fact, because
   `test_api` splits on machinery a boolean decision never reaches. Part 5's
   prerequisite, delivered early because 4b(ii) hit it first. The rebuild moved
@@ -1174,3 +1227,23 @@ and every exception behind it.**
   branch merges, and merging it then puts the work somewhere `main` will never
   see. The check is `git log main` containing the commit — cheap, and it is
   the one that failed here.*
+
+- 2026-08-06 — [#64](https://github.com/kjpatel/duly/pull/64) — **Phase 3, part
+  4b(ii)c-0: the review arc becomes content** — the four constants naming
+  `notice-ny` are gone; a scenario opts in with a `reviewArc` block and the demo
+  finds the first that declares one. This repository's arc is unchanged in every
+  field, which was the check that mattered. Removing the name exposed what it
+  had been hiding: a fixture-only deployment still gets no arc, because
+  store-backed ingest needs extraction targets the fixture scenario lacks.
+- 2026-08-06 — [#65](https://github.com/kjpatel/duly/pull/65) — **Phase 3, part
+  4b(ii)c-1: `test_rules_api`** — 29 failures under deletion → 0; the demo
+  directory falls 57 → 28. Added what the studio needs and the fixtures lacked:
+  declared outcomes, two DMN inputs, a nested `abstentionPolicy.attributes`, and
+  `fx-0006` — the only corpus case an edit to the threshold can move on its own,
+  without which impact analysis over these fixtures could only ever answer
+  "everything moved". `reload_demo()` hoisted into `demotest_helpers` after
+  being copied once. *Two of the 29 were not failures at all*: one looped over
+  an empty glob and one was parametrized over one, so under deletion they passed
+  vacuously and collected zero cases respectively — the sharpest instance of
+  this phase's founding rule yet, now a named form in CLAUDE.md. Three of the
+  plan's own claims about this task were wrong and are corrected in §7.

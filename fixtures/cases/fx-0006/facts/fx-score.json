@@ -1,0 +1,38 @@
+{
+  "id": "urn:duly:fact:sha256:b66aa90f2ab52ae3552faff85e29cb468434283c19e63e7c67ecdb95417dc7db",
+  "contentHash": "b66aa90f2ab52ae3552faff85e29cb468434283c19e63e7c67ecdb95417dc7db",
+  "caseId": "case:fixture:fx-0006",
+  "entity": {
+    "id": "widget:fx-0006",
+    "type": "fx:Widget"
+  },
+  "attribute": "fx:score",
+  "value": {
+    "kind": "decimal",
+    "value": "60"
+  },
+  "grounding": {
+    "kind": "attestation",
+    "actor": "duly-fixture-builder",
+    "channel": "synthetic",
+    "at": "2026-03-01T00:00:00Z"
+  },
+  "assertion": {
+    "kind": "machine",
+    "at": "2026-03-01T00:00:00Z",
+    "extractor": {
+      "name": "duly-fixture-builder",
+      "version": "0.1.0"
+    }
+  },
+  "confidence": {
+    "score": 1.0,
+    "method": "raw"
+  },
+  "recordedAt": "2026-03-01T00:00:00Z",
+  "status": "asserted",
+  "schemaRef": {
+    "ontology": "duly-fixture",
+    "version": "0.1.0"
+  }
+}

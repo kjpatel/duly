@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FICTIONAL. A widget fee schedule authored as DMN decision tables, in the
+  invented domain of fixtures/pack.yaml. It cites no real authority; every
+  citation below says so in its own text.
+
+  This is the toolkit's own DMN input. It exists because the rule studio's
+  import panel, the compiler's happy path and the "adopt a compiled pack"
+  flow were all exercised only through dmn/examples/trid-fee-tolerance.dmn —
+  teaching content that M5 relocates under examples/ and an adopter deletes.
+  A suite whose only DMN disappears with that content does not fail; it stops
+  being collected, which reads exactly like success (CLAUDE.md).
+
+  Two tables, in dependency order, chosen to be the two hit policies that
+  compile differently rather than to model anything:
+
+    1. fx:requiredMinimumScore  (UNIQUE) — rows scoped by disjoint categories,
+       so nothing depends on row order.
+    2. fx:assessedFee           (FIRST)  — the rows ARE ordered: the specific
+       charge first, the no-fee presumption last. Compiled to descending
+       priorities, so the kernel records the presumption as *defeated* on the
+       receipt rather than quietly dropping it.
+
+  The `duly:` annotation columns carry what DMN has no vocabulary for and duly
+  will not do without: the rule id, the citation, and the effective date.
+  Every one is required — see spec/dmn.md.
+-->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="widget-fee"
+             name="Widget fee schedule (fixture)"
+             namespace="urn:duly:fixture:widget-fee">
+
+  <description>Fixture fee schedule for widgets. Fictional.</description>
+
+  <extensionElements>
+    <duly:pack name="duly-fixture-dmn"
+               version="2026.1.0"
+               ontology="duly-fixture"
+               ontologyVersion="0.1.0"/>
+  </extensionElements>
+
+  <!-- The one extracted fact, and the derived value the second table reads. -->
+  <inputData id="category" name="fx:category"/>
+  <inputData id="score" name="fx:score"/>
+
+  <!-- ==================================================================
+       1. The minimum score in force for this category.
+       ================================================================== -->
+  <decision id="requiredMinimumScore" name="fx:requiredMinimumScore">
+    <question>What minimum score must this widget meet?</question>
+    <extensionElements>
+      <duly:decision entityType="fx:Widget"
+                     attribute="fx:requiredMinimumScore"
+                     entityVar="widget"
+                     valueKind="decimal"/>
+    </extensionElements>
+    <informationRequirement>
+      <requiredInput href="#category"/>
+    </informationRequirement>
+
+    <decisionTable id="requiredMinimumScoreTable" hitPolicy="UNIQUE">
+      <input id="rmsCategory" label="category">
+        <inputExpression typeRef="string">
+          <text>fx:category</text>
+        </inputExpression>
+      </input>
+      <output id="rmsMinimum" label="minimum" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="rmsRow1">
+        <description>Restricted widgets are held to the stricter threshold.</description>
+        <inputEntry><text>"restricted"</text></inputEntry>
+        <outputEntry><text>50</text></outputEntry>
+        <annotationEntry><text>FXD-MINIMUM-01</text></annotationEntry>
+        <annotationEntry><text>Fixture threshold, restricted regime (fictional)</text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+
+      <rule id="rmsRow2">
+        <description>Ordinary widgets are held to the looser one.</description>
+        <inputEntry><text>"ordinary"</text></inputEntry>
+        <outputEntry><text>10</text></outputEntry>
+        <annotationEntry><text>FXD-MINIMUM-02</text></annotationEntry>
+        <annotationEntry><text>Fixture threshold, ordinary regime (fictional)</text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <!-- ==================================================================
+       2. The fee assessed.
+
+       Note the `-` cells on the default row. `-` means "irrelevant", and the
+       compiler takes it literally: the default row binds NO fact, so it holds
+       even for a widget whose score was never extracted. Binding the columns
+       anyway would turn a presumption into a conditional.
+       ================================================================== -->
+  <decision id="assessedFee" name="fx:assessedFee">
+    <question>What fee is assessed?</question>
+    <extensionElements>
+      <duly:decision entityType="fx:Widget"
+                     attribute="fx:assessedFee"
+                     entityVar="widget"
+                     valueKind="money"
+                     currency="USD"/>
+    </extensionElements>
+    <informationRequirement>
+      <requiredDecision href="#requiredMinimumScore"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredInput href="#score"/>
+    </informationRequirement>
+
+    <decisionTable id="assessedFeeTable" hitPolicy="FIRST">
+      <input id="afMinimum" label="minimum">
+        <inputExpression typeRef="number">
+          <text>fx:requiredMinimumScore</text>
+        </inputExpression>
+      </input>
+      <input id="afScore" label="score">
+        <inputExpression typeRef="number">
+          <text>fx:score</text>
+        </inputExpression>
+      </input>
+      <output id="afFee" label="fee" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="afRow1">
+        <description>A widget below the minimum in force owes the fixture fee.</description>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>&lt; minimum</text></inputEntry>
+        <outputEntry><text>250.00</text></outputEntry>
+        <annotationEntry><text>FXD-FEE-01</text></annotationEntry>
+        <annotationEntry><text>Fixture fee for a deficient widget (fictional)</text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+
+      <rule id="afRow2">
+        <description>Otherwise nothing is owed. Binds no fact, so it holds even where the score is missing.</description>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <outputEntry><text>0.00</text></outputEntry>
+        <annotationEntry><text>FXD-FEE-00</text></annotationEntry>
+        <annotationEntry><text>Fixture fee schedule, default (fictional)</text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

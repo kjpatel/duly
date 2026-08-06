@@ -61,6 +61,23 @@ CASES = [
         "score": ("12", 0.62),  # below minConfidence 0.80, on purpose
         "category": "restricted",
     },
+    # 0005 is the scenario, not a corpus case; the gap is deliberate.
+    {
+        "id": "fx-0006",
+        "effective": "2026-06-01",
+        "note": "restricted but above the threshold — the category matches and "
+                "the score still clears, so the exception does not fire",
+        # 60 sits *between* the two thresholds this pack has ever declared (50
+        # from 2026, 10 before it) and above both. That is the point of the
+        # case: it is the only one an edit to the threshold can move on its
+        # own. Every other corpus case scores 12 or 80, so a threshold change
+        # either flips all three restricted cases together or none — and a
+        # corpus that can only answer "everything moved" cannot demonstrate
+        # what impact analysis is for, which is a pack whose *meaning* moved
+        # while its declared outcomes stayed green.
+        "score": ("60", 1.0),
+        "category": "restricted",
+    },
 ]
 
 
@@ -376,7 +393,12 @@ def main() -> int:
         )
 
     _build_scenario()
-    print(f"wrote {written} fixture cases")
+    # Receipts, not `CASES` entries: fx-0004 is derived from fx-0003 rather
+    # than declared, so counting the loop under-reports by one — and this
+    # number is what the corpus-size pins in the toolkit suites are checked
+    # against.
+    receipts = len(list((ROOT / "receipts").glob("*.json")))
+    print(f"wrote {written} declared cases, {receipts} receipts")
     return 0
 
 

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FICTIONAL REFUSAL FIXTURE: a row with no citation.
+     Row 2 carries a rule id and an effective date but an empty
+     `duly:citation`. Every duly rule cites its authority; the compiler will
+     not invent a `TODO(verify)` on an author's behalf, because a machine-
+     written "unverified" marker is indistinguishable from a human one that
+     was actually considered.
+
+     This is the toolkit's own refusal input. The studio must report it —
+     naming the decision, the row and the cell — rather than raise, and
+     adopting it must create nothing. dmn/examples/refusals/ covers the same
+     ground for the teaching content and moves under examples/ with it. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:duly="urn:duly:dmn:0.1"
+             id="fixtureUncitedRow" name="uncited row (fixture)"
+             namespace="urn:duly:fixture:refusal:uncited-row">
+  <extensionElements>
+    <duly:pack name="duly-fixture-refusal-uncited" version="0.0.1"
+               ontology="duly-fixture" ontologyVersion="0.1.0"/>
+  </extensionElements>
+
+  <decision id="fixtureMinimum" name="fx:requiredMinimumScore">
+    <question>What minimum score must this widget meet?</question>
+    <extensionElements>
+      <duly:decision entityType="fx:Widget" attribute="fx:requiredMinimumScore"
+                     entityVar="widget" valueKind="decimal"/>
+    </extensionElements>
+    <decisionTable id="fixtureMinimumTable" hitPolicy="UNIQUE">
+      <input id="fuCategory" label="category">
+        <inputExpression typeRef="string"><text>fx:category</text></inputExpression>
+      </input>
+      <output id="fuMinimum" label="minimum" typeRef="number"/>
+      <annotation name="duly:ruleId"/>
+      <annotation name="duly:citation"/>
+      <annotation name="duly:effectiveFrom"/>
+
+      <rule id="fuRow1">
+        <inputEntry><text>"restricted"</text></inputEntry>
+        <outputEntry><text>50</text></outputEntry>
+        <annotationEntry><text>FXR-MINIMUM-01</text></annotationEntry>
+        <annotationEntry><text>Fixture threshold, restricted regime (fictional)</text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+
+      <rule id="fuRow2">
+        <inputEntry><text>"ordinary"</text></inputEntry>
+        <outputEntry><text>10</text></outputEntry>
+        <annotationEntry><text>FXR-MINIMUM-02</text></annotationEntry>
+        <annotationEntry><text></text></annotationEntry>
+        <annotationEntry><text>2026-01-01</text></annotationEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

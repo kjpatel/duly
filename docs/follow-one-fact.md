@@ -431,7 +431,7 @@ Reading it top to bottom:
 - **`asOf`** — knowledge time `2026-07-28T09:00:00Z` is the correction's timestamp: this decision is evaluated *as of knowing the correction*. Replay the case at an earlier knowledge time and you get act one back, abstention and all.
 - **`rulesFired`** — NY-NR-45 establishes the minimum; NC-NR-01 finds the deficiency and records that it **defeated NC-DEF-00**, the presumption. The defeat is on the receipt because the non-monotonic step is precisely what an auditor needs to see.
 - **`derivation`** — a proof tree. The second premise of NC-NR-01 is `87ee4342…` — the *human* fact from stage 7, bound where the machine fact used to be. The four premise ids resolve to the four files in `examples/golden/cases/review-0001/facts/`: `120aa512…` is the policy expiration, `87ee4342…` the corrected mailed date, `2e35314c…` the notice type, and `76456b2f…` the governing state. Every leaf of the tree is a content-addressed fact with a grounding.
-- **`abstentions": []`** — empty, because the below-floor fact is superseded out of the projection; nothing the decision needed was declined.
+- **`abstentions": []`** — empty, because the below-floor fact is superseded out of the projection; nothing in the case's live facts was excluded before the rules ran.
 - **`receiptSha256`** — the receipt is content-addressed the same way facts are (canonical JSON minus `id` and `receiptSha256`). `uv run python -m duly_assurance verify` re-adjudicates this case — and 350 others — from its committed facts and asserts the receipt re-derives byte-for-byte, on every push.
 
 ## Where this leaves you

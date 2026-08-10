@@ -1127,6 +1127,44 @@ def _calibration_note(pair_count: int) -> str | None:
     )
 
 
+def _consulted_attributes(pack: Any, decision_attr: str | None) -> set[str] | None:
+    """Fact attributes the rules concluding `decision_attr` consult, following
+    `derived` bindings transitively (and including the decision attribute
+    itself). Returns None when the pack or decision is not in hand.
+
+    Presentation only. Receipt abstentions are case-wide — the kernel filters
+    the live-fact universe before any rule runs (spec/rule-ir.md, "Abstention
+    policy") — so an entry can name an attribute the selected question's rules
+    never look at. This computes that relationship so the UI can label it,
+    without touching receipt bytes.
+    """
+    if not isinstance(pack, dict) or not decision_attr:
+        return None
+    by_conclusion: dict[str, list[dict[str, Any]]] = {}
+    for rule in pack.get("rules") or []:
+        if not isinstance(rule, dict):
+            continue
+        conclusion = (rule.get("then") or {}).get("attribute")
+        if conclusion:
+            by_conclusion.setdefault(conclusion, []).append(rule)
+    consulted: set[str] = set()
+    pending = [decision_attr]
+    while pending:
+        attr = pending.pop()
+        if attr in consulted:
+            continue
+        consulted.add(attr)
+        for rule in by_conclusion.get(attr, []):
+            for binding in (rule.get("given") or {}).values():
+                if not isinstance(binding, dict):
+                    continue
+                if binding.get("attribute"):
+                    consulted.add(binding["attribute"])
+                elif binding.get("derived"):
+                    pending.append(binding["derived"])
+    return consulted
+
+
 def _review_state(
     scenario: dict[str, Any], receipt: dict[str, Any], engine_mode: str, knowledge: str
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -1134,11 +1172,19 @@ def _review_state(
     project the case's review state for the UI.
 
     Returns (review payload, abstention view). The abstention view is the
-    receipt's entries verbatim plus, when the queue is live, each entry's
-    queue item id and status; the receipt itself is never mutated.
+    receipt's entries verbatim plus presentation fields — each entry's
+    `consultedByDecision` hint and, when the queue is live, its queue item id
+    and status; the receipt itself is never mutated.
     """
     entries = [e for e in receipt.get("abstentions") or [] if isinstance(e, dict)]
     views = [dict(e) for e in entries]
+    consulted = _consulted_attributes(
+        scenario.get("pack"), (receipt.get("decision") or {}).get("attribute")
+    )
+    if consulted is not None:
+        for view in views:
+            if view.get("attribute"):
+                view["consultedByDecision"] = view["attribute"] in consulted
     review_meta = scenario.get("review") or {}
     runtime = _active_runtime()
     available = bool(review_meta.get("available")) and runtime is not None

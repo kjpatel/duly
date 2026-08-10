@@ -628,6 +628,18 @@ function abstentionCard(entry) {
   }
   card.append(head, thresholdLine(entry));
 
+  /* Server-computed presentation hint (never in the receipt): abstentions are
+   * case-wide — the kernel excludes facts before any rule runs — so an entry
+   * can name an attribute this question's rules never consult. Say so, or the
+   * entry reads as a bug. */
+  if (entry.consultedByDecision === false) {
+    const scope = document.createElement("div");
+    scope.className = "abstention-scope";
+    scope.textContent =
+      "Not consulted by this question's rules — excluded case-wide, so it appears on every receipt for this case.";
+    card.append(scope);
+  }
+
   const facts = document.createElement("div");
   facts.className = "premises";
   for (const factId of entry.facts || []) facts.append(factChip(factId));

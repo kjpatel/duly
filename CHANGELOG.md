@@ -6,6 +6,12 @@ Entries are written after the fact, from merged work.
 
 **Through M4, these versions were git tags marking milestones, not package releases** — `pyproject.toml` deliberately stayed at `0.0.1` because nothing was published, and a tag said "this milestone is done and here is what it meant" without claiming the contract was stable. **From v1.0.0 a tag is both**: the distribution version and the tag agree, and the milestone/stability distinction is carried by [spec/compatibility.md](spec/compatibility.md) instead of by the absence of a package.
 
+## Unreleased
+
+### Fixed
+
+- **The abstentions prose now matches the abstentions behavior.** The kernel has always filtered the case's live facts before any rule runs, and every entry seals into every receipt for the case — but the fact spec said abstentions were "attributes the decision *needed* but declined to use", and the demo captioned its panel the same way, so a `low_confidence` entry appearing on a question whose rules never consult the attribute read as a UI bug rather than as the design. The behavior is pinned by the 351 golden receipts and did not move; the sentences did — [spec/grounded-facts.md](spec/grounded-facts.md), [spec/rule-ir.md](spec/rule-ir.md) (the filter's scope is the case, not the question), the receipt schema's own `description`, [docs/concepts.md](docs/concepts.md), and the architecture doc, which gained the sharper claim: abstention is a property of the case's evidence, not of the question asked. The demo now also labels a not-consulted entry explicitly — a server-computed presentation hint beside the receipt, never in its bytes.
+
 ## v1.1.1 — both edges walkable, and the envelope measured
 
 **M5 closes with this release.** Its exit criterion was met the only way it could be honestly: an agent with no repository context followed the guide with an invented domain and reached a verified, replaying corpus in one sitting. The plan that ran the milestone (26 PRs at estimate, 40 shipped, every overrun a measurement replacing a guess) is deleted with the milestone; what it proved out lives in CLAUDE.md's rules, the stability policy, and this file.

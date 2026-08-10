@@ -423,8 +423,9 @@ The kernel emits a content-addressed `DecisionReceipt` containing:
   rule IDs;
 - a nested derivation from conclusion to consumed facts;
 - every consumed fact pinned by ID and content hash;
-- low-confidence and conflict abstentions, including any optional routing
-  label;
+- low-confidence and conflict abstentions — recorded case-wide, from the
+  filter that runs before any rule, so the same entries appear on every
+  receipt for the case — including any optional routing label;
 - the kernel version and backend.
 
 The Markdown/PDF audit report and
@@ -485,7 +486,12 @@ implies.
 A receipt can contain a decision and abstentions at the same time. For example,
 a low-confidence fact may be excluded while a conservative presumption still
 produces a decision. "The system abstained on evidence" does not always mean
-"the system produced no decision."
+"the system produced no decision." The converse surprise is scope: abstention
+is a property of the *case's evidence*, not of the question asked. The kernel
+filters the case's live facts before any rule runs, so a receipt can carry a
+`low_confidence` entry for an attribute none of its decision's rules consult —
+the entry says what the case could not use, not what this decision reached for
+and missed.
 
 An integrator passes receipt abstentions to `ReviewQueue.enqueue_receipt`,
 where they become deduplicated, append-only review items. A pack may attach an

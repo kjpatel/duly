@@ -1,7 +1,26 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["ortools>=9.8", "duly"]
+#
+# [tool.uv.sources]
+# duly = { path = "../..", editable = true }
+# ///
+#
+# The block above is PEP 723 inline script metadata, and it is where CP-SAT is
+# declared *for the whole repository*. There is no `scheduling` extra in the
+# root `pyproject.toml`: ortools belongs to this example, not to duly, so its
+# declaration lives in the file that needs it and leaves with `git rm -r
+# examples/`. `uv run examples/closing-scheduler/schedule.py` resolves it.
+#
+# `duly` is listed too, from a relative path source, because a script with
+# inline metadata runs in its own environment rather than the project's — the
+# same isolation that makes the ortools declaration self-contained also means
+# nothing is on the path unless this block says so. The path is relative to
+# this file, so the example still moves as a directory.
 """Plan a mortgage closing — sign, fund, record — to the earliest feasible dates.
 
-    uv run --with ortools python examples/closing-scheduler/schedule.py
+    uv run examples/closing-scheduler/schedule.py
 
 duly decides what is ALLOWED. The solver decides what is BEST. A compliance
 rule is never re-encoded here.
@@ -57,9 +76,11 @@ except ImportError:  # pragma: no cover - exercised by test_scheduler.py
 
 ORTOOLS_MISSING = (
     "ortools is not installed. The scheduler half of this example is behind an\n"
-    "optional dependency (the duly half is not):\n"
+    "optional dependency (the duly half is not). This file declares it in its\n"
+    "own PEP 723 script metadata, so the shortest path is to let uv read it:\n"
+    "    uv run examples/closing-scheduler/schedule.py\n"
+    "or, from an environment you manage yourself,\n"
     "    uv run --with ortools python examples/closing-scheduler/schedule.py\n"
-    "or `uv sync --extra scheduling`.\n"
     "\n"
     "To see the adjudicated windows without a solver, run with --no-solve."
 )

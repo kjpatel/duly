@@ -18,6 +18,18 @@ Or mount/create programmatically::
 
 Connections are opened with ``check_same_thread=False`` because FastAPI runs
 sync handlers on a threadpool; sqlite3 serializes access internally.
+
+FastAPI is an optional dependency of the wheel, behind the ``demo`` extra —
+``pip install 'duly[demo]'``. The extra is named for the demonstration
+workspace and covers this module too, because what it installs is one thing
+(a web framework and an ASGI server) rather than one surface; splitting it
+would have given an adopter two extras naming the same two packages. That
+this module is *not* the demo is why the import stays here: ``import
+duly_review`` reaches the queue, the golden-case converter and the
+calibration export without touching FastAPI, so the library half of this
+package installs and runs on a bare ``pip install duly``. Only reaching for
+``duly_review.api`` asks for the extra, and the wheel smoke job proves the
+distinction rather than asserting it.
 """
 
 from __future__ import annotations

@@ -827,10 +827,10 @@ proves it.
       not exist, so it boots to the built-in `spec/examples` scenario and
       honest empty listings. Whether the wheel carries content or the
       limitation is documented is left to the packaging PR below.*
-- [ ] **Dependencies (1 PR)** — added after Phase 0 measured it (A2). A
-      kernel-only `pip install duly` installs 18 packages including `fastapi`,
+- [x] **Dependencies (1 PR)** — added after Phase 0 measured it (A2). A
+      kernel-only `pip install duly` installed 18 packages including `fastapi`,
       `starlette`, `uvicorn`, `pydantic`, `reportlab`, `pillow`, `click`,
-      `anyio` and `h11`. They are declared unconditionally in
+      `anyio` and `h11`. They were declared unconditionally in
       [`pyproject.toml`](../pyproject.toml) `[project] dependencies` and serve
       the demo server and the PDF audit report; only `pyyaml` is on the
       document→receipt path. Move them behind extras (`demo`, `report`), keep
@@ -838,6 +838,22 @@ proves it.
       install stays small — otherwise this regresses silently the next time
       someone adds a convenience import. "The audit toolkit installed a web
       server" is a bad first line in a security review.
+      *Done — 18 packages to 2 (duly + PyYAML), pinned by an
+      `EXPECTED_PACKAGES` assertion in `check_wheel.sh` that prints the freeze
+      and names SECURITY.md when it fails. Three things the plan had not
+      anticipated. The `demo` extra covers `duly_review.api` as well as
+      `duly_demo` — a second FastAPI consumer that is not the demo — which is
+      fine because `duly_review/__init__.py` never reaches `api.py`, so the
+      queue stays installable bare (verified on the wheel, not argued). The
+      extras alone would have broken every CI lane and every developer's
+      single command, so `fastapi`/`uvicorn`/`reportlab` **also** join
+      `[dependency-groups].dev`: extras gate the wheel consumer, the dev group
+      gates the repository, and no suite grew a skip. And `duly_demo` gained a
+      one-line FastAPI check in its `__init__` — the package has no importable
+      surface without it, so one actionable failure at the door beats four
+      identical `ModuleNotFoundError`s deeper in, which is the one place in
+      this package where raising beats degrading. The `scheduling` extra went
+      with it, per the decision recorded under Packaging below.*
 - [ ] **Packaging (1 PR).** Distribution version to `1.0.0` (release-process
       §3: distribution only — kernel stays `0.0.1` per D5, and
       `test_engine_identity.py` enforces the receipt side). Console entry
@@ -847,7 +863,15 @@ proves it.
       `duly-whatif`). The `scheduling` extra (**ASK — answered. DECIDED
       (Kushan, 2026-08-06): move the dependency declaration into the
       closing-scheduler example** — the extra's only consumer is deletable
-      content, so the declaration lives with it and deletes with it).
+      content, so the declaration lives with it and deletes with it) —
+      *done in the dependencies PR above, since it was the same edit to the
+      same file: `schedule.py` now opens with a PEP 723 `# /// script` block
+      naming `ortools>=9.8` and duly by relative path (a script with inline
+      metadata runs in its own environment, so the project is not on the path
+      unless the block says so). `uv run examples/closing-scheduler/schedule.py`
+      is the documented invocation; the suite keeps `uv run --with ortools
+      pytest …`, because pytest is not the script and cannot read another
+      file's metadata.*
 - [ ] **The smoke gate.** CI: build the wheel, install into a clean venv,
       run the Phase 0 example against it. (May already exist from Phase 0 —
       then just assert it still covers the final layout.)
@@ -960,16 +984,23 @@ every adopter's codebase). **DONE** ([#41](https://github.com/kjpatel/duly/pull/
 both, and the example uses them, with a byte-identical receipt.
 
 **A2 — a kernel-only install pulls a web framework and a PDF library.**
-`pip install duly` installs 18 packages including `fastapi`, `starlette`,
+`pip install duly` installed 18 packages including `fastapi`, `starlette`,
 `uvicorn`, `pydantic`, `reportlab`, `pillow`, `click`, `anyio`, `h11`. They
-come from [`pyproject.toml`](../pyproject.toml) `[project] dependencies`,
-which lists `fastapi`, `uvicorn` and `reportlab` unconditionally — they serve
+came from [`pyproject.toml`](../pyproject.toml) `[project] dependencies`,
+which listed `fastapi`, `uvicorn` and `reportlab` unconditionally — they serve
 the demo server and the PDF audit report, neither of which an embedding
 integration uses. Only `pyyaml` is needed on the document→receipt path.
 **Phase 4** (not Phase 1): move them behind extras (`demo`, `report`). Worth
 flagging early because it is a packaging decision D1 touches, and because
 "the audit toolkit installed a web server" is a bad first impression for a
-security review. **OPEN — Phase 4** (§8's dependencies task).
+security review. **DONE — Phase 4** (§8's dependencies task): 18 packages to
+2, with `check_wheel.sh` failing on a third. One adjacent gap was found and
+deliberately *not* fixed: `duly_review.queue` imports `jsonschema` lazily to
+validate a correction, and no extra declares it, so `ReviewQueue.resolve()`
+on a bare install raises instead of enforcing C6. Documented in SECURITY.md
+and recommended for promotion to `[project] dependencies` — enforcement of a
+compatibility rule should not be optional behaviour — but that is a decision,
+not a cleanup, so it is not made here.
 
 **A3 — `duly_conformance`'s CLI defaults to a repo-relative path and
 tracebacks when it is wrong.**

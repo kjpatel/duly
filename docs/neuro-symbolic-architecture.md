@@ -918,6 +918,23 @@ semantics it was sealed under, and a kernel that does not implement that
 version refuses it instead of replaying it and possibly agreeing by accident.
 The distribution itself is not yet published; that is the remaining v1.0 work.
 
+**What the seam costs to install.** This document argues throughout that duly's
+value is the narrowness of the seam — one contract, one kernel, no domain
+knowledge. That argument has a supply-chain half, and it was false until
+recently: a kernel-only install brought a web framework, an ASGI server and a
+PDF renderer, because the demonstration workspace and the audit report were
+declared as dependencies *of* the toolkit rather than as surfaces built *on*
+it. The document→receipt path now installs as two packages — duly and PyYAML,
+because a rule pack is YAML — with every surface behind an extra: `demo` for
+the two HTTP apps, `report` for the PDF renderer, `prove` for the solver,
+`extraction` for the extraction stack. The distinction matters more for an
+audit component than for a typical library. Every package that can execute in
+the process that seals a receipt is inside the boundary that receipt's
+guarantees are drawn against, and a platform team reviewing this component will
+read its dependency list before it reads its semantics. The floor is asserted
+rather than documented: the wheel check installs a bare wheel into a clean
+virtualenv and fails if a third package appears.
+
 A production integration should treat duly as a decision component inside a
 larger workflow:
 

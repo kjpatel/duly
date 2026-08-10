@@ -22,7 +22,33 @@ echo "    $(basename "$WHEEL")"
 
 echo "==> installing into a clean venv"
 python3 -m venv "$WORK/venv"
+# Plain, no extras. That is the second thing this script probes: an adopter who
+# writes `pip install duly` and imports the kernel should not inherit an HTTP
+# framework, an ASGI server or a PDF renderer. `run.py` below proves the
+# install is *enough*; the assertion here proves it is not *more*.
 "$WORK/venv/bin/pip" install --quiet --disable-pip-version-check "$WHEEL"
+
+echo "==> asserting the bare install stays bare"
+# Two: duly itself and PyYAML, which is the whole of `[project] dependencies`
+# — a rule pack is YAML, so the document→receipt path needs a YAML parser and
+# nothing else. pip itself does not appear in `pip freeze`.
+#
+# Everything the demo, the review API and the PDF report need is behind the
+# `demo` and `report` extras, so this number moves only when someone adds a
+# dependency to `[project]`. If that is deliberate, update the number *and*
+# SECURITY.md's "Dependencies" section, which makes the claim this pins.
+EXPECTED_PACKAGES=2
+FROZEN="$("$WORK/venv/bin/pip" freeze)"
+COUNT="$(printf '%s\n' "$FROZEN" | grep -c . || true)"
+if [ "$COUNT" -ne "$EXPECTED_PACKAGES" ]; then
+  echo
+  echo "FAIL: a bare 'pip install duly' now brings $COUNT packages, expected $EXPECTED_PACKAGES." >&2
+  printf '%s\n' "$FROZEN" | sed 's/^/    /' >&2
+  echo "If a new core dependency is intentional, update EXPECTED_PACKAGES here" >&2
+  echo "and the dependency claim in SECURITY.md." >&2
+  exit 1
+fi
+printf '%s\n' "$FROZEN" | sed 's/^/    /'
 
 echo "==> copying the example out of the repository"
 # Copied to a temp directory so that even an accidental relative path back

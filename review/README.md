@@ -46,3 +46,13 @@ receipt.abstentions ──enqueue──▶ queue item (open)
 DULY_REVIEW_DB=review.db DULY_FACTS_DB=facts.db \
   uv run uvicorn review.duly_review.api:app --port 8789
 ```
+
+From the wheel, this surface is behind the `demo` extra (`pip install
+'duly[demo]'`) — named for the demonstration workspace, but what it installs is
+FastAPI and uvicorn, which is one dependency serving two surfaces. `import
+duly_review` does not reach `api.py`, so the queue, the golden-case converter
+and the calibration export all work on a plain `pip install duly`. One caveat
+until it is resolved: `ReviewQueue.resolve()` validates the correction against
+the fact schema with `jsonschema`, which no extra declares — install it
+alongside duly, or resolution raises `ModuleNotFoundError` rather than
+enforcing [compatibility.md](../spec/compatibility.md) C6.

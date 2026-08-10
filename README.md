@@ -163,6 +163,22 @@ duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is 
 
 The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M5 below; until it lands, [examples/rulepacks/README.md](examples/rulepacks/README.md) and the per-component READMEs cover each edge individually.
 
+### What a plain install brings
+
+The same line runs through the dependencies. `pip install duly` is the document→receipt path and nothing else: **two packages, duly and PyYAML** — a rule pack is YAML, so the kernel needs a parser, and that is the whole list. Every surface built *on* that path is an extra:
+
+| Install | Adds | For |
+|---|---|---|
+| `duly` | — | adjudicating documents: the kernel, the store, the fact contract, conformance, DMN compilation |
+| `duly[demo]` | fastapi, uvicorn | both HTTP surfaces — the demonstration workspace (`duly_demo`) and the review queue's API (`duly_review.api`). The queue itself needs neither |
+| `duly[report]` | reportlab | the PDF audit report (`duly_kernel.report.render_report_pdf`), imported lazily inside the render call |
+| `duly[prove]` | z3-solver | static pack verification (`duly_assurance prove`) and backward queries (`duly_whatif`) |
+| `duly[extraction]` | docling | the live extraction adapter; without it, extraction falls back to the scripted stub |
+
+Two things keep that honest rather than aspirational. [`examples/minimal-integration/check_wheel.sh`](examples/minimal-integration/check_wheel.sh) installs a built wheel into a clean virtualenv and **fails if a third package appears**, then runs the example with duly's source tree off `sys.path`. And the OR-Tools scheduler example declares its own solver in [its own script metadata](examples/closing-scheduler/schedule.py) rather than in an extra here — an example's dependency belongs to the example, and leaves when the example does.
+
+Working *on* this repo is the other case, and it is why `uv sync` needs no extra: fastapi, uvicorn and reportlab are also in the dev group, so every suite runs on the one command. The extras gate the wheel consumer; the dev group gates the repository.
+
 ## Design choices and why
 
 ### Why neuro-symbolic at all
@@ -214,10 +230,15 @@ Specifications that develop ahead of running code rarely get adopted. The contra
 The milestone that validates the architecture end to end now runs. Seven scenarios ship with the repo, grouped by domain in the picker. Insurance: a New York homeowners nonrenewal notice and a review-arc variant whose extracted mailing date lands below the rule pack's confidence floor. Mortgage closing: a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure, remote-online-notarization eligibility under real state authorization statutes (adjudicate the same California closing today and in 2030 — the outcome flips on SB 696's operative date), eSign/eNote signing-method routing for a closing package, a TILA right-of-rescission funding hold that clears only after the third *precise* business day (Saturdays count; Sundays and federal holidays do not — the 2026 Memorial Day window is the demo case), and a county recording-readiness check with its own below-floor extraction feeding the review arc:
 
 ```bash
-uv sync                     # core install — extraction falls back to the scripted stub
+uv sync                     # working on the repo — extraction falls back to the scripted stub
 uv sync --extra extraction  # optional: live Docling extraction in the demo (large install)
 uv run uvicorn duly_demo.app:app --port 8788
 ```
+
+`uv sync` serves the demo without an extra because the repo's dev group carries
+FastAPI. Installing the *wheel* is the other case: `pip install duly` is the
+kernel and PyYAML alone, and the demo asks for `pip install 'duly[demo]'` —
+see [what the extras are](#what-a-plain-install-brings).
 
 Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
 
@@ -315,6 +336,7 @@ Shipped so far in M5. What each turned out to mean is in the [changelog](CHANGEL
 - [x] **One canonical form** ([`duly_core`](core/duly_core/), [vectors](spec/canonical-vectors.json)) — content addressing and the JSON Schemas in one place that ships, with committed test vectors any implementation in any language must reproduce.
 - [x] **Compatibility policy** ([spec/compatibility.md](spec/compatibility.md)) — what v1.0 promises per contract and what it deliberately does not cover, plus the two claims that needed code: replay refuses semantics it does not implement, and `decision_digest()` says when two receipts record the same adjudication.
 - [x] **Contract closeout** — the fact, receipt and IR contracts are frozen, with all three of the questions that had to be answered first decided in the compatibility policy: quantified bindings deferred past v1.0, the run envelope reserving no signature affordance, and a `low_confidence` review resolution now required to supersede the fact it rules on.
+- [x] **The install is the seam** ([what a plain install brings](#what-a-plain-install-brings)) — `pip install duly` went from 18 packages to two, with every surface behind an extra and the floor asserted by a build check rather than documented.
 
 **v1.0 exit:** a maintainer working from the published packages on a clean machine, with no repository checkout, can integrate a new document and extractor, author a pack, and reproduce a receipt — from the written guides alone. That proves nothing required insider knowledge. That an adopter finds it usable is [v1.1](#v11--durable-deployment-and-extraction-evaluation)'s to report.
 
@@ -393,7 +415,7 @@ uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml       
 uv sync --extra prove      && uv run pytest assurance/tests -q -m z3            # verifier encoding is sound
 uv sync --extra prove      && uv run pytest whatif/tests    -q -m z3            # what-if survives kernel verification
 uv sync --extra prove      && uv run pytest duly_demo/tests      -q -m z3            # the rule studio's equivalence panel
-uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
+uv run --with ortools      pytest examples/closing-scheduler -q -m ortools      # the closing scheduler example
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```
 

@@ -122,7 +122,12 @@ Open an issue before writing code if your change would:
   ([spec/compatibility.md](spec/compatibility.md));
 - change what the kernel *means* by an existing pack (a semantics change, which
   rewrites every committed receipt);
-- add a required dependency to the kernel path;
+- add a required dependency to the kernel path — `[project] dependencies` is
+  `pyyaml` and nothing else, and a build check fails if a bare `pip install duly`
+  brings a third package. A dependency only a *surface* needs goes in an extra
+  (`demo`, `report`, `prove`, `extraction`); one only this repository needs goes
+  in `[dependency-groups].dev`, which the wheel never sees; one only an *example*
+  needs is declared inside the example, so it leaves when the example does;
 - edit a committed ontology version file, which is immutable by design.
 
 ## Security

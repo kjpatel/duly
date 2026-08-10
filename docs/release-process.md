@@ -90,12 +90,24 @@ load-bearing, not an omission.
 | A pack's citations, or a rule's own `version` | patch | — | — | `pack.version` **clarifying** component; `impact` must show zero flips |
 | A pack's `phrasing:` / `question` | patch | — | — | nothing hashed moves, so no `pack.version` component moves |
 | Added an ontology term | patch | — | — | new ontology version file; facts re-pin; **fact hashes change ⇒ corpus churn** |
-| New optional dependency + extra | minor | — | — | pytest marker, optional-deps workflow |
+| New optional dependency + extra | minor | — | — | heavy dep ⇒ pytest marker + optional-deps workflow; light dep ⇒ `[dependency-groups].dev` so one `uv sync` still serves the repo |
+| Moved a dependency from `[project]` into an extra | **major** | — | — | an install that used to import stops importing; see below |
 | Receipt, fact, or IR **schema** | major | — | see §4 | breaking — §5 |
 | A new public Python API | minor | yes if in kernel | — | — |
 | Removed or renamed a public API | major | yes if in kernel | — | — |
 
-Two rows deserve emphasis because they are counterintuitive:
+Three rows deserve emphasis because they are counterintuitive:
+
+**Narrowing the default install is a breaking change.** Moving `fastapi`,
+`uvicorn` and `reportlab` out of `[project] dependencies` in M5 was free only
+because nothing had been published: a consumer pinned to `duly` who imported
+`duly_demo` or rendered a PDF would have had that stop working on upgrade,
+with no code of theirs changing and no API removed. Adding an extra is minor;
+*subtracting* from what a plain install brings is major, and the release note
+has to name the extra that restores it. The same logic is why a light
+dependency the repository needs goes in `[dependency-groups].dev` rather than
+in `[project]`: the dev group is invisible to the wheel, so it can move
+without a version implication at all.
 
 **A kernel bugfix is usually a semantics change.** If the evaluator was wrong
 and you corrected it, decisions move — that is the point of the fix — and the
@@ -247,7 +259,7 @@ not rely on a path filter having triggered:
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml
 uv sync --extra prove && uv run pytest assurance/tests whatif/tests duly_demo/tests -q -m z3
-uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
+uv run --with ortools pytest examples/closing-scheduler -q -m ortools
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling
 ```
 

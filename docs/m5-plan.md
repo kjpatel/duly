@@ -63,6 +63,13 @@ lesson is that it is not the kind of claim this plan can make in advance:
 it.** Assume the next conversion is blocked on something, and find out by
 measuring.*
 
+**Execution model from 2026-08-06 (Kushan):** the remainder of M5 runs as an
+orchestrated pipeline — a master session sequencing one PR at a time with
+subagents doing scoped work inside each. Merge authority is **hybrid**: the
+master merges a PR once CI is green, except three that pause for Kushan's
+review before merge — the `examples/` move, the `1.0.0` version/tag PR, and
+the close-out that deletes this file.
+
 Remaining, in order: the evidence browser and review arc (part 4b(ii)c-2, 21 of
 the 28 demo failures left under deletion), then kernel report + whatif + dmn +
 extraction (part 5), then the move, then the deletion gate — which the part-3
@@ -747,11 +754,12 @@ proves it.
       §3: distribution only — kernel stays `0.0.1` per D5, and
       `test_engine_identity.py` enforces the receipt side). Console entry
       points for the CLIs currently reachable only as `python -m …`
-      (**ASK**: which ones; recommend `duly-verify`, `duly-impact`,
-      `duly-conformance`, `duly-dmn`, `duly-whatif`). Decide the
-      `scheduling` extra (**ASK**: its only consumer is the deletable
-      closing-scheduler example — move the dependency declaration into the
-      example, or keep the extra as a courtesy).
+      (**ASK — answered. DECIDED (Kushan, 2026-08-06): the recommended five**,
+      `duly-verify`, `duly-impact`, `duly-conformance`, `duly-dmn`,
+      `duly-whatif`). The `scheduling` extra (**ASK — answered. DECIDED
+      (Kushan, 2026-08-06): move the dependency declaration into the
+      closing-scheduler example** — the extra's only consumer is deletable
+      content, so the declaration lives with it and deletes with it).
 - [ ] **The smoke gate.** CI: build the wheel, install into a clean venv,
       run the Phase 0 example against it. (May already exist from Phase 0 —
       then just assert it still covers the final layout.)

@@ -308,7 +308,7 @@ Blocked the v1.0 contracts:
   fragment, and C3 makes deferral safe — they arrive as a new semantics version
   whose kernel also implements this one. Still open as a *design* question for
   whichever adopter's domain first has genuinely repeating structure.
-- What capacity envelope should the reference interpreter publish?
+- ~~What capacity envelope should the reference interpreter publish?~~ Answered at M5 close: [docs/capacity-envelope.md](capacity-envelope.md) — ~3,100 adjudications/s/core with the pack held in memory, parse as the 30× lever, additive rule×fact scaling, and five named workload shapes where the reference interpreter stops being the right tool.
   (Measurement, not optimization — an adopter sizing a workload needs a number
   before a deployment exists to produce one)
 

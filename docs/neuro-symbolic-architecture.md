@@ -234,6 +234,15 @@ document model can replace the proposal mechanism while preserving the same
 rendition, fact, span, and envelope contracts. duly is the extraction boundary,
 not the extraction model.
 
+That boundary runs *inside* an adapter as well as around it, which is the
+practical form of the same claim. Conversion (bytes to rendition text) and
+proposal (rendition plus targets to facts) are separable stages, and the
+rendition between them is already an immutable, content-addressed artifact —
+so a recorded rendition is a complete recording of the neural stage, and an
+adapter that calls a paid remote service can be tested offline, byte for byte,
+by supplying one. That is what the scripted stub is, and it is why duly ships
+no recording harness ([extraction/README.md](../extraction/README.md)).
+
 ### 2. Extraction produces proposed grounded facts
 
 A [`GroundedFact`](../spec/grounded-facts.md) is one
@@ -883,7 +892,7 @@ until a workload supplies acceptance criteria.
 | Natural-language-to-formal-query interface | Possible extension; not current behavior |
 | RDF or property-graph decision core | Not implemented |
 | Joint neural-symbolic training or differentiable logic | Out of scope for the current architecture |
-| Datalog/Soufflé or ASP execution backend | Roadmap option after equivalence semantics and a real workload |
+| Datalog/Soufflé or ASP execution backend | Roadmap option (M8+). Its gate has two halves: equivalence semantics are **closed** (cross-backend agreement is digest equality, compatibility C4) and the demonstrated workload is **open** — the [capacity envelope](capacity-envelope.md) is where such a workload would have appeared, and at ~3,100 adjudications/s/core it has not |
 | Optimizer plans, symbolic layer decides admissibility | Implemented as a worked example ([examples/closing-scheduler](../examples/closing-scheduler/README.md)): every hard constraint given to CP-SAT is a table of adjudications, the scheduler holds no copy of any rule, and each planned date cites the receipt ids that constrained it. It plans and explains; it still does not execute |
 | Agent plans, symbolic layer executes actions | Possible integration pattern; duly itself does not execute consequential actions |
 
@@ -1088,7 +1097,10 @@ requirement without weakening replay.
 - [Rule-pack authoring guide](../examples/rulepacks/README.md) is the starting point for
   changing decision content.
 - [`extraction/duly_extraction`](../extraction/duly_extraction) contains the
-  adapter and run-envelope boundary.
+  adapter and run-envelope boundary; its
+  [README](../extraction/README.md) is the starting point for adding an
+  extractor, the way the authoring guide above is for changing decision
+  content.
 - [`store/duly_store`](../store/duly_store) contains append-only bitemporal
   storage; [`duly_demo/evidence_api.py`](../duly_demo/evidence_api.py) reads that log
   back at an arbitrary horizon, which is the shortest way to see what the two

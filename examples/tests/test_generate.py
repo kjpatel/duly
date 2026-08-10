@@ -26,14 +26,29 @@ import datetime as dt
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 
-from exampletest_helpers import GOLDEN, GOLDEN_CASES, REPO_ROOT, RULEPACKS
+from exampletest_helpers import EXAMPLES, GOLDEN, GOLDEN_CASES, REPO_ROOT, RULEPACKS
 
 from duly_assurance import generate
+from duly_assurance.corpus import PackNotFound, resolve_pack_path
 from duly_kernel.api import adjudicate
 from duly_core import schema_path
+
+#: The `pack:` every committed case carries, per template name. Content-root
+#: relative — see `test_generated_cases_carry_the_committed_pack_ref_form`.
+COMMITTED_PACK_REFS = {
+    "ny": "rulepacks/termination-notice-us-states/pack.yaml",
+    "fl": "rulepacks/termination-notice-us-states/pack.yaml",
+    "ca": "rulepacks/termination-notice-us-states/pack.yaml",
+    "trid": "rulepacks/trid-fee-tolerance-us-federal/pack.yaml",
+    "ron": "rulepacks/notarization-ron-us-states/pack.yaml",
+    "esign": "rulepacks/esign-closing-package/pack.yaml",
+    "resc": "rulepacks/tila-rescission-us-federal/pack.yaml",
+    "rec": "rulepacks/county-recording-us/pack.yaml",
+}
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -92,8 +107,45 @@ def test_case_ids_allocation_and_layout(tmp_path):
     for case_id in ids:
         case = yaml.safe_load((out / "cases" / case_id / "case.yaml").read_text())
         assert case["id"] == case_id
-        assert (REPO_ROOT / case["pack"]).is_file()
+        # Content-root relative, the one written form — the same string the
+        # committed corpus carries, resolving beside the corpus rather than
+        # against a repository root a deployed corpus does not have.
+        assert (EXAMPLES / case["pack"]).is_file()
         assert list((out / "cases" / case_id / "facts").glob("*.json"))
+
+
+def test_generated_cases_carry_the_committed_pack_ref_form(tmp_path, monkeypatch):
+    """A generated `pack:` is the *written* ref, not the path the generator
+    read the pack at, and the two are in different coordinate systems.
+
+    The load path is relative to the working directory, because `--out` is
+    routinely a scratch directory (every regeneration check is one) and an
+    output location cannot find an input. The written ref is relative to the
+    *content root*, so a committed case resolves beside its own corpus with no
+    working directory in play. Both resolve in a checkout, which is why the
+    generator emitting the load path went unnoticed: it cost nothing until
+    someone regenerated, and then it rewrote all 350 `pack:` lines.
+    """
+    for name, expected in COMMITTED_PACK_REFS.items():
+        out = tmp_path / name
+        # Generating into a scratch directory outside the content root: the
+        # pack must still LOAD, or this returns non-zero.
+        assert generate.main(
+            ["--out", str(out), "--count", "1", "--seed", "5", "--templates", name]
+        ) == 0
+        (case_dir,) = list((out / "cases").iterdir())
+        case = yaml.safe_load((case_dir / "case.yaml").read_text())
+        assert case["pack"] == expected, name
+        assert not case["pack"].startswith("examples/"), name
+        # It resolves beside a corpus in the content root...
+        assert resolve_pack_path(case["pack"], EXAMPLES / "golden").is_file()
+
+    # ...and nowhere else. With the working directory moved off the repository,
+    # a ref that was quietly cwd-relative would stop resolving here — which is
+    # the whole reason the committed corpus carries this form.
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(PackNotFound):
+        resolve_pack_path(COMMITTED_PACK_REFS["ny"], tmp_path / "ny" / "cases")
 
 
 def test_generated_facts_validate_against_schema(tmp_path):
@@ -222,14 +274,12 @@ def test_committed_corpus_covers_all_six_packs():
         questions.add(case["question"])
     for prefix in ("ron", "esign", "resc", "rec"):
         assert by_prefix.get(prefix) == 25, f"{prefix}: {by_prefix.get(prefix)} cases"
-    assert packs == {
-        "rulepacks/termination-notice-us-states/pack.yaml",
-        "rulepacks/trid-fee-tolerance-us-federal/pack.yaml",
-        "rulepacks/notarization-ron-us-states/pack.yaml",
-        "rulepacks/esign-closing-package/pack.yaml",
-        "rulepacks/tila-rescission-us-federal/pack.yaml",
-        "rulepacks/county-recording-us/pack.yaml",
-    }
+    # The same constant the generator's output is pinned against, so the two
+    # tests cannot drift into pinning opposite forms — which is exactly what
+    # they were doing while `resolve_pack_path` accepted both and kept the
+    # disagreement green.
+    assert packs == set(COMMITTED_PACK_REFS.values())
+    assert len(packs) == 6
     # Strata pick among each pack's declared decisions, so every decision
     # attribute the four packs declare appears as a corpus question.
     assert {

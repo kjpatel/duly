@@ -84,14 +84,16 @@ jobs:
       - name: Rule studio's solver-backed panel
         run: uv run pytest duly_demo/tests -q -m z3
 
-      # Deliberately NOT a gate on rule-pack PRs, which is why `examples/rulepacks/**`
-      # is absent from the paths filter above. `validate_pack` already refuses
-      # any pack with an unproven same-priority overlap and no `overrides`, so
-      # a pack that loads cannot make this command fail. It can only fail if Z3
-      # refutes a proof `_equality_guards` accepted — a kernel soundness bug.
-      # That makes it a differential check between two proof systems, worth
-      # running whenever the validator changes (kernel/ is in paths) and on
-      # every merge to main, but pointless as a per-pack-PR checkbox.
+      # Not a *gate* on a rule pack, though a pack PR does run it: the packs
+      # live under `examples/` since the M5 move, so `examples/**` above matches
+      # them, where the root-level `rulepacks/**` it replaced did not. The
+      # distinction still matters for reading a red X here. `validate_pack`
+      # already refuses any pack with an unproven same-priority overlap and no
+      # `overrides`, so a pack that loads cannot make this command fail on its
+      # own account. It can only fail if Z3 refutes a proof `_equality_guards`
+      # accepted — a kernel soundness bug. That makes it a differential check
+      # between two proof systems, which a newly authored pack is new input to,
+      # and which is why running it costs a pack PR seconds worth paying.
       # `--ontologies` is explicit because the flag has no path default: it
       # used to resolve to duly's own `ontologies/` relative to the working
       # directory, which is right here and wrong for every adopter (M5 plan,
@@ -127,13 +129,14 @@ jobs:
       - name: The example is the demo; run it
         run: uv run examples/closing-scheduler/schedule.py
 
-      # NOTE for whoever edits a rule pack: `examples/rulepacks/**` is deliberately
-      # absent from this workflow's paths filter (see the comment on the z3
-      # job), so a pack change that moves the committed plan in
-      # `test_scheduler.py::test_the_plan_is_the_committed_demo_output` will
-      # surface on the merge to main rather than on the pack PR. That is the
-      # same trade the rest of this workflow makes; the fix is a one-line date
-      # update in that test, made in the same spirit as a golden regeneration.
+      # NOTE for whoever edits a rule pack: this job DOES run on your PR — the
+      # packs are under `examples/`, which the paths filter matches (see the
+      # comment on the z3 job; it did not, back when they sat at the repository
+      # root). So a pack change that moves the committed plan in
+      # `test_scheduler.py::test_the_plan_is_the_committed_demo_output` fails
+      # here rather than on the merge to main. The fix is a one-line date update
+      # in that test, made in the same spirit as a golden regeneration, and it
+      # belongs in the pack's own commit.
 
   docling:
     name: live Docling adapter

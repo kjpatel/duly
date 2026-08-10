@@ -72,12 +72,54 @@ from duly_core import content_hash as _content_hash, load_schema
 GENERATOR_NAME = "duly-golden-generator"
 GENERATOR_VERSION = "0.1.0"
 
+# --- two coordinate systems, and never the same string -----------------------
+#
+# A pack path appears twice in a generation run, meaning two different things,
+# and conflating them silently rewrites every case in the corpus:
+#
+# *The LOAD path* — the `pack` on each template below — says where THIS
+# generator reads the pack from while it runs, and it is relative to the
+# working directory (the repository root, where the example content sits under
+# `examples/`). It has to be: `--out` may be a scratch directory anywhere on
+# the disk, so the output location cannot locate the input.
+#
+# *The WRITTEN ref* — the `pack:` line in a generated case.yaml — says where
+# the pack sits relative to the CONTENT ROOT, the directory holding `golden/`
+# and `rulepacks/` as siblings. `corpus.resolve_pack_path` resolves it against
+# `golden_root.parent`, so a committed case finds its pack with no working
+# directory in play at all, and an adopter who copies the content elsewhere
+# still has a corpus that verifies. Portable, and therefore the form the
+# committed corpus carries.
+#
+# `written_pack_ref` is the one conversion between them. Nothing else may
+# write `template["pack"]` into a case file.
+
+#: Where this repository keeps the content root the built-in templates name.
+#: Example content, like the six templates themselves: an adopter's templates
+#: name their own packs, already in their own content root's coordinates, and
+#: are written through unchanged.
+EXAMPLE_CONTENT_ROOT = "examples"
+
 NOTICE_PACK = "examples/rulepacks/termination-notice-us-states/pack.yaml"
 TRID_PACK = "examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
 RON_PACK = "examples/rulepacks/notarization-ron-us-states/pack.yaml"
 ESIGN_PACK = "examples/rulepacks/esign-closing-package/pack.yaml"
 RESC_PACK = "examples/rulepacks/tila-rescission-us-federal/pack.yaml"
 RECORDING_PACK = "examples/rulepacks/county-recording-us/pack.yaml"
+
+
+def written_pack_ref(load_ref: str) -> str:
+    """The `pack:` a generated case.yaml carries, from the path it was read at.
+
+    A load path under this repository's example content root is rewritten into
+    the content root's own coordinates; anything else is already expressed in
+    them and is written as given. See the note above: getting this wrong is
+    invisible in a checkout, where both forms resolve, and shows up as 350
+    rewritten `pack:` lines the next time anyone regenerates.
+    """
+    prefix = f"{EXAMPLE_CONTENT_ROOT}/"
+    return load_ref[len(prefix):] if load_ref.startswith(prefix) else load_ref
+
 
 # Synthetic policy expiration dates span this window (2025-2026) so that
 # mailed dates (= asOf.effective) land on both sides of the pack's
@@ -1324,7 +1366,7 @@ def _write_case(out: Path, case_id: str, template: dict, question: str, eff: str
     (case_dir / "facts").mkdir(parents=True)
     case_yaml = (
         f"id: {case_id}\n"
-        f"pack: {template['pack']}\n"
+        f"pack: {written_pack_ref(template['pack'])}\n"
         f"question: {question}\n"
         f"asOfEffective: \"{eff}\"\n"
         f"asOfKnowledge: \"{kn}\"\n"
@@ -1389,6 +1431,9 @@ def main(argv: list[str] | None = None) -> int:
     packs: dict[str, dict] = {}
     for name in names:
         template = STATE_TEMPLATES[name]
+        # The LOAD path, resolved against the working directory: `--out` is
+        # routinely a scratch directory outside the content root, so the
+        # written ref cannot be used to find the pack. See `written_pack_ref`.
         pack_rel = template["pack"]
         if pack_rel not in packs:
             packs[pack_rel] = yaml.safe_load(

@@ -14,7 +14,7 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `spec/` | The contract *argued*: grounded-fact + receipt specs (decision/why/rejected format), committed examples, canonical-form vectors, `validate.py`. The schemas themselves live in `core/` because they ship |
 | `kernel/` | Reference interpreter: IR validation, evaluation, defeat semantics, receipt + audit-report emission |
 | `store/` | Append-only bitemporal fact store (SQLite, Postgres-portable) |
-| `extraction/` | Adapter protocol, Docling adapter, scripted stub, run envelopes (verify/ingest/revoke) |
+| `extraction/` | Adapter protocol, Docling adapter, scripted stub, run envelopes (verify/ingest/revoke) — [extraction/README.md](extraction/README.md) is the contributor-facing contract |
 | `calibration/` | Temperature/Platt/conformal math — deliberately unfitted; labels come from review |
 | `review/` | Review queue: abstention routing, human corrections, golden-case export, calibration pairs |
 | `assurance/` | Golden-corpus generator, replay verifier, rule-change impact analysis, static pack verifier (`prove`, optional z3) |
@@ -132,6 +132,7 @@ The pass is mechanical enough to run every time:
 - [CHANGELOG.md](CHANGELOG.md) — what each release turned out to mean; read it before assuming why something is the way it is
 - [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
 - [docs/concepts.md](docs/concepts.md) — the vocabulary this repo uses precisely; read it before assuming a term means what it usually means
+- [docs/capacity-envelope.md](docs/capacity-envelope.md) — what one adjudication costs, measured with machine and date, and the five workload shapes where the reference interpreter stops; `bench/capacity_bench.py` reproduces it and is the only stopwatch in the repository
 - [docs/follow-one-fact.md](docs/follow-one-fact.md) — one committed fact traced byte by byte from PDF text to receipt to human correction; the fastest way to see the actual shapes rather than their descriptions
 - [docs/faq.md](docs/faq.md) — the objections a skeptical reader raises first, answered in one place
 - [examples/rulepacks/README.md](examples/rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired
@@ -143,4 +144,5 @@ The pass is mechanical enough to run every time:
 - [examples/starters/README.md](examples/starters/README.md) — starter layout and shared tooling
 - [examples/golden/README.md](examples/golden/README.md) — corpus contract, case-id series, regeneration rules
 - [spec/grounded-facts.md](spec/grounded-facts.md) / [spec/rule-ir.md](spec/rule-ir.md) — the contract, with open questions at the bottom (check them before "fixing" something deliberate)
+- [extraction/README.md](extraction/README.md) — the adapter contract: the protocol's three artifacts, the five-property acceptance bar for a contributed adapter, how to test one that calls a live service without CI calling it, and what is deliberately not provided (no recording harness, no adapter registry)
 - [review/README.md](review/README.md), [calibration/README.md](calibration/README.md) — component contracts and their honest caveats

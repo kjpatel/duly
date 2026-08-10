@@ -6,7 +6,20 @@ Entries are written after the fact, from merged work.
 
 **Through M4, these versions were git tags marking milestones, not package releases** — `pyproject.toml` deliberately stayed at `0.0.1` because nothing was published, and a tag said "this milestone is done and here is what it meant" without claiming the contract was stable. **From v1.0.0 a tag is both**: the distribution version and the tag agree, and the milestone/stability distinction is carried by [spec/compatibility.md](spec/compatibility.md) instead of by the absence of a package.
 
-## v1.1.0 — the adopter's wave
+## v1.1.1 — both edges walkable, and the envelope measured
+
+### Added
+
+- **Both contribution paths are walkable** — the roadmap's "only one of them has a path" is closed. [examples/rulepacks/README.md](examples/rulepacks/README.md) gained "Contributing it back" (what a pack PR triggers, what each check cannot see, what nobody wires for you); [extraction/README.md](extraction/README.md) is the adapter edge's new component contract, whose central observation makes recording harnesses unnecessary: conversion and proposal are separable stages with a content-addressed artifact between them, so *the rendition is the recording* and `StubAdapter` is the replay adapter that already exists.
+- **[The capacity envelope](docs/capacity-envelope.md)** — ~3,100 adjudications/s/core with the pack in memory (p50 0.32 ms); parse is the 30× lever; scaling additive in rules and facts; five named shapes where the reference interpreter is the wrong tool. One curve published rather than tuned: `validate_pack` is quadratic in rules-per-attribute, cause located. `bench/capacity_bench.py` is the only stopwatch in the repository, by design.
+
+### Fixed
+
+- The corpus generator now writes the committed corpus's content-root-relative pack refs while loading via the working directory — a regeneration is byte-inert again (proven over a corpus copy, 351/351 including `review-0001`), where it would have rewritten 350 `pack:` lines.
+- Starter generators merge into `scenario.json` instead of overwriting it: hand-maintained keys (`domain`, `demoExtractor`, `reviewArc`) survive a re-run, enforced by a new generator-drift suite. The same fix caught the reverse drift — one generator's literal was resurrecting fact files deleted from the manifest and the disk.
+- Three docs pointed the LinkML lane at its pre-move path — a command that collected zero tests and exited 0; and the optional-deps comments still claimed the packs were outside a paths filter the move had put them inside.
+
+## v1.1.0 — the adopter's wave## v1.1.0 — the adopter's wave
 
 What shipping the adopter's guide cost and taught. The guide was written by executing every command against an installed wheel, then executed *again* by an agent with no context and an invented domain — and the three defects that run surfaced were all in seams the guide's claims never covered.
 

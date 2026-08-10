@@ -29,7 +29,7 @@ same way (marker-gated, skipped when the tooling is absent — the docling
 pattern):
 
 ```bash
-uv run --with linkml --with pyshacl pytest conformance/tests -m linkml
+uv run --with linkml --with pyshacl pytest examples/tests -q -m linkml
 ```
 
 This matters more than it looks. The hot-path gate deliberately does not import
@@ -37,13 +37,68 @@ linkml-runtime, so it would keep passing on a file that had stopped being valid
 LinkML. This suite is the only thing standing between "duly's validator accepts
 it" and "it is what we say it is".
 
+The suite is [`examples/tests/test_real_linkml.py`](../tests/test_real_linkml.py),
+and it lives there because its subject is *these two artifacts* — it dies with
+them. That line used to read `pytest conformance/tests -m linkml`, which after
+the move collected **zero tests and exited 0**: the loudest-looking check in
+this file, saying nothing, in the exact shape CLAUDE.md warns about. Run a
+marker-gated suite once and read the collected count, not the exit code.
+
 ## Useful commands
+
+Run from this directory (`examples/ontologies/`) — `--ontologies .` is the
+registry root, and the check paths are relative to it:
 
 ```bash
 uv run python -m duly_conformance --ontologies . list                    # registry contents
 uv run python -m duly_conformance --ontologies . check ../starters ../golden/cases ../rulepacks ../../spec/examples
 uv run python ../../spec/conformance_gate_demo.py                        # the gate, loudly
 ```
+
+The same sweep from the repository root, which is the form CI and the
+pack-authoring guide use:
+
+```bash
+uv run python -m duly_conformance --ontologies examples/ontologies \
+    check examples/starters examples/golden/cases examples/rulepacks spec/examples
+```
+
+`--ontologies` has no default and will not acquire one: a registry path that is
+right in this repository is wrong for every adopter, and the default that used
+to supply duly's own directory hid an entire class of unencodable-pack
+diagnostics behind it (CLAUDE.md, "a path relative to a *package* resolves
+everywhere"). `DULY_ONTOLOGIES` works too.
+
+## Adding terms for a new rule pack
+
+Step 2 of [authoring a pack](../rulepacks/README.md#before-you-open-it-in-this-order),
+and the one that fails in a suite pack authors do not expect to touch.
+
+1. **Never edit a committed version file.** `schemaRef` is inside every fact's
+   content hash, so an in-place edit silently breaks the relationship between
+   the facts already committed and the vocabulary they claim to speak. New
+   terms go in a new `<name>/<version>.yaml`, and the facts that need them pin
+   the new version.
+2. **A new domain gets a new directory; an existing domain gets a new version
+   of its own artifact.** `duly-mortgage-closing` carries five prefixes
+   (`trid:`, `ron:`, `pkg:`, `resc:`, `rec:`) on purpose — one artifact spanning
+   a domain, the way MISMO's model does. Splitting per pack would multiply
+   `schemaRef`s across facts that describe the same closing.
+3. **Declare everything the pack or its targets name** — entity types,
+   attributes, and every code value, including the ones only a rule's guard
+   mentions. [`examples/tests/test_example_conformance.py`](../tests/test_example_conformance.py)
+   sweeps every committed fact and fails loudly; a code value that only appears
+   in a `when` clause fails less loudly, as a rule that never binds.
+4. **Crosswalk annotations are verify-or-omit.** A MISMO data-point name goes in
+   `annotations.mismo` only if you checked it against a public source; a FIBO
+   `close_mappings` IRI only if you fetched it. Sparse and real over complete
+   and invented — the deliberately-unmapped list above is what that discipline
+   looks like written down, and adding to it is a contribution.
+5. **Renaming an ontology is corpus churn, forever.** The name sits in every
+   fact's hashed bytes, so a rename rewrites fact hashes, receipt `inputFacts`,
+   and every affected golden receipt. `duly-starter-notice` keeps its awkward
+   name for exactly this reason: the preserved-forever
+   `examples/golden/cases/review-0001` pins it.
 
 ## The standards crosswalk (and why the standards are not vendored)
 

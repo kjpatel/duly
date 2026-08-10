@@ -7,7 +7,7 @@ drawn from a single list of source lines and the rendition .txt is the same
 lines joined with newlines, so the rendition genuinely corresponds to the PDF
 text; PDFs are generated with invariant=1 so regeneration is byte-stable.
 
-Also (re)writes starters/esign-package/scenario.json with the actual SHA-256
+Also merges starters/esign-package/scenario.json (write_manifest) with the SHA-256
 of the generated PDF bytes.
 
 Usage (from the repo root):
@@ -16,7 +16,6 @@ Usage (from the repo root):
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -24,7 +23,7 @@ SCENARIO_DIR = Path(__file__).resolve().parent
 STARTERS = SCENARIO_DIR.parent
 sys.path.insert(0, str(STARTERS / "tools"))
 
-from make_documents import build_document  # noqa: E402  (shared helpers)
+from make_documents import build_document, write_manifest  # noqa: E402  (shared helpers)
 
 SCENARIO = "esign-package"
 CASE_ID = "case:closing-package:CP-2026-0847"
@@ -123,9 +122,7 @@ def main() -> None:
         "rulePack": "rulepacks/esign-closing-package/pack.yaml",
     }
 
-    path = SCENARIO_DIR / "scenario.json"
-    path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {path.relative_to(STARTERS.parent)}")
+    write_manifest(SCENARIO_DIR / "scenario.json", manifest)
 
 
 if __name__ == "__main__":

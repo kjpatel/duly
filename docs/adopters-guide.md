@@ -254,7 +254,11 @@ duly does not know where you keep them. `DULY_ONTOLOGIES` works too.
 
 Read [examples/rulepacks/README.md](../examples/rulepacks/README.md) before
 authoring in anger — it is the pack-authoring contract and this section does
-not replace it. What follows is the smallest pack that exercises the three
+not replace it. If your pack is one another duly user could use — a
+jurisdiction, a program, a published standard — that README's **"Contributing
+it back"** section is the upstreaming path: the checks your PR triggers, the
+ordered pre-PR checklist, and the list of what maintainers will not wire for
+you. What follows is the smallest pack that exercises the three
 things you will actually need: a default, an exception that defeats it, an
 exception that defeats *that*, and a policy constant.
 

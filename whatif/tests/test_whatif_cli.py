@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 
 import pytest
 
-from whatiftest_helpers import REPO_ROOT, needs_z3  # noqa: E402
+from whatiftest_helpers import FIXTURE_CASES, REPO_ROOT, needs_z3  # noqa: E402
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
@@ -152,6 +153,83 @@ def test_a_pack_needing_a_registry_says_which_attribute_and_why():
     assert "UNSUPPORTED" in result.stderr
     assert "fx:score" in result.stderr
     assert "--ontologies" in result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Reading a case: the asOf point, in either form the toolchain writes
+# ---------------------------------------------------------------------------
+#
+# The unit is in `test_whatif.py`; these two run the whole CLI over a case file
+# carrying each form, because the defect was end-to-end — `duly-whatif` against
+# a committed, review-exported golden case, tracebacking on the timestamp that
+# case.yaml legally carries.
+#
+# The case is built here rather than added to `fixtures/`: a fixture case's
+# `asOfEffective` is inside no hash, but the corpus is a committed dependency
+# of several suites, and one more case in it to exercise a string form is a
+# corpus change to make a test convenient. Copying the facts and writing the
+# case.yaml inline costs four lines and leaves both forms visible in the test.
+
+CASE_YAML = (
+    "id: fx-0001\n"
+    "pack: fixtures/pack.yaml\n"
+    "question: fx:permitted\n"
+    'asOfEffective: "{effective}"\n'
+    'asOfKnowledge: "2026-03-02T12:00:00Z"\n'
+)
+
+
+def _case_with_effective(tmp_path, effective: str):
+    """A copy of fx-0001 whose `asOfEffective` reads `effective`."""
+    case_dir = tmp_path / "cases" / "fx-0001"
+    shutil.copytree(FIXTURE_CASES / "fx-0001" / "facts", case_dir / "facts")
+    (case_dir / "case.yaml").write_text(CASE_YAML.format(effective=effective))
+    return case_dir
+
+
+@needs_z3
+@pytest.mark.z3
+def test_a_case_whose_as_of_is_a_timestamp_answers_like_the_bare_date(tmp_path):
+    """`2026-06-01` and `2026-06-01T00:00:00Z` are one evaluation point.
+
+    The kernel has always read them that way (`normalize_point`), and both
+    forms are committed in `golden/`: the generator writes the first, the
+    review exporter writes the second because it copies the receipt's
+    `asOf.effective`, which the receipt schema types `date-time`. Only the
+    echoed point differs between the two reports; every answer is identical.
+    """
+    reports = [
+        json.loads(
+            run_cli(
+                "--ontologies", "fixtures/ontology",
+                "--case", str(_case_with_effective(tmp_path / form, effective)),
+                "--free", "fx:score", "--target", "true", "--json", expect=0,
+            ).stdout
+        )
+        for form, effective in (
+            ("bare", "2026-06-01"), ("stamped", "2026-06-01T00:00:00Z")
+        )
+    ]
+
+    assert reports[0].pop("asOfEffective") == "2026-06-01"
+    assert reports[1].pop("asOfEffective") == "2026-06-01T00:00:00Z"
+    assert reports[0] == reports[1]
+    assert reports[0]["extremal"]["value"] == "50"
+
+
+@needs_z3
+@pytest.mark.z3
+def test_a_case_whose_as_of_is_not_a_date_is_refused_naming_field_and_file(tmp_path):
+    """A genuinely bad point is a diagnostic, like `--ontologies no/such/place`
+    — not the traceback the legal timestamp used to get."""
+    case_dir = _case_with_effective(tmp_path, "yesterday")
+    result = run_cli(
+        "--ontologies", "fixtures/ontology", "--case", str(case_dir),
+        "--free", "fx:score", "--target", "true", expect=2,
+    )
+    assert "asOfEffective" in result.stderr
+    assert str(case_dir / "case.yaml") in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 # ---------------------------------------------------------------------------

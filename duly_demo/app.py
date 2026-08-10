@@ -207,18 +207,6 @@ def _date_prefix(iso: str | None) -> str | None:
     return iso[:10] if iso else None
 
 
-def _short_attr(curie: str) -> str:
-    """Strip the CURIE prefix for human-facing copy (mirrors app.js shortAttr)."""
-    return curie.split(":", 1)[1] if ":" in curie else curie
-
-
-def _fmt_score(value: Any) -> str:
-    try:
-        return f"{float(value):g}"
-    except (TypeError, ValueError):
-        return str(value)
-
-
 # ---------------------------------------------------------------------------
 # Store-backed runtime: extraction pipeline -> verified envelopes -> FactStore
 # ---------------------------------------------------------------------------
@@ -887,31 +875,6 @@ def _run_kernel(
     return (receipt, None) if isinstance(receipt, dict) else (None, None)
 
 
-def _find_derived_value(node: Any, attribute_suffix: str) -> dict[str, Any] | None:
-    """Depth-first search of a derivation tree for a conclusion on an attribute."""
-    if not isinstance(node, dict):
-        return None
-    conclusion = node.get("conclusion")
-    if isinstance(conclusion, dict):
-        attr = conclusion.get("attribute", "")
-        if attr == attribute_suffix or attr.endswith(":" + attribute_suffix):
-            return conclusion.get("value")
-    for premise in node.get("premises", []) or []:
-        found = _find_derived_value(premise, attribute_suffix)
-        if found is not None:
-            return found
-    return None
-
-
-def _fact_value(facts: list[dict[str, Any]], attribute_suffix: str) -> Any:
-    for fact in facts:
-        attr = fact.get("attribute", "")
-        if attr == attribute_suffix or attr.endswith(":" + attribute_suffix):
-            value = fact.get("value", {})
-            return value.get("value")
-    return None
-
-
 def _format_value(value: Any) -> str:
     if not isinstance(value, dict):
         return str(value)
@@ -923,248 +886,67 @@ def _format_value(value: Any) -> str:
     return str(value.get("value"))
 
 
-def _low_confidence_caveat(receipt: dict[str, Any]) -> str | None:
-    """A "Presumption only — …" detail when the verdict stands only because a
-    below-floor fact was excluded, else None. Shared by every decision whose
-    presumption can mask an unevaluated deficiency."""
-    low_confidence = [
-        a
-        for a in receipt.get("abstentions") or []
-        if isinstance(a, dict) and a.get("reason") == "low_confidence"
-    ]
-    if not low_confidence:
-        return None
-    parts = []
-    for entry in low_confidence:
-        attr = _short_attr(entry.get("attribute", ""))
-        confidence = entry.get("confidence") or {}
-        threshold = entry.get("threshold") or {}
-        if confidence.get("score") is not None and threshold.get("minConfidence") is not None:
-            parts.append(
-                f"{attr} excluded at confidence "
-                f"{_fmt_score(confidence['score'])}, below the "
-                f"{_fmt_score(threshold['minConfidence'])} floor"
-            )
-        else:
-            parts.append(f"{attr} excluded below the confidence floor")
-    return "Presumption only — " + "; ".join(parts)
-
-
 # --- Decision phrasing -----------------------------------------------------
 #
-# How a decision value is worded is *pack data*, not demo code. A decision in
+# How a decision value is worded is *pack data*, not demo code, and the
+# renderer of that data is *kernel* code: `duly_kernel.phrasing`. A decision in
 # a pack.yaml may carry a `phrasing:` block (spec/rule-ir.md, "Decision
-# phrasing"); what follows is only its renderer. Adding a rule pack never
-# means editing this file — the failure it used to cause (a new non-boolean
-# decision leaking a raw CURIE into the UI) is now a pack-authoring omission
-# with a pack-authoring fix.
+# phrasing"); the kernel validates it in `ir.py` and resolves it in
+# `phrasing.py`, and every surface that words a decision for a human — this
+# answer line, the audit report's headline verdict — calls that one function.
+# It used to live here, which made the demo the only thing that could read a
+# pack's own wording: the kernel's report renderer had a domain heuristic
+# instead ("if 'compliant' is in the attribute name…"), so the same decision
+# came out phrased two different ways depending on which surface you asked.
 #
-# Phrasing is presentation and stays presentation: it is read from the pack
-# the demo already has in hand, never written to a receipt, a fact, or
-# anything hashed.
-
-_PHRASING_TOKEN = re.compile(r"\{([^{}]+)\}")
-
-
-def _phrasing_scalar(raw: Any, fmt: str) -> str | None:
-    """Format an already-unwrapped scalar (a fact's `value.value`)."""
-    if fmt == "day":
-        return _date_prefix(str(raw)) or str(raw)
-    if fmt == "int":
-        try:
-            return str(int(float(raw)))
-        except (TypeError, ValueError):
-            return None
-    return str(raw)
+# Adding a rule pack still never means editing this file.
+#
+# Phrasing is presentation and stays presentation: it is read from the pack the
+# demo already has in hand, never written to a receipt, a fact, or anything
+# hashed.
 
 
-def _phrasing_value(value: Any, fmt: str) -> str | None:
-    """Format a fact-value mapping (`{kind, value}` / `{kind, amount, currency}`)."""
-    if not isinstance(value, dict):
-        return _phrasing_scalar(value, fmt)
-    if fmt == "day":
-        return _date_prefix(str(value.get("value") or "")) or _format_value(value)
-    if fmt == "int":
-        raw = value.get("value", value.get("amount"))
-        return _phrasing_scalar(raw, "int")
-    return _format_value(value)
+def _kernel_determination(
+    receipt: dict[str, Any], scenario: dict[str, Any]
+) -> dict[str, Any] | None:
+    """The kernel's phrasing verdict, or None when the kernel cannot say.
 
-
-def _phrasing_days_between(facts: list[dict[str, Any]], start: str, end: str) -> str | None:
-    a, b = _fact_value(facts, start), _fact_value(facts, end)
-    if a is None or b is None:
-        return None
+    Reached lazily like every other kernel call in this module, so the four
+    pages still come up when `duly_kernel` is not importable. The cost of that
+    degrade is named rather than hidden: a demo with no kernel is already in
+    fixture mode, and its answer line falls back to Yes/No below instead of the
+    pack's own wording. Nothing is invented; only less is said.
+    """
     try:
-        return str(
-            (date.fromisoformat(str(b)[:10]) - date.fromisoformat(str(a)[:10])).days
-        )
-    except ValueError:
+        from duly_kernel.phrasing import determination  # noqa: PLC0415
+    except Exception:
         return None
-
-
-def _phrasing_token(
-    token: str, receipt: dict[str, Any], scenario: dict[str, Any], value: dict[str, Any]
-) -> str | None:
-    """Resolve one `{token}`. None means *unresolvable*, which discards the
-    template alternative that used it — that is how a pack says "phrase it
-    this way when the inputs are there, that way when they are not"."""
-    spec, _, fmt = token.partition("|")
-    head, _, arg = spec.strip().partition(":")
-    fmt, arg = fmt.strip(), arg.strip()
-    facts = scenario.get("facts") or []
-    if head == "value":
-        return _phrasing_value(value, fmt)
-    if head == "money":
-        text = " ".join(
-            str(part) for part in (value.get("amount"), value.get("currency")) if part
-        )
-        return text or None
-    if head == "caveat":
-        return _low_confidence_caveat(receipt)
-    if head == "fact":
-        raw = _fact_value(facts, arg)
-        return None if raw is None else _phrasing_scalar(raw, fmt)
-    if head == "derived":
-        found = _find_derived_value(receipt.get("derivation"), arg)
-        return None if found is None else _phrasing_value(found, fmt)
-    if head == "daysBetween":
-        start, _, end = arg.partition(",")
-        return _phrasing_days_between(facts, start.strip(), end.strip())
-    return None
-
-
-def _phrasing_render(
-    template: Any,
-    receipt: dict[str, Any],
-    scenario: dict[str, Any],
-    value: dict[str, Any],
-) -> str | None:
-    if not isinstance(template, str):
-        return None
-    out: list[str] = []
-    pos = 0
-    for match in _PHRASING_TOKEN.finditer(template):
-        resolved = _phrasing_token(match.group(1), receipt, scenario, value)
-        if resolved is None:
-            return None
-        out.append(template[pos:match.start()])
-        out.append(resolved)
-        pos = match.end()
-    out.append(template[pos:])
-    return "".join(out)
-
-
-def _phrasing_first(
-    candidates: Any,
-    receipt: dict[str, Any],
-    scenario: dict[str, Any],
-    value: dict[str, Any],
-) -> str | None:
-    """The first alternative whose every token resolves, or None."""
-    if isinstance(candidates, str):
-        candidates = [candidates]
-    if not isinstance(candidates, list):
-        return None
-    for candidate in candidates:
-        rendered = _phrasing_render(candidate, receipt, scenario, value)
-        if rendered is not None:
-            return rendered
-    return None
-
-
-def _money_is_positive(value: dict[str, Any]) -> bool:
-    amount = value.get("amount")
-    try:
-        return float(amount) > 0
-    except (TypeError, ValueError):
-        return bool(amount)
-
-
-def _phrasing_case_applies(
-    when: Any, receipt: dict[str, Any], scenario: dict[str, Any], value: dict[str, Any]
-) -> bool:
-    """Every declared guard must hold; an absent/empty `when` always holds."""
-    if not when:
-        return True
-    if not isinstance(when, dict):
-        return False
-    if "value" in when:
-        expected = when["value"]
-        if isinstance(expected, bool):
-            if value.get("kind") != "boolean" or bool(value.get("value")) is not expected:
-                return False
-        elif str(value.get("value", "")) != str(expected):
-            return False
-    if "amount" in when:
-        if (when["amount"] == "positive") is not _money_is_positive(value):
-            return False
-    if "abstained" in when:
-        excluded = _low_confidence_caveat(receipt) is not None
-        if (when["abstained"] == "lowConfidence") is not excluded:
-            return False
-    guard = when.get("fact")
-    if isinstance(guard, dict):
-        raw = _fact_value(scenario.get("facts") or [], str(guard.get("attribute", "")))
-        if "present" in guard and bool(guard["present"]) is not (raw is not None):
-            return False
-        if "equals" in guard:
-            if raw is None:
-                return False
-            expected_text = guard["equals"]
-            if isinstance(expected_text, str) and "{" in expected_text:
-                expected_text = _phrasing_render(expected_text, receipt, scenario, value)
-                if expected_text is None:
-                    return False
-            if str(raw) != str(expected_text):
-                return False
-    return True
-
-
-def _decision_phrasing(pack: Any, attribute: str) -> list[Any] | None:
-    if not isinstance(pack, dict):
-        return None
-    for decision in pack.get("decisions") or []:
-        if isinstance(decision, dict) and decision.get("attribute") == attribute:
-            cases = decision.get("phrasing")
-            return cases if isinstance(cases, list) else None
-    return None
+    return determination(receipt, scenario.get("facts") or [], scenario.get("pack"))
 
 
 def _determination(
     receipt: dict[str, Any], scenario: dict[str, Any], effective: str
 ) -> dict[str, Any]:
-    """How a decision value is phrased: the single source of truth.
+    """How a decision value is phrased, for the client to render verbatim.
 
     Returns ``verdict`` (the headline), ``detail`` (one supporting sentence, no
-    terminal period) and ``tone`` ("pos" | "neg" | "warn" | ""). The client
-    renders these verbatim, so no phrasing is duplicated in JavaScript.
+    terminal period) and ``tone`` ("pos" | "neg" | "warn" | ""), so no phrasing
+    is duplicated in JavaScript.
 
-    The wording comes from the pack's own `phrasing:` block. When the pack
-    declares none — or declares none whose guards match this value — a boolean
-    decision falls back to Yes/No and anything else sets ``generic``, and the
-    caller renders a raw ``attribute = value`` string rather than inventing a
-    verdict it cannot support.
+    The wording itself comes from the pack, resolved by
+    `duly_kernel.phrasing.determination`. What is left here is only this
+    surface's fallback for when the pack declares no phrasing that applies: a
+    boolean decision falls back to Yes/No, and anything else sets ``generic``
+    so the caller renders a raw ``attribute = value`` string rather than
+    inventing a verdict it cannot support. The fallback is per-surface on
+    purpose — the audit report words the same gap as ``permitted: no``, because
+    a report names the attribute it is reporting on.
     """
-    decision = receipt.get("decision", {})
-    attribute = decision.get("attribute", "")
-    value = decision.get("value", {})
+    phrased = _kernel_determination(receipt, scenario)
+    if phrased is not None:
+        return phrased
 
-    cases = _decision_phrasing(scenario.get("pack"), attribute)
-    for case in cases or []:
-        if not isinstance(case, dict):
-            continue
-        if not _phrasing_case_applies(case.get("when"), receipt, scenario, value):
-            continue
-        verdict = _phrasing_first(case.get("verdict"), receipt, scenario, value)
-        if verdict is None:
-            continue
-        detail = _phrasing_first(case.get("detail"), receipt, scenario, value)
-        return {
-            "verdict": verdict,
-            "detail": detail or "",
-            "tone": str(case.get("tone") or ""),
-        }
-
+    value = receipt.get("decision", {}).get("value", {})
     if value.get("kind") == "boolean":
         affirmative = bool(value.get("value"))
         return {

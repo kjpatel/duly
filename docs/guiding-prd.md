@@ -278,9 +278,11 @@ decision and receipt authority.
 
 ## Open questions
 
-These divide by who can answer them. The second group blocks v1.0 by
-construction — a specification freeze is the act of closing those questions —
-so each carries a roadmap item rather than waiting for evidence.
+These divide by who can answer them. The second group blocked v1.0 by
+construction — taking a contract to v1.0 *is* the act of closing those
+questions — so each carried a roadmap item rather than waiting for evidence,
+and two of the three are now closed in
+[spec/compatibility.md](../spec/compatibility.md).
 
 Answerable only by an adopter:
 
@@ -290,18 +292,23 @@ Answerable only by an adopter:
 - What evidence would demonstrate that duly is more governable than a
   model-centric workflow for a specific adopter?
 
-Blocking the v1.0 contract freeze:
+Blocked the v1.0 contracts:
 
-- Must review-queue resolution always supersede the abstained fact?
-  ([spec/grounded-facts.md](../spec/grounded-facts.md#open-questions), open
-  question 2 — a coexisting human fact leaves a `low_confidence` entry on every
-  future receipt for an attribute the decision did use)
-- What multi-entity binding model is needed when real packs outgrow the current
-  one-entity-per-type simplification?
-  ([spec/rule-ir.md](../spec/rule-ir.md#open-questions-v0), open question 1 —
-  the IR already assigns quantified bindings to v1, and the TRID pack works
-  around their absence with one fee entity per case)
-- What capacity envelope should the reference interpreter publish at v1.0?
+- ~~Must review-queue resolution always supersede the abstained fact?~~
+  **Decided: yes, for `low_confidence` items**
+  ([compatibility.md](../spec/compatibility.md) C6, enforced at the queue
+  boundary) — the coexisting form leaves a `low_confidence` entry on every
+  future receipt for an attribute the decision did use, which contradicts the
+  fact spec's own definition of `abstentions`. `conflict` items are
+  deliberately not covered.
+- ~~What multi-entity binding model is needed when real packs outgrow the
+  current one-entity-per-type simplification?~~ **Deferred past v1.0**
+  ([compatibility.md](../spec/compatibility.md) C5): no committed pack needs
+  it, quantified bindings would mean re-establishing the verifier's decidable
+  fragment, and C3 makes deferral safe — they arrive as a new semantics version
+  whose kernel also implements this one. Still open as a *design* question for
+  whichever adopter's domain first has genuinely repeating structure.
+- What capacity envelope should the reference interpreter publish?
   (Measurement, not optimization — an adopter sizing a workload needs a number
   before a deployment exists to produce one)
 

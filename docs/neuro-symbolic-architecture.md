@@ -133,9 +133,9 @@ more explicitly:
 A rule pack has two halves, and the distinction is easy to miss because one
 file holds both. The **deciding half** — rules, priorities, effective windows,
 calendars, confidence floors — reaches the receipt through the decision it
-produces and the trace it leaves, and is therefore frozen: change it and you
-change what replays, which is why every such change is a version bump and an
-impact run. The **speaking half** — the question a pack advertises and the
+produces and the trace it leaves, and is therefore version-pinned: change it
+and you change what replays, which is why every such change is a version bump
+and an impact run. The **speaking half** — the question a pack advertises and the
 phrasing of its answers — is authored by the same expert, reviewed in the same
 pull request, and versioned in the same file, yet must never enter a hashed
 body, because a wording improvement that invalidated 351 receipts would make
@@ -143,6 +143,26 @@ the wording unimprovable. Governance and identity are not the same boundary.
 The practical test: a decision's meaning is `decision.value`, which is hashed;
 how that value reads to a human is pack data that any renderer may consume and
 no receipt records.
+
+"May consume" turned out to be the weak word, and the audit report is where it
+gave way. Because phrasing is presentation, it is exempt from everything that
+makes the deciding half hold still: no hash covers it, no replay reproduces it,
+no impact run reports it. That exemption is what lets wording improve — and it
+is also what let a *second* wording exist. The report renderer, being kernel
+code and not UI code, never read the pack's phrasing at all; it guessed from
+the attribute name (any boolean containing "compliant" became
+"Compliant"/"Not compliant"), and for one of duly's own packs it guessed the
+same words the pack declared, which is why nothing looked wrong for as long as
+the browser and the PDF were compared only against expectations rather than
+against each other. So the sharper statement is: presentation is exempt from
+the *hash*, not from the requirement to have one source. Every surface that
+words a decision now calls one renderer
+([`duly_kernel.phrasing`](../kernel/duly_kernel/phrasing.py)), sitting beside
+the validator that already rejects a malformed phrasing block, and what each
+surface keeps for itself is only the sentence it uses when the pack phrases
+nothing — a statement about the medium, not about the domain. An unhashed
+artifact needs its single source named somewhere, because nothing will
+otherwise notice that it has two.
 
 There is a third part of the file, and building an editor for packs is what
 made it visible. Between the deciding half and the speaking half sits the
@@ -468,9 +488,9 @@ reviewer can:
   or
 - dismiss it because exclusion was the correct outcome.
 
-Supersession was optional here until the contract freeze, and the argument for
-requiring it is about what a receipt is allowed to say rather than about
-tidiness. Resolving a `low_confidence` item is, by construction, a ruling on
+Supersession was optional here until the contracts reached v1.0, and the
+argument for requiring it is about what a receipt is allowed to say rather than
+about tidiness. Resolving a `low_confidence` item is, by construction, a ruling on
 one specific fact. A correction that merely *outranks* leaves that fact live,
 so every subsequent receipt carries a `low_confidence` abstention for an
 attribute the decision went on to use — which contradicts what
@@ -566,6 +586,7 @@ are not current behavior.
 | Golden replay | Committed cases produce byte-identical historical receipts | General correctness outside the corpus or legal validation of synthetic examples. Nor that *any* kernel reproduces them: replay is scoped to the receipt's [semantics version](../spec/compatibility.md), and a kernel not implementing it refuses rather than agreeing by coincidence |
 | Decision identity | `receiptSha256` identifies the artifact; `decision_digest()` identifies the adjudication, so two runs on different machines or backends can be shown to have decided the same thing | That either receipt is authentic — the digest excludes what identifies the run, so it resists nothing. Verification is still the whole-body hash |
 | Impact analysis | A rule change's flips and reasoning changes are visible on the corpus | Automatic approval or rejection of the change |
+| Contract stability | The fact, receipt and rule-IR contracts are at v1.0 and held stable by a written policy, and each has a named check that fails on an unintended break — hashes and 351 replays for the bytes, committed vectors for canonical form and the decision digest, `expected.yaml` and the pack suite for the IR's floor | That they will never change. A break is a **major version** with a procedure — changelog entry, converter or an argued impossibility, and for semantics a kernel implementing both — and duly has no external adopter yet, so the stability rests on policy and those checks rather than on anyone's dependency |
 | PROV-O export | Standard lineage tools can query useful artifact relationships | A lossless mapping of duly's time, uncertainty, or rule semantics |
 
 The compact version is:
@@ -689,7 +710,7 @@ to the person with a reason to doubt. The [receipt viewer](../duly_demo/receipts
 exists to make that availability concrete rather than theoretical
 ([tour §12](demo_tour.md#12-the-receipt-viewer)).
 
-Freezing the contracts put a question to all of that which none of it had
+Taking the contracts to v1.0 put a question to all of that which none of it had
 asked: **replay by whom?** Every claim above ends in "re-adjudicate and compare
 the bytes", and every one of them quietly assumes the kernel doing the
 re-adjudicating means by the rules what the kernel that sealed the receipt
@@ -708,7 +729,7 @@ Coincidental agreement is the failure worth naming, because it is silent and it
 passes: two semantics that differ on some inputs agree on most, so a kernel
 replaying receipts it has no standing to replay produces a wall of green.
 
-The second thing the freeze exposed is a conflation this document carried from
+The second thing v1.0 exposed is a conflation this document carried from
 the start. Golden replay compares *bytes*, and a receipt's bytes include which
 kernel and which evaluation backend produced it. That is right for a corpus —
 duly's cases come from one implementation, and byte identity is the strongest
@@ -721,6 +742,34 @@ answer to what evaluated it.
 > answers **what was decided**. Byte identity is the second plus having been the
 > same run — which is precisely why it is the right check for a corpus and the
 > wrong one between two implementations.
+
+There is a third thing, and it is about this document's own register rather
+than about the system. Every guarantee above is stated as a mechanism with a
+named check and an explicit "does not imply" column, because a claim a reader
+cannot check is not a guarantee — and the contracts were, for a while, the one
+place that discipline was not applied to itself. They were described as
+*frozen*, which is a claim about the future: it cannot be checked, cannot be
+falsified until it has already failed, and cannot honestly be kept, since
+correcting an evaluator bug changes what the kernel means and the correction is
+right. What the work actually built is the thing the word was reaching for:
+
+> An architecture that **can** be locked is a different and better claim than a
+> promise that nothing will change. Content addressing makes a contract change
+> a hash that moves rather than a diff somebody has to notice; a semantics pin
+> with a replay guard makes a change of meaning a refusal rather than a silent
+> pass; committed vectors make a change to *what agreement means* fail; and a
+> written break procedure makes the change that is genuinely right available at
+> a stated cost. None of that says duly will never break a contract. All of it
+> says a break cannot happen quietly.
+
+The asymmetry is the same one the verifier's `NOT-PROVED` and the receipt
+viewer's *not checked* rest on, arriving a third time: **an unfalsifiable
+assurance is weaker than a procedure with a failing check behind it.** It is
+also why the honest note that duly has no external adopters yet belongs in the
+compatibility policy rather than in a caveat somewhere — rigidity that no
+dependency has yet demanded is rigidity nobody has tested, and a system whose
+whole argument is *show the reader what you actually checked* cannot exempt its
+own stability claim from that.
 
 ## The gates
 
@@ -787,9 +836,9 @@ validator interprets a documented LinkML subset.
 
 That is a sensible boundary for the current workload. The kernel assumes one
 entity per entity type and one live fact per attribute in a case — and that is
-now a **frozen** assumption rather than an unexamined one: quantified bindings
-were weighed at the contract freeze and deferred past v1.0, so a v1.0 pack
-states the limit rather than working around it silently
+now a **stated and versioned** assumption rather than an unexamined one:
+quantified bindings were weighed when the contracts reached v1.0 and deferred
+past it, so a v1.0 pack states the limit rather than working around it silently
 ([compatibility.md](../spec/compatibility.md) C5). Its demonstrations ask
 bounded document-decision questions; adding graph infrastructure would create
 another consistency, temporal, and operational surface without yet simplifying
@@ -906,17 +955,23 @@ contracts, not a claim that the repository already supplies enterprise
 operations.
 
 What has changed is the contracts' standing. They are no longer "v0, may
-break": [compatibility.md](../spec/compatibility.md) states what v1.0 promises,
-per contract, and what it deliberately does not cover — the demo surfaces, CLI
-rendering, calibration interfaces, and the example content are all outside the
-freeze. Two things a platform team should read before designing against them.
-The fact and receipt schemas are **closed**: because the hash covers the whole
-body, there is no additive change to either, so anything that must travel with
-a receipt travels in a separately-hashed sidecar referencing it. And replay is
-scoped to a **semantics version** rather than to duly: a receipt names the
-semantics it was sealed under, and a kernel that does not implement that
-version refuses it instead of replaying it and possibly agreeing by accident.
-The distribution itself is not yet published; that is the remaining v1.0 work.
+break": [compatibility.md](../spec/compatibility.md) states what v1.0 holds
+stable per contract, what it deliberately does not cover — the demo surfaces,
+CLI rendering, calibration interfaces, and the example content are all outside
+it — and how a break happens when one is right. Three things a platform team
+should read before designing against them. The fact and receipt schemas are
+**closed**: because the hash covers the whole body, there is no additive change
+to either, so anything that must travel with a receipt travels in a
+separately-hashed sidecar referencing it. Replay is scoped to a **semantics
+version** rather than to duly: a receipt names the semantics it was sealed
+under, and a kernel that does not implement that version refuses it instead of
+replaying it and possibly agreeing by accident. And the stability itself is a
+**procedure, not a vow** — a break is a major version with a written cost, and
+each contract has a named check that fails on an unintended one — which is the
+form worth designing against, because it is the form that survives duly being
+wrong about something. Note also that duly has no external adopters yet, so
+those contracts are held stable by policy and by those checks rather than by
+anyone's dependency; plan on the versioning discipline, not on the adjective.
 
 **What the seam costs to install.** This document argues throughout that duly's
 value is the narrowness of the seam — one contract, one kernel, no domain
@@ -924,8 +979,9 @@ knowledge. That argument has a supply-chain half, and it was false until
 recently: a kernel-only install brought a web framework, an ASGI server and a
 PDF renderer, because the demonstration workspace and the audit report were
 declared as dependencies *of* the toolkit rather than as surfaces built *on*
-it. The document→receipt path now installs as two packages — duly and PyYAML,
-because a rule pack is YAML — with every surface behind an extra: `demo` for
+it. The document→receipt path now installs as seven packages — duly, PyYAML
+and jsonschema's closure, because a rule pack is YAML and C6's correction
+validation is core — with every surface behind an extra: `demo` for
 the two HTTP apps, `report` for the PDF renderer, `prove` for the solver,
 `extraction` for the extraction stack. The distinction matters more for an
 audit component than for a typical library. Every package that can execute in
@@ -996,7 +1052,7 @@ These are extension paths, not commitments or a second roadmap. The
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
 | Long-running enterprise deployment | Postgres, migrations, durable queues and calibration artifacts, observability, backup/restore | Knowledge-time replay and append-only history remain semantically equivalent |
 | Stronger governance | Signed run envelopes, RBAC, tenant isolation, retention controls, rule approval and rollback. The signature *scheme* is still open; its **shape** is settled — a signature never goes inside a hashed body, because signing bytes and then storing the signature among them is circular | Integrity, authenticity, authorization, and decision semantics remain distinct |
-| Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection — **deferred past v1.0**, which freezes one entity per type and states the boundary rather than working around it | Existing atomic facts and receipts remain canonical and old cases replay. New IR capability is not additive-for-free: it arrives as a new *semantics version* whose kernel also implements the old one, because a receipt using a construct an honest older kernel cannot evaluate must not claim that kernel's version |
+| Multiple entities and cross-document decisions | Quantified bindings, explicit relationships, completeness checkpoints, optional graph projection — **deferred past v1.0**, which holds the IR at one entity per type and states the boundary rather than working around it | Existing atomic facts and receipts remain canonical and old cases replay. New IR capability is not additive-for-free: it arrives as a new *semantics version* whose kernel also implements the old one, because a receipt using a construct an honest older kernel cannot evaluate must not claim that kernel's version |
 | Conversational investigation | Typed query API, validated natural-language-to-query translation, receipt-grounded rendering | A model may translate or phrase; it does not silently create facts or decisions |
 | Governed agentic workflows | Receipt-aware action policies and idempotent orchestration adapters. The decision-consumption half now has a worked reference ([examples/closing-scheduler](../examples/closing-scheduler/README.md)); the action half — authorization, freshness, idempotency — remains open | duly remains decision authority, the orchestrator owns side effects, and the orchestrator holds no copy of the rule it just asked about |
 | Higher-volume relational reasoning | Cross-backend equivalence is now **defined** — two receipts agree when their [decision digests](../spec/compatibility.md) match, since `engine.backend` is inside the hashed body and byte equality was never available — so what remains is the Datalog/Soufflé backend itself and differential testing against the reference | Decision semantics and trace fidelity match the reference kernel. Equivalence is digest equality, never a relaxed byte comparison: dropping `engine.backend` from the hash to make bytes agree would cost the receipt its answer to "what evaluated this" |
@@ -1021,10 +1077,10 @@ requirement without weakening replay.
   receipt design decision.
 - [Rule IR](../spec/rule-ir.md) defines applicability, stratification,
   defeasibility, abstention, and receipt mapping.
-- [Compatibility](../spec/compatibility.md) states what v1.0 promises per
-  contract, what the freeze deliberately leaves uncovered, and why the receipt
-  has no extension point — read it before proposing a field on any hashed
-  document.
+- [Compatibility](../spec/compatibility.md) states what v1.0 holds stable per
+  contract, what the policy deliberately leaves uncovered, how a break happens
+  when one is right, and why the receipt has no extension point — read it
+  before proposing a field on any hashed document.
 - [Ontology conformance](../spec/ontology-conformance.md) defines the LinkML
   subset and the gate's honest boundaries.
 - [PROV-O alignment](../spec/prov-o.md) explains the partial external
@@ -1044,7 +1100,7 @@ requirement without weakening replay.
   also what another language needs to implement the fact contract.
 - [`kernel/duly_kernel`](../kernel/duly_kernel) contains the reference
   interpreter and receipt builder. Two small modules beside it carry the
-  compatibility promise's executable half:
+  compatibility policy's executable half:
   [`semantics.py`](../kernel/duly_kernel/semantics.py) refuses a receipt whose
   decision-semantics version this kernel does not implement, and
   [`digest.py`](../kernel/duly_kernel/digest.py) says when two receipts record
@@ -1065,6 +1121,12 @@ requirement without weakening replay.
   section structure that three renderers walk — Markdown, PDF, and
   JSON blocks for the browser — so a new medium is a new walk rather than a
   second account of the same decision.
+- [`kernel/duly_kernel/phrasing.py`](../kernel/duly_kernel/phrasing.py) resolves
+  a pack's `phrasing:` block into the verdict, supporting clause and tone a
+  human reads. It sits next to the validator that already rejects a malformed
+  block, and it is the *only* implementation: the report's headline and the
+  demo's answer line are two callers, which is what keeps one decision from
+  being worded two ways.
 - [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) carries the
   rule-id convention and the explicit list of ids that predate it.
 

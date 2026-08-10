@@ -6,20 +6,43 @@ Entries are written after the fact, from merged work.
 
 **Through M4, these versions were git tags marking milestones, not package releases** — `pyproject.toml` deliberately stayed at `0.0.1` because nothing was published, and a tag said "this milestone is done and here is what it meant" without claiming the contract was stable. **From v1.0.0 a tag is both**: the distribution version and the tag agree, and the milestone/stability distinction is carried by [spec/compatibility.md](spec/compatibility.md) instead of by the absence of a package.
 
+## v1.1.0 — the adopter's wave
+
+What shipping the adopter's guide cost and taught. The guide was written by executing every command against an installed wheel, then executed *again* by an agent with no context and an invented domain — and the three defects that run surfaced were all in seams the guide's claims never covered.
+
+### Added
+
+- **[The adopter's guide](docs/adopters-guide.md)** — one end-to-end bring-your-own walkthrough: documents → adapter → facts → conformance → pack → store → review → corpus → calibration, every command executed outside the repository against the released wheel, with a "what is not automatic" register and a closing statement of what an adopter is depending on.
+- **First-contact imports** — `duly_extraction` and `duly_store` re-export their public surfaces (`from duly_store import FactStore` works now); the missing-solver messages in `duly-whatif` and `prove` speak to installed users instead of naming this repository's paths.
+- `duly_kernel.phrasing` — the pack-phrasing engine as public kernel API (see below).
+
+### Fixed — the three defects the cold run found
+
+- **The audit report now reads the pack's `phrasing:` block.** It had guessed verdicts from attribute names — agreeing with duly's own packs by coincidence, so neither renderer was ever compared against the other. Phrasing lives in `duly_kernel.phrasing` beside its validator; the report and the demo are two callers of one implementation, keeping only their per-medium fallbacks.
+- **`duly-whatif` reads `case.yaml` dates with the kernel's parser.** The review freezer writes the receipt's `date-time` form, the generator writes bare dates, both legal — and what-if was the only reader parsing the field itself, so it agreed on 350 committed cases and tracebacked on the 351st. Bad input is now a diagnostic naming field and file.
+- **The receipt viewer resolves packs by declared name, not directory name.** Nothing requires a pack's directory to match `pack.name` except this checkout's habit — an adopter with any other layout got `replay: unavailable`. The eighth costume of the repo-relative-path defect, subtler for the path being correct and only the assumption behind it wrong.
+
+### Changed
+
+- **The stability posture, corrected** ([spec/compatibility.md](spec/compatibility.md) is now "the stability policy"): the contracts are *held stable*, not "frozen" — an architecture that **can** be locked, a priced and versioned break procedure (C9) with a named failing check behind every contract, and an explicit pre-adoption clause. An unfalsifiable promise is weaker than a procedure with a check behind it.
+- Roadmap milestones are M-numbers (`M6`–`M8+`): version numbers belong to releases now that tags are releases, and this minor release moving mid-milestone is the proof.
+
 ## v1.0.0 — M5: adoption and v1.0
 
-The milestone where duly became installable, deletable, and frozen: `pip install` gives the seam, `git rm -r examples/` leaves a working toolkit (enforced in CI), and the fact/receipt/IR contracts are v1.0 with their promises written down. 351 golden receipts replay byte-for-byte from before the milestone — nothing here changed a decision.
+The milestone where duly became installable, deletable, and accountable for its own contracts: `pip install` gives the seam, `git rm -r examples/` leaves a working toolkit (enforced in CI), and the fact/receipt/IR contracts are v1.0 with what they hold stable — and what it would take to break one — written down. 351 golden receipts replay byte-for-byte from before the milestone — nothing here changed a decision.
 
 ### The demo grew three surfaces
 
 **Rule studio** (`/rules`) — packs as editable decision-table grids with the validator, declared cases, ad-hoc cases, corpus impact and the solver over one session draft; drafts never write into the packs. **Evidence browser** (`/evidence`) — every fact with its grounding, provenance and supersession chain under a knowledge-time dial; liveness recomputed from the event log and differentially checked against the store. **Receipt viewer** (`/receipt`) — any receipt re-verified on open: own hash, fact hashes, full re-adjudication; a re-sealed forgery passes the first two checks, which is why there are three.
 
-### The contract froze
+### The contracts reached v1.0
 
-- **[spec/compatibility.md](spec/compatibility.md)** — what v1.0 promises per contract (C1–C9), including the receipt having no extension point and review resolutions superseding (C6, now enforced).
+- **[spec/compatibility.md](spec/compatibility.md)** — what v1.0 holds stable per contract (C1–C9), including the receipt having no extension point, review resolutions superseding (C6, now enforced), and how a break happens when one is right (C9).
 - **Semantics-scoped replay** — every replay path checks `engine.version` against what the kernel implements and refuses rather than replaying foreign semantics; `engine.version` is a decision-semantics pin, not a package version, and stays `0.0.1` at 1.0.0 by design.
 - **`decision_digest()`** — a hash over a receipt's determinant fields, excluding what identifies the run; cross-backend agreement is digest equality, with self-contained vectors in [spec/decision-digest-vectors.json](spec/decision-digest-vectors.json).
 - **One canonical form** — RFC 8785 key order in a shared `duly_core`, seven call sites migrated, provably inert.
+
+And the correction the milestone's own documentation needed, found by writing the adopter's guide: **the work built the machinery for locking a contract and then described it with a word the machinery does not support.** "Frozen" reads as *this will not change*, which is a claim about the future that nobody — not this project, not its readers, not a test — can audit. What actually shipped is better and more checkable: canonical bytes, a decision-semantics pin whose replay guard refuses receipts it has no standing to answer for, committed canonical-form and digest vectors, a corpus that replays on every push, and four version scopes with a procedure saying which one moves. That is an architecture that *can* be locked, holding its contracts stable by policy — and a break stays available as a deliberate, versioned, documented major-version event, which is what C9 was for all along even while it was filed last and read as an appendix. The generalization is one this project already applies to rule packs and had exempted itself from: **an unfalsifiable promise is weaker than a procedure with a failing check behind it**, and every contract here has the second. duly also has no external adopters yet, so saying "frozen" claimed a rigidity that no dependency had yet earned — the honest version costs nothing and survives being wrong.
 
 ### The seams stopped assuming this repository
 

@@ -212,6 +212,16 @@ to travel alongside a receipt travels in a separately-hashed sidecar that
 references it — the idiom [PROV-O export](../spec/prov-o.md) already
 established: *wrap, never edit*.
 
+**And when the breaking change is the right one**, this table stops being a
+list of things not to do and becomes the input to a procedure:
+[compatibility.md](../spec/compatibility.md) C9 says what a break costs — a
+major version, a changelog entry naming what stopped being true, a converter or
+an argued statement that none is possible, and for a semantics change a kernel
+implementing both versions for at least one minor release. duly does not
+promise never to break a contract; it promises that a break is versioned,
+procedural, and caught by one of the checks in the right-hand column if it is
+taken by accident. Which is the promise this document exists to operate.
+
 ## 6. Tagging
 
 Tags are **annotated**, named `vMAJOR.MINOR.PATCH`, with the milestone as the
@@ -303,8 +313,9 @@ project previously made is worth more space than the feature that found it.
 
 ## See also
 
-- [spec/compatibility.md](../spec/compatibility.md) — what v1.0 promises, per
-  contract, and the arguments behind every rule this document applies
+- [spec/compatibility.md](../spec/compatibility.md) — what v1.0 holds stable,
+  per contract, how a break happens when one is right (C9), and the arguments
+  behind every rule this document applies
 - [CLAUDE.md](../CLAUDE.md) — the `engine` block gotcha, stated for agents
 - [examples/golden/README.md](../examples/golden/README.md) — corpus contract and regeneration rules
 - [examples/rulepacks/README.md](../examples/rulepacks/README.md) — pack authoring and what is not auto-wired

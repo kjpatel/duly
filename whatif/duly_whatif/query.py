@@ -76,9 +76,9 @@ __all__ = [
 Z3_MISSING = (
     "z3-solver is not installed. What-if is an optional analysis behind an "
     "optional dependency:\n"
-    "    uv run --with z3-solver python -m duly_whatif "
-    "--case golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true\n"
-    "or `uv sync --extra prove`."
+    "    pip install 'duly[prove]'   # or: uv sync --extra prove\n"
+    "then re-run this command. (In this repository: uv run --with z3-solver "
+    "python -m duly_whatif ...)"
 )
 
 # The same deterministic resource ceiling `prove` uses, for the same reason:
@@ -260,7 +260,9 @@ def _pin_term(enc: PackEncoding, key: str, value: dict):
     if sym.kind == "decimal":
         return var == z3.RealVal(str(value["value"]))
     if sym.kind == "date":
-        return var == z3.IntVal(_cf.parse_date(str(value["value"])).toordinal())
+        return var == z3.IntVal(
+            _cf.parse_date(str(value["value"]), f"the case's {sym.label}").toordinal()
+        )
     literal = str(value["value"])
     values = sym.values
     if literal in values:
@@ -293,7 +295,7 @@ def _decision_term(enc: PackEncoding, attribute: str, target: dict):
     if sym.kind == "decimal":
         return z3.RealVal(str(target["value"]))
     if sym.kind == "date":
-        return z3.IntVal(_cf.parse_date(str(target["value"])).toordinal())
+        return z3.IntVal(_cf.parse_date(str(target["value"]), "the target value").toordinal())
     literal = str(target["value"])
     values = sym.values
     if literal not in values:
@@ -498,7 +500,9 @@ def _pins(enc: PackEncoding, query: Query, live: dict[str, dict], freed_key: str
         if sym.origin == "asOf":
             terms.append(
                 enc.vars[key]
-                == z3.IntVal(_cf.parse_date(query.as_of_effective).toordinal())
+                == z3.IntVal(
+                    _cf.parse_date(query.as_of_effective, "asOfEffective").toordinal()
+                )
             )
             continue
         if sym.origin != "attribute":
@@ -638,8 +642,8 @@ def _answer_ordered(query, enc, sym, key, base, target, template, report) -> Non
         objective, grid_terms = var, []
         to_raw = _dt.date.fromordinal
         anchor_raw = (
-            _cf.parse_date(query.as_of_effective) if sym.origin == "asOf"
-            else _cf.parse_date(str(template["value"]))
+            _cf.parse_date(query.as_of_effective, "asOfEffective") if sym.origin == "asOf"
+            else _cf.parse_date(str(template["value"]), f"the case's {sym.label}")
         )
         anchor = anchor_raw.toordinal()
     else:

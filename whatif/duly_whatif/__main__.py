@@ -1,7 +1,7 @@
 """CLI: python -m duly_whatif — solve a rule pack backwards.
 
-    uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
-        --case golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true
+    duly-whatif --ontologies <registry-dir> \
+        --case <corpus>/cases/<case-id> --free <attribute> --target true
 
 Exit codes: 0 SATISFIABLE, 1 UNSATISFIABLE, 2 UNSUPPORTED (or a bad
 invocation). A solver/kernel contradiction exits 3 and prints both artifacts:
@@ -27,6 +27,7 @@ from pathlib import Path
 
 import yaml
 
+from . import casefacts as _cf
 from .query import (
     AS_OF,
     Query,
@@ -100,6 +101,29 @@ def _load_case(directory: Path) -> tuple[dict, list[dict], dict]:
     pack_path = resolve_pack_path(str(case["pack"]), directory.resolve().parent.parent)
     pack = yaml.safe_load(pack_path.read_text())
     return case, facts, pack
+
+
+def _check_points(effective: str, knowledge: str, args) -> None:
+    """Refuse an unparseable asOf point at the edge, naming where it came from.
+
+    Both halves would otherwise fail silently or unhelpfully further in:
+    `asOfEffective` reaches the encoding, which used to traceback on it, and
+    `asOfKnowledge` reaches `casefacts.decide`, which turns *every* exception
+    into "no decision" — an answer, not an error, for what is really a
+    malformed case.
+    """
+    case_file = str(Path(args.case) / "case.yaml") if args.case else None
+    for field, flag_name, text, flag in (
+        ("asOfEffective", "--as-of-effective", effective, args.as_of_effective),
+        ("asOfKnowledge", "--as-of-knowledge", knowledge, args.as_of_knowledge),
+    ):
+        # A point the caller typed is named by its flag; one the case supplied
+        # is named by its field and its file.
+        _cf.parse_point(
+            str(text),
+            flag_name if flag else field,
+            None if flag else case_file,
+        )
 
 
 def _decision_kind(pack: dict, attribute: str) -> tuple[str, str | None]:
@@ -249,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
+        _check_points(str(effective), str(knowledge), args)
         target = None
         if args.target and args.target != "none":
             kind, currency = _decision_kind(pack, str(decision))
@@ -262,6 +287,11 @@ def main(argv: list[str] | None = None) -> int:
             ),
             registry,
         )
+    except _cf.BadDate as exc:
+        # A malformed date is a bad input, not an unsupported question: it is
+        # reported like `--ontologies no/such/place`, naming the field.
+        print(str(exc), file=sys.stderr)
+        return 2
     except Unsupported as exc:
         print(f"UNSUPPORTED: {exc}", file=sys.stderr)
         return 2

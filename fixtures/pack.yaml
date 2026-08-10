@@ -32,11 +32,13 @@ decisions:
     question: "Is this widget permitted?"
 
   # A NON-BOOLEAN decision, carried so the fixtures exercise the phrasing path.
-  # A boolean decision gets the kernel's Yes/No fallback and never reaches a
+  # A boolean decision is worded by each renderer's own fallback (`permitted:
+  # no` in the audit report, Yes/No in the demo) and never reaches a
   # `phrasing:` block, so a fixture pack without one of these leaves every
-  # placeholder, tone and guard in that machinery untested — and the demo's
-  # rule that verdict wording is *pack data* untestable except through the
-  # teaching packs.
+  # placeholder, tone and guard in that machinery untested — and the rule that
+  # verdict wording is *pack data* untestable except through the teaching
+  # packs. Both surfaces resolve this block through duly_kernel.phrasing, so
+  # this is also the only committed fixture that proves they agree.
   - attribute: fx:assessedFee
     entityType: fx:Widget
     question: "What fee is assessed?"

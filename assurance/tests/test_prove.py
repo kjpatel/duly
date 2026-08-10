@@ -77,7 +77,9 @@ def test_importing_prove_does_not_require_z3():
     from duly_assurance import prove
 
     assert "z3-solver is not installed" in prove.Z3_MISSING
-    assert "uv run --with z3-solver" in prove.Z3_MISSING
+    # The remedy is stated for an *installed* user first (the message reaches
+    # adopters through the console scripts), with the repo form second.
+    assert "duly[prove]" in prove.Z3_MISSING
 
 
 def test_the_verdict_names_are_the_documented_three():

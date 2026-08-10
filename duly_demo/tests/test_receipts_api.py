@@ -94,6 +94,13 @@ def _checks(view: dict) -> dict[str, str]:
     return {c["id"]: c["state"] for c in view["verification"]["checks"]}
 
 
+def yaml_name(pack_path: Path) -> str:
+    """The name a pack file *declares* — which is not its directory's name."""
+    import yaml
+
+    return yaml.safe_load(pack_path.read_text())["pack"]["name"]
+
+
 class TestCorpusIndex:
     def test_every_committed_receipt_is_listed(self, client):
         body = client.get("/api/receipts/corpus").json()
@@ -304,6 +311,61 @@ class TestPackResolution:
             assert view["resolution"]["pack"]["state"] == "unavailable"
             assert "not a rule-pack name" in view["resolution"]["pack"]["reason"]
             assert _checks(view)["replay"] == "unavailable"
+
+    def test_a_pack_directory_named_differently_from_pack_name_resolves(
+        self, tmp_path, monkeypatch
+    ):
+        """The viewer resolves a receipt's pack by what packs *declare*, not by
+        where they sit.
+
+        `rulepacks/<directory>/pack.yaml` and `pack.name` are two different
+        strings. Duly's own packs make them equal, so building the path from
+        the receipt's name passed every test here while answering
+        `replay: unavailable` for any adopter who named the directory anything
+        else — and unavailable is the answer that looks like a missing pack
+        rather than like a lookup that could never have succeeded.
+
+        So this content root is deliberately mis-named: the pack directory is
+        `an-adopters-directory-name` while the pack inside it still declares
+        `duly-fixture-pack`, which is what every receipt in the corpus carries.
+        """
+        root = build_content_root(tmp_path / "content")
+        pack_dir = root / "rulepacks" / "duly-fixture-pack"
+        renamed = pack_dir.with_name("an-adopters-directory-name")
+        pack_dir.rename(renamed)
+        assert not pack_dir.exists()
+        assert yaml_name(renamed / "pack.yaml") == "duly-fixture-pack"
+
+        # Everything that refers to the pack *by path* follows the directory;
+        # only the receipts, which refer to it by name, do not. That asymmetry
+        # is the situation under test, not an inconsistency to tidy away.
+        for case_yaml in (root / "golden" / "cases").glob("*/case.yaml"):
+            case_yaml.write_text(
+                case_yaml.read_text().replace(
+                    "rulepacks/duly-fixture-pack/", f"rulepacks/{renamed.name}/"
+                )
+            )
+
+        monkeypatch.setenv("DULY_DEMO_CONTENT", str(root))
+        monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+        reload_demo()
+        try:
+            import duly_demo.app
+
+            with TestClient(duly_demo.app.app) as c:
+                view = c.get(f"/api/receipts/corpus/{CASE}").json()
+        finally:
+            monkeypatch.undo()
+            reload_demo()
+
+        pack_status = view["resolution"]["pack"]
+        assert pack_status["state"] == "resolved", pack_status
+        assert pack_status["source"] == f"rulepacks/{renamed.name}/pack.yaml"
+        # Resolution is not the claim; replay is. The pack was found, so the
+        # receipt is re-adjudicated and compared byte-for-byte.
+        assert _checks(view)["replay"] == "pass"
+        assert view["verification"]["verdict"] == "pass"
+        assert view["report"], "a resolved pack should render report sections"
 
     def test_a_moved_pack_version_is_refused_not_substituted(self, client, monkeypatch):
         # Rendering rule text out of a pack version the receipt never saw

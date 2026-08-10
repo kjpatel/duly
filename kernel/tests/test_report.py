@@ -196,21 +196,64 @@ class TestMarkdownContent:
         )
         assert "- **Defeated:** FX-DEFAULT-00" in md
 
-    def test_money_verdict_carries_its_currency(self, fx):
-        # A non-boolean decision: the report renders the amount *and* the
-        # currency, in the header verdict and in the conclusion sentence. (The
-        # pack's `phrasing:` block is the demo's presentation layer and never
-        # reaches this renderer — the report says what the value is.)
+    def test_the_headline_verdict_is_the_packs_own_wording(self, fx):
+        # Verdict wording is pack data, and the report obeys it: fixtures/
+        # pack.yaml phrases fx:assessedFee "Fee assessed" above zero and "No
+        # fee" at zero, so those are the words, not "250.00 USD". Both guarded
+        # branches are asserted — a phrasing test that only exercises the
+        # matching case cannot tell a working guard from one that always fires.
         _receipt, facts, pack = fx
         fee = adjudicate(
             facts, pack, FX_AS_OF_EFFECTIVE, FX_AS_OF_KNOWLEDGE, "fx:assessedFee"
         )
         md = render_report_markdown(fee, facts, pack)
-        assert "**Verdict:** 250.00 USD" in md
-        assert 'the question "What fee is assessed?" was answered: 250.00 USD.' in md
-        assert (
-            "which would otherwise have concluded fx:assessedFee = 0.00 USD" in md
+        assert "**Verdict:** Fee assessed" in md
+        assert 'the question "What fee is assessed?" was answered: Fee assessed.' in md
+
+        # Phrasing replaces the headline, not the record. The amount and its
+        # currency still reach the reader, in the reasoning step that concluded
+        # them and in what the defeated rule would have concluded instead — so
+        # an examiner reading the report can still see the number.
+        assert "fx:assessedFee was determined to be 250.00 USD" in md
+        assert "which would otherwise have concluded fx:assessedFee = 0.00 USD" in md
+
+        zero_facts, _case, _r = fixture_case("fx-0002")
+        no_fee = adjudicate(
+            zero_facts, pack, FX_AS_OF_EFFECTIVE, FX_AS_OF_KNOWLEDGE, "fx:assessedFee"
         )
+        assert no_fee["decision"]["value"]["amount"] == "0.00"
+        assert "**Verdict:** No fee" in render_report_markdown(no_fee, zero_facts, pack)
+
+    def test_a_decision_the_pack_phrases_nowhere_names_its_attribute(self, fx):
+        # fx:permitted carries no `phrasing:` block on purpose, so it exercises
+        # the fallback: the report names the attribute and its value rather
+        # than inventing a verdict no pack author wrote.
+        receipt, facts, pack = fx
+        assert "**Verdict:** permitted: no" in render_report_markdown(
+            receipt, facts, pack
+        )
+
+    def test_the_renderer_carries_no_domain_heuristic(self, fx):
+        """A regression pin, not a capability.
+
+        `_verdict` used to render any boolean attribute whose local name
+        contained "compliant" as "Compliant"/"Not compliant" — a guess tuned to
+        one of duly's own packs, living in the kernel, and outranking whatever
+        the pack said. It is gone. A pack that wants those words says so in its
+        own `phrasing:` block (the termination-notice pack does); a report with
+        no pack in hand says what it can defend.
+        """
+        _receipt, facts, _pack = fx
+        borrowed = {
+            "caseId": "case:fixture:heuristic",
+            "decision": {
+                "attribute": "nc:noticeCompliant",
+                "value": {"kind": "boolean", "value": False},
+            },
+        }
+        md = render_report_markdown(borrowed, facts, None)
+        assert "**Verdict:** noticeCompliant: no" in md
+        assert "Not compliant" not in md
 
     def test_pack_none_still_renders(self, fx):
         receipt, facts, _pack = fx

@@ -6,8 +6,8 @@
 [security advisory form](https://github.com/kjpatel/duly/security/advisories/new),
 which is the fastest route and keeps the report confidential until a fix exists.
 
-Expect an acknowledgement within a week. duly is a pre-1.0 project maintained by one
-person; there is no on-call rotation and no paid bounty, and saying so plainly is
+Expect an acknowledgement within a week. duly is a pre-adoption project maintained by
+one person; there is no on-call rotation and no paid bounty, and saying so plainly is
 better than implying a response time nobody staffs.
 
 ## Scope

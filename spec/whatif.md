@@ -145,6 +145,8 @@ Which facts actually bind — after supersession, effective windows, the pack's 
 
 That matters more than it sounds. "The fact was never asserted" is a distinct and frequently decisive region of the input space, and a what-if that let the solver assume a missing fact into existence would answer a question about a case that does not exist. A second implementation of liveness would be the same latent defect as a second SMT encoder, so there is not one.
 
+The rule reaches the evaluation point's *parse*, and that is where it was broken. A case's `asOfEffective` is read with the kernel's own `normalize_point`, so a bare date and the midnight-Z instant are one point here exactly as they are in the kernel. What-if used to read the field with `date.fromisoformat` and traceback on the instant — which duly's own freezer writes, `duly_review.golden` copying the receipt's `date-time`-typed `asOf.effective` into the case it seals. A second implementation of a *parse* is the same defect as a second implementation of liveness, in a smaller costume: it agreed with the kernel on every generated case and disagreed on every review-exported one. A point that genuinely is not a date is now a diagnostic naming the field and the file, not a traceback.
+
 A freed *evaluation point* additionally stays inside every pinned fact's truth window. `smt.py` does not model fact windows — it reasons about a rulebase, where facts are free — so that constraint lives in `whatif/`, and it is what keeps the `exists` pins consistent with the dates the solver is allowed to consider.
 
 ## W10. Determinism, without a normalization ladder

@@ -98,9 +98,10 @@ this corpus is not the place to discover it; `examples/golden/` is.
 - **Keep it minimal.** Add a case only when a toolkit behaviour cannot be
   asserted with the ones that exist. This corpus is a test dependency, not a
   second demonstration vertical. The bar that has been met twice: `fx:permitted`
-  is boolean, so it takes the kernel's Yes/No fallback and never reaches a
-  `phrasing:` block — the *whole* phrasing machinery was unreachable until the
-  pack grew `fx:assessedFee`. That is what "cannot be asserted otherwise"
+  is boolean, so a renderer's own fallback words it (`permitted: no` in the
+  audit report, Yes/No in the demo) and it never reaches a `phrasing:` block —
+  the *whole* phrasing machinery was unreachable until the pack grew
+  `fx:assessedFee`. That is what "cannot be asserted otherwise"
   looks like. `fx-0006` met the same bar from the other direction: not a
   behaviour that was unreachable, but a *distinction* the corpus could not
   draw, since every existing case moved together under the edit that mattered.

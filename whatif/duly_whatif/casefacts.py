@@ -41,6 +41,7 @@ from duly_kernel.engine import normalize_point
 from duly_core import canonical, content_hash as _content_hash  # noqa: F401
 
 __all__ = [
+    "BadDate",
     "canonical",
     "content_hash",
     "live_by_attribute",
@@ -48,6 +49,7 @@ __all__ = [
     "decide",
     "normalize_point",
     "parse_date",
+    "parse_point",
     "render_value",
     "values_equal",
     "KernelOutcome",
@@ -218,5 +220,53 @@ def render_value(value: dict) -> str:
     return f'"{value["value"]}"'
 
 
-def parse_date(text: str) -> _dt.date:
-    return _dt.date.fromisoformat(text)
+class BadDate(ValueError):
+    """A date-valued field carried something that is not a date.
+
+    A `ValueError` subclass so the raise stays where callers already expect
+    one, with a message that names the field and — when the caller knows it —
+    the file, because "Invalid isoformat string" names neither.
+    """
+
+
+def parse_point(text: str, field: str | None = None, source: str | None = None) -> _dt.datetime:
+    """An asOf point or a date-valued literal, parsed the way the kernel does.
+
+    **This is a cross-component contract, and it is why this is not
+    `datetime.fromisoformat` inline at each call site.** Two shipped
+    components write `case.yaml`, and they write this field differently:
+    `duly_assurance.generate` emits bare dates from its templates, while
+    `duly_review.golden.resolved_item_to_golden_case` copies the *receipt's*
+    `asOf.effective` — and the receipt schema types that field `date-time`,
+    so a review-exported case necessarily carries a timestamp (see
+    `examples/golden/cases/review-0001/case.yaml`: `"2026-07-25T00:00:00Z"`).
+    Both forms are legal, `duly-verify` accepts both, and nothing warns —
+    because every other reader hands the string to the kernel's
+    `normalize_point`, which takes a bare date as midnight UTC.
+
+    So does this one. A midnight-Z timestamp on a date-valued field is the
+    freezer being precise, not a different value, and what-if had been the
+    single reader that refused it with a bare `ValueError` traceback.
+    """
+    try:
+        return normalize_point(str(text))
+    except (ValueError, TypeError) as exc:
+        where = field or "a date-valued field"
+        if source is not None:
+            where = f"{where} in {source}"
+        raise BadDate(
+            f"{where} is not a date: {text!r}. Give an ISO date (2026-07-25) "
+            "or an ISO timestamp (2026-07-25T00:00:00Z)."
+        ) from exc
+
+
+def parse_date(text: str, field: str | None = None, source: str | None = None) -> _dt.date:
+    """The date a point denotes; see `parse_point` for what is accepted.
+
+    The encoding is date-grained — dates enter the solver as ordinals — so a
+    point carrying a time of day is truncated to its date here. That is the
+    grain every date comparison in the fragment already works at, and it
+    costs nothing in soundness: the kernel is re-run on the caller's original
+    string, so no answer is ever *verified* against the truncation.
+    """
+    return parse_point(text, field, source).date()

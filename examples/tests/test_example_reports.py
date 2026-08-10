@@ -87,7 +87,20 @@ def test_ny_citation_quote_defeat_and_verdict(ny):
     # The exception rule's defeat of the default presumption is narrated.
     assert "NC-DEF-00" in md
     assert "overrode NC-DEF-00" in md
-    assert "Not compliant" in md
+    # The headline verdict, and where it comes from. These two words used to
+    # appear here for the wrong reason: the renderer special-cased any boolean
+    # attribute whose name contained "compliant". They now come out of the
+    # pack, which is why this assertion belongs to the *example content* and
+    # reads the wording back out of the pack rather than spelling it twice.
+    verdict = next(
+        case["verdict"]
+        for decision in pack["decisions"]
+        if decision["attribute"] == "nc:noticeCompliant"
+        for case in decision["phrasing"]
+        if case.get("when", {}).get("value") is False
+    )
+    assert verdict == "Not compliant"
+    assert f"- **Verdict:** {verdict}" in md
 
 
 def test_trid_cure_amount_and_citation(trid):
@@ -98,3 +111,9 @@ def test_trid_cure_amount_and_citation(trid):
     md = render_report_markdown(receipt, facts, pack)
     assert "250.00" in md
     assert "12 CFR 1026.19(e)(3)(i)" in md
+    # A money decision the pack phrases: the report leads with the pack's
+    # words, and the amount stays in the reasoning where the rule concluded it.
+    # (Before phrasing reached this renderer the header read "250.00 USD" —
+    # true, but not what the pack author wrote for a reader of this document.)
+    assert "- **Verdict:** Cure required" in md
+    assert "trid:toleranceCureAmount was determined to be 250.00 USD" in md

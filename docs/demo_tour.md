@@ -176,7 +176,9 @@ The instructive one takes a second step. Flip the verdict *and* recompute `recei
 
 Paste a receipt with no facts alongside it. The hash still verifies; the evidence and replay checks report **not checked** and say why — a receipt pins its facts by content hash, so it genuinely cannot reproduce them, and a viewer that quietly rendered a thinner report would be claiming completeness it does not have. **Rendered against** at the bottom of the rail always names what the report was built from.
 
-The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to the file now at `examples/rulepacks/<name>/pack.yaml`: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
+The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to whichever pack now declares that name: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
+
+How it finds the pack at all is worth one line, because it is not the obvious thing. A receipt names its pack (`rulePack.name`) and that name is a *declaration inside the pack file*, not the directory the file sits in — nothing ties the two together, and duly's own packs agreeing is a coincidence of this repository. So the viewer reads every `rulepacks/*/pack.yaml` and matches on what each one declares. Rename a pack directory and every receipt still resolves.
 
 One consequence worth knowing if you build on the API: `/api/receipts/inspect` takes raw JSON **text**, not objects. JavaScript has a single number type, so a fact's `"score": 1.0` survives a browser round trip as `1` — a different canonical body, a different content hash, and every genuine fact reported as tampered with. Content addressing is over bytes, so the bytes are what travel and Python does the only parse.
 

@@ -147,6 +147,46 @@ def test_the_notice_packs_45_day_boundary():
 
 @needs_z3
 @pytest.mark.z3
+def test_the_review_exported_case_solves_at_all():
+    """review-0001, the corpus's one review-exported case — and the one whose
+    `asOfEffective` is a timestamp rather than a bare date.
+
+    It is a timestamp because `duly_review.golden.resolved_item_to_golden_case`
+    copies the *receipt's* `asOf.effective` into the case.yaml it writes, and
+    the receipt schema types that field `date-time`. What-if read the field
+    with `date.fromisoformat` and tracebacked on it: two shipped components
+    disagreeing about a file one of them writes, with `duly-verify` accepting
+    both forms so nothing warned. A cold adopter found it by running the two
+    commands in the order the docs give them.
+
+    The boundary itself, by hand: the policy expires 2026-09-01, the notice is
+    a NY Nonrenewal, and evaluated at 2026-07-25 the minimum is NY-NR-45's 45
+    days. 2026-09-01 minus 45 days: 31 days back to 2026-08-01, 14 more to
+    **2026-07-18**. The case's own (human-corrected) mailing date is
+    2026-07-25 — 38 days, and non-compliant.
+
+    The assertion on the string form is deliberate: rewrite that field to a
+    bare date and this test's subject is gone, so it must fail rather than
+    quietly become a duplicate of the notice-ny-0001 boundary.
+    """
+    case, _, _ = load_case("review-0001")
+    assert str(case["asOfEffective"]) == "2026-07-25T00:00:00Z"
+
+    report = solve_for("review-0001", "nc:noticeMailedDate", target=TRUE)
+
+    assert report.current == "false"
+    assert report.verdict == "SATISFIABLE"
+    assert report.extremal.value == "2026-07-18"
+    assert report.extremal.decision == "true"
+    assert report.boundary.value == "2026-07-19"
+    assert report.boundary.refuted
+
+    expiration = _dt.date(2026, 9, 1)
+    assert _dt.date.fromisoformat(report.extremal.value) == expiration - _dt.timedelta(days=45)
+
+
+@needs_z3
+@pytest.mark.z3
 def test_the_trid_maximum_fee_that_owes_no_cure():
     """The largest closing amount on trid-0001 that owes no tolerance cure.
 

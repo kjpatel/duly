@@ -16,6 +16,8 @@ import yaml
 
 from . import expr as _expr
 from . import rule_ids as _rule_ids
+from .phrasing import PHRASING_FORMATS as _PHRASING_FORMATS
+from .phrasing import PHRASING_TOKEN as _PHRASING_TOKEN
 
 
 class PackValidationError(Exception):
@@ -92,8 +94,10 @@ _PHRASING_FACT_GUARD_KEYS = {"attribute", "equals", "present"}
 _PHRASING_TONES = {"pos", "neg", "warn", ""}
 _PHRASING_AMOUNTS = {"positive", "nonPositive"}
 _PHRASING_ABSTAINED = {"lowConfidence", "none"}
-_PHRASING_FORMATS = {"", "day", "int"}
-_PHRASING_TOKEN = re.compile(r"\{([^{}]*)\}")
+# _PHRASING_FORMATS and _PHRASING_TOKEN are imported from `duly_kernel.phrasing`
+# — the renderer that has to resolve what this validator accepts. A validator
+# and a renderer holding separate copies fail in the worst way available: the
+# pack loads and the sentence silently comes out wrong.
 
 
 def _validate_phrasing(phrasing: object, where: str) -> None:

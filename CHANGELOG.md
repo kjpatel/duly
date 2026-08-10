@@ -6,7 +6,7 @@ Entries are written after the fact, from merged work.
 
 **Through M4, these versions were git tags marking milestones, not package releases** — `pyproject.toml` deliberately stayed at `0.0.1` because nothing was published, and a tag said "this milestone is done and here is what it meant" without claiming the contract was stable. **From v1.0.0 a tag is both**: the distribution version and the tag agree, and the milestone/stability distinction is carried by [spec/compatibility.md](spec/compatibility.md) instead of by the absence of a package.
 
-## Unreleased
+## v1.1.1 — both edges walkable, and the envelope measured
 
 ### Added
 

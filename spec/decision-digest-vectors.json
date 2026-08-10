@@ -34,8 +34,8 @@
       "description": "the committed fixture receipt fx-0001, unmodified",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -51,7 +51,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -138,14 +138,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
+      "decisionDigest": "955ef8adf8a06dd2a966ef3143915b19ff64228f09a0674bfa45b5c72efafa89"
     },
     {
       "description": "same adjudication, different case id — caseId is bookkeeping",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:acme:loan-4471",
         "decision": {
           "entity": "widget:fx-0001",
@@ -161,7 +161,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -248,14 +248,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
+      "decisionDigest": "955ef8adf8a06dd2a966ef3143915b19ff64228f09a0674bfa45b5c72efafa89"
     },
     {
       "description": "same adjudication, pack provenance added — where a pack was fetched from is not what it says",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -271,7 +271,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0",
+          "version": "2026.3.0",
           "gitCommit": "9f1c0b2",
           "url": "https://example.invalid/packs/duly-fixture-pack"
         },
@@ -360,14 +360,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
+      "decisionDigest": "955ef8adf8a06dd2a966ef3143915b19ff64228f09a0674bfa45b5c72efafa89"
     },
     {
       "description": "same adjudication, different evaluation backend — this is the cross-backend agreement claim, executable",
       "equivalenceClass": "fx-0001-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -383,7 +383,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -470,7 +470,7 @@
           "backend": "souffle"
         }
       },
-      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
+      "decisionDigest": "955ef8adf8a06dd2a966ef3143915b19ff64228f09a0674bfa45b5c72efafa89"
     },
     {
       "description": "same adjudication, different kernel implementation, and the artifact identity fields deliberately wrong — the digest is over what was decided, not over a correctly sealed document",
@@ -493,7 +493,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -580,14 +580,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "9c60d7bfbfbc2a532e830c957a1fd1d994de07ff594f4a4a03d5321d5283ebea"
+      "decisionDigest": "955ef8adf8a06dd2a966ef3143915b19ff64228f09a0674bfa45b5c72efafa89"
     },
     {
       "description": "different decision semantics — engine.version is determinant because different semantics can mean different decisions",
       "equivalenceClass": "fx-0001-under-other-semantics",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -603,7 +603,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -690,14 +690,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "01ec30ef120fea5881f3768070cf3749bfd3c7d96012972ba360a13d32de2576"
+      "decisionDigest": "0f6edded3a697348e79b50c980079b2572e3af8f7c11921d3a3171535bf563b0"
     },
     {
       "description": "different pack version — a pack's identity is its name and version",
       "equivalenceClass": "fx-0001-under-later-pack",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -713,7 +713,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2027.2.0"
+          "version": "2027.3.0"
         },
         "rulesFired": [
           {
@@ -800,14 +800,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "51e83c2c3206c8cd3581868ba9802c022e10a221db653fc91e5a6efc13ec349c"
+      "decisionDigest": "818b8973becf36a276857e72399e22343df9d391113ad9ab22f0451a2f3f798c"
     },
     {
       "description": "the opposite conclusion (synthetic: the value flipped in both the decision and the derivation)",
       "equivalenceClass": "fx-0001-flipped",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
-        "receiptSha256": "521917aa7373eab2b71fc652f4533ac7ff3f00eb505eee0f2de27bf1fc8792eb",
+        "id": "urn:duly:receipt:sha256:f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
+        "receiptSha256": "f374205a898c66abcb6fd311f407094badd6363aad0d466eee95a1b69fe42c3f",
         "caseId": "case:fixture:fx-0001",
         "decision": {
           "entity": "widget:fx-0001",
@@ -823,7 +823,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -910,14 +910,14 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "fedfcb0630d7ec82c52fd73695348af11b20c34e1bdb5af47123efe19f8189ee"
+      "decisionDigest": "5bd150aed47e4225802bb595fbfb0f971426adb70c2ab6c2e0f251e1716e837d"
     },
     {
       "description": "the committed fixture receipt fx-0003, unmodified — a live low_confidence abstention alongside a decision",
       "equivalenceClass": "fx-0003-as-decided",
       "receipt": {
-        "id": "urn:duly:receipt:sha256:d10aea516c5b47966774ef9811a4abe1ae022bd631ac1143d3631c7de098e14c",
-        "receiptSha256": "d10aea516c5b47966774ef9811a4abe1ae022bd631ac1143d3631c7de098e14c",
+        "id": "urn:duly:receipt:sha256:b4804a3b3caa4ab68e264fc6983e6c9d0524eb2c303831ee2e8b774b6f3ee2d4",
+        "receiptSha256": "b4804a3b3caa4ab68e264fc6983e6c9d0524eb2c303831ee2e8b774b6f3ee2d4",
         "caseId": "case:fixture:fx-0003",
         "decision": {
           "entity": "widget:fx-0003",
@@ -933,7 +933,7 @@
         },
         "rulePack": {
           "name": "duly-fixture-pack",
-          "version": "2026.2.0"
+          "version": "2026.3.0"
         },
         "rulesFired": [
           {
@@ -996,7 +996,7 @@
               "minConfidence": 0.8,
               "source": "default",
               "pack": "duly-fixture-pack",
-              "packVersion": "2026.2.0"
+              "packVersion": "2026.3.0"
             },
             "routedTo": "fixture-review"
           }
@@ -1007,7 +1007,7 @@
           "backend": "reference"
         }
       },
-      "decisionDigest": "bc38ba0eeb9451cc5e3b0ea77ceac168096e50d8715414271e9b9f2c96f211e3"
+      "decisionDigest": "873d6ca975d1531ac70b301b3c3d69cd5f99fd245ce8d80c6c4eb9ae7321c47c"
     }
   ]
 }

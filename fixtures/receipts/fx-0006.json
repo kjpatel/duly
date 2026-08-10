@@ -1,9 +1,9 @@
 {
-  "id": "urn:duly:receipt:sha256:f3dc0eb6645503f78aa4c9c94db12b80e1fd88bad339a9abce5cda2a25b85501",
-  "receiptSha256": "f3dc0eb6645503f78aa4c9c94db12b80e1fd88bad339a9abce5cda2a25b85501",
-  "caseId": "case:fixture:fx-0002",
+  "id": "urn:duly:receipt:sha256:7b1722102aa0ed5d39ba629377e1288f622f67beab4f52c60479491b7176e432",
+  "receiptSha256": "7b1722102aa0ed5d39ba629377e1288f622f67beab4f52c60479491b7176e432",
+  "caseId": "case:fixture:fx-0006",
   "decision": {
-    "entity": "widget:fx-0002",
+    "entity": "widget:fx-0006",
     "attribute": "fx:permitted",
     "value": {
       "kind": "boolean",
@@ -52,7 +52,7 @@
   ],
   "derivation": {
     "conclusion": {
-      "entity": "widget:fx-0002",
+      "entity": "widget:fx-0006",
       "attribute": "fx:permitted",
       "value": {
         "kind": "boolean",

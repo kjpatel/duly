@@ -90,6 +90,6 @@ def test_every_fixture_receipt_passes_the_guard():
     must be, since there has only ever been one semantics version. A guard that
     changed a verdict here would be a defect in the guard."""
     receipts = fixture_receipts()
-    assert len(receipts) == 4
+    assert len(receipts) == 5
     for doc in receipts:
         check_replayable(doc)

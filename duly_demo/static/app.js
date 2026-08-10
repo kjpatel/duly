@@ -92,7 +92,8 @@ async function init() {
   $("asof-input").addEventListener("change", () => {
     if (state.scenario && state.activeAttribute) runAdjudication();
   });
-  $("download-receipt").addEventListener("click", downloadReceipt);
+  $("download-bundle").addEventListener("click", () => downloadReport("bundle"));
+  $("download-receipt").addEventListener("click", () => downloadReport("receipt"));
   $("download-report-md").addEventListener("click", () => downloadReport("md"));
   $("download-report-pdf").addEventListener("click", () => downloadReport("pdf"));
 
@@ -416,7 +417,12 @@ function applyAdjudication(payload) {
 }
 
 function setDownloadsEnabled(enabled) {
-  for (const id of ["download-receipt", "download-report-md", "download-report-pdf"]) {
+  for (const id of [
+    "download-bundle",
+    "download-receipt",
+    "download-report-md",
+    "download-report-pdf",
+  ]) {
     $(id).disabled = !enabled;
   }
 }
@@ -932,22 +938,14 @@ function renderRulesFired() {
   $("rules-count").textContent = plural(rules.length, "rule");
 }
 
-/* ---------- receipt download ---------- */
-
-function downloadReceipt() {
-  if (!state.receipt) return;
-  const blob = new Blob([JSON.stringify(state.receipt, null, 2)],
-                        { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  const sha = state.receipt.receiptSha256;
-  a.download = sha ? `receipt-${sha.slice(0, 12)}.json` : "receipt.json";
-  document.body.append(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+/* ---------- exports ----------
+ *
+ * Every one of these is a server round trip, including the plain receipt,
+ * which used to be assembled here with JSON.stringify. Hashed bytes must not
+ * pass through a second JSON implementation: JavaScript has one number type,
+ * so a receipt whose abstention carried a score of 1.0 was written back as 1
+ * and no longer matched its own receiptSha256. Same rule the receipt viewer
+ * follows in the other direction — move the text, never the object. */
 
 function downloadReport(format) {
   if (!state.scenario || !state.activeAttribute) return;

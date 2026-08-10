@@ -800,6 +800,41 @@ def download_receipt(case_id: str) -> Response:
     )
 
 
+@router.get("/corpus/{case_id}/bundle.json")
+def download_bundle(case_id: str) -> Response:
+    """The receipt and the facts it was adjudicated over, in one file.
+
+    The bare receipt is the artifact whose hash is its identity; this is the
+    artifact that still verifies when nobody has the facts on disk. Both are
+    offered because the difference is a disclosure decision, not a convenience
+    one: fact bodies carry the source quotes, so the receipt alone proves what
+    was decided without showing the evidence it was decided from.
+
+    The shape is a JSON array of documents, verbatim — `/inspect` already
+    sorts receipts from facts by the fields they carry, so a bundle uploads as
+    one file and verifies whole. It wraps rather than edits for the usual
+    reason: a key added to a hashed body changes the hash.
+    """
+    receipt = _golden_receipt(case_id)
+    facts, status = _resolve_golden_facts(case_id)
+    if status.get("state") != "resolved":
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No bundle for case {case_id}: its facts could not be "
+                f"resolved ({status.get('reason', 'unknown reason')}). The "
+                "receipt alone is still available."
+            ),
+        )
+    return Response(
+        content=json.dumps([receipt, *facts], indent=2, ensure_ascii=False),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{case_id}-bundle.json"'
+        },
+    )
+
+
 @router.get("/corpus/{case_id}/report")
 def download_report(case_id: str, format: str = "md") -> Response:
     """The audit report for a corpus receipt, as Markdown or PDF.

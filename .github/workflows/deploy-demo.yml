@@ -1,0 +1,129 @@
+# Redeploy the hosted demo when main moves.
+#
+# This workflow is *optional infrastructure*, not part of the toolkit: it runs
+# only where the four GCP secrets below are configured, and is skipped
+# everywhere else — a fork, or a clone whose owner hosts nothing, sees it exit
+# immediately rather than fail. Nothing in duly's test matrix depends on it.
+#
+# Authentication is Workload Identity Federation, so no exportable credential
+# exists anywhere. The provider is pinned on the Google side to this repository
+# *and* to refs/heads/main, which is what makes it safe in a public repo: a
+# fork's token cannot satisfy the attribute condition even if this file is
+# copied verbatim.
+
+name: deploy the demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time, and let a newer commit supersede an in-flight older
+# one: the demo should end up serving main, not whichever build finished last.
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write   # required to mint the OIDC token WIF exchanges
+
+jobs:
+  deploy:
+    name: build, deploy, and verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A repository without the deployment configured is the normal case, and
+      # it must be quiet rather than red. Secrets are unavailable to expressions
+      # in `if:` at the job level for forks, so the gate is a step.
+      - name: Is a deployment configured?
+        id: gate
+        env:
+          PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+        run: |
+          if [ -z "$PROVIDER" ]; then
+            echo "no GCP_WIF_PROVIDER secret — this checkout hosts no demo; skipping"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.gate.outputs.configured == 'true'
+
+      - name: Build the wheel
+        if: steps.gate.outputs.configured == 'true'
+        run: uv build --wheel
+
+      # The Dockerfile expects a wheel and a content/ directory beside it. The
+      # content root is `examples/` — the same teaching content the deletion
+      # gate proves is removable, which is why it is copied in rather than
+      # baked into the image by path.
+      - name: Stage the build context
+        if: steps.gate.outputs.configured == 'true'
+        run: |
+          cp dist/duly-*.whl deploy/
+          cp -R examples deploy/content
+          du -sh deploy/content
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        if: steps.gate.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: steps.gate.outputs.configured == 'true'
+
+      # No --allow-unauthenticated: the service's IAM policy is set once, when
+      # it is created. Re-asserting it on every deploy would mean this
+      # identity needed permission to rewrite IAM policy, which is a larger
+      # grant than "publish a new revision" deserves.
+      - name: Deploy to Cloud Run
+        if: steps.gate.outputs.configured == 'true'
+        run: |
+          gcloud run deploy duly-demo \
+            --source deploy \
+            --region us-central1 \
+            --project "${{ secrets.GCP_PROJECT }}" \
+            --min-instances 0 \
+            --max-instances 1 \
+            --memory 1Gi \
+            --quiet
+
+      # Up is not the same as correct. The bundle round trip exercises the
+      # kernel, the content root, and the fact hashes in one request: it
+      # downloads a bundle from the decision workspace and pushes it back
+      # through the receipt viewer, which re-hashes every fact and re-runs the
+      # adjudication. A deployment serving stale or contentless bytes fails
+      # here rather than looking healthy.
+      - name: Verify the deployment decides, and its receipt replays
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          URL: https://duly.nyxworks.ai
+        run: |
+          set -euo pipefail
+          for path in / /rules /evidence /receipt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL$path")
+            printf '  %-10s %s\n' "$path" "$code"
+            [ "$code" = "200" ] || exit 1
+          done
+          curl -s --max-time 60 "$URL/api/report?scenarioId=notice-ny&attribute=nc:noticeCompliant&asOfEffective=2026-07-25&format=bundle" -o bundle.json
+          python3 - "$URL" <<'PY'
+          import json, sys, urllib.request
+          url = sys.argv[1]
+          text = open("bundle.json").read()
+          req = urllib.request.Request(
+              f"{url}/api/receipts/inspect",
+              data=json.dumps({"documents": [text]}).encode(),
+              headers={"Content-Type": "application/json"},
+          )
+          v = json.load(urllib.request.urlopen(req))["verification"]
+          print("  bundle:", v["verdict"], {c["id"]: c["state"] for c in v["checks"]})
+          if v["verdict"] != "pass":
+              raise SystemExit("the deployed demo does not verify its own bundle")
+          PY

@@ -1,0 +1,79 @@
+# Compiled from DMN by `python -m duly_dmn compile` — do not hand-edit.
+# Source: fixtures/dmn/widget-fee.dmn
+# The DMN decision table is the authored artifact; this file is its
+# compilation into the rule IR (spec/rule-ir.md, spec/dmn.md).
+
+pack:
+  name: duly-fixture-dmn
+  version: "2026.1.0"
+  ontology: duly-fixture
+  ontologyVersion: "0.1.0"
+  description: "Fixture fee schedule for widgets. Fictional."
+
+decisions:
+  - attribute: fx:requiredMinimumScore
+    entityType: fx:Widget
+    question: "What minimum score must this widget meet?"
+  - attribute: fx:assessedFee
+    entityType: fx:Widget
+    question: "What fee is assessed?"
+
+rules:
+  - id: FXD-MINIMUM-01
+    description: "Restricted widgets are held to the stricter threshold."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Fixture threshold, restricted regime (fictional)" }
+    effectiveFrom: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+      category: { attribute: fx:category }
+    when:
+      - 'category == "restricted"'
+    then:
+      entity: widget
+      attribute: fx:requiredMinimumScore
+      value: { kind: decimal, value: "50" }
+  - id: FXD-MINIMUM-02
+    description: "Ordinary widgets are held to the looser one."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Fixture threshold, ordinary regime (fictional)" }
+    effectiveFrom: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+      category: { attribute: fx:category }
+    when:
+      - 'category == "ordinary"'
+    then:
+      entity: widget
+      attribute: fx:requiredMinimumScore
+      value: { kind: decimal, value: "10" }
+  - id: FXD-FEE-01
+    description: "A widget below the minimum in force owes the fixture fee."
+    version: "1.0.0"
+    priority: 100
+    citation: { text: "Fixture fee for a deficient widget (fictional)" }
+    effectiveFrom: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+      minimum: { derived: fx:requiredMinimumScore }
+      score: { attribute: fx:score }
+    when:
+      - "score < minimum"
+    then:
+      entity: widget
+      attribute: fx:assessedFee
+      value: { kind: money, amount: "250.00", currency: USD }
+  - id: FXD-FEE-00
+    description: "Otherwise nothing is owed. Binds no fact, so it holds even where the score is missing."
+    version: "1.0.0"
+    priority: 0
+    citation: { text: "Fixture fee schedule, default (fictional)" }
+    effectiveFrom: "2026-01-01"
+    given:
+      widget: { entityType: fx:Widget }
+    then:
+      entity: widget
+      attribute: fx:assessedFee
+      value: { kind: money, amount: "0.00", currency: USD }

@@ -13,6 +13,7 @@ an optional dependency into the core suite.
 
 from __future__ import annotations
 
+import pathlib
 import subprocess
 import sys
 from pathlib import Path
@@ -85,6 +86,58 @@ def test_the_verdict_names_are_the_documented_three():
     assert prove.PROVED_DISJOINT == "PROVED-DISJOINT"
     assert prove.NOT_PROVED == "NOT-PROVED"
     assert prove.OUT_OF_FRAGMENT == "OUT-OF-FRAGMENT"
+
+
+def test_prove_equivalent_has_no_repo_relative_ontologies_default():
+    """The fourth CLI to carry `default="ontologies"`, and the one the A10
+    sweep missed: it is the SECOND parser in a file whose first parser was
+    already fixed, and that sweep read files, not parsers. A default that is
+    right in this repository hides the wrong-path case everywhere else
+    (CLAUDE.md), so the parser must resolve through the same
+    `_resolve_ontologies` no-default path `prove` uses.
+
+    Asserted without the solver: the z3 gate fires *before* registry
+    resolution, so this checks the parser itself.
+    """
+    import argparse
+
+    from duly_assurance import prove
+
+    # Reach the parser the same way main_equivalent builds it: parse a
+    # minimal argv and inspect the namespace default.
+    parser = argparse.ArgumentParser()
+    # Rather than duplicating the parser, assert on the source of truth the
+    # CLI actually uses: _resolve_ontologies prefers the flag, then the
+    # environment, then None — never a literal path.
+    ns = argparse.Namespace(ontologies=None)
+    import os
+
+    old = os.environ.pop("DULY_ONTOLOGIES", None)
+    try:
+        assert prove._resolve_ontologies(ns) is None
+        os.environ["DULY_ONTOLOGIES"] = "somewhere/else"
+        assert prove._resolve_ontologies(ns) == "somewhere/else"
+    finally:
+        if old is None:
+            os.environ.pop("DULY_ONTOLOGIES", None)
+        else:
+            os.environ["DULY_ONTOLOGIES"] = old
+    # And the parser default itself is None: parsing no flag must leave the
+    # namespace resolving through the environment, not through a path that
+    # only exists in duly's own checkout.
+    assert 'default="ontologies"' not in pathlib.Path(prove.__file__).read_text()
+
+
+@needs_z3
+@pytest.mark.z3
+def test_prove_equivalent_refuses_a_missing_registry_by_name():
+    """A path that was typed on purpose and does not exist is an error, not a
+    silent weakening of every verdict — same posture as `prove` (A10)."""
+    from duly_assurance.prove import main_equivalent
+
+    pack = str(REPO_ROOT / "fixtures" / "pack.yaml")
+    code = main_equivalent([pack, pack, "--ontologies", "no/such/place"])
+    assert code == 2
 
 
 # ---------------------------------------------------------------------------

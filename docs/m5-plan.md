@@ -652,7 +652,27 @@ proves it.
       it). The corrected review value was chosen by mutation: the obvious
       above-threshold value clears the abstention without moving the decision,
       which is a strictly weaker test.*
-- [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
+- [x] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
+      *Done, four converters in parallel plus two master fixes. Under
+      deletion the five converted suites now fail ONLY on tests carrying an
+      explicit moves-with-examples classification — 42 across all suites,
+      zero unclassified. Highlights: the report suite found that adjudicating
+      the fixture scenario as committed ABSTAINS (inputFacts empty), so every
+      converted assertion would have passed vacuously — the existing
+      rehash-fact precedent closes it; whatif's UNSAT twin turned out
+      constructible (fx-0002, free the score, demand not-permitted — the
+      exception needs "restricted", so no score reaches it); dmn's committed
+      compilation (fixtures/dmn/widget-fee.pack.yaml) is byte-stable across
+      hash seeds; extraction's byte-identity twin held on first run,
+      independently confirming c-2's adapter regeneration. Master fixes: the
+      SEVENTH repo-relative default (prove-equivalent's --ontologies — the
+      second parser in a file whose first was fixed; sweep by parser, not by
+      file), and spec/compatibility_demo.py moved off golden/ onto a fixture
+      receipt — the digest-vectors category error, found still live by the
+      deletion measurement, which also caught test_rule_ids' committed-pack
+      sweep passing half-vacuously (guards added; the four sweep tests are
+      classified movers).*
+      *(original task text follows)*
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
       `sensitivity: pii` fact for the redaction tests, and the pack now carries
@@ -1281,3 +1301,12 @@ and every exception behind it.**
   target field the adapter carries; the review arc now proves itself on a
   fixture-only deployment end to end, including a golden export that skips the
   seeded review-0001. Two example-shaped premises retired rather than forced.
+
+- 2026-08-06 — [#67](https://github.com/kjpatel/duly/pull/67) — **Phase 3, part
+  5: the last four suites** — kernel report, whatif, dmn and extraction onto
+  fixtures/, four converters in parallel. Deletion failures across all suites
+  are now 42, every one carrying an explicit moves-with-examples
+  classification; zero unclassified. The seventh repo-relative default fixed
+  (prove-equivalent — sweep by parser, not by file); compatibility_demo off
+  golden/; test_rule_ids' half-vacuous sweep guarded. The deletion measurement
+  caught both of the last two — no scout had.

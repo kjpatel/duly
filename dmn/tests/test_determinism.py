@@ -17,13 +17,29 @@ import pytest
 import yaml
 
 from duly_dmn import compile_file, compile_source, emit_pack
-from dmntest_helpers import EXAMPLES, REFUSALS, REPO, TRID_COMPILED, TRID_DMN, minimal_dmn
+from dmntest_helpers import (
+    FIXTURE_COMPILED,
+    FIXTURE_DMN,
+    FIXTURE_DMN_DIR,
+    FIXTURE_REFUSALS,
+    REPO,
+    minimal_dmn,
+)
 
-SOURCES = sorted(EXAMPLES.glob("*.dmn"))
+# The corpus this suite compiles. Fixtures, not `dmn/examples/`: parametrizing
+# over a glob is evaluated at *collection*, so a directory that has moved away
+# produces zero cases and pytest reports only the count that remains — which
+# reads exactly like success (CLAUDE.md). Hence the guards below.
+SOURCES = sorted(FIXTURE_DMN_DIR.glob("*.dmn"))
+REFUSAL_SOURCES = sorted(FIXTURE_REFUSALS.glob("*.dmn"))
 
 
 def test_there_is_something_to_compile():
-    assert SOURCES
+    assert SOURCES, f"no .dmn documents under {FIXTURE_DMN_DIR}"
+
+
+def test_there_is_something_that_refuses():
+    assert REFUSAL_SOURCES, f"no .dmn documents under {FIXTURE_REFUSALS}"
 
 
 @pytest.mark.parametrize("path", SOURCES, ids=lambda p: p.name)
@@ -43,11 +59,11 @@ def test_emitted_yaml_round_trips_to_the_compiled_dict(path):
 
 
 def test_amounts_and_dates_survive_the_round_trip_as_strings():
-    pack = yaml.safe_load(TRID_COMPILED.read_text(encoding="utf-8"))
-    default = next(r for r in pack["rules"] if r["id"] == "TRID-DEF-00")
+    pack = yaml.safe_load(FIXTURE_COMPILED.read_text(encoding="utf-8"))
+    default = next(r for r in pack["rules"] if r["id"] == "FXD-FEE-00")
     assert default["then"]["value"]["amount"] == "0.00"
     assert isinstance(default["effectiveFrom"], str)
-    assert default["effectiveFrom"] == "2015-10-03"
+    assert default["effectiveFrom"] == "2026-01-01"
     assert isinstance(pack["pack"]["version"], str)
 
 
@@ -99,19 +115,19 @@ def test_hash_randomization_does_not_move_a_byte():
     for seed in ("0", "12345"):
         env = dict(os.environ, PYTHONHASHSEED=seed)
         proc = subprocess.run(
-            [sys.executable, "-m", "duly_dmn", "compile", str(TRID_DMN)],
+            [sys.executable, "-m", "duly_dmn", "compile", str(FIXTURE_DMN)],
             capture_output=True, text=True, env=env, cwd=REPO, check=True,
         )
         outputs.append(proc.stdout)
     assert outputs[0] == outputs[1]
-    assert outputs[0] == TRID_COMPILED.read_text(encoding="utf-8")
+    assert outputs[0] == FIXTURE_COMPILED.read_text(encoding="utf-8")
 
 
 def test_the_source_header_is_repo_relative():
     """The `# Source:` line must not leak an absolute path, or a checkout in a
     different directory would produce different bytes."""
-    text = TRID_COMPILED.read_text(encoding="utf-8")
-    assert "# Source: dmn/examples/trid-fee-tolerance.dmn" in text
+    text = FIXTURE_COMPILED.read_text(encoding="utf-8")
+    assert "# Source: fixtures/dmn/widget-fee.dmn" in text
     assert str(REPO) not in text
 
 
@@ -120,11 +136,11 @@ def test_cwd_and_absolute_paths_do_not_change_a_byte(tmp_path):
     the identical file: the header anchors on the project root above the .dmn,
     not on the cwd or on where duly_dmn happens to be installed."""
     proc = subprocess.run(
-        [sys.executable, "-m", "duly_dmn", "compile", str(TRID_DMN.resolve())],
+        [sys.executable, "-m", "duly_dmn", "compile", str(FIXTURE_DMN.resolve())],
         capture_output=True, text=True, cwd=tmp_path, check=True,
         env=dict(os.environ, PYTHONPATH=str(REPO / "dmn") + os.pathsep + str(REPO / "kernel")),
     )
-    assert proc.stdout == TRID_COMPILED.read_text(encoding="utf-8")
+    assert proc.stdout == FIXTURE_COMPILED.read_text(encoding="utf-8")
 
 
 def test_column_order_not_dict_order_drives_the_output():
@@ -135,16 +151,20 @@ def test_column_order_not_dict_order_drives_the_output():
     assert list(base["rules"][0]["given"]) == ["terminationNotice", "state"]
 
 
-def test_refusal_examples_fail_the_same_way_every_time():
+def test_refusals_fail_the_same_way_every_time():
+    """A refusal is output too. An error message that varied between runs — on
+    set iteration, on which of several defects was noticed first — would make
+    a CI failure irreproducible."""
     from duly_dmn.errors import DmnCompileError
 
-    from dmntest_helpers import refusal_value_kinds
+    from dmntest_helpers import fixture_value_kinds
 
-    for path in sorted(REFUSALS.glob("*.dmn")):
+    assert REFUSAL_SOURCES, f"no .dmn documents under {FIXTURE_REFUSALS}"
+    for path in REFUSAL_SOURCES:
         messages = set()
         for _ in range(3):
             try:
-                compile_file(path, refusal_value_kinds())
+                compile_file(path, fixture_value_kinds())
             except DmnCompileError as e:
                 messages.add(str(e))
         assert len(messages) == 1, path.name

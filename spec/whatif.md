@@ -88,13 +88,13 @@ When the kernel refutes something the solver claimed, the tool raises `SolverKer
 
 It is not a filter. A candidate that fails verification is never silently skipped and never silently returned, because both of those turn a defect into a wrong answer. Reaching this state means the encoding and the kernel disagree about the rule IR, which is a bug in one of them and is not something a user can work around.
 
-**The guard is tested by firing it.** `whatif/tests/test_whatif.py` injects two broken encodings — the solver is handed a perturbed pack while the kernel keeps running the real one — and requires the raise. The first is worth understanding, because it shows why verifying the answer alone is not enough:
+**The guard is tested by firing it.** `whatif/tests/test_whatif.py` injects two broken encodings — the solver is handed a perturbed pack while the kernel keeps running the real one — and requires the raise. Both now run on the toolkit's own fixture pack, so the proof survives the deletion of the teaching content; the shapes are unchanged. The first is worth understanding, because it shows why verifying the answer alone is not enough:
 
-- Perturbing the notice pack's deficiency test from `days_between(...) < minDays` to `<= minDays` moves the compliance boundary one day. The solver answers 2026-04-23.
-- **The kernel confirms 2026-04-23 is compliant.** The answer check passes. A tool that verified only its answer would return a wrong date that passed its own test.
-- The boundary check is what catches it: the solver claims 2026-04-24 is non-compliant, the kernel says it is compliant, and the tool refuses to answer.
+- Perturbing the fixture pack's exception guard from `score < minimum` to `<= minimum` moves the permitted boundary by one. The solver answers 51.
+- **The kernel confirms 51 is permitted.** The answer check passes. A tool that verified only its answer would return a wrong value that passed its own test.
+- The boundary check is what catches it: the solver claims 50 is not permitted, the kernel says it is, and the tool refuses to answer.
 
-The second injection retypes the TRID categorisation guard from `"TransferTax"` to `"RecordingFee"` — the perturbation [pack-verification.md](pack-verification.md) P7 records as failing at both levels — so the solver concludes no amount owes a cure, and the kernel refutes the first value handed to it.
+The second injection retypes the category guard from `"restricted"` to `"ordinary"` — the same shape as the perturbation [pack-verification.md](pack-verification.md) P7 records as failing at both levels — so the solver concludes no score owes the fee, and the kernel refutes the first value handed to it.
 
 **Rejected:** *logging the contradiction and returning the next candidate.* It converts a soundness bug into an intermittent wrong answer, which is strictly worse than a crash — and the crash is actionable, since it arrives with both artifacts attached.
 

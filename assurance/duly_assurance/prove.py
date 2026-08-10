@@ -1033,7 +1033,11 @@ def main_equivalent(argv: list[str] | None = None) -> int:
         "--attribute", action="append", default=None,
         help="attribute CURIE to compare (repeatable; default: every attribute both packs conclude)",
     )
-    parser.add_argument("--ontologies", default="ontologies")
+    # No path default, same as `prove` — see _resolve_ontologies. This parser
+    # kept the repo-relative fallback for a while after `prove`'s lost it: the
+    # sweep that fixed A10 read the file, found the first parser already
+    # clean, and moved on. Sweep by parser, not by file.
+    parser.add_argument("--ontologies", default=None)
     parser.add_argument("--verbose", action="store_true", help="print domain assumptions")
     args = parser.parse_args(argv)
 
@@ -1041,7 +1045,11 @@ def main_equivalent(argv: list[str] | None = None) -> int:
         print(Z3_MISSING, file=sys.stderr)
         return 2
 
-    registry = _registry(args.ontologies)
+    try:
+        registry = _registry(_resolve_ontologies(args))
+    except BadOntologies as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     pack_a, pack_b = _load(args.pack_a), _load(args.pack_b)
     if pack_a is None or pack_b is None:
         return 2

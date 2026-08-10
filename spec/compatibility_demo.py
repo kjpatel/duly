@@ -34,7 +34,11 @@ from duly_core import content_hash
 from duly_kernel import UnsupportedSemantics, check_replayable, decision_digest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-RECEIPT_PATH = ROOT / "golden" / "receipts" / "notice-ny-0007.json"
+# A committed receipt from the toolkit's own corpus. This demo is a contract
+# artifact executed by a kernel test, so it must not rest on content an
+# adopter is invited to delete — the same rule that moved the digest vectors
+# off `golden/` (fixtures/README.md).
+RECEIPT_PATH = ROOT / "fixtures" / "receipts" / "fx-0001.json"
 
 
 def _reseal(receipt: dict) -> dict:

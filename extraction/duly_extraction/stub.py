@@ -9,7 +9,9 @@ deployment swaps in an adapter that derives the rendition from the bytes
 (docling_adapter.py is the first); nothing downstream changes.
 
 Output is byte-compatible with the facts extract.py has always produced (the
-committed starter facts regression-test this), including passing the targets'
+committed starter *and fixture* facts regression-test this — the fixture twin
+in extraction/tests is the load-bearing one, since the starters relocate under
+examples/), including passing the targets'
 scripted confidence values through verbatim — those are demo values, not real
 calibration; adapters that measure anything should emit ``method: "raw"``.
 """

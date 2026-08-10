@@ -19,8 +19,19 @@ RULEPACKS = Path(__file__).resolve().parents[2] / "rulepacks"
 
 
 def committed_packs():
-    for pack_file in sorted(RULEPACKS.glob("*/pack.yaml")):
-        yield pack_file, yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+    """EXAMPLE CONTENT: the four tests below sweep the committed teaching
+    packs and their grandfathered-id audit trail — their subject moves under
+    `examples/` and they move with it. The convention unit tests above them
+    are toolkit (synthetic packs) and stay. The list-then-assert shape is the
+    vacuous-glob guard: an empty directory must fail these tests loudly, not
+    let two of them pass over nothing while the other two fail confusingly.
+    """
+    packs = [
+        (pack_file, yaml.safe_load(pack_file.read_text(encoding="utf-8")))
+        for pack_file in sorted(RULEPACKS.glob("*/pack.yaml"))
+    ]
+    assert packs, "no committed packs found; these tests sweep example content"
+    return packs
 
 
 def conventional_pack(rules: list[dict], prefix: str = "TEST") -> dict:

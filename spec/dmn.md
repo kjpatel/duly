@@ -199,7 +199,7 @@ DMN namespaces accepted: 1.3 (`…/20191111/MODEL/`), 1.4 (`…/20211108/MODEL/`
 
 ## Refusal classes
 
-Every refusal carries a machine-readable class and a location. One minimal example per class is committed under [`dmn/examples/refusals/`](../dmn/examples/refusals/) and exercised by [`dmn/tests/test_refusals.py`](../dmn/tests/test_refusals.py), which asserts the message names the actual problem — not merely that something was raised.
+Every refusal carries a machine-readable class and a location. One minimal example per class is committed under [`dmn/examples/refusals/`](../dmn/examples/refusals/) and exercised by [`dmn/tests/test_refusals.py`](../dmn/tests/test_refusals.py), which asserts the message names the actual problem — not merely that something was raised. Every class additionally has example-independent unit coverage in `dmn/tests/test_compile.py` (synthetic tables built in-code, plus the toolkit's own committed refusal at `fixtures/dmn/refusals/`), so the refusal contract stays tested when the teaching examples relocate under `examples/`.
 
 | Class | Raised when | Example |
 |---|---|---|

@@ -68,7 +68,7 @@
     },
     "abstentions": {
       "type": "array",
-      "description": "Attributes the decision needed but declined to use. Abstention lives on the receipt, not on the fact (spec D5).",
+      "description": "Attributes the case declined to use as asserted, excluded from the case's live facts before any rule ran — the entries appear on every receipt for the case, whichever decision was adjudicated. Abstention lives on the receipt, not on the fact (spec D5).",
       "items": {
         "type": "object",
         "required": ["attribute", "reason"],

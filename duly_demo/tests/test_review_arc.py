@@ -254,10 +254,14 @@ def test_review_scenario_abstains_below_the_confidence_floor(client):
     assert entry["routedTo"] == "fixture-review"
     assert entry["itemId"].startswith("urn:duly:review:sha256:")
     assert entry["itemStatus"] == "open"
+    # Presentation hint: FX-EXCEPTION-01 (concluding fx:permitted) binds
+    # fx:score, so this question's rules do consult the abstained attribute.
+    assert entry["consultedByDecision"] is True
 
     # The receipt itself stays verbatim — enrichment lives beside it.
     receipt_entry = payload["receipt"]["abstentions"][0]
     assert "itemId" not in receipt_entry and "itemStatus" not in receipt_entry
+    assert "consultedByDecision" not in receipt_entry
 
     # The abstained fact links to its document span like any grounded fact.
     abstained = payload["factIndex"][entry["facts"][0]]
@@ -305,6 +309,49 @@ def test_the_arc_scripts_a_separate_case_and_leaves_its_source_alone(client):
     assert source_entry["facts"] != arc_entry["facts"]
     assert source_entry["itemId"] != arc_entry["itemId"]
     assert source["receipt"]["caseId"] != arc["receipt"]["caseId"]
+
+
+def test_consulted_attributes_is_scoped_to_the_question_and_follows_derived():
+    """The `consultedByDecision` presentation hint's underlying set.
+
+    Receipt abstentions are case-wide — the kernel filters the fact universe
+    before any rule runs — so an entry can name an attribute the selected
+    question's rules never consult, and the UI labels that rather than letting
+    it read as a bug. The set is per-question rule reachability: direct
+    `attribute:` bindings, `derived:` bindings followed transitively, and the
+    decision attribute itself. The fixture content cannot exercise the
+    "not consulted" branch (both fixture decisions consult the same inputs),
+    which is why this pack is synthetic.
+    """
+    pack = {
+        "rules": [
+            {
+                "given": {
+                    "w": {"entityType": "fx:Widget"},
+                    "s": {"attribute": "fx:score"},
+                    "m": {"derived": "fx:minimum"},
+                },
+                "then": {"attribute": "fx:permitted"},
+            },
+            {
+                "given": {"w": {"entityType": "fx:Widget"}, "b": {"attribute": "fx:baseline"}},
+                "then": {"attribute": "fx:minimum"},
+            },
+            {
+                "given": {"w": {"entityType": "fx:Widget"}, "c": {"attribute": "fx:color"}},
+                "then": {"attribute": "fx:label"},
+            },
+        ]
+    }
+    consulted = demo_app._consulted_attributes(pack, "fx:permitted")
+    assert "fx:score" in consulted  # direct binding
+    assert "fx:baseline" in consulted  # via the derived fx:minimum
+    assert "fx:permitted" in consulted  # the question's own attribute
+    assert "fx:color" not in consulted  # the other decision's input
+
+    # No pack or no decision in hand: no hint, rather than a wrong one.
+    assert demo_app._consulted_attributes(None, "fx:permitted") is None
+    assert demo_app._consulted_attributes(pack, None) is None
 
 
 # ---------------------------------------------------------------------------

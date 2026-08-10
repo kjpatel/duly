@@ -275,7 +275,7 @@ class TestStandaloneTier:
         rendered = " ".join(
             b.get("text", "") for b in evidence["blocks"] if b["tag"] == "para"
         )
-        assert "not available for rendering" in rendered
+        assert "was not supplied for rendering" in rendered
 
     def test_a_pasted_corpus_receipt_resolves_its_own_facts(self, client):
         # The paste has no facts, but the corpus does — and a receipt that is

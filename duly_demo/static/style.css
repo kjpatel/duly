@@ -1147,6 +1147,14 @@ summary:focus-visible {
   font-size: 0.7rem;
 }
 
+/* The export panel's standing caveat: wider than the one-line blurb above it,
+ * and it wraps rather than sitting on the flex baseline. */
+.export-copy .export-note {
+  max-width: 62ch;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
 .rules-heading {
   margin-top: 26px;
 }

@@ -49,7 +49,9 @@
       "*Search* the 351 committed receipts by case id or hash, or paste one you were given.",
       "Read it as an *audit report*, or as the raw *receipt JSON* it actually is.",
       "*Verification* on the right ran when the receipt opened, not on request: " +
-        "its own hash, its facts' hashes, and a full re-adjudication.",
+        "its own hash, its facts' hashes, and a full re-adjudication. A receipt " +
+        "without its facts can pass only the first — *partly verified* means " +
+        "the rest had nothing to check, not that something failed.",
     ],
   };
 

@@ -275,7 +275,7 @@ class TestStandaloneTier:
         rendered = " ".join(
             b.get("text", "") for b in evidence["blocks"] if b["tag"] == "para"
         )
-        assert "not available for rendering" in rendered
+        assert "was not supplied for rendering" in rendered
 
     def test_a_pasted_corpus_receipt_resolves_its_own_facts(self, client):
         # The paste has no facts, but the corpus does — and a receipt that is
@@ -448,6 +448,51 @@ class TestExports:
     def test_an_unknown_format_is_refused(self, client):
         res = client.get(f"/api/receipts/corpus/{CASE}/report?format=docx")
         assert res.status_code == 422
+
+
+class TestTheBundle:
+    """A bundle is the receipt plus the evidence it was decided over, and the
+    property that makes it worth having is that it verifies *whole* somewhere
+    the corpus is not — which is exactly what a bare receipt cannot do."""
+
+    def test_a_bundle_carries_the_receipt_and_every_fact_verbatim(self, client):
+        res = client.get(f"/api/receipts/corpus/{CASE}/bundle.json")
+        assert res.status_code == 200
+        docs = res.json()
+        assert isinstance(docs, list), "a bundle wraps in an array; it never edits"
+        receipts = [d for d in docs if "receiptSha256" in d]
+        facts = [d for d in docs if "contentHash" in d and "receiptSha256" not in d]
+        assert receipts == [_receipt()]
+        assert facts == [json.loads(t) for t in _fact_texts()]
+
+    def test_a_bundle_verifies_whole_when_the_corpus_cannot_be_consulted(
+        self, client
+    ):
+        # The point of the whole feature. A receipt whose case the server
+        # cannot resolve verifies only its own hash; the same receipt carried
+        # in a bundle replays. Re-cased so no corpus lookup can rescue it —
+        # which is the situation of every receipt minted in a live session.
+        bundle = client.get(f"/api/receipts/corpus/{CASE}/bundle.json").json()
+        receipt = next(d for d in bundle if "receiptSha256" in d)
+        facts = [d for d in bundle if "receiptSha256" not in d]
+
+        alone = _inspect(client, json.dumps(_rehash({**receipt, "caseId": "case:elsewhere"})))
+        assert _checks(alone) == {
+            "receiptHash": "pass",
+            "facts": "unavailable",
+            "replay": "unavailable",
+        }
+
+        whole = _inspect(client, json.dumps(bundle))
+        assert _checks(whole) == {"receiptHash": "pass", "facts": "pass", "replay": "pass"}
+        assert whole["verification"]["verdict"] == "pass"
+        assert len(facts) > 0, "a bundle with no facts would prove nothing new"
+
+    def test_a_bundle_uploads_as_one_blob(self, client):
+        # `_parse_documents` flattens an array, so the whole file goes in one
+        # field: a user who downloaded a bundle never has to split it up.
+        text = client.get(f"/api/receipts/corpus/{CASE}/bundle.json").text
+        assert _checks(_inspect(client, text))["replay"] == "pass"
 
 
 class TestWithoutTheKernel:

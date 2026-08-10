@@ -6,6 +6,25 @@ Entries are written after the fact, from merged work.
 
 **Through M4, these versions were git tags marking milestones, not package releases** — `pyproject.toml` deliberately stayed at `0.0.1` because nothing was published, and a tag said "this milestone is done and here is what it meant" without claiming the contract was stable. **From v1.0.0 a tag is both**: the distribution version and the tag agree, and the milestone/stability distinction is carried by [spec/compatibility.md](spec/compatibility.md) instead of by the absence of a package.
 
+## Unreleased
+
+**A question a reader asked the demo, and could not answer from it.** Someone downloaded a receipt minted in a live session, pasted it back into the receipt viewer, got **Partly verified** with two *not checked* cards, and reasonably concluded verification was broken. Every word on the screen was accurate; nothing on it said the thing that would have resolved the confusion. What that exposed was not a defect in the receipt contract but an unexamined seam in how the project talks about it — and, underneath, one real bug.
+
+### Added
+
+- **Bundle exports** (`Receipt + facts`, in the decision workspace and the receipt viewer). A JSON array carrying the receipt and the exact fact set it was adjudicated over — *wrapped*, never merged, because a fact array added inside a receipt changes the bytes its own `receiptSha256` covers, so the merged document would fail the first check it met. Bundles are the whole fact set rather than `inputFacts`, which is the subtlety: abstentions are computed over the entire live fact set, so a below-floor fact shapes a receipt without ever binding, and replaying from the pinned facts alone drops the abstention and byte equality with it.
+- **[The FAQ answers the question directly](docs/faq.md)** — *a receipt does not carry its facts; what does it prove if they are gone?* Integrity and a binding commitment to the evidence, which are separable from availability. The commitment is the part that is easy to miss: losing the facts costs the ability to substantiate a decision and never buys the ability to substitute a more convenient account of what the evidence was, because matching a pinned hash with different bodies is a second-preimage attack. Evidence loss is made visible and irreversible rather than quietly repairable.
+
+### Fixed
+
+- **The workspace's receipt download was corrupting hashed bytes, and the demo data hid it.** `abstentions[].confidence.score` and `.threshold.minConfidence` are JSON *numbers* in the receipt schema; the button assembled its file with `JSON.stringify` in the browser, and JavaScript has one number type — so a receipt whose abstention scored exactly `1.0` downloaded as `1`, a different canonical body, and failed its own hash check in the viewer one page over. The [JSON-fidelity gotcha](duly_demo/CLAUDE.md) had been written a release earlier about the *upload* direction and read as a rule about `/inspect`; it was always directionless. Every export is a server round trip now, pinned by feeding the download back into `/inspect`. Nothing caught it because no committed scenario has an integral floor or score — the bug needed a `0.0` or a `1.0`, and honest demo data never produced one.
+- **A demo scenario's in-memory facts are not always the documents their ids name**, which the deletion gate found by failing the new bundle test. `_load_fixture_scenario` rewrites `grounding.charSpan` on the committed `spec/examples` facts to index the abridged rendition the demo serves — right for a highlight, and a mutation of a content-addressed body, so those facts stop hashing to their own ids. It went unnoticed because the demo had only ever *displayed* them; an export is the first path that hands facts to someone as hashed artifacts. The bundle re-hashes every pinned fact and refuses rather than emit a file that fails its own facts check, since **"the evidence has been altered" is indistinguishable from a forgery on the receiving end** — the guard is on the artifact rather than the code path, so a future edit-on-the-way-through is caught the same way.
+- Receipt-viewer and audit-report copy now say *why* a check could not run and what supplying the facts would change, rather than only that it did not: "not checked" is a missing input, not a refuted check, and the two are different verdicts on purpose.
+
+### Changed
+
+- [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) sharpens the claim this work put pressure on. The doc already argued that a record only its author can verify is documentation, while one its recipient can verify is a receipt — "the difference is not in the artifact, it is in whether the checking is available to the person with a reason to doubt." What the download exposed is that this availability has a *packaging* precondition: **integrity travels inside the artifact; availability is a retention decision somebody has to make.** The separation is not a gap in the scheme — it is what lets a receipt prove what was decided to someone not entitled to read the evidence it was decided from.
+
 ## v1.1.1 — both edges walkable, and the envelope measured
 
 **M5 closes with this release.** Its exit criterion was met the only way it could be honestly: an agent with no repository context followed the guide with an invented domain and reached a verified, replaying corpus in one sitting. The plan that ran the milestone (26 PRs at estimate, 40 shipped, every overrun a measurement replacing a guess) is deleted with the milestone; what it proved out lives in CLAUDE.md's rules, the stability policy, and this file.
@@ -21,7 +40,7 @@ Entries are written after the fact, from merged work.
 - Starter generators merge into `scenario.json` instead of overwriting it: hand-maintained keys (`domain`, `demoExtractor`, `reviewArc`) survive a re-run, enforced by a new generator-drift suite. The same fix caught the reverse drift — one generator's literal was resurrecting fact files deleted from the manifest and the disk.
 - Three docs pointed the LinkML lane at its pre-move path — a command that collected zero tests and exited 0; and the optional-deps comments still claimed the packs were outside a paths filter the move had put them inside.
 
-## v1.1.0 — the adopter's wave## v1.1.0 — the adopter's wave
+## v1.1.0 — the adopter's wave
 
 What shipping the adopter's guide cost and taught. The guide was written by executing every command against an installed wheel, then executed *again* by an agent with no context and an invented domain — and the three defects that run surfaced were all in seams the guide's claims never covered.
 

@@ -202,9 +202,22 @@
       <div class="export-panel">
         <div class="export-copy">
           <div class="field-label">Export audit artifacts</div>
-          <p>Save the receipt or a human-readable report.</p>
+          <p>Save the receipt, the receipt with its evidence, or a human-readable report.</p>
+          <p class="export-note">
+            A receipt pins its facts by hash rather than carrying them, so the
+            receipt alone proves what was decided but cannot reproduce its own
+            evidence. <strong>Receipt + facts</strong> bundles both and replays
+            anywhere. In a deployment the fact store keeps that evidence; this
+            demo's store is in memory and resets when the process does.
+          </p>
         </div>
         <div class="download-row">
+          <button id="download-bundle" class="download-btn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+              <path d="M12 3v12M7 10l5 5 5-5M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Receipt + facts
+          </button>
           <button id="download-receipt" class="download-btn" type="button" disabled>
             <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
               <path d="M12 3v12M7 10l5 5 5-5M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

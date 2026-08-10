@@ -719,6 +719,22 @@ to the person with a reason to doubt. The [receipt viewer](../duly_demo/receipts
 exists to make that availability concrete rather than theoretical
 ([tour §12](demo_tour.md#12-the-receipt-viewer)).
 
+That last claim has a precondition it took a demo download to expose, and it is
+about *packaging* rather than computation. A receipt pins its facts by hash, so
+what the recipient can check depends on what travelled with it: alone, the
+receipt yields tamper-evidence and a permanent commitment to which evidence was
+used — nobody can substitute fact bodies that hash the same — but not
+re-derivation, because the bodies are what re-adjudication consumes. **Integrity
+travels in the artifact; availability is a retention decision somebody has to
+make.** Inside a deployment the append-only store is that decision (guidance
+item 5 below asks for the whole chain, not only facts). For an artifact leaving
+it, the answer is a bundle: the receipt and the exact fact set it was
+adjudicated over, wrapped in one file rather than merged into one document,
+because a fact array added inside a receipt would change the bytes its own hash
+covers. The distinction is not a gap in the scheme — it is the same separation
+that lets a receipt prove what was decided to someone who is not entitled to
+read the evidence it was decided from.
+
 Taking the contracts to v1.0 put a question to all of that which none of it had
 asked: **replay by whom?** Every claim above ends in "re-adjudicate and compare
 the bytes", and every one of them quietly assumes the kernel doing the

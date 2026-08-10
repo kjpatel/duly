@@ -396,7 +396,10 @@ def _check_facts(receipt: dict, facts: list[dict], facts_status: dict) -> dict:
                 f"{len(pinned)} facts are pinned by hash, but their bodies were "
                 f"not supplied: {facts_status.get('reason', 'no facts available')}. "
                 "A receipt pins facts by content hash, so it cannot reproduce "
-                "them on its own."
+                "them on its own — and the viewer resolves bodies from disk "
+                "only for the committed corpus, so a receipt from a live "
+                "session must arrive with its facts. Paste them alongside it "
+                "and this check runs."
             ),
         }
     content_hash = _kernel("content_hash")
@@ -594,7 +597,11 @@ def _verify(
             "partial",
             "Nothing here can be checked without the kernel."
             if checks[0]["state"] == "unavailable"
-            else "Verified as far as the supplied inputs allow.",
+            else (
+                'Verified as far as the supplied inputs allow. "Not checked" '
+                "is a missing input, not a failed check — supply what each "
+                "card names and it runs."
+            ),
         )
     else:
         verdict, headline = "pass", "This receipt replays byte-for-byte."
@@ -789,6 +796,41 @@ def download_receipt(case_id: str) -> Response:
         media_type="application/json",
         headers={
             "Content-Disposition": f'attachment; filename="{case_id}-receipt.json"'
+        },
+    )
+
+
+@router.get("/corpus/{case_id}/bundle.json")
+def download_bundle(case_id: str) -> Response:
+    """The receipt and the facts it was adjudicated over, in one file.
+
+    The bare receipt is the artifact whose hash is its identity; this is the
+    artifact that still verifies when nobody has the facts on disk. Both are
+    offered because the difference is a disclosure decision, not a convenience
+    one: fact bodies carry the source quotes, so the receipt alone proves what
+    was decided without showing the evidence it was decided from.
+
+    The shape is a JSON array of documents, verbatim — `/inspect` already
+    sorts receipts from facts by the fields they carry, so a bundle uploads as
+    one file and verifies whole. It wraps rather than edits for the usual
+    reason: a key added to a hashed body changes the hash.
+    """
+    receipt = _golden_receipt(case_id)
+    facts, status = _resolve_golden_facts(case_id)
+    if status.get("state") != "resolved":
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No bundle for case {case_id}: its facts could not be "
+                f"resolved ({status.get('reason', 'unknown reason')}). The "
+                "receipt alone is still available."
+            ),
+        )
+    return Response(
+        content=json.dumps([receipt, *facts], indent=2, ensure_ascii=False),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{case_id}-bundle.json"'
         },
     )
 

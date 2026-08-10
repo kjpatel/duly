@@ -43,9 +43,10 @@ Change the **As of** date (top right) to a date in 2025 — say `12/15/2025`. Th
 
 ## 7. Download the artifacts
 
-Three buttons at bottom right:
+Four buttons at bottom right:
 
-- **Receipt (JSON)** — the machine-verifiable, content-hashed decision record.
+- **Receipt + facts** — the receipt *and* the fact set it was adjudicated over, wrapped in one JSON array. This is the export that still replays somewhere the facts are not on disk, which is every artifact that leaves the machine that produced it; drop the whole file into the receipt viewer's paste box in step 12 and all three checks run.
+- **Receipt (JSON)** — the machine-verifiable, content-hashed decision record, and the smaller claim: it proves what was decided and permanently pins *which* evidence was used, without carrying — or disclosing — the evidence itself.
 - **Audit report (Markdown / PDF)** — the examiner-facing document: conclusion, reasoning narrative with quoted evidence, cited rules, and a technical appendix with every hash and the exact replay command. Download it at both as-of dates and compare. See a committed [example report](example-audit-report.md).
 
 ## 8. Switch domains
@@ -175,6 +176,8 @@ The instructive one takes a second step. Flip the verdict *and* recompute `recei
 ### 12c. What it refuses to guess
 
 Paste a receipt with no facts alongside it. The hash still verifies; the evidence and replay checks report **not checked** and say why — a receipt pins its facts by content hash, so it genuinely cannot reproduce them, and a viewer that quietly rendered a thinner report would be claiming completeness it does not have. **Rendered against** at the bottom of the rail always names what the report was built from.
+
+*Not checked* is an absent input, not a refuted check, and the difference is worth feeling rather than reading: open a corpus case, download **Receipt + facts**, and paste that single file. The same three checks now pass, because the bundle carried the evidence the bare receipt could only name. Nothing about the receipt changed — it is byte-identical in both files — which is the point. Integrity travels inside the artifact; availability is a packaging decision somebody makes when the artifact leaves home.
 
 The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to whichever pack now declares that name: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
 

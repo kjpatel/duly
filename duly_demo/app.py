@@ -1593,13 +1593,17 @@ def api_report(
     scenarioId: str, attribute: str, asOfEffective: str, format: str = "md"
 ) -> Response:
     """Adjudicate (same path as /api/adjudicate) and return a downloadable
-    export: the audit report as Markdown or PDF, or the receipt as PROV-O
-    JSON-LD (format=jsonld — machine consumers only, deliberately no UI
-    button; see spec/prov-o.md)."""
-    if format not in ("md", "pdf", "jsonld"):
+    export: the audit report as Markdown or PDF, the receipt and the facts it
+    was adjudicated over as one self-contained bundle (format=bundle), or the
+    receipt as PROV-O JSON-LD (format=jsonld — machine consumers only,
+    deliberately no UI button; see spec/prov-o.md)."""
+    if format not in ("md", "pdf", "jsonld", "bundle", "receipt"):
         raise HTTPException(
             status_code=422,
-            detail=f"format must be 'md', 'pdf', or 'jsonld', got {format!r}",
+            detail=(
+                "format must be 'md', 'pdf', 'jsonld', 'bundle', or 'receipt', "
+                f"got {format!r}"
+            ),
         )
     scenario = _get_scenario(scenarioId)
     effective = _normalize_effective(asOfEffective)
@@ -1608,6 +1612,97 @@ def api_report(
     receipt, _engine_mode = _adjudicate_scenario(
         scenario, attribute, effective, knowledge
     )
+
+    if format == "receipt":
+        # Served from here rather than assembled in the browser, and the
+        # reason is not tidiness. `abstentions[].confidence.score` and
+        # `abstentions[].threshold.minConfidence` are JSON numbers in the
+        # receipt schema, and JavaScript has one number type: a receipt
+        # carrying a score of 1.0 came back out of `JSON.stringify` as 1,
+        # a different canonical body, and the download failed its own hash
+        # check in the receipt viewer. Nothing warned, because the scenarios
+        # whose floors and scores are not integral round-trip fine.
+        filename = f"duly-receipt-{scenarioId}-{_date_prefix(effective)}.json"
+        return Response(
+            content=json.dumps(receipt, indent=2, ensure_ascii=False),
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    if format == "bundle":
+        # The receipt and the exact fact set it was adjudicated over, in one
+        # file. Three things about the shape, each load-bearing:
+        #
+        # A JSON *array*, and the documents go in verbatim. A receipt's hash
+        # is over its own bytes, so a bundle that put facts *inside* the
+        # receipt would produce a document whose receiptSha256 no longer
+        # matches its body — an export wraps, it never edits.
+        #
+        # Every fact adjudicate() saw, not just the ones in `inputFacts`.
+        # Abstention entries are computed over the whole live fact set, so a
+        # below-floor fact shapes the receipt without ever binding: replay it
+        # from `inputFacts` alone and the abstention disappears, taking byte
+        # equality with it.
+        #
+        # Serialized *here*. JavaScript has one number type, so a bundle
+        # assembled in the browser would rewrite a fact's `"score": 1.0` as
+        # `1` and break every hash it carries (duly_demo/CLAUDE.md).
+        #
+        # And verified before it is emitted, because a scenario's in-memory
+        # facts are not always the documents their ids name. The fixture
+        # scenario re-points `grounding.charSpan` at the abridged rendition
+        # the demo actually serves (`_load_fixture_scenario`) — right for a
+        # highlight, and a mutation of a content-addressed body, so those
+        # facts no longer hash to their own ids. Nothing noticed while the
+        # demo only ever *displayed* them.
+        #
+        # A bundle that fails its own facts check is worse than no bundle:
+        # "the evidence has been altered" is what a forgery looks like, and
+        # the recipient cannot tell our display convenience from tampering.
+        # So the guard is on the artifact rather than on the code path — it
+        # catches this and anything else that edits a fact on the way through.
+        pinned = {
+            p.get("id") for p in receipt.get("inputFacts") or [] if isinstance(p, dict)
+        }
+        try:
+            from duly_kernel.receipt import content_hash  # noqa: PLC0415
+        except Exception:
+            content_hash = None
+        unusable = pinned - {f.get("id") for f in scenario["facts"]}
+        if content_hash is not None:
+            unusable |= {
+                f["id"]
+                for f in scenario["facts"]
+                if f.get("id") in pinned
+                and content_hash(f, "contentHash") != f.get("contentHash")
+            }
+        if content_hash is None or unusable:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "No bundle for this decision: "
+                    + (
+                        "the fact hashes cannot be checked here because "
+                        "duly_kernel is not importable"
+                        if content_hash is None
+                        else f"{len(unusable)} of {len(pinned)} pinned fact(s) "
+                        "are missing from this scenario or no longer hash to "
+                        "the id they carry"
+                    )
+                    + ", so the file would fail its own verification and read "
+                    "as tampered-with. This is the demo serving committed "
+                    "fixture content rather than adjudicating facts of its "
+                    "own. The receipt export is unaffected."
+                ),
+            )
+        filename = f"duly-bundle-{scenarioId}-{_date_prefix(effective)}.json"
+        return Response(
+            content=json.dumps(
+                [receipt, *scenario["facts"]], indent=2, ensure_ascii=False
+            ),
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     if format == "jsonld":
         try:

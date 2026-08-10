@@ -41,11 +41,22 @@ CASE = "fx-0001"
 #: The case carrying a live `low_confidence` abstention.
 ABSTAINING_CASE = "fx-0003"
 
-#: The scenario: one document, its rendition, and two facts grounded in
+#: The scenario: one document, its rendition, and three facts grounded in
 #: character spans of that rendition — one of them below the pack's confidence
 #: floor, so the review arc has something to resolve. The corpus cases use
 #: attestation grounding, which leaves the span machinery untested.
 SCENARIO = "fx-0005"
+
+#: The scenario's review arc, as `demo/app.py` names it (`REVIEW_ID_SUFFIX`).
+#: Derived there from whichever scenario opts in, so it is derived here too.
+REVIEW_SCENARIO = f"{SCENARIO}-review"
+
+#: The case id `duly_review.golden` hands out first. `next_review_case_id`
+#: scans the corpus for `review-*` and takes the first free slot, so in a
+#: content root built fresh the first export would be `review-0001` — the id
+#: this repository's own `golden/` has held since M3. `build_content_root`
+#: seeds it (see below) so the fixture corpus poses the same question.
+SEEDED_REVIEW_CASE = "review-0001"
 
 
 def build_content_root(root: Path) -> Path:
@@ -58,6 +69,33 @@ def build_content_root(root: Path) -> Path:
 
     shutil.copytree(FIXTURES / "cases", root / "golden" / "cases")
     shutil.copytree(FIXTURES / "receipts", root / "golden" / "receipts")
+
+    # A corpus that already holds `review-0001`, because this repository's does
+    # and the export path's *interesting* behaviour is the collision:
+    # `duly_review.golden.next_review_case_id` takes the first free `review-*`
+    # slot, so a fresh corpus hands out `review-0001` and never exercises the
+    # skip. `fx-0004` is the honest thing to seed it with — it is already the
+    # post-review case, the same shape a resolution exports.
+    #
+    # The receipt is copied **byte-for-byte**: it is content-addressed, so an
+    # edit is a forgery, and its own `caseId` therefore still reads
+    # `case:fixture:fx-0003` (the correction supersedes an fx-0003 fact). That
+    # is not a mismatch to fix — a golden case's *name* and the case id inside
+    # its receipt are different namespaces here, and every corpus reader keys
+    # off the filename. The one line that must move is `case.yaml`'s `id`,
+    # which is what `duly_assurance.verify` resolves the receipt filename from:
+    # left at `fx-0004` this directory would silently verify fx-0004 twice and
+    # never open the receipt beside it.
+    seeded = root / "golden" / "cases" / SEEDED_REVIEW_CASE
+    shutil.copytree(FIXTURES / "cases" / "fx-0004", seeded)
+    seeded_yaml = seeded / "case.yaml"
+    seeded_yaml.write_text(
+        seeded_yaml.read_text().replace("id: fx-0004", f"id: {SEEDED_REVIEW_CASE}")
+    )
+    shutil.copy(
+        FIXTURES / "receipts" / "fx-0004.json",
+        root / "golden" / "receipts" / f"{SEEDED_REVIEW_CASE}.json",
+    )
 
     # Each case names the pack it was decided under. In `fixtures/` that is the
     # repo-relative `fixtures/pack.yaml`; in a content root it is where the pack
@@ -109,6 +147,17 @@ def build_content_root(root: Path) -> Path:
     (scenario_dir / "scenario.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
     )
+
+    # The extraction targets, under the one directory the demo indexes them
+    # from: `starters/tools/targets/*.json`, keyed by each file's `documentId`
+    # *field* rather than its name. Without them the store-backed runtime does
+    # not fail — `_ingest_starter_case` returns None the moment a document has
+    # no targets entry, and `_ingest_review_case` simply returns — so the
+    # scenario falls back to its committed disk facts and the review arc does
+    # not appear at all. A deployment with no arc and a deployment with no
+    # targets look identical from the outside, which is why this mapping is
+    # here rather than assumed.
+    shutil.copytree(FIXTURES / "targets", root / "starters" / "tools" / "targets")
     return root
 
 

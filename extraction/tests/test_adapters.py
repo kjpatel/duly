@@ -83,6 +83,61 @@ def test_stub_notes_ambiguous_quote():
     assert any("more than once" in note for note in result.notes)
 
 
+# --- what a target carries through, and what it does not ---------------------
+
+#: A targets file with no content root behind it: the pass-through rules below
+#: are adapter behaviour, so asserting them against committed starter targets
+#: would tie them to content an adopter deletes.
+def _standalone_targets(**fact_extras) -> dict:
+    return {
+        "documentId": "doc:widget:1",
+        "caseId": "case:widget:1",
+        "schemaRef": {"ontology": "duly-fixture", "version": "0.1.0"},
+        "assertedAt": "2026-03-01T00:00:00Z",
+        "facts": [
+            {
+                "entity": {"id": "widget:1", "type": "fx:Widget"},
+                "attribute": "fx:inspector",
+                "value": {"kind": "string", "value": "Dana Okafor"},
+                "quote": "Inspector of record: Dana Okafor",
+                "confidence": {"score": 0.99, "method": "raw"},
+                **fact_extras,
+            }
+        ],
+    }
+
+
+def _one_fact(**fact_extras) -> dict:
+    targets = _standalone_targets(**fact_extras)
+    text = "Inspector of record: Dana Okafor, 41 Alder Row\n"
+    document = SourceDocument(targets["documentId"], "0" * 64)
+    [fact] = StubAdapter(text).extract(document, targets).facts
+    return fact
+
+
+def test_a_target_can_declare_its_handling_class():
+    """`sensitivity` passes through from the target, like the effective dates.
+
+    Whether a quote carries PII is knowable when the target is authored and
+    unknowable from the span, so the adapter carries the declaration rather
+    than inferring one. Before this, the only way to hold a `pii` fact was to
+    assemble it by hand — outside the one code path that verifies spans, which
+    is the opposite of where a fact quoting a person's name should be built.
+    """
+    fact = _one_fact(sensitivity="pii")
+    assert fact["sensitivity"] == "pii"
+    # Last, matching the schema's property order; key order is presentation,
+    # but the committed facts are compared byte-for-byte elsewhere.
+    assert list(fact)[-1] == "sensitivity"
+
+
+def test_an_undeclared_handling_class_is_absent_rather_than_defaulted():
+    """Absent means `internal` (spec/grounded-facts.md, PII sensitivity), and
+    the default is the *reader's* to apply: writing it in would put a byte in
+    every fact's hash to say nothing the absence did not already say."""
+    assert "sensitivity" not in _one_fact()
+
+
 # --- verify_fact_span rejects what it should ---------------------------------
 
 def test_verify_fact_span_rejects_wrong_offsets():

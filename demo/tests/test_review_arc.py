@@ -1,12 +1,43 @@
 """API tests for the demo's store-backed scenarios and the review arc.
 
-The arc under test is the M3 demo moment: extraction runs over the committed
-starter documents into a per-process fact store; the review scenario's mailed
-date lands below the notice pack's 0.9 attribute floor and abstains (the
-decision falls to the compliance presumption); a human correction supersedes
-the below-floor fact through duly_review; the decision re-adjudicates and
-flips; and the resolution exports as a golden-case bundle that replays
-byte-for-byte.
+The arc under test is the M3 demo moment, and it is **toolkit**: extraction
+runs over whatever documents a deployment's starters carry into a per-process
+fact store; the scenario that opts into a `reviewArc` gets a second case with
+one attribute scripted below the pack's confidence floor, so the decision
+abstains and falls to the presumption; a human correction supersedes the
+below-floor fact through `duly_review`; the decision re-adjudicates and flips;
+and the resolution exports as a golden-case bundle that replays byte-for-byte.
+
+None of that names a scenario, so these run against a content root assembled
+from [`fixtures/`](../../fixtures/README.md) rather than against the teaching
+starters in `starters/` (CLAUDE.md, "a test that would still pass with its
+subject deleted"). The fixture scenario `fx-0005` carries the whole arc as
+*content*: three span-grounded facts, one of them (`fx:score`) below the pack's
+0.80 floor, and a `reviewArc` block that re-scripts it lower still.
+
+Three things the conversion found, recorded here because each one is a claim
+the notice-ny version was quietly making about its example rather than about
+the toolkit:
+
+* **The verdict is Yes/No, and that is pack data working.** `notice-ny`'s
+  determination read "Compliant" with tone `warn` and the confidence numbers in
+  its detail sentence — all of that is the *notice pack's* `phrasing:` block.
+  The fixture pack gives its boolean decision no phrasing on purpose, so the
+  kernel's Yes/No fallback is what a caller sees, and the confidence numbers
+  live where they always did: on the abstention entry.
+* **The floor here is the global one.** `fx:score` has no per-attribute floor,
+  so `threshold.source` reads `default`. The per-attribute path is what
+  `abstentionPolicy.attributes` exists for, and it is asserted where the pack's
+  nested structure is the subject (`test_rules_api`), not here.
+* **The source scenario abstains too**, which retired
+  `test_other_scenarios_carry_no_abstentions` — see that test's replacement.
+
+`test_county_recording_abstains_regardless_of_installed_extractor` and
+`test_fixture_mode_lists_the_committed_example_honestly` stay pointed at this
+repository, because their subject genuinely *is* committed content. The county
+test moves under `examples/` with the starters; the fixture-mode test STAYS —
+its subject is the built-in `spec/examples` scenario, and `spec/` is not
+relocating, which is why it keeps passing under the deletion measurement.
 
 Run from the repo root:
     PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
@@ -30,35 +61,99 @@ if str(REPO_ROOT) not in sys.path:
 from fastapi.testclient import TestClient  # noqa: E402
 
 import demo.app as demo_app  # noqa: E402
-from demo.app import REVIEW_ID_SUFFIX, app  # noqa: E402
+from demotest_helpers import (  # noqa: E402
+    SCENARIO,
+    SEEDED_REVIEW_CASE,
+    build_content_root,
+    reload_demo,
+)
 
 # Derived, not imported: the arc's id follows whichever scenario opts into it,
 # so a fixture deployment gets its own rather than this repository's.
-REVIEW_SCENARIO_ID = f"notice-ny{REVIEW_ID_SUFFIX}"
+REVIEW_SCENARIO_ID = f"{SCENARIO}{demo_app.REVIEW_ID_SUFFIX}"
 
-client = TestClient(app)
+#: The fixture pack's boolean decision, and the fixture scenario's own as-of —
+#: after `FX-THRESHOLD-02` takes effect, so the minimum score is 50.
+REVIEW_QUESTION = "fx:permitted"
+REVIEW_AS_OF = "2026-06-01"
 
-REVIEW_QUESTION = "nc:noticeCompliant"
-REVIEW_AS_OF = "2026-07-25"
+#: The score the document actually states, which is what a reviewer reading the
+#: quoted span types in. It is *below* the 2026 threshold, so restoring it as a
+#: trusted human fact lets `FX-EXCEPTION-01` fire and the decision flips — the
+#: same shape as confirming notice-ny's mailed date. A value above 50 would
+#: clear the abstention without moving the decision, which is a weaker test.
+CORRECTED_SCORE = "12"
 
 
 @pytest.fixture
-def live_runtime(monkeypatch):
-    """A fresh store-backed runtime with the extractor pinned to the stub.
+def content_root(tmp_path_factory) -> Path:
+    """A fresh content root per test.
 
-    The stub pin keeps the byte-identity assertions meaningful on machines
-    where the Docling extra is installed (Docling produces a different
-    rendition, hence different facts — correct, but not what these tests
-    assert). Reset on teardown so other test modules rebuild lazily.
+    Per test rather than per session: the arc *writes* (corrections, review
+    resolutions, exported cases). Those live in a per-process store rather than
+    on disk, but the runtime is rebuilt from this root every time, and a test
+    that ever gains a filesystem side effect would otherwise leak forward.
+    """
+    return build_content_root(tmp_path_factory.mktemp("content"))
+
+
+@pytest.fixture
+def client(content_root, monkeypatch):
+    """A store-backed runtime over the fixture content root.
+
+    Three environment moves, each load-bearing. `DULY_DEMO_CONTENT` points the
+    surfaces at the fixture corpus; `DULY_DEMO_FORCE_FIXTURE` must go because
+    `test_api` sets it process-wide at import; and the extractor is pinned to
+    the stub so the byte-identity assertions stay meaningful on machines where
+    the Docling extra is installed (Docling produces its own rendition and its
+    own measured confidence — correct, but not what these tests assert).
+
+    Both sides of the yield matter. The demo binds its roots at *import*, so a
+    suite that reloads on setup and not on teardown leaves every later file in
+    the directory serving a temp directory that no longer exists.
+    """
+    monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    monkeypatch.setenv("DULY_DEMO_EXTRACTOR", "stub")
+    reload_demo()
+    demo_app._reset_runtime()
+
+    with TestClient(demo_app.app) as c:
+        yield c
+
+    demo_app._reset_runtime()
+    monkeypatch.undo()
+    reload_demo()
+
+
+@pytest.fixture
+def example_client(monkeypatch):
+    """A store-backed runtime over *this repository's* content.
+
+    For the two tests below whose subject is the committed example content
+    rather than toolkit behaviour. No `DULY_DEMO_CONTENT`, so the roots stay
+    where they default; the reload on teardown is still here because a prior
+    test in this file may have left them elsewhere.
     """
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     monkeypatch.setenv("DULY_DEMO_EXTRACTOR", "stub")
-    demo_app._reset_runtime()
-    yield
+    reload_demo()
     demo_app._reset_runtime()
 
+    with TestClient(demo_app.app) as c:
+        yield c
 
-def _adjudicate(scenario_id: str, attribute: str = REVIEW_QUESTION, as_of: str = REVIEW_AS_OF):
+    demo_app._reset_runtime()
+    monkeypatch.undo()
+    reload_demo()
+
+
+def _adjudicate(
+    client,
+    scenario_id: str,
+    attribute: str = REVIEW_QUESTION,
+    as_of: str = REVIEW_AS_OF,
+):
     res = client.post(
         "/api/adjudicate",
         json={"scenarioId": scenario_id, "attribute": attribute, "asOfEffective": as_of},
@@ -67,7 +162,7 @@ def _adjudicate(scenario_id: str, attribute: str = REVIEW_QUESTION, as_of: str =
     return res.json()
 
 
-def _correct(item_id: str, value: str = "2026-07-25", **overrides):
+def _correct(client, item_id: str, value: str = CORRECTED_SCORE, **overrides):
     body = {
         "scenarioId": REVIEW_SCENARIO_ID,
         "itemId": item_id,
@@ -86,32 +181,49 @@ def _correct(item_id: str, value: str = "2026-07-25", **overrides):
 # ---------------------------------------------------------------------------
 
 
-def test_store_backed_scenario_facts_are_byte_identical_to_disk(live_runtime):
-    """The stub reproduces the committed starter fact sets exactly, so the
-    store projection the demo serves must match the disk JSON document for
-    document (canonical form — key order is presentation, not content)."""
+def test_store_backed_scenario_facts_are_byte_identical_to_disk(client):
+    """The stub reproduces a starter's committed fact set exactly, so the store
+    projection the demo serves must match the disk JSON document for document
+    (canonical form — key order is presentation, not content).
+
+    Read through `demo.content.CONTENT`, not through this repository's
+    `starters/`: reaching past the content root would compare a store built
+    from the fixtures against files the runtime never saw, and the assertion
+    would be about which directory the test knows rather than about the
+    pipeline.
+    """
+    import demo.content as demo_content
+
     runtime = demo_app._active_runtime()
     assert runtime is not None
 
-    for scenario_id in ("notice-ny", "trid"):
-        scenario_dir = REPO_ROOT / "starters" / scenario_id
+    scenario_dirs = [
+        path
+        for path in sorted(demo_content.CONTENT.starters.iterdir())
+        if (path / "scenario.json").exists()
+    ]
+    assert scenario_dirs, "content root has no starters — nothing was compared"
+
+    for scenario_dir in scenario_dirs:
         manifest = json.loads((scenario_dir / "scenario.json").read_text())
         disk_facts = [
             json.loads((scenario_dir / rel).read_text()) for rel in manifest["facts"]
         ]
+        assert disk_facts, scenario_dir.name
         store_facts = runtime.store.as_of(
             manifest["caseId"], knowledge=demo_app._now_knowledge()
         )
         canon = lambda facts: sorted(  # noqa: E731
             json.dumps(f, sort_keys=True, separators=(",", ":")) for f in facts
         )
-        assert canon(store_facts) == canon(disk_facts), scenario_id
+        assert canon(store_facts) == canon(disk_facts), scenario_dir.name
 
 
-def test_scenarios_report_extraction_provenance(live_runtime):
+def test_scenarios_report_extraction_provenance(client):
     res = client.get("/api/scenarios")
     assert res.status_code == 200
     scenarios = {s["id"]: s for s in res.json()}
+    assert scenarios, "content root served no scenarios"
 
     assert REVIEW_SCENARIO_ID in scenarios
     for scenario in scenarios.values():
@@ -124,7 +236,7 @@ def test_scenarios_report_extraction_provenance(live_runtime):
         assert scenario["review"]["available"] is True
 
     # The review scenario is always the scripted stub (the arc needs the
-    # committed below-floor confidence, which Docling would not reproduce).
+    # scripted below-floor confidence, which Docling would not reproduce).
     review = scenarios[REVIEW_SCENARIO_ID]
     assert review["extraction"]["extractor"]["name"] == "duly-demo-extractor"
 
@@ -134,24 +246,33 @@ def test_scenarios_report_extraction_provenance(live_runtime):
 # ---------------------------------------------------------------------------
 
 
-def test_review_scenario_abstains_below_the_attribute_floor(live_runtime):
-    payload = _adjudicate(REVIEW_SCENARIO_ID)
+def test_review_scenario_abstains_below_the_confidence_floor(client):
+    payload = _adjudicate(client, REVIEW_SCENARIO_ID)
     assert payload["engineMode"] == "live"
 
+    # The presumption stands, because the abstained score is out of the
+    # projection and `FX-EXCEPTION-01` needs it. The wording is the kernel's
+    # boolean fallback: the fixture pack gives `fx:permitted` no `phrasing:`
+    # block, and inventing one in demo/app.py is exactly what the pack-data
+    # rule forbids. The confidence numbers live on the abstention below.
     found = payload["determination"]
-    assert found["verdict"] == "Compliant"
-    assert found["tone"] == "warn"
-    assert "0.62" in found["detail"] and "0.9" in found["detail"]
+    assert found["verdict"] == "Yes"
+    assert found["tone"] == "pos"
+    assert found["detail"] == ""
 
     assert len(payload["abstentions"]) == 1
     entry = payload["abstentions"][0]
     assert entry["reason"] == "low_confidence"
-    assert entry["attribute"] == "nc:noticeMailedDate"
-    assert entry["confidence"] == {"score": 0.62, "method": "platt"}
-    assert entry["threshold"]["minConfidence"] == 0.9
-    assert entry["threshold"]["source"] == "attribute"
-    assert entry["threshold"]["pack"] == "termination-notice-us-states"
+    assert entry["attribute"] == "fx:score"
+    # Scripted by the scenario's `reviewArc` block, not by this test.
+    assert entry["confidence"] == {"score": 0.55, "method": "platt"}
+    assert entry["threshold"]["minConfidence"] == 0.8
+    # `default`, not `attribute`: the fixture pack's per-attribute floor covers
+    # fx:category, so this one is decided by the pack-wide minimum.
+    assert entry["threshold"]["source"] == "default"
+    assert entry["threshold"]["pack"] == "duly-fixture-pack"
     assert entry["threshold"]["packVersion"]
+    assert entry["routedTo"] == "fixture-review"
     assert entry["itemId"].startswith("urn:duly:review:sha256:")
     assert entry["itemStatus"] == "open"
 
@@ -161,7 +282,7 @@ def test_review_scenario_abstains_below_the_attribute_floor(live_runtime):
 
     # The abstained fact links to its document span like any grounded fact.
     abstained = payload["factIndex"][entry["facts"][0]]
-    assert abstained["quote"] == "Date of Mailing: July 25, 2026"
+    assert abstained["quote"] == "Measured score: 12"
     assert abstained["documentId"]
     assert abstained["charSpan"]["end"] > abstained["charSpan"]["start"]
     assert abstained["provenance"]["kind"] == "machine"
@@ -172,23 +293,63 @@ def test_review_scenario_abstains_below_the_attribute_floor(live_runtime):
     assert review["resolved"] == []
 
 
-def test_other_scenarios_carry_no_abstentions(live_runtime):
-    payload = _adjudicate("notice-ny")
-    assert payload["abstentions"] == []
-    assert payload["determination"]["verdict"] == "Not compliant"
+def test_the_arc_scripts_a_separate_case_and_leaves_its_source_alone(client):
+    """The scripted confidence belongs to the arc's case, not to the world.
+
+    This replaces `test_other_scenarios_carry_no_abstentions`, whose premise
+    was a property of `notice-ny` rather than of the toolkit: that starter's
+    base scenario happens to be clean, so "the only abstention is the scripted
+    one" held. The fixture scenario's committed `fx:score` is *already* below
+    the pack floor (that is what gives it a live `low_confidence` abstention to
+    browse at all), so the base case abstains too and the old assertion cannot
+    be made honestly here.
+
+    What survives is the claim the old test was really probing: `_ingest_review_case`
+    re-extracts under a *separate* case id with the confidence overridden, so
+    the source scenario keeps its own committed confidence, its own fact, and
+    its own review item. A bug that scripted the value into the shared targets
+    dict — they are the same object until `copy.deepcopy` — would show up here
+    as two identical confidences.
+    """
+    source = _adjudicate(client, SCENARIO)
+    arc = _adjudicate(client, REVIEW_SCENARIO_ID)
+
+    (source_entry,) = source["abstentions"]
+    (arc_entry,) = arc["abstentions"]
+    assert source_entry["attribute"] == arc_entry["attribute"] == "fx:score"
+
+    # The committed confidence, untouched by the arc's override.
+    assert source_entry["confidence"] == {"score": 0.62, "method": "raw"}
+    assert arc_entry["confidence"] == {"score": 0.55, "method": "platt"}
+
+    # Different facts, different cases, different review items.
+    assert source_entry["facts"] != arc_entry["facts"]
+    assert source_entry["itemId"] != arc_entry["itemId"]
+    assert source["receipt"]["caseId"] != arc["receipt"]["caseId"]
 
 
-def test_county_recording_abstains_regardless_of_installed_extractor(live_runtime):
-    """The recording scenario's 0.58 top-space confidence is scripted in its
-    targets file, which only the stub passes through — Docling measures its
-    own confidence and would sail over the floor, silently skipping the
-    abstention arc the scenario exists to show. The manifest pins the stub
-    (demoExtractor), so this must hold whether or not docling is importable."""
+def test_county_recording_abstains_regardless_of_installed_extractor(example_client):
+    """EXAMPLE CONTENT (moves with `starters/`): the recording scenario's 0.58
+    top-space confidence is scripted in its targets file, which only the stub
+    passes through — Docling measures its own confidence and would sail over
+    the floor, silently skipping the abstention arc the scenario exists to
+    show. The manifest pins the stub (demoExtractor), so this must hold whether
+    or not docling is importable.
+
+    Its subject is that scenario, so it stays pointed at this repository rather
+    than at a fixture content root — unlike everything above it, deleting the
+    starter should take this test with it and not leave it passing vacuously.
+    """
     scenario = next(
-        s for s in client.get("/api/scenarios").json() if s["id"] == "county-recording"
+        s
+        for s in example_client.get("/api/scenarios").json()
+        if s["id"] == "county-recording"
     )
     payload = _adjudicate(
-        "county-recording", attribute="rec:recordable", as_of=scenario["defaultAsOf"]
+        example_client,
+        "county-recording",
+        attribute="rec:recordable",
+        as_of=scenario["defaultAsOf"],
     )
     assert payload["engineMode"] == "live"
 
@@ -202,7 +363,7 @@ def test_county_recording_abstains_regardless_of_installed_extractor(live_runtim
     assert entry["attribute"] == "rec:firstPageTopSpaceInches"
     assert entry["routedTo"] == "recording-review"
 
-    scenarios = {s["id"]: s for s in client.get("/api/scenarios").json()}
+    scenarios = {s["id"]: s for s in example_client.get("/api/scenarios").json()}
     extractor = scenarios["county-recording"]["extraction"]["extractor"]
     assert extractor["name"] == "duly-demo-extractor"
 
@@ -212,17 +373,19 @@ def test_county_recording_abstains_regardless_of_installed_extractor(live_runtim
 # ---------------------------------------------------------------------------
 
 
-def test_correction_round_trip_flips_the_decision(live_runtime):
-    payload = _adjudicate(REVIEW_SCENARIO_ID)
+def test_correction_round_trip_flips_the_decision(client):
+    payload = _adjudicate(client, REVIEW_SCENARIO_ID)
     item_id = payload["abstentions"][0]["itemId"]
+    assert payload["receipt"]["decision"]["value"] == {"kind": "boolean", "value": True}
 
-    res = _correct(item_id)
+    res = _correct(client, item_id)
     assert res.status_code == 200, res.text
     corrected = res.json()
 
-    # The flip: verdict changes, abstention gone.
+    # The flip: the restored score is back in the projection, `FX-EXCEPTION-01`
+    # fires over the presumption, and the abstention is gone.
     assert corrected["receipt"]["decision"]["value"] == {"kind": "boolean", "value": False}
-    assert corrected["determination"]["verdict"] == "Not compliant"
+    assert corrected["determination"]["verdict"] == "No"
     assert corrected["determination"]["tone"] == "neg"
     assert corrected["abstentions"] == []
     assert corrected["receipt"]["abstentions"] == []
@@ -246,43 +409,46 @@ def test_correction_round_trip_flips_the_decision(live_runtime):
     resolved = review["resolved"][0]
     assert resolved["itemId"] == item_id
     assert resolved["actor"] == {"id": "reviewer:r-queue-demo", "role": "compliance-review"}
-    assert resolved["value"] == {"kind": "date", "value": "2026-07-25"}
+    assert resolved["value"] == {"kind": "decimal", "value": CORRECTED_SCORE}
     assert review["calibrationPairs"] == 1
     assert review["calibrationNote"]
 
     # Re-adjudicating fresh shows the corrected world: no abstention entry.
-    again = _adjudicate(REVIEW_SCENARIO_ID)
+    again = _adjudicate(client, REVIEW_SCENARIO_ID)
     assert again["abstentions"] == []
-    assert again["determination"]["verdict"] == "Not compliant"
+    assert again["determination"]["verdict"] == "No"
 
     # Terminal item: a second correction is refused.
-    assert _correct(item_id).status_code == 409
+    assert _correct(client, item_id).status_code == 409
 
 
-def test_correction_rejects_a_malformed_value_and_leaves_the_item_open(live_runtime):
-    payload = _adjudicate(REVIEW_SCENARIO_ID)
+def test_correction_rejects_a_malformed_value_and_leaves_the_item_open(client):
+    payload = _adjudicate(client, REVIEW_SCENARIO_ID)
     item_id = payload["abstentions"][0]["itemId"]
 
-    res = _correct(item_id, value="not-a-date")
+    # The abstained attribute is a decimal, so the value is parsed as one; the
+    # refusal names the kind rather than echoing the input back as a fact.
+    res = _correct(client, item_id, value="not-a-number")
     assert res.status_code == 422
-    assert "ISO date" in res.json()["detail"]
+    assert "decimal" in res.json()["detail"]
 
-    res = _correct(item_id, reviewerName="   ")
+    res = _correct(client, item_id, reviewerName="   ")
     assert res.status_code == 422
 
     # Nothing resolved: the abstention is still there and still open.
-    again = _adjudicate(REVIEW_SCENARIO_ID)
+    again = _adjudicate(client, REVIEW_SCENARIO_ID)
     assert again["abstentions"][0]["itemStatus"] == "open"
     assert again["review"]["calibrationPairs"] == 0
 
 
-def test_unknown_item_and_wrong_scenario_are_refused(live_runtime):
-    payload = _adjudicate(REVIEW_SCENARIO_ID)
+def test_unknown_item_and_wrong_scenario_are_refused(client):
+    payload = _adjudicate(client, REVIEW_SCENARIO_ID)
     item_id = payload["abstentions"][0]["itemId"]
 
-    assert _correct("urn:duly:review:sha256:" + "0" * 64).status_code == 404
-    # The item belongs to the review case, not notice-ny's.
-    assert _correct(item_id, scenarioId="notice-ny").status_code == 409
+    assert _correct(client, "urn:duly:review:sha256:" + "0" * 64).status_code == 404
+    # The item belongs to the arc's case, not to the scenario it was scripted
+    # from — which has an open item of its own, on the same attribute.
+    assert _correct(client, item_id, scenarioId=SCENARIO).status_code == 409
 
 
 # ---------------------------------------------------------------------------
@@ -290,32 +456,76 @@ def test_unknown_item_and_wrong_scenario_are_refused(live_runtime):
 # ---------------------------------------------------------------------------
 
 
-def test_fixture_mode_disables_the_review_flow_honestly(monkeypatch):
+def test_fixture_mode_disables_the_review_flow_honestly(content_root, monkeypatch):
+    """Without the session store there is no arc, and both review endpoints say
+    so with a 503 rather than a 500 or an empty success.
+
+    The scenario list is empty here, and that is the second honest degradation
+    rather than a gap in the test: fixture mode serves the committed
+    `spec/examples` receipt, a content root need not have one, and the workspace
+    reports "no scenarios" instead of failing to boot.
+    """
+    monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
     monkeypatch.setenv("DULY_DEMO_FORCE_FIXTURE", "1")
+    reload_demo()
     demo_app._reset_runtime()
 
-    scenarios = client.get("/api/scenarios").json()
-    ids = {s["id"] for s in scenarios}
-    assert REVIEW_SCENARIO_ID not in ids  # the arc needs the session store
+    with TestClient(demo_app.app) as fixture_client:
+        res = fixture_client.get("/api/scenarios")
+        assert res.status_code == 200
+        assert res.json() == []  # the arc needs the session store
 
-    fixture = scenarios[0]
-    assert fixture["review"]["available"] is False
-    assert fixture["review"]["note"]
-    assert fixture["extraction"]["source"] == "fixture"
-    assert "no extraction run" in fixture["extraction"]["label"]
+        refused = _correct(
+            fixture_client,
+            "urn:duly:review:sha256:" + "0" * 64,
+            scenarioId=SCENARIO,
+        )
+        assert refused.status_code == 503
+        assert "fixture" in refused.json()["detail"].lower()
 
-    payload = _adjudicate(fixture["id"], fixture["questions"][0]["attribute"])
-    assert payload["review"]["available"] is False
-    assert payload["review"]["note"]
-
-    refused = _correct("urn:duly:review:sha256:" + "0" * 64, scenarioId=fixture["id"])
-    assert refused.status_code == 503
-    assert "fixture" in refused.json()["detail"].lower()
-
-    golden = client.get("/api/review/golden-case", params={"itemId": "urn:x"})
-    assert golden.status_code == 503
+        golden = fixture_client.get("/api/review/golden-case", params={"itemId": "urn:x"})
+        assert golden.status_code == 503
 
     demo_app._reset_runtime()
+    monkeypatch.undo()
+    reload_demo()
+
+
+def test_fixture_mode_lists_the_committed_example_honestly(monkeypatch):
+    """COMMITTED CONTENT that does not move: the built-in fixture scenario is
+    served from `spec/examples`, which stays when `examples/` is deleted — this
+    test survives the deletion gate on purpose. The built-in fixture
+    scenario is a committed receipt served without an extraction run, and it
+    must say both things — no store-backed scenario, no review affordance, and
+    a label that does not pretend an extractor ran."""
+    monkeypatch.setenv("DULY_DEMO_FORCE_FIXTURE", "1")
+    reload_demo()
+    demo_app._reset_runtime()
+
+    with TestClient(demo_app.app) as fixture_client:
+        scenarios = fixture_client.get("/api/scenarios").json()
+        assert scenarios
+        # Not one of them is the arc: it exists only in the session store.
+        assert not any(s["id"].endswith(demo_app.REVIEW_ID_SUFFIX) for s in scenarios)
+
+        fixture = scenarios[0]
+        assert fixture["review"]["available"] is False
+        assert fixture["review"]["note"]
+        assert fixture["extraction"]["source"] == "fixture"
+        assert "no extraction run" in fixture["extraction"]["label"]
+
+        payload = _adjudicate(
+            fixture_client,
+            fixture["id"],
+            attribute=fixture["questions"][0]["attribute"],
+            as_of=fixture["defaultAsOf"],
+        )
+        assert payload["review"]["available"] is False
+        assert payload["review"]["note"]
+
+    demo_app._reset_runtime()
+    monkeypatch.undo()
+    reload_demo()
 
 
 # ---------------------------------------------------------------------------
@@ -323,15 +533,15 @@ def test_fixture_mode_disables_the_review_flow_honestly(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_golden_export_bundle_replays_byte_for_byte(live_runtime):
-    payload = _adjudicate(REVIEW_SCENARIO_ID)
+def test_golden_export_bundle_replays_byte_for_byte(client, content_root):
+    payload = _adjudicate(client, REVIEW_SCENARIO_ID)
     item_id = payload["abstentions"][0]["itemId"]
 
     # Export before resolution is refused.
     early = client.get("/api/review/golden-case", params={"itemId": item_id})
     assert early.status_code == 409
 
-    assert _correct(item_id).status_code == 200
+    assert _correct(client, item_id).status_code == 200
 
     res = client.get("/api/review/golden-case", params={"itemId": item_id})
     assert res.status_code == 200
@@ -341,19 +551,31 @@ def test_golden_export_bundle_replays_byte_for_byte(live_runtime):
     names = bundle.namelist()
     case_yaml_name = next(n for n in names if n.endswith("case.yaml"))
     case_id = case_yaml_name.split("/")[1]
-    # A fresh id from the review-NNNN series, never the committed review-0001.
-    assert case_id.startswith("review-") and case_id != "review-0001"
+    # A fresh id from the review-NNNN series, never one the corpus already
+    # holds — `build_content_root` seeds `review-0001` precisely so this
+    # assertion has a collision to survive rather than a free slot to take.
+    assert case_id.startswith("review-") and case_id != SEEDED_REVIEW_CASE
     assert f"receipts/{case_id}.json" in names
+
+    # One file per *live* fact, which is the scenario's three attributes — the
+    # human correction replaces the machine score rather than joining it.
     fact_names = [n for n in names if f"cases/{case_id}/facts/" in n]
-    assert len(fact_names) == 4
+    assert len(fact_names) == 3
+    facts = [json.loads(bundle.read(n)) for n in fact_names]
+    (score,) = [f for f in facts if f["attribute"] == "fx:score"]
+    assert score["assertion"]["kind"] == "human"
+    assert score["value"] == {"kind": "decimal", "value": CORRECTED_SCORE}
 
     # Replay: adjudicate the bundle's facts with the pinned pack at the
-    # bundle's as-of pair and byte-compare against the bundled receipt.
+    # bundle's as-of pair and byte-compare against the bundled receipt. The
+    # pack path is resolved against the *content root* — it is where the case
+    # says the pack is, and this repository is only one possible answer.
     case = yaml.safe_load(bundle.read(case_yaml_name))
-    facts = [json.loads(bundle.read(n)) for n in fact_names]
     from duly_kernel.api import adjudicate  # noqa: PLC0415
 
-    pack = yaml.safe_load((REPO_ROOT / case["pack"]).read_text(encoding="utf-8"))
+    pack_path = content_root / case["pack"]
+    assert pack_path.is_file(), case["pack"]
+    pack = yaml.safe_load(pack_path.read_text(encoding="utf-8"))
     fresh = adjudicate(
         facts, pack, case["asOfEffective"], case["asOfKnowledge"], case["question"]
     )

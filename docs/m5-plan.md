@@ -63,9 +63,16 @@ lesson is that it is not the kind of claim this plan can make in advance:
 it.** Assume the next conversion is blocked on something, and find out by
 measuring.*
 
-Remaining, in order: the evidence browser and review arc (part 4b(ii)c-2, 21 of
-the 28 demo failures left under deletion), then kernel report + whatif + dmn +
-extraction (part 5), then the move, then the deletion gate — which the part-3
+**Execution model from 2026-08-06 (Kushan):** the remainder of M5 runs as an
+orchestrated pipeline — a master session sequencing one PR at a time with
+subagents doing scoped work inside each. Merge authority is **hybrid**: the
+master merges a PR once CI is green, except three that pause for Kushan's
+review before merge — the `examples/` move, the `1.0.0` version/tag PR, and
+the close-out that deletes this file.
+
+Remaining, in order: kernel report + whatif + dmn + extraction (part 5 — the
+demo's suites are done; demo/tests stands at 8 under deletion, all classified
+movers), then the move, then the deletion gate — which the part-3
 measurement showed **cannot pass before the move**, because most of what breaks
 under deletion is example tests that the move deletes alongside their subject.
 Phases 4, 5 and 6 all wait on Phase 3.
@@ -619,15 +626,32 @@ proves it.
       decisions while two of the three rules stay byte-identical on the page —
       the blast radius of an edit is not a syntactic property of the edit.
       Sharpened into [docs/neuro-symbolic-architecture.md](neuro-symbolic-architecture.md).*
-- [ ] **Fixtures, part 4b(ii)c-2: the evidence browser and the review arc
-      (1 PR).** 21 failures: `test_evidence_api` 13, `test_review_arc` 8, plus
-      the one in `test_content_roots` that asserts six packs and moves. Both
-      assert on the review arc, which c-0 made content-declared but which a
-      fixture deployment still cannot produce: store-backed ingest needs
-      extraction **targets**, and the fixture scenario has none. Add them here —
-      the shape is `starters/tools/targets/<doc-id>.json`, and
-      `fixtures/build.py` should emit them beside the scenario it already
-      builds.
+- [x] **Fixtures, part 4b(ii)c-2: the evidence browser and the review arc
+      (1 PR).** 21 failures under deletion → **2**, both classified movers
+      (the county-recording arc test and `test_content_roots`' six-pack
+      assertion); demo/tests overall falls **28 → 8**, every one a classified
+      mover. The task as written was corrected in two places: the targets
+      index key is the `documentId` **field**, not the filename (which is
+      convention), and the committed copy lives at `fixtures/targets/` —
+      `build_content_root` places it at `starters/tools/targets/`.
+      *What the targets work uncovered was bigger than the task: the fixture
+      scenario's hand-assembled facts were **schema-invalid** (an old
+      `locator`/`renditionId` grounding no production code reads), and nothing
+      was positioned to notice — the conformance gate validates attributes,
+      not the envelope; the schema checker globs `starters/`. The facts are
+      now what `StubAdapter.extract` emits from the committed targets, the way
+      every real starter is built. And `sensitivity` was only ever
+      hand-written: no adapter could produce a PII-marked fact, so targets now
+      carry the field and `build_fact` passes it through.*
+      *Two premises did not survive conversion and were retired, not forced:
+      "other scenarios carry no abstentions" was a notice-ny property (the
+      fixture base case abstains organically — its replacement asserts the
+      scripted arc and organic source stay separate), and
+      `DULY_DEMO_FORCE_FIXTURE` was the wrong no-store lever under a fixture
+      root (the converted test removes the store the way a deployment loses
+      it). The corrected review value was chosen by mutation: the obvious
+      above-threshold value clears the abstention without moving the decision,
+      which is a strictly weaker test.*
 - [ ] **Fixtures, part 5: kernel report, whatif, dmn, extraction (1 PR).**
       `kernel/tests/test_report.py` — **its blocker is gone.** The scenario
       supplies document-grounded facts with quotes and spans, a
@@ -747,11 +771,12 @@ proves it.
       §3: distribution only — kernel stays `0.0.1` per D5, and
       `test_engine_identity.py` enforces the receipt side). Console entry
       points for the CLIs currently reachable only as `python -m …`
-      (**ASK**: which ones; recommend `duly-verify`, `duly-impact`,
-      `duly-conformance`, `duly-dmn`, `duly-whatif`). Decide the
-      `scheduling` extra (**ASK**: its only consumer is the deletable
-      closing-scheduler example — move the dependency declaration into the
-      example, or keep the extra as a courtesy).
+      (**ASK — answered. DECIDED (Kushan, 2026-08-06): the recommended five**,
+      `duly-verify`, `duly-impact`, `duly-conformance`, `duly-dmn`,
+      `duly-whatif`). The `scheduling` extra (**ASK — answered. DECIDED
+      (Kushan, 2026-08-06): move the dependency declaration into the
+      closing-scheduler example** — the extra's only consumer is deletable
+      content, so the declaration lives with it and deletes with it).
 - [ ] **The smoke gate.** CI: build the wheel, install into a clean venv,
       run the Phase 0 example against it. (May already exist from Phase 0 —
       then just assert it still covers the final layout.)
@@ -1247,3 +1272,12 @@ and every exception behind it.**
   vacuously and collected zero cases respectively — the sharpest instance of
   this phase's founding rule yet, now a named form in CLAUDE.md. Three of the
   plan's own claims about this task were wrong and are corrected in §7.
+
+- 2026-08-06 — [#66](https://github.com/kjpatel/duly/pull/66) — **Phase 3, part
+  4b(ii)c-2: the evidence browser and the review arc** — demo/tests under
+  deletion falls 28 → 8, all classified movers. The fixture scenario gained
+  committed extraction targets and its facts became adapter-emitted, which
+  found them schema-invalid as hand-assembled; `sensitivity` became a declared
+  target field the adapter carries; the review arc now proves itself on a
+  fixture-only deployment end to end, including a golden export that skips the
+  seeded review-0001. Two example-shaped premises retired rather than forced.

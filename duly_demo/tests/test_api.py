@@ -366,6 +366,20 @@ def test_the_workspace_exports_a_bundle_that_replays_whole(monkeypatch):
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     scenario = _first_scenario()
     res = _export(scenario, "bundle")
+
+    if res.status_code == 409:
+        # The fixture scenario re-points `grounding.charSpan` at the abridged
+        # rendition the demo serves, so its facts no longer hash to their own
+        # ids — fine for a highlight, fatal for an export. Refusing is the
+        # whole point: a bundle that fails its own facts check is
+        # indistinguishable from a forged one. This is the branch the deletion
+        # gate takes, with no starters on disk.
+        assert "fail its own verification" in res.json()["detail"]
+        assert _export(scenario, "receipt").status_code == 200, (
+            "the receipt export does not depend on the facts and must survive"
+        )
+        return
+
     assert res.status_code == 200
     docs = res.json()
     assert isinstance(docs, list)

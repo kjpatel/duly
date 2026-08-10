@@ -1647,6 +1647,54 @@ def api_report(
         # Serialized *here*. JavaScript has one number type, so a bundle
         # assembled in the browser would rewrite a fact's `"score": 1.0` as
         # `1` and break every hash it carries (duly_demo/CLAUDE.md).
+        #
+        # And verified before it is emitted, because a scenario's in-memory
+        # facts are not always the documents their ids name. The fixture
+        # scenario re-points `grounding.charSpan` at the abridged rendition
+        # the demo actually serves (`_load_fixture_scenario`) — right for a
+        # highlight, and a mutation of a content-addressed body, so those
+        # facts no longer hash to their own ids. Nothing noticed while the
+        # demo only ever *displayed* them.
+        #
+        # A bundle that fails its own facts check is worse than no bundle:
+        # "the evidence has been altered" is what a forgery looks like, and
+        # the recipient cannot tell our display convenience from tampering.
+        # So the guard is on the artifact rather than on the code path — it
+        # catches this and anything else that edits a fact on the way through.
+        pinned = {
+            p.get("id") for p in receipt.get("inputFacts") or [] if isinstance(p, dict)
+        }
+        try:
+            from duly_kernel.receipt import content_hash  # noqa: PLC0415
+        except Exception:
+            content_hash = None
+        unusable = pinned - {f.get("id") for f in scenario["facts"]}
+        if content_hash is not None:
+            unusable |= {
+                f["id"]
+                for f in scenario["facts"]
+                if f.get("id") in pinned
+                and content_hash(f, "contentHash") != f.get("contentHash")
+            }
+        if content_hash is None or unusable:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "No bundle for this decision: "
+                    + (
+                        "the fact hashes cannot be checked here because "
+                        "duly_kernel is not importable"
+                        if content_hash is None
+                        else f"{len(unusable)} of {len(pinned)} pinned fact(s) "
+                        "are missing from this scenario or no longer hash to "
+                        "the id they carry"
+                    )
+                    + ", so the file would fail its own verification and read "
+                    "as tampered-with. This is the demo serving committed "
+                    "fixture content rather than adjudicating facts of its "
+                    "own. The receipt export is unaffected."
+                ),
+            )
         filename = f"duly-bundle-{scenarioId}-{_date_prefix(effective)}.json"
         return Response(
             content=json.dumps(

@@ -78,7 +78,7 @@ Two things it still cannot promise, both stated wherever an answer appears rathe
 
 ## Someone hands me a receipt. How do I check it, without trusting them?
 
-Open it in the receipt viewer (<http://localhost:8788/receipt>, or `/api/receipts/inspect`) and it runs three checks before it shows you anything. Their independence is the answer to your question, because each one closes a different hole.
+Open it in the receipt viewer ([try it](https://duly.nyxworks.ai/receipt), or `/api/receipts/inspect`) and it runs three checks before it shows you anything. Their independence is the answer to your question, because each one closes a different hole.
 
 **Its own hash.** Recompute SHA-256 over the receipt's canonical body and compare it to the `receiptSha256` it carries. This needs nothing but the receipt — not our repository, not our facts, not our packs — so it works on a receipt produced by somebody else's deployment years ago. It proves exactly one thing: nobody edited this document after it was sealed.
 

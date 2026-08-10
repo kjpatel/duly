@@ -6,12 +6,22 @@ A guided walkthrough of the duly demonstration. Take it in order — it builds f
 
 ## Start the demo
 
+A hosted instance runs at **<https://duly.nyxworks.ai/>** with the same code and
+the same seven scenarios, and steps 1–8 and 11–12 work there as written — they
+only read.
+
+**Steps 9 and 10 want a local server.** Both write to state the demo process
+shares across every visitor: the review arc ingests your correction into the
+in-memory fact store, and the rule studio's drafts are process-global, not
+per-browser. On the hosted instance you would be editing what the next visitor
+sees, and a restart discards it. Run those two here:
+
 ```bash
 uv sync
 uv run uvicorn duly_demo.app:app --port 8788
 ```
 
-Open http://localhost:8788.
+Open <https://duly.nyxworks.ai/> or http://localhost:8788.
 
 Each of the four pages opens with a three-step orientation strip under its title — what to click, in what order. Dismiss it with **Got it** and the choice is remembered per page; **Show guide** under the page title brings it back. The strip is the short version of this tour, and the two are kept in step by hand: if a change moves what a page's first three actions are, the strip's copy in [duly_demo/static/guide.js](../duly_demo/static/guide.js) is part of that change. `duly_demo/tests/test_guide.py` enforces that every page has one and that no guide is orphaned, but it cannot tell you the words went stale.
 
@@ -75,7 +85,7 @@ The committed [review-0001](../examples/golden/cases/review-0001) golden case is
 
 ## 10. The rule studio
 
-Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*.
+Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*. This step edits a draft the demo process holds globally, so run it on your own server rather than the hosted one — reading the grids is safe anywhere, but the edit below is not yours alone.
 
 The left rail lists the six packs discovered under `examples/rulepacks/`, each with its rule count, how many outcomes it declares, and how many committed golden receipts cite it. Pick **termination-notice-us-states** — 226 of the 351 golden receipts are its.
 
@@ -119,7 +129,7 @@ Then click one of the red examples. Each is a minimal document that breaks one w
 
 ## 11. The evidence browser
 
-The workspace showed you the facts *this question's receipt cited*. That is the right frame for reading a decision and the wrong one for reading a case: it never shows a fact no rule needed, and it cannot show a fact that is no longer true. Click **Evidence browser** in the header (or open <http://localhost:8788/evidence>) for the other frame — every document the case holds and every fact ever asserted about it.
+The workspace showed you the facts *this question's receipt cited*. That is the right frame for reading a decision and the wrong one for reading a case: it never shows a fact no rule needed, and it cannot show a fact that is no longer true. Click **Evidence browser** in the header (or open [`/evidence`](https://duly.nyxworks.ai/evidence)) for the other frame — every document the case holds and every fact ever asserted about it.
 
 Pick **NY nonrenewal — review arc**, the same case you corrected in step 9.
 
@@ -153,7 +163,7 @@ Deep links carry the whole view — `?case=&fact=&k=&tab=` — because "look at 
 
 ## 12. The receipt viewer
 
-The workspace produces a receipt. This surface reads one back. Click **Receipt viewer** in the header (or open <http://localhost:8788/receipt>) — the question it answers is the one an auditor actually arrives with: *someone handed me this receipt; does it hold?*
+The workspace produces a receipt. This surface reads one back. Click **Receipt viewer** in the header (or open [`/receipt`](https://duly.nyxworks.ai/receipt)) — the question it answers is the one an auditor actually arrives with: *someone handed me this receipt; does it hold?*
 
 The toolbar holds the whole committed corpus behind a search field: filter by rule pack, then type a case id or a receipt hash — arrow keys and Enter, or click. 351 receipts are searched rather than browsed, so the picker sits across the top and the width goes to the two panes that need it. Type `notice-ny-0001`. Three things happen at once, and the third is the point.
 

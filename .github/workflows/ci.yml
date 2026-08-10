@@ -42,6 +42,72 @@ jobs:
             echo "examples/golden/cases not present; skipping verify"
           fi
 
+
+  deletion-gate:
+    name: the toolkit survives deleting examples/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      # The roadmap's claim, executed literally: an adopter deletes the
+      # teaching content and keeps a working toolkit. Everything after this
+      # step runs in the deleted state.
+      - name: Delete the example content
+        run: |
+          git rm -rq examples
+          rm -rf examples
+
+      - name: Toolkit suites pass with the content gone
+        run: uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+
+      # Deleting the directory is not the same state as an empty corpus:
+      # Phase 1 gave "0 of 0" its own honest wording, and a *missing*
+      # directory refuses instead. The gate asserts the refusal an adopter's
+      # deletion actually produces — staging empty directories to get the
+      # softer answer would test a state nobody creates.
+      - name: verify refuses honestly, naming the missing directory
+        run: |
+          set +e
+          out=$(uv run python -m duly_assurance verify 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          test $code -ne 0
+          echo "$out" | grep -q "no cases directory"
+
+      # "Tests pass" alone is weaker than the claim: the four demo surfaces
+      # must boot and say what they have — the built-in spec/examples
+      # scenario (which ships with the demo), and otherwise empty listings —
+      # rather than crash or fabricate.
+      - name: the demo boots to the honest empty state
+        run: |
+          uv run python - <<'CHECK'
+          from fastapi.testclient import TestClient
+
+          import demo.app
+
+          with TestClient(demo.app.app) as c:
+              scenarios = c.get("/api/scenarios")
+              packs = c.get("/api/rules/packs")
+              receipts = c.get("/api/receipts/corpus")
+              assert scenarios.status_code == 200, scenarios.text
+              assert packs.status_code == 200, packs.text
+              assert receipts.status_code == 200, receipts.text
+              listing = scenarios.json()
+              [built_in] = listing  # exactly the built-in, nothing invented
+              assert built_in["extraction"]["source"] == "fixture"
+              assert packs.json().get("packs") == []
+              assert receipts.json().get("count") == 0
+              for page in ("/", "/rules", "/evidence", "/receipt"):
+                  assert c.get(page).status_code == 200, page
+          print("deleted state: 1 built-in scenario, 0 packs, 0 receipts, four pages serve")
+          CHECK
+
   rule-impact:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

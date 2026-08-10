@@ -70,12 +70,9 @@ master merges a PR once CI is green, except three that pause for Kushan's
 review before merge — the `examples/` move, the `1.0.0` version/tag PR, and
 the close-out that deletes this file.
 
-Remaining, in order: kernel report + whatif + dmn + extraction (part 5 — the
-demo's suites are done; demo/tests stands at 8 under deletion, all classified
-movers), then the move, then the deletion gate — which the part-3
-measurement showed **cannot pass before the move**, because most of what breaks
-under deletion is example tests that the move deletes alongside their subject.
-Phases 4, 5 and 6 all wait on Phase 3.
+**Phase 3 is complete.** The separation claim is CI-enforced by the
+deletion gate on every push. Phases 4 (distribution), 5 (adopter's guide) and
+6 (capacity envelope) remain, in that order.
 
 **Twenty-six M5 PRs are merged** (#40–#65), plus three pre-plan ones — see
 Appendix B, which is the count of record. The original estimate was ~19–21
@@ -768,9 +765,14 @@ proves it.
       gotchas and creates the directory a nested file belongs in. Splitting
       first means splitting twice, and the second pass is the one that gets
       skipped.*
-- [ ] **The deletion gate (1 PR).** A CI job: `git rm -r examples/`, run the
-      toolkit suites, run `verify` — **and the expected outcome is the honest
-      missing-directory refusal, not `verified 0 cases`.** The move PR's
+- [x] **The deletion gate (1 PR).** Done — a `deletion-gate` job in ci.yml,
+      on every push and PR: `git rm -r examples/`, all eleven toolkit suites,
+      `verify`'s refusal asserted by exit code *and* message, and the four
+      demo pages booted against nothing (1 built-in scenario, 0 packs, 0
+      receipts, four 200s). The steps were run verbatim in a fresh-venv
+      deleted-state copy before the job was committed. As corrected below:
+      the expected `verify` outcome is the honest missing-directory refusal,
+      not `verified 0 cases`.** The move PR's
       simulation established this: Phase 1's empty-corpus semantics
       distinguish an empty `cases/` directory (0 cases, exit 0, says nothing
       was measured) from a *missing* one (refusal, non-zero), and
@@ -1358,3 +1360,9 @@ and every exception behind it.**
   in the main CI loop, and whatif's CLI refused a bad `--ontologies` path as
   a missing solver in z3-less venvs. Paused for Kushan's review before merge
   per the execution model.
+
+- 2026-08-06 — [#69](https://github.com/kjpatel/duly/pull/69) — **Phase 3
+  complete: the deletion gate** — a ci.yml job runs `git rm -r examples/`,
+  the eleven toolkit suites, verify's honest refusal (exit code and message),
+  and the four demo pages against nothing, on every push. Phase 3's founding
+  claim is now enforced, not asserted.

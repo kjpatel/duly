@@ -1,6 +1,6 @@
 {
-  "id": "urn:duly:fact:sha256:c34e1cefc9eaec0521a57a0cdb7dfd7be8f85c78c3dcf94001a0331c73eb7202",
-  "contentHash": "c34e1cefc9eaec0521a57a0cdb7dfd7be8f85c78c3dcf94001a0331c73eb7202",
+  "id": "urn:duly:fact:sha256:aec14a19e2a1f856a6d1950908dc9c28cf90d5322c408603b21c4e492241c9c6",
+  "contentHash": "aec14a19e2a1f856a6d1950908dc9c28cf90d5322c408603b21c4e492241c9c6",
   "caseId": "case:fixture:fx-0005",
   "entity": {
     "id": "widget:fx-0005",
@@ -17,9 +17,13 @@
     "kind": "document",
     "documentId": "doc:widget-report:FX-INSPECTION-0005",
     "documentSha256": "63374b03b3091d5c6132249ce651f338942ee93da9b04347b6f2a92e851f2159",
-    "renditionId": "rendition:widget-report:0.1.0",
-    "locator": {
-      "kind": "charSpan",
+    "rendition": {
+      "id": "rend:demo-extractor:0.1.0:63374b03",
+      "extractor": "duly-demo-extractor",
+      "extractorVersion": "0.1.0"
+    },
+    "page": 1,
+    "charSpan": {
       "start": 127,
       "end": 156
     },
@@ -29,8 +33,9 @@
     "kind": "machine",
     "at": "2026-03-01T00:00:00Z",
     "extractor": {
-      "name": "duly-fixture-builder",
-      "version": "0.1.0"
+      "name": "duly-demo-extractor",
+      "version": "0.1.0",
+      "runId": "run:fixture:0005"
     }
   },
   "confidence": {

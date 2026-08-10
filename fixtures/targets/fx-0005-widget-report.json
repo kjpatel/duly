@@ -1,0 +1,71 @@
+{
+  "documentId": "doc:widget-report:FX-INSPECTION-0005",
+  "caseId": "case:fixture:fx-0005",
+  "schemaRef": {
+    "ontology": "duly-fixture",
+    "version": "0.1.0"
+  },
+  "assertedAt": "2026-03-01T00:00:00Z",
+  "runId": "run:fixture:0005",
+  "page": 1,
+  "notes": [
+    "Confidence scores in this file are scripted demo values (the stub adapter passes them through verbatim); they are not calibration output.",
+    "fx:score is scripted below the pack's 0.80 floor so the scenario carries a live low_confidence abstention."
+  ],
+  "facts": [
+    {
+      "file": "fx-score.json",
+      "entity": {
+        "id": "widget:fx-0005",
+        "type": "fx:Widget"
+      },
+      "attribute": "fx:score",
+      "value": {
+        "kind": "decimal",
+        "value": "12"
+      },
+      "quote": "Measured score: 12",
+      "confidence": {
+        "score": 0.62,
+        "method": "raw"
+      }
+    },
+    {
+      "file": "fx-category.json",
+      "entity": {
+        "id": "widget:fx-0005",
+        "type": "fx:Widget"
+      },
+      "attribute": "fx:category",
+      "value": {
+        "kind": "code",
+        "value": "restricted",
+        "codeSystem": "duly-fixture/widget-categories",
+        "codeSystemVersion": "0.1.0"
+      },
+      "quote": "Assigned category: restricted",
+      "confidence": {
+        "score": 0.97,
+        "method": "raw"
+      }
+    },
+    {
+      "file": "fx-inspector.json",
+      "entity": {
+        "id": "widget:fx-0005",
+        "type": "fx:Widget"
+      },
+      "attribute": "fx:inspector",
+      "value": {
+        "kind": "string",
+        "value": "Dana Okafor"
+      },
+      "quote": "Inspector of record: Dana Okafor, 41 Alder Row",
+      "confidence": {
+        "score": 0.99,
+        "method": "raw"
+      },
+      "sensitivity": "pii"
+    }
+  ]
+}

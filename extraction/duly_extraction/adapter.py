@@ -252,6 +252,16 @@ def build_fact(
         body["effectiveFrom"] = target["effectiveFrom"]
     if "effectiveTo" in target:
         body["effectiveTo"] = target["effectiveTo"]
+    # `sensitivity` is a property of the *content* a target names, not of the
+    # extraction: whether a quote carries PII is knowable when the target is
+    # authored and not knowable from the span. So it passes through here, the
+    # same way the effective dates do. Nothing is inferred — an adapter that
+    # guessed at PII would be asserting a handling class it cannot ground, and
+    # the absent field already means `internal` (spec/grounded-facts.md, open
+    # question 3). Without this pass-through the only way to hold a `pii` fact
+    # was to write it by hand, i.e. outside the adapter that verifies spans.
+    if "sensitivity" in target:
+        body["sensitivity"] = target["sensitivity"]
 
     digest = content_hash(body)
     # Present keys in the spec-example order for readability; key order does
@@ -260,6 +270,7 @@ def build_fact(
     for key in (
         "caseId", "entity", "attribute", "value", "grounding", "assertion",
         "confidence", "effectiveFrom", "effectiveTo", "recordedAt", "status", "schemaRef",
+        "sensitivity",
     ):
         if key in body:
             ordered[key] = body[key]

@@ -16,7 +16,6 @@ example content whose templates it carries.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -27,7 +26,11 @@ ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 sys.path.insert(0, str(REPO / "kernel"))
 sys.path.insert(0, str(REPO / "core"))
+sys.path.insert(0, str(REPO / "store"))
+sys.path.insert(0, str(REPO / "extraction"))
 
+from duly_extraction.adapter import SourceDocument  # noqa: E402
+from duly_extraction.stub import StubAdapter  # noqa: E402
 from duly_kernel import adjudicate, seal_fact  # noqa: E402
 
 ONTOLOGY = {"ontology": "duly-fixture", "version": "0.1.0"}
@@ -144,11 +147,22 @@ def _correction(case_id: str, supersedes: str, value: dict) -> dict:
 # data but leaves the span machinery — the evidence browser's highlighting, the
 # report's quotes, span verification itself — with nothing to exercise.
 #
-# So one scenario, built the way `starters/tools/make_documents.py` builds the
-# teaching ones: the rendition is the join of the document's lines, spans are
-# computed from that text rather than typed by hand, and the builder asserts
-# each quote equals the slice it claims. A hand-counted offset is a fact that
-# lies about its own evidence.
+# So one scenario, built the way the teaching starters are built and by the
+# same code: this file writes a **targets file** (the adapter's fact-proposal
+# seam — see extraction/duly_extraction/adapter.py) and the committed facts are
+# whatever `StubAdapter.extract` emits from it. Nothing here assembles a fact
+# by hand.
+#
+# That is not tidiness. A demo deployment ingests a scenario by running the
+# targets through the adapter into a session store, so a scenario whose
+# committed facts were built by some *other* code is a scenario whose store
+# projection and disk projection can silently disagree — and the fixture
+# scenario's did: its hand-built grounding used a `renditionId` + `locator`
+# pair that the schema's DocumentGrounding (`additionalProperties: false`,
+# `rendition` required, charSpan-or-bbox) does not admit at all. Nothing
+# caught it, because the only checker that reads these facts is the ontology
+# conformance gate, which validates attributes and values rather than the
+# envelope around them. One producer, one shape.
 
 DOC_LINES = [
     ("title", "WIDGET INSPECTION REPORT"),
@@ -164,51 +178,63 @@ DOC_LINES = [
 ]
 
 SCENARIO_CASE = "fx-0005"
+SCENARIO_DOC = "doc:widget-report:FX-INSPECTION-0005"
+
+#: The extraction run this scenario's facts come from. Named rather than
+#: derived (`derive_run_id` would do) so the id is legible in an envelope and
+#: in `assertion.extractor.runId`, and so the review arc's own run id —
+#: `demo/app.py` rewrites it to `run:<scenario>:review-demo` — is visibly a
+#: *different* run over the same document rather than an unlabeled second one.
+SCENARIO_RUN = "run:fixture:0005"
+
+#: The fact proposals the adapter is asked to ground, in the shape
+#: `extraction/duly_extraction/adapter.py` documents. This list is the source
+#: of truth for the scenario: `fixtures/targets/` commits it verbatim, the
+#: committed facts are what the stub emits from it, and a demo deployment
+#: ingests the same file. Confidences are scripted demo values passed through
+#: verbatim by the stub — they are not calibration output.
+SCENARIO_TARGETS = [
+    {
+        "file": "fx-score.json",
+        "entity": {"id": f"widget:{SCENARIO_CASE}", "type": "fx:Widget"},
+        "attribute": "fx:score",
+        "value": {"kind": "decimal", "value": "12"},
+        "quote": "Measured score: 12",
+        # Below the pack's 0.80 floor, so the scenario carries a live
+        # abstention the demo's review arc has something to resolve.
+        "confidence": {"score": 0.62, "method": "raw"},
+    },
+    {
+        "file": "fx-category.json",
+        "entity": {"id": f"widget:{SCENARIO_CASE}", "type": "fx:Widget"},
+        "attribute": "fx:category",
+        "value": {
+            "kind": "code",
+            "value": "restricted",
+            "codeSystem": "duly-fixture/widget-categories",
+            "codeSystemVersion": "0.1.0",
+        },
+        "quote": "Assigned category: restricted",
+        "confidence": {"score": 0.97, "method": "raw"},
+    },
+    {
+        "file": "fx-inspector.json",
+        "entity": {"id": f"widget:{SCENARIO_CASE}", "type": "fx:Widget"},
+        "attribute": "fx:inspector",
+        "value": {"kind": "string", "value": "Dana Okafor"},
+        "quote": "Inspector of record: Dana Okafor, 41 Alder Row",
+        "confidence": {"score": 0.99, "method": "raw"},
+        # `sensitivity: pii` so the report renderer's redaction path has
+        # something to redact. The quote is invented and names nobody; a
+        # fixture that carried real personal data to test PII handling would
+        # be the joke that writes itself.
+        "sensitivity": "pii",
+    },
+]
 
 
 def _rendition_text(lines: list[tuple[str, str]]) -> str:
     return "\n".join(text for _, text in lines) + "\n"
-
-
-def _span(text: str, quote: str) -> dict:
-    """The span of `quote` in `text`, found rather than asserted."""
-    start = text.index(quote)
-    if text.count(quote) != 1:
-        raise ValueError(f"quote is not unique in the rendition: {quote!r}")
-    return {"start": start, "end": start + len(quote)}
-
-
-def _grounded_fact(
-    attribute: str,
-    value: dict,
-    quote: str,
-    score: float,
-    doc: dict,
-    rendition: str,
-    sensitivity: str | None = None,
-) -> dict:
-    body = {
-            "caseId": f"case:fixture:{SCENARIO_CASE}",
-            "entity": {"id": f"widget:{SCENARIO_CASE}", "type": "fx:Widget"},
-            "attribute": attribute,
-            "value": value,
-            "grounding": {
-                "kind": "document",
-                "documentId": doc["id"],
-                "documentSha256": doc["sha256"],
-                "renditionId": doc["renditionId"],
-                "locator": {"kind": "charSpan", **_span(rendition, quote)},
-                "quote": quote,
-            },
-            "assertion": {"kind": "machine", "at": ASSERTED_AT, "extractor": EXTRACTOR},
-            "confidence": {"score": score, "method": "raw"},
-            "recordedAt": ASSERTED_AT,
-            "status": "asserted",
-            "schemaRef": dict(ONTOLOGY),
-    }
-    if sensitivity is not None:
-        body["sensitivity"] = sensitivity
-    return seal_fact(body)
 
 
 def _build_scenario() -> None:
@@ -237,43 +263,47 @@ def _build_scenario() -> None:
     rendition = _rendition_text(DOC_LINES)
     (root / "renditions" / "widget-report.txt").write_text(rendition, encoding="utf-8")
 
-    doc = {
-        "id": "doc:widget-report:FX-INSPECTION-0005",
-        "sha256": hashlib.sha256(pdf_path.read_bytes()).hexdigest(),
-        "renditionId": "rendition:widget-report:0.1.0",
+    document = SourceDocument.from_bytes(SCENARIO_DOC, pdf_path.read_bytes())
+
+    # The targets file lives beside the corpus rather than inside `scenario/`,
+    # because that is where it lives in a deployment: the demo indexes
+    # `starters/tools/targets/*.json` by the `documentId` *field*, one shared
+    # directory for every scenario, and the filename is a human convention
+    # (`<scenario>-<document>.json`). `demo/tests/demotest_helpers.py` maps
+    # this directory onto that one.
+    targets = {
+        "documentId": SCENARIO_DOC,
+        "caseId": f"case:fixture:{SCENARIO_CASE}",
+        "schemaRef": dict(ONTOLOGY),
+        "assertedAt": ASSERTED_AT,
+        "runId": SCENARIO_RUN,
+        "page": 1,
+        "notes": [
+            "Confidence scores in this file are scripted demo values (the stub "
+            "adapter passes them through verbatim); they are not calibration output.",
+            "fx:score is scripted below the pack's 0.80 floor so the scenario "
+            "carries a live low_confidence abstention.",
+        ],
+        "facts": SCENARIO_TARGETS,
     }
+    _dump(ROOT / "targets" / f"{SCENARIO_CASE}-widget-report.json", targets)
 
-    facts = [
-        # Below the pack's 0.80 floor, so the scenario carries a live
-        # abstention the demo's review arc has something to resolve.
-        _grounded_fact(
-            "fx:score", {"kind": "decimal", "value": "12"},
-            "Measured score: 12", 0.62, doc, rendition,
-        ),
-        _grounded_fact(
-            "fx:category",
-            {
-                "kind": "code",
-                "value": "restricted",
-                "codeSystem": "duly-fixture/widget-categories",
-                "codeSystemVersion": "0.1.0",
-            },
-            "Assigned category: restricted", 0.97, doc, rendition,
-        ),
-        # `sensitivity: pii` so the report renderer's redaction path has
-        # something to redact. The quote is invented and names nobody; a
-        # fixture that carried real personal data to test PII handling would
-        # be the joke that writes itself.
-        _grounded_fact(
-            "fx:inspector",
-            {"kind": "string", "value": "Dana Okafor"},
-            "Inspector of record: Dana Okafor, 41 Alder Row", 0.99, doc,
-            rendition, sensitivity="pii",
-        ),
-    ]
-    for fact in facts:
-        _dump(root / "facts" / f'{fact["attribute"].replace(":", "-")}.json', fact)
+    # The committed facts are the adapter's output, not this file's. The stub
+    # locates every quote by exact substring search and re-checks
+    # `quote == rendition[start:end]` on each emission, so a hand-counted
+    # offset — a fact that lies about its own evidence — is unrepresentable
+    # here rather than merely discouraged.
+    result = StubAdapter(rendition).extract(document, targets)
+    if result.notes:
+        # The stub's only note is "quote occurs more than once, using first
+        # occurrence", which for authored fixture targets is an authoring bug:
+        # the span would be correct and the *evidence* ambiguous.
+        raise ValueError(f"ambiguous scenario targets: {result.notes}")
+    facts = result.facts
+    for target, fact in zip(SCENARIO_TARGETS, facts):
+        _dump(root / "facts" / target["file"], fact)
 
+    doc = {"id": document.document_id, "sha256": document.sha256}
     _dump(
         root / "scenario.json",
         {
@@ -302,11 +332,14 @@ def _build_scenario() -> None:
                     "sha256": doc["sha256"],
                 }
             ],
-            "facts": [f'facts/{f["attribute"].replace(":", "-")}.json' for f in facts],
+            "facts": [f'facts/{t["file"]}' for t in SCENARIO_TARGETS],
             "rulePack": "fixtures/pack.yaml",
         },
     )
-    print(f"{SCENARIO_CASE}  scenario: 1 document, {len(facts)} span-grounded facts")
+    print(
+        f"{SCENARIO_CASE}  scenario: 1 document, {len(facts)} span-grounded facts "
+        f"(extracted by {result.rendition.extractor} {result.rendition.extractor_version})"
+    )
 
 
 def _dump(path: Path, doc: dict) -> None:

@@ -5,7 +5,8 @@ Since M3 this is a thin CLI over extraction/duly_extraction — the stub is
 adapter #1 (duly_extraction.stub.StubAdapter); this file keeps the tool and
 its flags working unchanged. Given a rendition .txt, the SHA-256 of the
 source document bytes, and a targets file listing (attribute, entity, value,
-quote) tuples, the adapter finds each quote's character span in the rendition
+quote, confidence, optional sensitivity) tuples, the adapter finds each
+quote's character span in the rendition
 via substring search and emits fact JSON conforming to
 duly_core's grounded-fact schema, with the content hash computed the
 same way spec/validate.py verifies it:

@@ -19,7 +19,7 @@ no more. In particular, both need to be told *which* attributes to look for:
 document conversion gives you text, not an ontology. That fact-proposal seam
 is the ``targets`` dict, the same shape starters/tools/extract.py has always
 documented ({documentId, caseId, schemaRef, assertedAt, runId?, page?,
-facts: [{entity, attribute, value, quote, confidence?, ...}]}). A future
+facts: [{entity, attribute, value, quote, confidence?, sensitivity?, ...}]}). A future
 model-driven proposer (an LLM or trained extractor deciding what to assert)
 replaces the targets file with generated proposals; the rendition, span
 verification, fact shape, and envelope stay exactly as they are here.

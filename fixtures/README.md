@@ -33,8 +33,9 @@ deleted is not a test.**
 | `cases/fx-000N/` | Five cases: `case.yaml` plus content-addressed facts |
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
 | `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
+| `targets/` | The scenario's extraction **targets** — the scripted quotes, values and confidences `StubAdapter` extracts from the rendition. The committed facts under `scenario/facts/` are what the adapter emits from this file, exactly how real starters are built; a demo content root places it at `starters/tools/targets/`, which is what makes the review arc reachable from a fixture-only deployment |
 | `dmn/` | Two DMN decision tables: one that compiles, one that is refused. The studio's import panel and the compiler's happy path were reachable only through `dmn/examples/`, which an adopter deletes |
-| `build.py` | Regenerates the cases, receipts and scenario, deterministically |
+| `build.py` | Regenerates the cases, receipts, targets and scenario, deterministically — the scenario's facts by running the real `StubAdapter` over the targets, never by hand-assembling |
 
 Five cases, chosen to cover what the toolkit's own tests need rather than to
 teach anything:
@@ -66,9 +67,14 @@ And one scenario, which is a different artifact from a case:
   path has something to redact (the name is invented and refers to nobody). The cases above all use attestation grounding, which is honest for
   synthetic data and leaves the span machinery — the evidence browser's
   highlighting, quotes in the audit report, span verification itself — with
-  nothing to exercise. Spans are *found* in the rendition text by the builder,
-  never typed: a hand-counted offset is a fact that lies about its own
-  evidence.
+  nothing to exercise. The facts are emitted by the real extraction adapter
+  from a committed targets file, so span verification is the *adapter's*
+  guarantee — `verify_fact_span` re-checks every quote against the slice it
+  claims on emission. The first version of these facts was hand-assembled by
+  the builder instead, and turned out to be schema-invalid in a way nothing
+  was positioned to catch: the conformance gate validates attributes, not the
+  envelope, and the schema checker globs `starters/`. A fixture built by a
+  private code path drifts; one built by the shipped path cannot.
 
 ## Regenerating
 

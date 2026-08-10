@@ -688,14 +688,41 @@ proves it.
       `dmn/tests` only has to point at it. And the "date attribute" this task
       inherited was never needed: see c-1.
 
-- [ ] **The move itself (1 PR).** `git mv` of `rulepacks/`, `starters/`,
-      `golden/` (D8), the teaching ontologies, `dmn/examples/`, and the
-      generator templates (now a registry per Phase 1) under an `examples/`
-      umbrella — propose the exact layout in the PR. Update: CI workflow
-      paths and the optional-deps paths filter, CLAUDE.md's layout table and
-      verify commands, every README path reference. `review-0001` is
-      preserved-forever and pins `duly-starter-notice` — it moves intact;
-      `schemaRef` is a name, not a path, so no hash moves.
+- [x] **The move itself (1 PR).** Done: 2,253 files by pure rename (0
+      insertions, 0 deletions in the rename set; `review-0001` and
+      `notice-ny-0007` byte-compared across the move). Layout as proposed in
+      the digest: the five directories are **siblings** under `examples/`
+      (`dmn/examples/` became `examples/dmn/`), which is what let all 351
+      committed `case.yaml` pack refs keep resolving unrewritten via
+      `resolve_pack_path`'s sibling fallback.
+      *The design decision that made it cheap: the **content-root contract
+      did not move** — a root still holds `starters/`, `golden/`,
+      `rulepacks/`, `ontologies/`, `dmn/` directly, and the repo now offers
+      `examples/` as its default root instead of itself. No adopter mirrors
+      this repo's nesting; no fixture content root changed; six committed
+      scenario manifests kept their `rulePack` refs.*
+      *One deliberate behaviour change: the demo's built-in `spec/examples`
+      scenario is pinned to the repo (it ships with the demo) rather than
+      derived from the content root — necessary because the default root no
+      longer contains `spec/`, and it means the deleted state demos the
+      contract instead of nothing.*
+      *Example tests live in `examples/tests/` (133 tests, run by the main CI
+      lane while the directory exists, deleted with it). Two waves: the
+      classified movers, then 26 stragglers the deletion simulation caught —
+      including `review/tests` (45 failures, a suite no scout had swept) and
+      `test_generate` (whole-file mover the plan had ruled on two PRs
+      earlier). The simulation also unmasked a live defect the new CI
+      coverage made visible: whatif's CLI checked for z3 before validating
+      `--ontologies`, so its refusal depended on the venv — and `whatif/tests`
+      plus `core/tests` had never been in the main CI suite loop at all.*
+      ***The end state, machine-checked: `git rm -r examples/` leaves 791
+      toolkit tests passing with 0 failures and 0 errors, `verify` refusing
+      with the honest missing-directory message, and the demo booting to the
+      built-in-plus-empty state.* The CLAUDE.md gotcha split rode along as
+      planned: root 5,352 → ~3,660 words, 18 gotchas routed
+      (`demo/CLAUDE.md`, `examples/rulepacks/README.md`,
+      `assurance/CLAUDE.md`, `whatif/CLAUDE.md`, `examples/CLAUDE.md`), the
+      graduation rule added as docs-pass question 6 and applied once.*
 
       **Also in this PR: split CLAUDE.md's gotchas, and give them a lifecycle.**
       Measured 2026-08-06 — the file is **5,352 words** (~7k tokens, loaded
@@ -1320,3 +1347,14 @@ and every exception behind it.**
   (prove-equivalent — sweep by parser, not by file); compatibility_demo off
   golden/; test_rule_ids' half-vacuous sweep guarded. The deletion measurement
   caught both of the last two — no scout had.
+
+- 2026-08-06 — [#68](https://github.com/kjpatel/duly/pull/68) — **Phase 3: the
+  move** — 2,253 files by pure rename; content-root contract unchanged (the
+  repo's default root became `examples/`); example tests in `examples/tests/`
+  (133); CLAUDE.md split with graduation rule; docs sweep with every command
+  executed. The deletion simulation reached **zero**: 791 toolkit tests pass
+  with `examples/` deleted. Found on the way: `review/tests` was a suite no
+  scout swept (45 failures), `core/tests` and `whatif/tests` had never been
+  in the main CI loop, and whatif's CLI refused a bad `--ontologies` path as
+  a missing solver in z3-less venvs. Paused for Kushan's review before merge
+  per the execution model.

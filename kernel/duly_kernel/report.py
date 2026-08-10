@@ -161,7 +161,7 @@ def _quote_text(fact: dict | None) -> str | None:
 def _evidence_line(fact_id: str, facts_by_id: dict[str, dict]) -> str:
     fact = facts_by_id.get(fact_id)
     if fact is None:
-        return f"— fact {_short_hash(fact_id)}: not available for rendering"
+        return f"— fact {_short_hash(fact_id)}: pinned by hash; body not supplied"
     grounding = fact.get("grounding", {})
     ref = f"(fact {_short_hash(fact.get('contentHash', fact_id))})"
     if grounding.get("kind") == "document":
@@ -345,7 +345,12 @@ def _build_evidence(receipt: dict, facts_by_id: dict[str, dict]) -> _Section:
         if fact is None:
             blocks.append(("subhead", f"Fact {_short_hash(fact_id)}"))
             blocks.append(
-                ("para", "Pinned in the receipt but not available for rendering.")
+                (
+                    "para",
+                    "Pinned in the receipt by content hash, but the fact body "
+                    "— where the value and its source quote live — was not "
+                    "supplied for rendering.",
+                )
             )
             continue
         attribute = fact.get("attribute", "?")

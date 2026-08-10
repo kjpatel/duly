@@ -11,6 +11,7 @@
 
 <p align="center">
   <strong>
+    <a href="https://duly.nyxworks.ai/">Live demo</a> ·
     <a href="#quick-start-60-seconds">Quick start</a> ·
     <a href="docs/demo_tour.md">Demo tour</a> ·
     <a href="docs/neuro-symbolic-architecture.md">Architecture</a> ·
@@ -66,6 +67,9 @@ they can re-run it.
 workspace, a rule studio, an evidence browser with a knowledge-time dial, and a
 receipt viewer that re-verifies anything you paste into it.
 
+They are running at **<https://duly.nyxworks.ai/>** — same code, same seven
+scenarios, no install. Or locally:
+
 ```bash
 uv run uvicorn duly_demo.app:app --port 8788     # → http://localhost:8788
 ```
@@ -98,6 +102,7 @@ its pack, and compared byte-for-byte against the receipt committed months earlie
 
 | If you want | Read |
 |---|---|
+| To watch it run without installing anything | [the live demo](https://duly.nyxworks.ai/) |
 | To watch it run before reading about it | [demo tour](docs/demo_tour.md) |
 | The system mental model, for platform engineers | [architecture guide](docs/neuro-symbolic-architecture.md) |
 | The ~20 terms this repo uses precisely | [concepts](docs/concepts.md) |
@@ -233,7 +238,25 @@ Specifications that develop ahead of running code rarely get adopted. The contra
 
 ## The demonstration
 
-The milestone that validates the architecture end to end now runs. Seven scenarios ship with the repo, grouped by domain in the picker. Insurance: a New York homeowners nonrenewal notice and a review-arc variant whose extracted mailing date lands below the rule pack's confidence floor. Mortgage closing: a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure, remote-online-notarization eligibility under real state authorization statutes (adjudicate the same California closing today and in 2030 — the outcome flips on SB 696's operative date), eSign/eNote signing-method routing for a closing package, a TILA right-of-rescission funding hold that clears only after the third *precise* business day (Saturdays count; Sundays and federal holidays do not — the 2026 Memorial Day window is the demo case), and a county recording-readiness check with its own below-floor extraction feeding the review arc:
+The milestone that validates the architecture end to end now runs. Seven scenarios ship with the repo, grouped by domain in the picker. Insurance: a New York homeowners nonrenewal notice and a review-arc variant whose extracted mailing date lands below the rule pack's confidence floor. Mortgage closing: a TRID transfer-tax tolerance check between a Loan Estimate and a Closing Disclosure, remote-online-notarization eligibility under real state authorization statutes (adjudicate the same California closing today and in 2030 — the outcome flips on SB 696's operative date), eSign/eNote signing-method routing for a closing package, a TILA right-of-rescission funding hold that clears only after the third *precise* business day (Saturdays count; Sundays and federal holidays do not — the 2026 Memorial Day window is the demo case), and a county recording-readiness check with its own below-floor extraction feeding the review arc.
+
+All seven are live at **<https://duly.nyxworks.ai/>**, with the other three
+surfaces at [`/rules`](https://duly.nyxworks.ai/rules),
+[`/evidence`](https://duly.nyxworks.ai/evidence) and
+[`/receipt`](https://duly.nyxworks.ai/receipt). It runs the real kernel against
+the committed `examples/` content — the receipt viewer there searches all 351
+committed receipts and re-verifies them on open.
+
+Reading any of it is safe from anywhere. The two steps that *write* — the review
+arc's correction and a rule-studio draft — are worth running on your own server
+instead, because both live in state the demo process shares across visitors: the
+fact store is in-memory, and drafts are process-global rather than per-browser.
+On a shared instance you would be editing what the next visitor sees, and a
+restart discards it. That is a property of this reference wiring, not of duly —
+the store itself is durable and append-only, and the studio never writes into
+`examples/rulepacks/` on any deployment.
+
+To run the same thing locally:
 
 ```bash
 uv sync                     # working on the repo — extraction falls back to the scripted stub
@@ -246,11 +269,11 @@ FastAPI. Installing the *wheel* is the other case: `pip install duly` is the
 kernel and PyYAML alone, and the demo asks for `pip install 'duly[demo]'` —
 see [what the extras are](#what-a-plain-install-brings).
 
-Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
+Open <https://duly.nyxworks.ai/> (or http://localhost:8788), pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
 
-The same server has a second surface for the rules themselves: <http://localhost:8788/rules> renders every pack as decision-table grids you can edit as cells, forms or YAML, and puts the five instruments a rule change needs in one rail — the kernel's validator, the pack's declared `expected.yaml` outcomes, an ad-hoc case you build by changing input values, golden-corpus impact analysis over the draft, and (with `--extra prove`) a solver proof of whether the draft and the committed pack decide alike. The stock demonstration is watching two of them disagree: change New York's 45-day minimum to 60, and every declared case still passes while the corpus reports one flipped decision — declared outcomes catch a pack that *breaks*, only the corpus catches one whose *meaning moved*. Drafts live in the process and are never written into `examples/rulepacks/`; the studio hands you `pack.yaml` and a diff, and committing is a human act ([tour §10](docs/demo_tour.md#10-the-rule-studio)).
+The same server has a second surface for the rules themselves: <http://localhost:8788/rules> ([live](https://duly.nyxworks.ai/rules), read-only by courtesy) renders every pack as decision-table grids you can edit as cells, forms or YAML, and puts the five instruments a rule change needs in one rail — the kernel's validator, the pack's declared `expected.yaml` outcomes, an ad-hoc case you build by changing input values, golden-corpus impact analysis over the draft, and (with `--extra prove`) a solver proof of whether the draft and the committed pack decide alike. The stock demonstration is watching two of them disagree: change New York's 45-day minimum to 60, and every declared case still passes while the corpus reports one flipped decision — declared outcomes catch a pack that *breaks*, only the corpus catches one whose *meaning moved*. Drafts live in the process and are never written into `examples/rulepacks/`; the studio hands you `pack.yaml` and a diff, and committing is a human act ([tour §10](docs/demo_tour.md#10-the-rule-studio)).
 
-A third surface is for the evidence: <http://localhost:8788/evidence> shows a case's documents — the committed PDF beside the extractor's rendition, with the spans drawn only on the rendition they are measured in — and every fact ever asserted about it, each with its provenance, confidence method, content hash, ontology slot, and the questions that cite it. The strip along the top is a knowledge-time dial whose stops are the moments the case's knowledge actually changed. Drag it back past the review arc's correction: the corrected fact becomes not-yet-known, the below-floor machine fact it superseded goes live again, and the citations move with them. Nothing is stored to make that work — it is the same append-only event log projected at a different horizon, which is what "bitemporal" has meant here since M2 and what nothing until now displayed ([tour §11](docs/demo_tour.md#11-the-evidence-browser)).
+A third surface is for the evidence: [`/evidence`](https://duly.nyxworks.ai/evidence) shows a case's documents — the committed PDF beside the extractor's rendition, with the spans drawn only on the rendition they are measured in — and every fact ever asserted about it, each with its provenance, confidence method, content hash, ontology slot, and the questions that cite it. The strip along the top is a knowledge-time dial whose stops are the moments the case's knowledge actually changed. Drag it back past the review arc's correction: the corrected fact becomes not-yet-known, the below-floor machine fact it superseded goes live again, and the citations move with them. Nothing is stored to make that work — it is the same append-only event log projected at a different horizon, which is what "bitemporal" has meant here since M2 and what nothing until now displayed ([tour §11](docs/demo_tour.md#11-the-evidence-browser)).
 
 No browser needed for the core of it — the same decision from the terminal, including the as-of flip:
 

@@ -78,7 +78,7 @@ Two things it still cannot promise, both stated wherever an answer appears rathe
 
 ## Someone hands me a receipt. How do I check it, without trusting them?
 
-Open it in the receipt viewer (<http://localhost:8788/receipt>, or `/api/receipts/inspect`) and it runs three checks before it shows you anything. Their independence is the answer to your question, because each one closes a different hole.
+Open it in the receipt viewer ([try it](https://duly.nyxworks.ai/receipt), or `/api/receipts/inspect`) and it runs three checks before it shows you anything. Their independence is the answer to your question, because each one closes a different hole.
 
 **Its own hash.** Recompute SHA-256 over the receipt's canonical body and compare it to the `receiptSha256` it carries. This needs nothing but the receipt — not our repository, not our facts, not our packs — so it works on a receipt produced by somebody else's deployment years ago. It proves exactly one thing: nobody edited this document after it was sealed.
 
@@ -89,6 +89,18 @@ Open it in the receipt viewer (<http://localhost:8788/receipt>, or `/api/receipt
 The reason it is three checks and not one is the forgery that beats the first two. Edit a verdict, then recompute the hash: the document is now internally consistent, its facts are genuine and correctly hashed, and the report renders in fluent sentences with real statutory citations. Hash passes. Facts pass. Replay fails, because the rules do not produce that answer. **Sealed, internally consistent, and true are three different properties**, and a system that checks only the first has confused tamper-evidence for correctness.
 
 Two honest limits. The hash is an integrity claim, not an authenticity one — it proves the document is unaltered, not who produced it; signing is an open question, the same one the [extraction run envelope](../spec/grounded-facts.md#resolved-questions) leaves open. And replay tells you the receipt is a faithful record of what this rulebase concludes, which is not a claim that the rulebase is right about the law. For that, read the citations — they are in the report, one per rule. See [demo tour §12](demo_tour.md#12-the-receipt-viewer).
+
+## A receipt does not carry its facts. What does it prove if they are gone?
+
+Integrity, and a binding commitment to the evidence. Both are worth separating from *availability*, which is a different property and the store's job rather than the receipt's.
+
+The hash covers the decision, every rule that fired with its citation and priority, the whole derivation tree including intermediate conclusions, the abstentions, the engine identity, and the **hashes** of the input facts. So the reasoning is auditable with no facts in hand: fetch the pack version the receipt names and you can check that those rules exist, carry those citations, and stand in the defeat relationships the receipt claims they did.
+
+What the pins add is the part that survives losing the bodies. A content hash is a commitment: whoever sealed the receipt cannot later produce different fact bodies matching those hashes, because that is a second-preimage attack on SHA-256. Losing the facts therefore costs the ability to **substantiate** a decision; it never buys the ability to **substitute** a more convenient account of what the evidence was. Evidence loss becomes visible and irreversible rather than quietly repairable, and that asymmetry is what the pinning is for. A git commit stores a tree hash rather than your files and nobody calls that a hole in git — they call it the object store's job.
+
+Two things it does not prove alone. That the facts were *accurate*: that runs back through grounding spans into source documents, which is why [the deployment guidance](neuro-symbolic-architecture.md) asks for source bytes and renditions to be retained too, not only facts. And that anyone can re-derive the decision: re-adjudication needs the bodies, which is exactly why the receipt viewer reports *not checked* instead of passing vacuously.
+
+In a deployment the append-only fact store holds those bodies, and retention is an operational requirement the receipt cannot discharge on your behalf. When the artifact itself has to travel — handed to a counterparty, attached to a case file, downloaded from a demo whose session store resets — export a **bundle**: the receipt and the fact set it was adjudicated over, wrapped in one file. Wrapped, never merged: a fact array added *inside* the receipt would change the bytes its `receiptSha256` is computed over, so the merged document would fail the first check it met. Both exports are offered because choosing between them is a disclosure decision as much as a convenience one — fact bodies carry the source quotes, so the receipt alone proves what was decided without showing the evidence it was decided from.
 
 ## Who decides how the answer is worded?
 

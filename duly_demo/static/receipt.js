@@ -461,6 +461,7 @@ function renderDownloads(view) {
   const base = `/api/receipts/corpus/${encodeURIComponent(view.caseId)}`;
   const row = el("div", { class: "download-row" });
   for (const [href, label] of [
+    [`${base}/bundle.json`, "Receipt + facts"],
     [`${base}/receipt.json`, "Receipt JSON"],
     [`${base}/report?format=md`, "Markdown"],
     [`${base}/report?format=pdf`, "PDF report"],
@@ -468,6 +469,16 @@ function renderDownloads(view) {
     row.append(el("a", { class: "ghost-btn small", href, text: label }));
   }
   wrap.append(row);
+  wrap.append(
+    el("p", {
+      class: "muted",
+      text:
+        "The receipt alone verifies its own hash anywhere. The bundle adds " +
+        "the facts it was adjudicated over, so it also replays anywhere — " +
+        "which is the check this pane cannot run on a receipt that arrives " +
+        "by itself.",
+    })
+  );
   return wrap;
 }
 

@@ -326,6 +326,73 @@ def test_static_assets_revalidate_rather_than_letting_the_browser_guess():
     assert not fresh.content
 
 
+def _export(scenario, fmt: str):
+    return client.get(
+        "/api/report",
+        params={
+            "scenarioId": scenario["id"],
+            "attribute": scenario["questions"][0]["attribute"],
+            "asOfEffective": scenario["defaultAsOf"],
+            "format": fmt,
+        },
+    )
+
+
+def test_the_workspace_exports_a_receipt_the_viewer_can_verify(monkeypatch):
+    """The receipt download is a server round trip, and the reason is numeric
+    fidelity rather than tidiness: `abstentions[].confidence.score` and
+    `.threshold.minConfidence` are JSON *numbers* in the receipt schema, and
+    the browser assembling this file wrote a score of 1.0 back out as 1 — a
+    different canonical body, so the download failed its own hash check. The
+    assertion that catches a regression is the round trip, not the shape."""
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    scenario = _first_scenario()
+    res = _export(scenario, "receipt")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/json")
+
+    checked = client.post(
+        "/api/receipts/inspect", json={"documents": [res.text]}
+    ).json()
+    states = {c["id"]: c["state"] for c in checked["verification"]["checks"]}
+    assert states["receiptHash"] == "pass"
+
+
+def test_the_workspace_exports_a_bundle_that_replays_whole(monkeypatch):
+    """The bundle is the receipt *and* the fact set it was adjudicated over,
+    so it verifies on all three checks with nothing else in hand — which a
+    bare receipt cannot do, because a receipt pins its facts by hash rather
+    than carrying them."""
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    scenario = _first_scenario()
+    res = _export(scenario, "bundle")
+
+    if res.status_code == 409:
+        # The fixture scenario re-points `grounding.charSpan` at the abridged
+        # rendition the demo serves, so its facts no longer hash to their own
+        # ids — fine for a highlight, fatal for an export. Refusing is the
+        # whole point: a bundle that fails its own facts check is
+        # indistinguishable from a forged one. This is the branch the deletion
+        # gate takes, with no starters on disk.
+        assert "fail its own verification" in res.json()["detail"]
+        assert _export(scenario, "receipt").status_code == 200, (
+            "the receipt export does not depend on the facts and must survive"
+        )
+        return
+
+    assert res.status_code == 200
+    docs = res.json()
+    assert isinstance(docs, list)
+    assert sum("receiptSha256" in d for d in docs) == 1
+    assert sum("contentHash" in d and "receiptSha256" not in d for d in docs) >= 1
+
+    checked = client.post(
+        "/api/receipts/inspect", json={"documents": [res.text]}
+    ).json()
+    states = {c["id"]: c["state"] for c in checked["verification"]["checks"]}
+    assert states == {"receiptHash": "pass", "facts": "pass", "replay": "pass"}
+
+
 def test_report_endpoint_rejects_unknown_format():
     scenario = _first_scenario()
     res = client.get(

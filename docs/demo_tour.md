@@ -6,12 +6,22 @@ A guided walkthrough of the duly demonstration. Take it in order — it builds f
 
 ## Start the demo
 
+A hosted instance runs at **<https://duly.nyxworks.ai/>** with the same code and
+the same seven scenarios, and steps 1–8 and 11–12 work there as written — they
+only read.
+
+**Steps 9 and 10 want a local server.** Both write to state the demo process
+shares across every visitor: the review arc ingests your correction into the
+in-memory fact store, and the rule studio's drafts are process-global, not
+per-browser. On the hosted instance you would be editing what the next visitor
+sees, and a restart discards it. Run those two here:
+
 ```bash
 uv sync
 uv run uvicorn duly_demo.app:app --port 8788
 ```
 
-Open http://localhost:8788.
+Open <https://duly.nyxworks.ai/> or http://localhost:8788.
 
 Each of the four pages opens with a three-step orientation strip under its title — what to click, in what order. Dismiss it with **Got it** and the choice is remembered per page; **Show guide** under the page title brings it back. The strip is the short version of this tour, and the two are kept in step by hand: if a change moves what a page's first three actions are, the strip's copy in [duly_demo/static/guide.js](../duly_demo/static/guide.js) is part of that change. `duly_demo/tests/test_guide.py` enforces that every page has one and that no guide is orphaned, but it cannot tell you the words went stale.
 
@@ -43,9 +53,10 @@ Change the **As of** date (top right) to a date in 2025 — say `12/15/2025`. Th
 
 ## 7. Download the artifacts
 
-Three buttons at bottom right:
+Four buttons at bottom right:
 
-- **Receipt (JSON)** — the machine-verifiable, content-hashed decision record.
+- **Receipt + facts** — the receipt *and* the fact set it was adjudicated over, wrapped in one JSON array. This is the export that still replays somewhere the facts are not on disk, which is every artifact that leaves the machine that produced it; drop the whole file into the receipt viewer's paste box in step 12 and all three checks run.
+- **Receipt (JSON)** — the machine-verifiable, content-hashed decision record, and the smaller claim: it proves what was decided and permanently pins *which* evidence was used, without carrying — or disclosing — the evidence itself.
 - **Audit report (Markdown / PDF)** — the examiner-facing document: conclusion, reasoning narrative with quoted evidence, cited rules, and a technical appendix with every hash and the exact replay command. Download it at both as-of dates and compare. See a committed [example report](example-audit-report.md).
 
 ## 8. Switch domains
@@ -74,7 +85,7 @@ The committed [review-0001](../examples/golden/cases/review-0001) golden case is
 
 ## 10. The rule studio
 
-Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*.
+Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*. This step edits a draft the demo process holds globally, so run it on your own server rather than the hosted one — reading the grids is safe anywhere, but the edit below is not yours alone.
 
 The left rail lists the six packs discovered under `examples/rulepacks/`, each with its rule count, how many outcomes it declares, and how many committed golden receipts cite it. Pick **termination-notice-us-states** — 226 of the 351 golden receipts are its.
 
@@ -118,7 +129,7 @@ Then click one of the red examples. Each is a minimal document that breaks one w
 
 ## 11. The evidence browser
 
-The workspace showed you the facts *this question's receipt cited*. That is the right frame for reading a decision and the wrong one for reading a case: it never shows a fact no rule needed, and it cannot show a fact that is no longer true. Click **Evidence browser** in the header (or open <http://localhost:8788/evidence>) for the other frame — every document the case holds and every fact ever asserted about it.
+The workspace showed you the facts *this question's receipt cited*. That is the right frame for reading a decision and the wrong one for reading a case: it never shows a fact no rule needed, and it cannot show a fact that is no longer true. Click **Evidence browser** in the header (or open [`/evidence`](https://duly.nyxworks.ai/evidence)) for the other frame — every document the case holds and every fact ever asserted about it.
 
 Pick **NY nonrenewal — review arc**, the same case you corrected in step 9.
 
@@ -152,7 +163,7 @@ Deep links carry the whole view — `?case=&fact=&k=&tab=` — because "look at 
 
 ## 12. The receipt viewer
 
-The workspace produces a receipt. This surface reads one back. Click **Receipt viewer** in the header (or open <http://localhost:8788/receipt>) — the question it answers is the one an auditor actually arrives with: *someone handed me this receipt; does it hold?*
+The workspace produces a receipt. This surface reads one back. Click **Receipt viewer** in the header (or open [`/receipt`](https://duly.nyxworks.ai/receipt)) — the question it answers is the one an auditor actually arrives with: *someone handed me this receipt; does it hold?*
 
 The toolbar holds the whole committed corpus behind a search field: filter by rule pack, then type a case id or a receipt hash — arrow keys and Enter, or click. 351 receipts are searched rather than browsed, so the picker sits across the top and the width goes to the two panes that need it. Type `notice-ny-0001`. Three things happen at once, and the third is the point.
 
@@ -175,6 +186,8 @@ The instructive one takes a second step. Flip the verdict *and* recompute `recei
 ### 12c. What it refuses to guess
 
 Paste a receipt with no facts alongside it. The hash still verifies; the evidence and replay checks report **not checked** and say why — a receipt pins its facts by content hash, so it genuinely cannot reproduce them, and a viewer that quietly rendered a thinner report would be claiming completeness it does not have. **Rendered against** at the bottom of the rail always names what the report was built from.
+
+*Not checked* is an absent input, not a refuted check, and the difference is worth feeling rather than reading: open a corpus case, download **Receipt + facts**, and paste that single file. The same three checks now pass, because the bundle carried the evidence the bare receipt could only name. Nothing about the receipt changed — it is byte-identical in both files — which is the point. Integrity travels inside the artifact; availability is a packaging decision somebody makes when the artifact leaves home.
 
 The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to whichever pack now declares that name: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
 

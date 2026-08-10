@@ -3,8 +3,8 @@
 
 Reuses the shared helpers (render_pdf / rendition_text / build_document) from
 starters/tools/make_documents.py — loaded by file path because both modules
-are named make_documents.py — and writes this scenario's own scenario.json
-with the actual SHA-256 of the generated PDF bytes.
+are named make_documents.py — and merges this scenario's own scenario.json
+(via write_manifest) with the actual SHA-256 of the generated PDF bytes.
 
 The scenario: a Los Angeles County deed of trust package headed to the
 recorder. Two documents —
@@ -30,7 +30,6 @@ Usage (from the repo root):
 from __future__ import annotations
 
 import importlib.util
-import json
 from pathlib import Path
 
 STARTERS = Path(__file__).resolve().parent.parent
@@ -42,6 +41,7 @@ _spec = importlib.util.spec_from_file_location(
 _shared = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_shared)
 build_document = _shared.build_document
+write_manifest = _shared.write_manifest
 
 # Line styles per the shared renderer: "title" | "heading" | "body" | "".
 # The rendition text is exactly these lines joined with newlines, so every
@@ -134,9 +134,9 @@ def main() -> None:
         "rulePack": "rulepacks/county-recording-us/pack.yaml",
     }
 
-    path = STARTERS / SCENARIO / "scenario.json"
-    path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {path.relative_to(STARTERS.parent)}")
+    # Merged, not replaced: this scenario's `demoExtractor: stub` pin lives
+    # only in the manifest, and a plain write reverts it (write_manifest).
+    write_manifest(STARTERS / SCENARIO / "scenario.json", manifest)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ examples/golden/
   receipts/<case-id>.json          # the golden DecisionReceipt
 ```
 
-`pack` is a repo-relative path to a `pack.yaml`.
+`pack` is a **content-root-relative** path to a `pack.yaml` — `rulepacks/<name>/pack.yaml`, not `examples/rulepacks/<name>/pack.yaml`. A receipt pins its pack's name and version, never its location, so something has to say what the path is relative to; [`corpus.resolve_pack_path`](../../assurance/duly_assurance/corpus.py) tries the working directory first (what the author of the path meant) and then the corpus root's parent, which is the content root. The second candidate is the one that makes a corpus portable: copy `golden/` and `rulepacks/` into your own tree and the cases still resolve, because neither path mentions this repository.
 
 `asOfEffective` and `asOfKnowledge` are each **a plain date or an RFC 3339 instant**, and the corpus carries both: the generator writes dates from its templates, while a review-born case copies the receipt's `asOf.effective`, which the receipt schema types `date-time` (`review-0001` reads `"2026-07-25T00:00:00Z"`). A bare date means midnight UTC — the kernel's `normalize_point` decides that, and any tool reading a case must parse these fields the same way rather than with its own `date.fromisoformat`. What-if did the latter and crashed on `review-0001` while `verify` passed over the same file; both forms are legal and neither is being deprecated.
 
@@ -36,7 +36,30 @@ python -m duly_assurance impact  [--golden examples/golden] [--json out.json] [-
 - `verify` exits non-zero on the first hash mismatch and prints the case id and the differing fields.
 - `impact` never fails the build by itself; it reports. `--markdown` writes the PR-comment body: a summary line, a table of flipped cases (id, question, before → after), and up to five before/after receipt excerpts.
 
+## Adding a template
+
+A new rule pack gets corpus coverage — and therefore a meaningful impact answer, ever — only by registering a template in [`assurance/duly_assurance/generate.py`](../../assurance/duly_assurance/generate.py) and regenerating. `register_template` takes a name and a dict: the `kind` whose drawer and fact builder it reuses (or a new one via `register_kind`), the `pack` it loads from (working-directory relative; the content-root-relative form written into each `case.yaml` is derived from it — see `written_pack_ref`), the `question`, the ontology, an `as_of_effective`, a `weight`, and either a range draw or an explicit `strata` table. It refuses a duplicate name, so a corpus cannot depend on import order.
+
+Then the arithmetic, which is the part that surprises people. `allocate` splits `--count` across templates **proportionally to their weights**, so adding a ninth template at the current `--count 350` does not add cases — it *redistributes* them, dropping the three notice states from 75 cases each to 70 and deleting the tail of every series. Each template draws from its own seeded stream (`f"{seed}:{name}"`), which is what makes case *i* of an existing template byte-identical across regenerations; it does not protect case *i* from ceasing to exist.
+
+So the rule is: **keep `count / sum(weights)` constant.** Today that ratio is 25 (350 over weights `3+3+3+1+1+1+1+1 = 14`). A new template of weight 1 makes the denominator 15, so the count goes to 375:
+
+```bash
+uv run python -m duly_assurance generate --out examples/golden --count 375 --seed 7
+```
+
+Verified, not asserted: registering a ninth weight-1 template and generating at `--count 375` leaves all 350 existing receipts byte-identical and adds exactly 25 new ones. At `--count 350` the same registration rewrites the corpus.
+
+After regenerating, read the diff before you commit it:
+
+- **`git diff --stat -- examples/golden`** should show only your new cases and receipts. Any change to an existing receipt is a decision that moved, and belongs in the PR description or in a fix to the pack.
+- **A diff on every `case.yaml`'s `pack:` line** is not a baseline change — it means the generator's pack constants and the committed corpus disagree about which root they are relative to. Fix the generator; a corpus whose `pack:` paths carry this repository's `examples/` prefix has stopped being portable, and nothing downstream will complain, because `resolve_pack_path` accepts both forms and the path is not inside any hash.
+- **`review-*` must be byte-untouched.** The generator preserves the series when it resets the corpus, because no seed can recreate it.
+
+Then `uv run python -m duly_assurance verify` (which now covers your new cases) and `uv run python -m duly_assurance impact`, which should report zero flips: a regeneration that adds coverage without changing a pack changes no decision.
+
 ## Rules for humans
 
 - Never hand-edit a case or receipt; change the generator (or the packs) and regenerate. Review-born cases are never hand-edited either — re-run the arc through the queue if one must change.
 - A rule-pack PR that flips golden decisions must either justify every flip in the PR description or fix the pack. Regenerating receipts to match a pack change is the *reviewed, deliberate* act of accepting the new baseline.
+- **`git diff -- examples/golden/` is empty unless regenerating the corpus is the point of the change.** If it is not empty and you did not mean it, the change was not inert: fix the change, not the corpus. This is the check that has caught the most, because a corpus diff is the first visible symptom of an accidental semantics change and the easiest thing in the repository to accept by reflex.

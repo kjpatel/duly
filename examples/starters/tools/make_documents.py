@@ -7,7 +7,9 @@ newlines, so the rendition genuinely corresponds to the PDF text. PDFs are
 generated with `invariant=1` so regeneration is byte-stable.
 
 It also (re)writes each scenario's scenario.json manifest with the actual
-SHA-256 of the generated PDF bytes.
+SHA-256 of the generated PDF bytes — by *merging* into the committed manifest
+rather than replacing it; see `write_manifest`, which every starter's
+generator goes through.
 
 Usage (from the repo root):
     uv run python starters/tools/make_documents.py
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 from reportlab.lib.pagesizes import letter
@@ -192,6 +195,85 @@ def build_document(scenario: str, doc_id_stem: str, lines, doc_title: str) -> di
     }
 
 
+# ---------------------------------------------------------------------------
+# The manifest: merged, never replaced
+# ---------------------------------------------------------------------------
+
+
+def merge_manifest(existing: dict, generated: dict) -> dict:
+    """`generated` laid over `existing`, key by key, order from `existing`.
+
+    The rule is one line and applies at both levels: **a key the generator
+    emits is the generator's; a key it does not emit is yours.** Edit a
+    generator-owned value in the script, not in the JSON — the next run wins.
+    Everything else survives untouched, including keys added to a manifest
+    long after its generator was written.
+
+    Three such keys exist today, and every one of them was silently reverted
+    by a re-run before this function existed: `domain` (all six scenarios),
+    `demoExtractor` (county-recording — the stub pin that keeps its scripted
+    below-floor confidence from being overwritten by a live Docling
+    measurement), and the whole `reviewArc` block (notice-ny). The loss was
+    caught, but by a demo test that reads as unrelated to the PDF someone was
+    regenerating.
+
+    `documents` is merged entry by entry, matched on `id`, so a hand-added key
+    on one document survives the same way; membership and order come from the
+    generated list, because the generator is what rendered the files.
+    """
+    merged = dict(existing)
+    merged.update(generated)
+    if "documents" in generated:
+        merged["documents"] = _merge_documents(
+            existing.get("documents", []), generated["documents"]
+        )
+    return merged
+
+
+def _merge_documents(existing: list, generated: list) -> list:
+    by_id = {d["id"]: d for d in existing if isinstance(d, dict) and "id" in d}
+    out = []
+    for doc in generated:
+        entry = dict(by_id.get(doc.get("id"), {}))
+        entry.update(doc)
+        out.append(entry)
+    return out
+
+
+def write_manifest(path: Path, generated: dict) -> None:
+    """Merge `generated` into the scenario.json at `path` and write it back.
+
+    Prints what it preserved, so a run that quietly kept a hand-maintained
+    key says so, and warns about any `facts` entry that names a file which is
+    not there — the other half of the same drift, running the other way: the
+    tila-rescission generator's literal went on naming two rescission-period
+    facts after the pack stopped computing the deadline from them and they
+    were deleted from the manifest and the disk. Only a re-run would have put
+    them back.
+    """
+    existing = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    manifest = merge_manifest(existing, generated)
+    path.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+
+    try:
+        shown = path.relative_to(STARTERS.parent)
+    except ValueError:  # a scenario tree outside this one (tests copy it)
+        shown = path
+    preserved = sorted(set(existing) - set(generated))
+    note = f"  (preserved {', '.join(preserved)})" if preserved else ""
+    print(f"wrote {shown}{note}")
+
+    missing = [f for f in manifest.get("facts", ()) if not (path.parent / f).is_file()]
+    if missing:
+        print(
+            f"warning: {shown} names {len(missing)} fact file(s) that do not exist: "
+            f"{', '.join(missing)}",
+            file=sys.stderr,
+        )
+
+
 def main() -> None:
     dec = build_document(
         "notice-ny", "dec-page", DEC_PAGE, "Homeowners Policy Declarations HO-77401-NY"
@@ -258,9 +340,7 @@ def main() -> None:
     }
 
     for scenario, manifest in (("notice-ny", notice_manifest), ("trid", trid_manifest)):
-        path = STARTERS / scenario / "scenario.json"
-        path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        print(f"wrote {path.relative_to(STARTERS.parent)}")
+        write_manifest(STARTERS / scenario / "scenario.json", manifest)
 
 
 if __name__ == "__main__":

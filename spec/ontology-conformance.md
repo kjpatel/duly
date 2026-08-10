@@ -42,7 +42,7 @@ The artifacts are LinkML YAML: classes with `class_uri`, attributes with `slot_u
 **Proven, not asserted:** marker-gated tests ([`examples/tests/test_real_linkml.py`](../examples/tests/test_real_linkml.py), docling-pattern — skipped when the tooling is absent) load both schemas under linkml-runtime, expand the CURIEs, generate SHACL, validate an RDF projection of a committed fact against the shapes, reject an out-of-enum mutation, and check the shapes coexist with the PROV-O export. Run them:
 
 ```bash
-uv run --with linkml --with pyshacl pytest conformance/tests -m linkml
+uv run --with linkml --with pyshacl pytest examples/tests -q -m linkml
 ```
 
 **Rejected:** SHACL as the authoring format (SHACL is a great validation target and a poor authoring surface; LinkML generates it); JSON Schema as the authoring format (no class/slot URIs, no mappings vocabulary, no SHACL path); OWL (expressive power nothing here needs, at a review-ability cost everything here would pay).
@@ -124,5 +124,5 @@ Every committed MISMO name and FIBO IRI was verified against public sources befo
 
 - **[`conformance_gate_demo.py`](conformance_gate_demo.py)** — the committed TRID fee fact passes; a misspelled attribute, a wrong value kind, and an out-of-enum code are each rejected with fact id, ontology@version, and reason. `uv run python spec/conformance_gate_demo.py`.
 - **`uv run python -m duly_conformance --ontologies examples/ontologies check examples/starters examples/golden/cases examples/rulepacks spec/examples`** — all committed facts conform.
-- **`uv run --with linkml --with pyshacl pytest conformance/tests -m linkml`** — the real-tooling proof (C3).
+- **`uv run --with linkml --with pyshacl pytest examples/tests -q -m linkml`** — the real-tooling proof (C3). The suite moved with the artifacts it proves; pointed at `conformance/tests` it collects nothing and exits 0.
 - **Adopting your organization's ontology** — the swap walkthrough is in [`examples/ontologies/README.md`](../examples/ontologies/README.md): author a LinkML overlay of the MISMO subset your shop uses, point `schemaRef` at it, and the same gate enforces it; nothing else changes.

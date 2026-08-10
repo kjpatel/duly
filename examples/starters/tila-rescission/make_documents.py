@@ -24,8 +24,10 @@ days except Sundays and the legal public holidays specified in
     Thu May 28  funds may be disbursed (12 CFR § 1026.23(c))
 
 The notice document prints that deadline, exactly as the H-8 model form's
-"final date to cancel" blank would. The extraction targets derive the
-rescission-period window facts from the printed date; the rule pack
+"final date to cancel" blank would. The extraction targets read that
+printed date as `resc:statedRescissionDeadline` and nothing more: since pack
+2026.2.0 the deadline is computed by RESC-DL-01 over the pack's embedded
+calendar, so a misprinted notice cannot mislead the decision. The rule pack
 (rulepacks/tila-rescission-us-federal/pack.yaml) documents why the
 business-day arithmetic itself lives outside the rule IR.
 
@@ -35,7 +37,6 @@ Usage (from the repo root):
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -44,7 +45,7 @@ TOOLS = HERE.parent / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from make_documents import build_document  # noqa: E402  (shared helpers)
+from make_documents import build_document, write_manifest  # noqa: E402  (shared helpers)
 
 LOAN_ID = "RF-2026-3117"
 CASE_ID = f"case:loan:{LOAN_ID}"
@@ -156,8 +157,12 @@ def main() -> None:
         "facts": [
             "facts/fact-notice-delivered.json",
             "facts/fact-notice-deadline.json",
-            "facts/fact-rescission-period-in-force.json",
-            "facts/fact-rescission-period-expired.json",
+            # No rescission-period window facts: since pack 2026.2.0 the
+            # deadline is COMPUTED by RESC-DL-01 over the pack's embedded
+            # calendar. The two facts that used to sit here were deleted from
+            # the committed manifest and left in this literal, where only a
+            # re-run would have found them — the drift `write_manifest`'s
+            # missing-fact warning now names out loud.
             "facts/fact-settlement-consummation.json",
             "facts/fact-settlement-disclosures-delivered.json",
             "facts/fact-settlement-principal-dwelling.json",
@@ -166,9 +171,7 @@ def main() -> None:
         "rulePack": "rulepacks/tila-rescission-us-federal/pack.yaml",
     }
 
-    path = HERE / "scenario.json"
-    path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {path}")
+    write_manifest(HERE / "scenario.json", manifest)
 
 
 if __name__ == "__main__":

@@ -928,11 +928,11 @@ The PRD's bar: one working day.
       Carry over the idiom Phase 0 found the hard way: a threshold is a rule,
       not a number in a guard ([spec/rule-ir.md](../spec/rule-ir.md),
       "A threshold is a rule, not a number in a guard").*
-- [ ] **Contribution path — the pack edge.** Complete the authoring guide and
+- [x] **Contribution path — the pack edge.** Done (#75): the authoring README carries the contribution story — trigger table, ordered checklist, reviewer reads, the not-wired list — with every command executed; found the zero-collection linkml doc command and the falsified paths-filter comments. Original: Complete the authoring guide and
       contribution checks across packs, ontologies, starters, and
       golden-corpus coverage — now phrased for content living under
       `examples/`.
-- [ ] **Contribution path — the adapter edge.** Added 2026-08-04: the roadmap
+- [x] **Contribution path — the adapter edge.** Done (#75): extraction/README.md is the component contract (protocol, acceptance bar, recorded-rendition testing, the deliberate absences); CONTRIBUTING carries the walkable checklist. Two executed findings: DoclingAdapter's version stamp defeats converter injection, and runtime_checkable proves attribute presence, not conformance. Original: Added 2026-08-04: the roadmap
       item is "contribution paths, **both** edges", and this plan had only
       the pack one. The [contribution model](../README.md#contribution-model)
       rests on two surfaces — rule packs and extraction adapters — and says
@@ -961,12 +961,12 @@ and where a pure-Python reference interpreter stops being the right thing to
 run. This answers a standing [PRD open question](guiding-prd.md#open-questions)
 and is a v1.0 exit item, not a nice-to-have.
 
-- [ ] **Measure, and publish the number.** Adjudication latency across the
+- [x] **Measure, and publish the number.** Done — [docs/capacity-envelope.md](capacity-envelope.md): ~3,100/s/core held-in-memory (p50 0.32 ms), parse the 30× lever, replay 1.1 ms/case, 16 KiB per adjudication, additive rule×fact scaling — and one located, published, deliberately untuned curve: `validate_pack` quadratic in rules-per-attribute. Original: Adjudication latency across the
       corpus — median and tail, by pack, separating pack load from evaluation
       — plus corpus replay wall time and peak memory for the largest case.
       Report the machine and the Python version: a number without them is not
       a measurement.
-- [ ] **State where it stops.** The honest half. Name the shape of workload
+- [x] **State where it stops.** Done, in the same doc: five named shapes with checkable arithmetic; the backend's demonstrated-need gate explicitly still open. Original: The honest half. Name the shape of workload
       the reference interpreter is the wrong tool for, in terms an adopter can
       check against their own volume, and say what the alternative would be —
       which is the v1.3 backend question, so this is where the *demonstrated
@@ -1463,3 +1463,12 @@ and every exception behind it.**
   milestones renamed to M-numbers; version 1.1.0 with the release cut on
   merge. The CHANGELOG restructured: v1.0.0 restored to its released shape,
   the wave in its own v1.1.0 section.
+
+- 2026-08-10 — [#75](https://github.com/kjpatel/duly/pull/75) — **Phases 5–6
+  complete: contribution paths, capacity envelope** — both edges walkable
+  (pack: "Contributing it back"; adapter: extraction/README.md, "the
+  rendition is the recording"); the capacity numbers published with their
+  one unflattering curve; the generator/corpus pack-root divergence and the
+  manifest-overwrite defect fixed with regeneration proven byte-inert;
+  three stale doc commands corrected including one that collected zero
+  tests and exited 0.

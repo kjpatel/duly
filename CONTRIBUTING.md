@@ -23,7 +23,9 @@ already written down there.
 Then read the component README for whatever you are touching:
 [examples/rulepacks/](examples/rulepacks/README.md) before any rule pack,
 [examples/ontologies/](examples/ontologies/README.md) before any ontology,
-[examples/golden/](examples/golden/README.md) before anything that regenerates the corpus.
+[examples/starters/](examples/starters/README.md) before any starter documents or facts,
+[examples/golden/](examples/golden/README.md) before anything that regenerates the corpus,
+[extraction/](extraction/README.md) before any extraction adapter.
 
 ## The four invariants
 
@@ -101,18 +103,94 @@ worth reading: it has been kept true.
 
 ## Contributing a rule pack
 
-Rule packs are the contribution path with the most leverage and the most rules.
-[examples/rulepacks/README.md](examples/rulepacks/README.md) walks it end to end, including what is
-*not* auto-wired. Three things catch people:
+The first of the two edges. duly's largest contribution surfaces sit at the
+*edges* of the contract, where domain knowledge matters more than familiarity
+with the kernel ([contribution model](README.md#contribution-model)): rule
+packs here, extraction adapters in the section that follows. A first-week
+outcome offered on either edge has to be walkable on either edge, so each has
+a path of its own, with its own checks.
+
+A pack is versioned, cited, effective-dated domain knowledge, and it is the
+path with the most leverage and the most rules.
+[examples/rulepacks/README.md](examples/rulepacks/README.md) walks it end to
+end and is the mandated reading before you touch one: the authoring mechanics,
+the three things that are *not* auto-wired, the constraints that will bite you,
+and — under **"Contributing it back"** — the checks your PR triggers, the
+ordered pre-PR checklist, what reviewers read for, and what nobody will wire
+for you. It hands off to four component READMEs:
+[ontologies](examples/ontologies/README.md) (new terms go in a new version
+file; committed versions are immutable), [starters](examples/starters/README.md)
+(synthetic documents, span-verified facts, the extractor pin),
+[golden](examples/golden/README.md) (corpus coverage, and the arithmetic of
+adding a generator template), and [dmn](dmn/README.md) if you would rather
+author the rules as a decision table.
+
+Three things catch people, and they are worth stating twice:
 
 - **Every rule cites its authority.** A rule with no citation and no
-  `TODO(verify)` naming what is unconfirmed will not be merged.
+  `TODO(verify)` naming what is unconfirmed will not be merged. A `TODO(verify)`
+  is not a demerit; presenting an unverified requirement as verified is.
 - **Rule ids are permanent** and appear in every receipt that cited them, so an id
   encoding a day count or a statute section is wrong forever once the law moves.
   The convention is `<PREFIX>-<TOPIC>[-QUALIFIER][-NN]` and the validator enforces it.
 - **`expected.yaml` is not the corpus.** Declared outcomes catch a pack that
-  *breaks*; only the golden corpus catches one whose *meaning moved*. Both are
-  required.
+  *breaks*; only the golden corpus catches one whose *meaning moved*. A pack
+  with no generator template gets a cheerful "0 of 351 decisions flip" on every
+  edit it will ever receive. Both are required.
+
+Your PR is read by four CI checks — the full suite including the example
+content's own tests, a sticky impact comment on any change under
+`examples/rulepacks/**`, the gate that deletes `examples/` and runs the toolkit
+without it, and the optional-dependency suites — and by a human, for the
+honest-labeling invariant that no check can see. All four are tabulated in the
+pack README's "What your PR triggers", each with what it cannot see.
+
+## Contributing an extraction adapter
+
+The other edge. A vendor or user of a document AI service can maintain its adapter
+independently, the way observability vendors maintain OpenTelemetry exporters —
+[extraction/README.md](extraction/README.md) is the contract, the acceptance bar and the
+honest boundaries, and [docs/adopters-guide.md §5](docs/adopters-guide.md#5-your-extraction-adapter)
+writes one end to end. The path, in the order it is walkable:
+
+1. **Satisfy the protocol.** A `name`, a `version`, and one
+   `extract(document, targets) -> ExtractionResult` returning a rendition, facts and a
+   run envelope. `isinstance(adapter, ExtractionAdapter)` is a shape check, not a
+   conformance proof — it does not look at `extract`'s signature.
+2. **Get stub parity first, on a recorded rendition.** Structure the adapter so the
+   conversion call *and* the version it stamps are injectable, then drive it from a
+   committed recording — which is exactly what `StubAdapter` is, and what lets the
+   toolkit's own adapter suite run offline. Assert byte equality against committed
+   facts: a fact is content-addressed, so a whitespace-level drift means the committed
+   `contentHash` describes nothing the pipeline can still produce.
+3. **Verify spans on every emission.** Call `verify_fact_span(fact, rendition.text)`
+   inside `extract` before the fact is appended, not in a test, and emit the actual
+   rendition slice rather than echoing the target's quote — a whitespace-normalized
+   match is a different string. A target you cannot ground goes into
+   `ExtractionResult.skipped` with a reason; it is never dropped.
+4. **Round-trip the envelope.** produce → `verify_envelope` → `ingest_envelope` →
+   `revoke_run`, against an in-memory store, plus the tamper cases
+   (`extraction/tests/test_envelope.py` is the worked list). Nothing may reach the
+   store when any check fails.
+5. **Marker-gate the live path.** Tests that call the real service go in their own
+   module behind `pytest.importorskip` (or a skip on a missing credential) and a marker
+   registered in `pyproject.toml`, so a plain `uv sync` skips them and the offline suite
+   still runs on every PR. duly's own `docling` lane is the model, and it is *not* on
+   PRs — run it from the Actions tab before merging anything under `extraction/`.
+6. **Document it.** The component README section, and the honest boundary: what your
+   adapter refuses, what it costs, what it needs credentials for.
+
+Three things catch people:
+
+- **Confidence is measured or absent, never invented.** `method: "raw"` is the honest
+  label for a heuristic proxy; a calibrated score is a different claim made downstream.
+  A machine fact with no confidence **fails closed** under an active abstention policy —
+  legal, and visible on the receipt.
+- **Sensitivity is declared by the target, never inferred from the span.** An adapter
+  that guessed at PII would be asserting a handling class it cannot ground.
+- **A recording is a baseline.** Re-recording moves the rendition hash, and therefore
+  every fact hash and the envelope hash. Treat it like a golden regeneration: deliberate,
+  explained in the commit.
 
 ## Changes that need a conversation first
 

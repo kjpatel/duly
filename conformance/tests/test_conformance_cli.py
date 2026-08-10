@@ -3,7 +3,7 @@
 No test exercised this surface before, which is exactly why it shipped with a
 repo-relative default and an uncaught traceback — both invisible from inside
 the repository, where the default happened to be correct, and both the first
-thing an adopter met (docs/m5-plan.md, Appendix A finding A3).
+thing an adopter met (M5 finding A3; CHANGELOG.md, v1.0.0).
 
 Every registry below is the toolkit's own — `fixtures/ontology/`, one invented
 ontology — or a directory built in `tmp_path`. That is the point of the

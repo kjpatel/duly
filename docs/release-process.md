@@ -218,8 +218,8 @@ Tags are **annotated**, named `vMAJOR.MINOR.PATCH`, with the milestone as the
 subject:
 
 ```bash
-git tag -a v0.5.0 -m "M5: adoption and v1.0"
-git push origin v0.5.0
+git tag -a v1.0.0 -m "M5: adoption and v1.0"
+git push origin v1.0.0
 ```
 
 Existing tags: `v0.1.0` (M0/M1), `v0.2.0` (M2), `v0.3.0` (M3), `v0.4.0` (M4).

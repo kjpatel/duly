@@ -137,7 +137,7 @@ def _cmd_describe(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m duly_dmn", description=__doc__.splitlines()[0]
+        prog="duly-dmn", description=__doc__.splitlines()[0]
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

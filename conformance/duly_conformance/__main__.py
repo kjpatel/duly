@@ -110,7 +110,7 @@ def _resolve_ontologies(args, parser: argparse.ArgumentParser) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m duly_conformance")
+    parser = argparse.ArgumentParser(prog="duly-conformance")
     parser.add_argument(
         "--ontologies",
         help="registry directory of <name>/<version>.yaml files. Required; "

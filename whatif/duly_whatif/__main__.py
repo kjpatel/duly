@@ -152,7 +152,7 @@ def _parse_target(text: str, kind: str, currency: str | None) -> dict:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m duly_whatif",
+        prog="duly-whatif",
         description=(
             "Free one input and ask which of its values produce a target "
             "decision, plus the extremal one. Every answer is verified by "

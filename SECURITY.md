@@ -48,8 +48,9 @@ can attract.
 
 ## Supported versions
 
-Pre-1.0: only `main` is supported. There are no backported fixes and no published
-distribution yet.
+Only `main` and the latest tagged release are supported. There are no backported
+fixes: a security fix lands on `main` and, when it warrants one, in a new
+release tagged from it.
 
 ## Dependencies
 

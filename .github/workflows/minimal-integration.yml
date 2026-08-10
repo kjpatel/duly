@@ -84,3 +84,16 @@ jobs:
         run: |
           cp .github/scripts/wheel_smoke.py /tmp/wheel_smoke.py
           cd /tmp && env -u PYTHONPATH /tmp/smoke-venv/bin/python /tmp/wheel_smoke.py
+
+      # A [project.scripts] entry pointing at a broken module:function would
+      # pass every import-level check silently — the console shim is only
+      # exercised by running it. Asserting the command's own name in its
+      # usage line also catches a parser whose prog= still claims to be
+      # `python -m ...`.
+      - name: Every console script answers --help under its own name
+        run: |
+          for cmd in duly-verify duly-impact duly-conformance duly-dmn duly-whatif; do
+            out=$(env -u PYTHONPATH "/tmp/smoke-venv/bin/$cmd" --help)
+            echo "$out" | head -1
+            echo "$out" | grep -q "$cmd" || { echo "usage line does not name $cmd"; exit 1; }
+          done

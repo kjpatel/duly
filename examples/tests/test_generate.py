@@ -1,4 +1,24 @@
-"""Tests for the golden-corpus generator (duly_assurance.generate)."""
+"""The golden-corpus generator, exercised through the content it generates.
+
+The example content's own tests (see `exampletest_helpers`): they run while
+`examples/` exists, they are deleted with it, and CI runs them as
+`uv run pytest examples/tests -q`.
+
+`duly_assurance.generate` is toolkit code, but every one of its templates names
+a teaching pack (`examples/rulepacks/...`) and draws facts in that pack's
+vocabulary, so there is no run of this generator that does not read the example
+content. Byte-identical regeneration, schema validity, the 45-day and
+California-operative-date flips, the committed corpus's pack coverage — every
+claim below is a claim about the six packs and the 351 cases, and `git rm -r
+examples/` deletes the subject of all of them.
+
+What survives the deletion is the *seam*: that templates and kinds are a
+registry rather than a dispatch chain, that registering one twice is refused,
+and that the corpus commands stand up against nothing. Those stay in
+`assurance/tests/test_corpus_seam.py` and `assurance/tests/test_empty_corpus.py`
+respectively, which is where a test about the generator's contract — as opposed
+to its output — belongs.
+"""
 
 from __future__ import annotations
 
@@ -9,11 +29,11 @@ from pathlib import Path
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 
+from exampletest_helpers import GOLDEN, GOLDEN_CASES, REPO_ROOT, RULEPACKS
+
 from duly_assurance import generate
 from duly_kernel.api import adjudicate
 from duly_core import schema_path
-
-REPO = Path(__file__).resolve().parents[2]
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -72,7 +92,7 @@ def test_case_ids_allocation_and_layout(tmp_path):
     for case_id in ids:
         case = yaml.safe_load((out / "cases" / case_id / "case.yaml").read_text())
         assert case["id"] == case_id
-        assert (REPO / case["pack"]).is_file()
+        assert (REPO_ROOT / case["pack"]).is_file()
         assert list((out / "cases" / case_id / "facts").glob("*.json"))
 
 
@@ -99,7 +119,7 @@ def test_generated_facts_validate_against_schema(tmp_path):
 
 def test_notice_decision_flips_across_45_day_threshold():
     template = generate.STATE_TEMPLATES["ny"]
-    pack = yaml.safe_load((REPO / template["pack"]).read_text())
+    pack = yaml.safe_load((REPO_ROOT / template["pack"]).read_text())
     expiration = dt.date(2026, 9, 1)  # mailed dates fall after 2026-01-01, so NY-NR-45 governs
     decisions = {}
     for margin in (44, 45):
@@ -190,7 +210,7 @@ def test_strata_tables_fit_their_corpus_quota():
 def test_committed_corpus_covers_all_six_packs():
     """The committed golden corpus carries cases for every rule pack in the
     repo, so `impact` can see a change to any of them."""
-    cases = REPO / "examples" / "golden" / "cases"
+    cases = GOLDEN_CASES
     by_prefix: dict[str, int] = {}
     packs: set[str] = set()
     questions: set[str] = set()
@@ -226,7 +246,7 @@ def test_committed_recording_receipts_carry_low_confidence_abstentions():
     recordability presumption survives; at it the measurement binds and the
     deficiency stands."""
     abstained, at_floor_bound = [], []
-    for path in sorted((REPO / "examples" / "golden" / "receipts").glob("rec-*.json")):
+    for path in sorted((GOLDEN / "receipts").glob("rec-*.json")):
         receipt = json.loads(path.read_text())
         entries = [a for a in receipt["abstentions"] if a["reason"] == "low_confidence"]
         for entry in entries:
@@ -235,7 +255,7 @@ def test_committed_recording_receipts_carry_low_confidence_abstentions():
             assert entry["threshold"]["pack"] == "county-recording-us"
         if any(e["attribute"] == "rec:firstPageTopSpaceInches" for e in entries):
             abstained.append(receipt)
-        case_dir = REPO / "examples" / "golden" / "cases" / path.stem / "facts"
+        case_dir = GOLDEN_CASES / path.stem / "facts"
         scores = {
             f["attribute"]: f["confidence"]["score"]
             for f in (json.loads(p.read_text()) for p in case_dir.glob("*.json"))
@@ -282,7 +302,7 @@ def test_pack_calendar_reconciles_with_generator_business_day_table():
     from duly_kernel import expr as kexpr
 
     pack = yaml.safe_load(
-        (REPO / "examples" / "rulepacks/tila-rescission-us-federal/pack.yaml").read_text()
+        (RULEPACKS / "tila-rescission-us-federal" / "pack.yaml").read_text()
     )
     calendars = kexpr.parse_calendars(pack["calendars"])
     cal = calendars["tila-precise"]
@@ -307,7 +327,7 @@ def test_pack_calendar_reconciles_with_generator_business_day_table():
 
 def test_ron_decision_flips_at_california_operative_date():
     template = generate.STATE_TEMPLATES["ron"]
-    pack = yaml.safe_load((REPO / template["pack"]).read_text())
+    pack = yaml.safe_load((REPO_ROOT / template["pack"]).read_text())
     decisions = {}
     for as_of in (dt.date(2029, 12, 31), dt.date(2030, 1, 1)):
         facts, eff, kn = generate.build_ron_facts(

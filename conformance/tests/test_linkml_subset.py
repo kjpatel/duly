@@ -1,8 +1,16 @@
 """The subset parser: what it interprets, and that it fails loudly at load
-time on anything outside the subset (never silently at check time)."""
+time on anything outside the subset (never silently at check time).
+
+Everything here is toolkit. The constructs are exercised on the synthetic
+`toy_schema`, and the one test that needs a *directory* of ontologies reads the
+toolkit's own registry under `fixtures/ontology/`. What the two committed
+teaching ontologies happen to contain — their names, their five mortgage
+namespaces — is asserted in `examples/tests/test_example_conformance.py` and
+moves with them.
+"""
 
 import pytest
-from conformancetest_helpers import ONTOLOGIES_DIR, toy_schema
+from conformancetest_helpers import FIXTURE_ONTOLOGIES, toy_schema
 
 from duly_conformance import OntologySubsetError, load_repo_registry, parse_ontology
 
@@ -75,11 +83,19 @@ def test_type_with_unknown_uri_is_a_load_error():
         parse_ontology(doc)
 
 
-def test_repo_registry_loads_both_committed_ontologies():
-    registry = load_repo_registry(ONTOLOGIES_DIR)
-    assert registry.refs() == ["duly-mortgage-closing@0.1.0", "duly-starter-notice@0.1.0"]
-    mortgage = registry.get("duly-mortgage-closing", "0.1.0")
-    # One artifact spans all five mortgage namespaces.
-    assert {c.split(":", 1)[0] for c in mortgage.classes} == {"trid", "ron", "pkg", "resc", "rec"}
-    # Version pinning is exact.
-    assert registry.get("duly-mortgage-closing", "0.2.0") is None
+def test_a_registry_directory_loads_as_name_version_refs():
+    """`load_repo_registry` walks `<name>/<version>.yaml` and pins exactly.
+
+    On the fixture registry, whose single ontology is enough to state the
+    loader's whole contract: the directory name becomes the ontology name, the
+    file stem becomes the version, `refs()` renders them as `name@version`, and
+    `get` is an exact match rather than a nearest one.
+    """
+    registry = load_repo_registry(FIXTURE_ONTOLOGIES)
+    assert registry.refs() == ["duly-fixture@0.1.0"]
+    fixture = registry.get("duly-fixture", "0.1.0")
+    assert fixture is not None
+    assert set(fixture.classes) == {"fx:Widget"}
+    # Version pinning is exact — a near miss is a miss, not a fallback.
+    assert registry.get("duly-fixture", "0.2.0") is None
+    assert registry.get("duly-fixtures", "0.1.0") is None

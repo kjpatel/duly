@@ -229,7 +229,7 @@ ESIGN_STRATA: tuple[dict, ...] = (
 # Consummation dates (all 2026, all weekdays, none itself a federal holiday)
 # grouped by what the three-business-day rescission window that FOLLOWS the
 # latest trigger contains under 12 CFR 1026.2(a)(6). Every date is verified by
-# assurance/tests/test_generate.py against add_business_days(), so a wrong
+# examples/tests/test_generate.py against add_business_days(), so a wrong
 # entry fails the suite rather than quietly weakening the corpus:
 #   both     — a Sunday AND a 5 U.S.C. 6103(a) holiday: 5 calendar days
 #   sunday   — a Sunday only: 4 calendar days (Saturday counts!)
@@ -947,7 +947,7 @@ def build_resc_facts(
     The business-day arithmetic in this module (add_business_days /
     federal_holidays) stays deliberately independent of the kernel's: it
     seeds the draws and cross-checks the pack's embedded calendar in
-    assurance/tests/test_generate.py.
+    examples/tests/test_generate.py.
     """
     ts = f"{consummation.isoformat()}T12:00:00Z"
     case_ref = f"case:golden:{case_id}"

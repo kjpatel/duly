@@ -7,8 +7,9 @@ made them a registry example content populates), so a verifier test that builds
 its corpus with the generator is asserting the verifier through a dependency it
 does not have.
 
-The one test whose subject genuinely is the committed teaching corpus says so
-in its name, and moves with `golden/`.
+The one test whose subject genuinely was the committed teaching corpus has now
+made that move: it is `examples/tests/test_example_verify.py`, and it is
+deleted with the corpus it replays.
 """
 
 from __future__ import annotations
@@ -41,15 +42,6 @@ def test_verify_passes_on_the_fixture_corpus(capsys):
     out = capsys.readouterr().out
     assert out.startswith("verified ")
     assert out.rstrip().endswith("cases")
-
-
-def test_verify_passes_on_the_committed_golden_corpus(capsys):
-    """Example content: the subject is the teaching corpus itself, so this
-    moves with it rather than onto a fixture."""
-    golden = REPO / "examples" / "golden"
-    assert (golden / "cases").is_dir(), "golden corpus has not been generated"
-    assert verify.main(["--golden", str(golden)]) == 0
-    assert "verified 351 cases" in capsys.readouterr().out
 
 
 def test_verify_passes_on_a_copied_corpus(corpus, capsys):

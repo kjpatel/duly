@@ -8,7 +8,16 @@ import copy
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-ONTOLOGIES_DIR = REPO / "examples" / "ontologies"
+
+# The toolkit's own registry, not the teaching one. It holds a single invented
+# ontology (`duly-fixture@0.1.0`), which is all a test of the *loader* needs —
+# discovery, ref formatting, exact version pinning. Pointed at
+# `examples/ontologies/` this constant made every test that touched it pass
+# only while the teaching content existed, which is the defect fixtures/ exists
+# to prevent (CLAUDE.md, "a test that would still pass with its subject
+# deleted"). Claims about the two committed teaching ontologies live in
+# `examples/tests/test_example_conformance.py` and are deleted with them.
+FIXTURE_ONTOLOGIES = REPO / "fixtures" / "ontology"
 
 # A minimal, self-contained schema exercising every construct the subset
 # interprets: builtin ranges, a duly:money type, a closed enum with a code

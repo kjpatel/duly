@@ -9,6 +9,11 @@ content all along.
 
 This is also Phase 3's acceptance criterion arriving early: after
 `git rm -r examples/`, this is what "a working, empty toolkit" has to mean.
+
+The other half of the claim — that configurable did not mean broken *here*,
+that the default root still finds the six packs and the golden corpus — is a
+statement about what this repository happens to ship. It is
+`examples/tests/test_example_content_roots.py`, and it goes with them.
 """
 
 from __future__ import annotations
@@ -146,17 +151,3 @@ def test_the_built_in_fixture_scenario_ships_with_the_demo(empty_content):
     scenario = demo.app._build_fixture_scenario()
     assert scenario is not None
     assert scenario["extraction"]["source"] == "fixture"
-
-
-def test_the_repo_default_still_finds_everything():
-    """The other half of the claim: configurable did not mean broken here.
-
-    Example content, and the *only* test in this file that is: its subject is
-    what this repository happens to ship, so it moves under `examples/` with
-    the six packs rather than being repointed at a fixture. Everything above
-    asserts the toolkit behaviour — that the roots are configurable and that
-    the surfaces stand up against nothing — and stays.
-    """
-    assert CONTENT.rulepacks.is_dir()
-    assert CONTENT.golden.is_dir()
-    assert len(list(CONTENT.rulepacks.glob("*/pack.yaml"))) == 6

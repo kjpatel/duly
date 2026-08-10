@@ -8,11 +8,11 @@ resolve, ids allocate in the `review-NNNN` series, the output replays) says
 nothing about any jurisdiction, so they run on the corpus in
 [`fixtures/`](../../fixtures/README.md).
 
-`TestCommittedProvenance` is **example content**: its subject genuinely is the
-committed golden case `review-0001`, so it stays pointed at
-`examples/golden/` and moves with it. That case is preserved forever — the
-corpus generator skips `review-*` — which is what makes a byte comparison
-against it meaningful rather than merely current.
+The provenance lock on the committed golden case `review-0001` has made the
+move its old section header promised: it is
+`examples/tests/test_example_review_provenance.py`, and the notice arc it needs
+went with it rather than staying here as facts in a vocabulary this suite no
+longer loads. Nothing in `review/` now reads `examples/`.
 
 Run from the repo root:
     PATH="/opt/homebrew/bin:$PATH" uv run pytest review/tests -q
@@ -36,20 +36,11 @@ from reviewtest_helpers import (  # noqa: E402
     ARC_SOURCE_CASE,
     FIXTURE_CORPUS,
     FIXTURE_PACK_PATH,
-    NOTICE_AS_OF_KNOWLEDGE,
-    NOTICE_CORRECTION_TS,
-    NOTICE_GOLDEN_DIR,
-    NOTICE_PACK_PATH,
-    NOTICE_REPO_ROOT,
     REPO_ROOT,
     adjudicate_arc,
-    adjudicate_notice_arc,
     build_arc_facts,
-    build_notice_arc_facts,
     committed_fixture_facts,
     make_correction,
-    make_notice_correction,
-    notice_mailed_fact,
     scored_fact,
 )
 
@@ -267,66 +258,3 @@ class TestCli:
         assert proc.returncode == 0, proc.stderr
         assert "wrote golden case review-0001" in proc.stdout
         assert verify_main(["--golden", str(golden)]) == 0
-
-
-# --- EXAMPLE CONTENT (moves with examples/) -----------------------------------
-
-
-def run_committed_arc(golden_dir: Path, *, case_id: str | None = "review-0001") -> dict:
-    """EXAMPLE CONTENT (moves with examples/). The exact arc behind the
-    committed golden case review-0001: machine mailed-date abstains (0.62 <
-    the notice pack's 0.9 floor) -> the presumption stands -> human confirms
-    the date, superseding the machine fact -> the decision resolves to
-    non-compliant (38 < 45 days).
-    """
-    store = FactStore.in_memory()
-    store.init_schema()
-    queue = ReviewQueue.in_memory()
-
-    facts = build_notice_arc_facts()
-    for f in facts:
-        store.ingest(f)
-    receipt = adjudicate_notice_arc(facts)
-    assert receipt["decision"]["value"] == {"kind": "boolean", "value": True}
-    assert [a["reason"] for a in receipt["abstentions"]] == ["low_confidence"]
-
-    (result,) = enqueue_receipt(queue, receipt, recorded_at=NOTICE_AS_OF_KNOWLEDGE)
-    correction = make_notice_correction(notice_mailed_fact(facts))
-    queue.resolve(result["itemId"], correction, store, NOTICE_CORRECTION_TS)
-
-    return resolved_item_to_golden_case(
-        queue,
-        store,
-        result["itemId"],
-        pack_path=NOTICE_PACK_PATH,
-        golden_dir=golden_dir,
-        # `case.yaml` records the pack path relative to the *corpus root's
-        # parent* — `rulepacks/...`, not `examples/rulepacks/...` — which is
-        # what `duly_assurance.corpus.resolve_pack_path` resolves it against
-        # and why the move under `examples/` left those references alone.
-        # Writing anything else here would change the committed bytes.
-        repo_root=NOTICE_REPO_ROOT,
-        case_id=case_id,
-    )
-
-
-class TestCommittedProvenance:
-    """EXAMPLE CONTENT (moves with examples/). The subject is the committed
-    case, not the converter."""
-
-    def test_committed_case_regenerates_byte_identically(self, tmp_path):
-        """examples/golden/cases/review-0001 + its receipt ARE this arc's
-        output."""
-        run_committed_arc(tmp_path)
-        produced = sorted(
-            str(p.relative_to(tmp_path)) for p in tmp_path.rglob("*") if p.is_file()
-        )
-        # The loop below is a byte comparison over whatever the arc wrote, so
-        # an arc that wrote nothing would pass it in silence. Name the count.
-        assert len(produced) == 6, f"expected 6 regenerated files, got {produced}"
-        for rel in produced:
-            committed = NOTICE_GOLDEN_DIR / rel
-            assert committed.is_file(), f"missing committed file examples/golden/{rel}"
-            assert (tmp_path / rel).read_bytes() == committed.read_bytes(), (
-                f"examples/golden/{rel} differs from the review-arc regeneration"
-            )

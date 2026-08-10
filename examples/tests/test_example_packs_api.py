@@ -18,12 +18,21 @@ placeholder resolution — stays in `demo/tests/test_api.py` on the fixture pack
 No `DULY_DEMO_CONTENT` is set here. The demo's default content root is this
 directory's parent, so importing `demo.app` serves the teaching content
 exactly as a plain `uvicorn demo.app:app` does.
+
+The two sweeps at the bottom go further and drive the *running* app over that
+default root — every scenario the six starters ship, every question their packs
+advertise. They came from `demo/tests/test_api.py` too, and by the same rule:
+"`notice-ny` is in the insurance domain" and "`county-recording` offers more
+than one question" are claims about manifests under `examples/starters/`, not
+about `demo/app.py`, and a `/api/scenarios` sweep over a content root with no
+starters in it would iterate the built-in fixture scenario and report success.
 """
 
 from __future__ import annotations
 
 import sys
 
+import pytest
 import yaml
 
 from exampletest_helpers import REPO_ROOT, RULEPACKS
@@ -31,7 +40,40 @@ from exampletest_helpers import REPO_ROOT, RULEPACKS
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+# `reload_demo` is imported rather than copied — see the note in
+# `test_example_review_arc.py`, which uses the same fixture shape for the same
+# reason. The dependency only points this way; `demo/tests/` never reaches here.
+_DEMO_TESTS = str(REPO_ROOT / "demo" / "tests")
+if _DEMO_TESTS not in sys.path:
+    sys.path.insert(0, _DEMO_TESTS)
+
+import demo.app as demo_app  # noqa: E402
 from demo.app import _determination, _render_answer  # noqa: E402
+from demotest_helpers import reload_demo  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+
+@pytest.fixture
+def example_client(monkeypatch):
+    """The demo over this repository's example content, as deployed.
+
+    No `DULY_DEMO_CONTENT`, so the roots stay at their default. Dropping
+    `DULY_DEMO_FORCE_FIXTURE` is not optional: `demo/tests/test_api.py` sets it
+    process-wide at *import*, so a combined run arrives here with the app
+    refusing to adjudicate anything (CLAUDE.md, "the evidence browser
+    recomputes liveness"). The reload on both sides is for the other half of
+    that binding — another suite may have left the roots in a temp directory.
+    """
+    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+    reload_demo()
+    demo_app._reset_runtime()
+
+    with TestClient(demo_app.app) as c:
+        yield c
+
+    demo_app._reset_runtime()
+    monkeypatch.undo()
+    reload_demo()
 
 
 def _pack(name: str) -> dict:
@@ -214,3 +256,85 @@ def test_every_committed_pack_phrases_every_decision_it_advertises():
             seen.add(attribute)
             assert decision.get("phrasing"), (pack_file.parent.name, attribute)
     assert non_boolean <= seen
+
+
+# --- the running app, over the starters this repository ships ----------------
+
+
+def test_every_scenario_carries_a_domain(example_client):
+    """Domains group the picker by regulated vertical; a scenario without one
+    falls into the "other" group rather than erroring (manifest field is
+    optional — presentation metadata, not contract).
+
+    The named ids are the six committed starters, so this fails loudly rather
+    than emptily if one loses its manifest.
+    """
+    res = example_client.get("/api/scenarios")
+    assert res.status_code == 200
+    scenarios = res.json()
+    assert scenarios
+    for scenario in scenarios:
+        assert scenario["domain"], scenario["id"]
+        assert scenario["domainLabel"], scenario["id"]
+
+    by_id = {s["id"]: s for s in scenarios}
+    assert by_id["notice-ny"]["domain"] == "insurance"
+    assert by_id["notice-ny"]["domainLabel"] == "Insurance"
+    for scenario_id in (
+        "trid",
+        "ron-closing",
+        "esign-package",
+        "tila-rescission",
+        "county-recording",
+    ):
+        assert by_id[scenario_id]["domain"] == "mortgage", scenario_id
+        assert by_id[scenario_id]["domainLabel"] == "Mortgage closing", scenario_id
+    if "notice-ny-review" in by_id:
+        assert by_id["notice-ny-review"]["domain"] == "insurance"
+
+
+def test_every_offered_question_is_answerable_and_phrased_for_humans(example_client):
+    """Whatever a pack advertises must adjudicate and render without CURIEs.
+
+    Derived from the packs rather than a hard-coded list, so adding a decision
+    extends the coverage instead of breaking the test.
+    """
+    res = example_client.get("/api/scenarios")
+    assert res.status_code == 200
+    scenarios = res.json()
+    assert scenarios
+    # The built-in fixture scenario ships with the demo and would satisfy the
+    # loop on its own; the starters are what this file is about.
+    assert len(scenarios) >= 6, [s["id"] for s in scenarios]
+
+    for scenario in scenarios:
+        questions = scenario["questions"]
+        # The demo is meant to show the as-of flip *and* a derived intermediate,
+        # so every starter scenario should offer more than a single question.
+        assert len(questions) > 1, scenario["id"]
+        for question in questions:
+            attribute = question["attribute"]
+            assert question["question"]
+            response = example_client.post(
+                "/api/adjudicate",
+                json={
+                    "scenarioId": scenario["id"],
+                    "attribute": attribute,
+                    "asOfEffective": scenario["defaultAsOf"],
+                },
+            )
+            assert response.status_code == 200, (scenario["id"], attribute)
+            payload = response.json()
+            assert payload["receipt"]["decision"]["attribute"] == attribute
+
+            # A recognised attribute gets a verdict; the generic fallback would
+            # leak the raw CURIE into the rendered answer.
+            found = payload["determination"]
+            assert found["verdict"], attribute
+            assert not found.get("generic"), attribute
+            assert found["tone"] in {"pos", "neg", "warn", ""}
+
+            namespace = f"{attribute.split(':')[0]}:"
+            assert namespace not in payload["answer"], payload["answer"]
+            assert namespace not in found["verdict"]
+            assert namespace not in found["detail"]

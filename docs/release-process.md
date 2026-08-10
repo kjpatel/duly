@@ -189,7 +189,7 @@ nothing and fixes something real.
 | **Receipt** ([schema](../core/duly_core/schemas/decision-receipt.schema.json)) | same — the hash covers the whole body, so *there is no additive change* | `verify` |
 | **Rule IR** ([spec](../spec/rule-ir.md)) | a pack that used to load no longer does, or loads and means something else | `examples/tests/test_rulepacks.py`, `expected.yaml` |
 | **Pack** | rules changed such that historical decisions move | `impact` (the CI comment) |
-| **Ontology** | editing a committed version file — never do this | `conformance/tests/test_repo_conformance.py` |
+| **Ontology** | editing a committed version file — never do this | `examples/tests/test_example_conformance.py` |
 | **HTTP API** | a removed route, a renamed field, a changed status code | nothing automated today |
 | **Python API** | a removed or renamed public symbol | nothing automated today |
 

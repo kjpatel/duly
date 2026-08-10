@@ -742,7 +742,17 @@ proves it.
       first means splitting twice, and the second pass is the one that gets
       skipped.*
 - [ ] **The deletion gate (1 PR).** A CI job: `git rm -r examples/`, run the
-      toolkit suites, run `verify` (expect `verified 0 cases` per Phase 1),
+      toolkit suites, run `verify` — **and the expected outcome is the honest
+      missing-directory refusal, not `verified 0 cases`.** The move PR's
+      simulation established this: Phase 1's empty-corpus semantics
+      distinguish an empty `cases/` directory (0 cases, exit 0, says nothing
+      was measured) from a *missing* one (refusal, non-zero), and
+      `git rm -r examples/` produces the second. The gate asserts the refusal
+      message and exit code; staging empty directories to get the softer
+      answer would test a state no adopter's deletion produces. Also assert
+      the demo boots to the built-in-plus-empty state (1 scenario — the
+      `spec/examples` built-in now ships with the demo — 0 packs, 0
+      receipts),
       **boot the demo and assert the honest empty state** — the surfaces
       must stand up and say "no scenarios", not crash. "Tests pass" alone is
       weaker than the roadmap's claim.

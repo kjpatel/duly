@@ -25,13 +25,16 @@ if the pack it reached for were deleted — it would simply stop being collected
 or start erroring, which is not the same as failing (CLAUDE.md, "a test that
 would still pass with its subject deleted is not a test").
 
-**The notice arc** (the EXAMPLE CONTENT section at the bottom) survives for
-exactly one test: it is the provenance of the committed golden case
-``review-0001``, which `test_golden.py` regenerates and byte-compares. That
-test's subject genuinely *is* the committed example, so it moves with
-`examples/` rather than converting.
+There used to be a second, **notice**, arc here: the provenance of the
+committed golden case ``review-0001``, kept for exactly one test that
+regenerates that case and byte-compares it. That test's subject genuinely *is*
+the committed example, so both it and the arc it needs are now
+`examples/tests/test_example_review_provenance.py` and are deleted with the
+case. Nothing in this suite reads `examples/` any more; if a new helper here
+starts wanting to, it is almost certainly a toolkit test that should be using
+the fixture arc instead.
 
-Every timestamp in both arcs is a fixed constant — no wall clock anywhere.
+Every timestamp in the arc is a fixed constant — no wall clock anywhere.
 """
 
 from __future__ import annotations
@@ -197,158 +200,4 @@ def make_correction(
     }
     if supersedes:
         doc["supersedes"] = machine_fact["id"]
-    return finish_fact(doc)
-
-
-# --- EXAMPLE CONTENT (moves with examples/) -----------------------------------
-#
-# Everything below exists for ONE test: the provenance lock on the committed
-# golden case `review-0001` (test_golden.py). Its subject is that committed
-# case, not the toolkit, so it stays pointed at the example content and moves
-# with it. Nothing else in this suite may import from here — if a second
-# caller appears, it is almost certainly a toolkit test that should be using
-# the fixture arc above.
-#
-# `review-0001` is preserved forever (the corpus generator skips `review-*`,
-# golden/README.md), so these constants are pinned by bytes that cannot be
-# regenerated away.
-
-NOTICE_GOLDEN_DIR = REPO_ROOT / "examples" / "golden"
-
-# As `examples/golden/cases/review-0001/case.yaml` records it, and therefore
-# what must be written back for the regeneration to be byte-identical: the path
-# is relative to the *corpus root's parent* (`examples/`), which is what
-# `duly_assurance.corpus.resolve_pack_path` resolves it against. The move under
-# `examples/` deliberately left these references alone for that reason.
-NOTICE_PACK_PATH = "rulepacks/termination-notice-us-states/pack.yaml"
-NOTICE_REPO_ROOT = REPO_ROOT / "examples"
-
-NOTICE_ONTOLOGY = "duly-starter-notice"
-MAILED = "nc:noticeMailedDate"
-NOTICE_QUESTION = "nc:noticeCompliant"
-
-NOTICE_CASE_ID = "case:review:0001"
-NOTICE_ENTITY = "notice:review-0001"
-NOTICE_POLICY_ENTITY = "policy:review-0001"
-NOTICE_MACHINE_TS = "2026-07-25T12:00:00Z"          # extraction time
-NOTICE_AS_OF_EFFECTIVE = "2026-07-25"               # the mailed date
-NOTICE_AS_OF_KNOWLEDGE = "2026-07-27T12:00:00Z"     # first adjudication
-NOTICE_CORRECTION_TS = "2026-07-28T09:00:00Z"       # review resolution
-NOTICE_MAILED_CONFIDENCE = {"score": 0.62, "method": "platt"}
-NOTICE_REVIEWER = {"id": "reviewer:rq-demo", "role": "compliance-review"}
-
-
-def load_notice_pack() -> dict:
-    """EXAMPLE CONTENT (moves with examples/)."""
-    return yaml.safe_load(
-        (NOTICE_REPO_ROOT / NOTICE_PACK_PATH).read_text(encoding="utf-8")
-    )
-
-
-def _notice_fact(
-    entity_id: str, entity_type: str, attribute: str, value: dict,
-    *, confidence: dict | None = None,
-) -> dict:
-    """EXAMPLE CONTENT (moves with examples/). A schema-valid machine-asserted
-    GroundedFact (attestation grounding — this fixture, like the golden
-    generator, does not fake document spans)."""
-    ts = NOTICE_MACHINE_TS
-    doc = {
-        "caseId": NOTICE_CASE_ID,
-        "entity": {"id": entity_id, "type": entity_type},
-        "attribute": attribute,
-        "value": value,
-        "grounding": {
-            "kind": "attestation",
-            "actor": "review-arc-fixture",
-            "channel": "synthetic",
-            "at": ts,
-        },
-        "assertion": {
-            "kind": "machine",
-            "at": ts,
-            "extractor": {"name": "review-arc-fixture", "version": "0.1.0"},
-        },
-        "confidence": confidence if confidence is not None else {"score": 1.0, "method": "raw"},
-        "recordedAt": ts,
-        "status": "asserted",
-        "schemaRef": {"ontology": NOTICE_ONTOLOGY, "version": "0.1.0"},
-    }
-    return finish_fact(doc)
-
-
-def build_notice_arc_facts() -> list[dict]:
-    """EXAMPLE CONTENT (moves with examples/). The four machine facts behind
-    `review-0001`. The mailed date carries a below-floor confidence (0.62 <
-    the notice pack's 0.9 attribute floor); expiration 2026-09-01 minus mailed
-    2026-07-25 gives 38 days of notice against NY's 45-day minimum."""
-    return [
-        _notice_fact(
-            NOTICE_ENTITY, "nc:TerminationNotice", "nc:noticeType",
-            {
-                "kind": "code",
-                "value": "Nonrenewal",
-                "codeSystem": "duly-starter-notice/notice-types",
-                "codeSystemVersion": "0.1.0",
-            },
-        ),
-        _notice_fact(
-            NOTICE_ENTITY, "nc:TerminationNotice", MAILED,
-            {"kind": "date", "value": "2026-07-25"},
-            confidence=dict(NOTICE_MAILED_CONFIDENCE),
-        ),
-        _notice_fact(
-            NOTICE_POLICY_ENTITY, "nc:Policy", "nc:governingState",
-            {
-                "kind": "code",
-                "value": "US-NY",
-                "codeSystem": "iso-3166-2",
-                "codeSystemVersion": "2020",
-            },
-        ),
-        _notice_fact(
-            NOTICE_POLICY_ENTITY, "nc:Policy", "nc:policyExpirationDate",
-            {"kind": "date", "value": "2026-09-01"},
-        ),
-    ]
-
-
-def notice_mailed_fact(facts: list[dict]) -> dict:
-    """EXAMPLE CONTENT (moves with examples/)."""
-    return next(f for f in facts if f["attribute"] == MAILED)
-
-
-def adjudicate_notice_arc(facts: list[dict]) -> dict:
-    """EXAMPLE CONTENT (moves with examples/)."""
-    return adjudicate(
-        facts,
-        load_notice_pack(),
-        NOTICE_AS_OF_EFFECTIVE,
-        NOTICE_AS_OF_KNOWLEDGE,
-        NOTICE_QUESTION,
-    )
-
-
-def make_notice_correction(machine_fact: dict) -> dict:
-    """EXAMPLE CONTENT (moves with examples/). The human confirmation that
-    produced `review-0001`'s committed mailed-date fact."""
-    who = dict(NOTICE_REVIEWER)
-    ts = NOTICE_CORRECTION_TS
-    doc = {
-        "caseId": machine_fact["caseId"],
-        "entity": dict(machine_fact["entity"]),
-        "attribute": machine_fact["attribute"],
-        "value": copy.deepcopy(machine_fact["value"]),
-        "grounding": {
-            "kind": "attestation",
-            "actor": who["id"],
-            "channel": "review-queue",
-            "at": ts,
-        },
-        "assertion": {"kind": "human", "at": ts, "actor": who},
-        "supersedes": machine_fact["id"],
-        "recordedAt": ts,
-        "status": "asserted",
-        "schemaRef": dict(machine_fact["schemaRef"]),
-    }
     return finish_fact(doc)

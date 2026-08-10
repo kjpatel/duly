@@ -1012,7 +1012,10 @@ validate a correction, and no extra declares it, so `ReviewQueue.resolve()`
 on a bare install raises instead of enforcing C6. Documented in SECURITY.md
 and recommended for promotion to `[project] dependencies` — enforcement of a
 compatibility rule should not be optional behaviour — but that is a decision,
-not a cleanup, so it is not made here.
+not a cleanup, so it is not made here. **DECIDED (Kushan, 2026-08-06, at
+the 1.0.0 pause): promoted.** jsonschema is a `[project]` dependency; a bare
+install is seven packages and `ReviewQueue.resolve()` enforces C6 on every
+one of them.
 
 **A3 — `duly_conformance`'s CLI defaults to a repo-relative path and
 tracebacks when it is wrong.**

@@ -114,7 +114,7 @@ PyYAML. That is the whole list — `pip install duly` brings two packages, duly 
 
 This was not always true, and the correction is worth more than the number. Until M5, a kernel-only install pulled a web framework, an ASGI server and a PDF library, because the demo and the audit report were declared as dependencies *of* the toolkit rather than as surfaces built *on* it. "The audit toolkit installed a web server" is a bad first line in a security review, and the reason it is a bad line is specific: every package that can execute in the process that seals a receipt is inside the boundary that receipt's guarantees are drawn against. So the floor is asserted rather than promised — [`check_wheel.sh`](../examples/minimal-integration/check_wheel.sh) installs a built wheel into a clean virtualenv and fails if a third package appears, in the same run that proves the example works with duly's source tree absent.
 
-One honest gap remains, documented in [SECURITY.md](../SECURITY.md): the review queue validates a human correction with `jsonschema`, which no extra declares, so `ReviewQueue.resolve()` on a bare install raises rather than enforcing the rule it exists to enforce. Install `jsonschema` alongside duly until that is resolved.
+(The one gap this section used to document — the review queue's `jsonschema` validation missing from a bare install — closed at 1.0.0, when jsonschema became a core dependency on the argument that enforcing a compatibility rule is not behaviour an extra may withhold.)
 
 ## Is this a product I can deploy?
 

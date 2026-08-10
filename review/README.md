@@ -51,8 +51,8 @@ From the wheel, this surface is behind the `demo` extra (`pip install
 'duly[demo]'`) — named for the demonstration workspace, but what it installs is
 FastAPI and uvicorn, which is one dependency serving two surfaces. `import
 duly_review` does not reach `api.py`, so the queue, the golden-case converter
-and the calibration export all work on a plain `pip install duly`. One caveat
-until it is resolved: `ReviewQueue.resolve()` validates the correction against
-the fact schema with `jsonschema`, which no extra declares — install it
-alongside duly, or resolution raises `ModuleNotFoundError` rather than
-enforcing [compatibility.md](../spec/compatibility.md) C6.
+and the calibration export all work on a plain `pip install duly` —
+including `ReviewQueue.resolve()`: `jsonschema`, which validates the
+correction against the fact schema, is a core dependency as of 1.0.0
+precisely so that [compatibility.md](../spec/compatibility.md) C6 is
+enforced on every install, not only on installs that happened to add it.

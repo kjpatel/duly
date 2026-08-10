@@ -75,10 +75,10 @@ jobs:
           # closure at two packages. Here the job's question is the opposite
           # one: given the extras, does every package work outside the repo?
           #
-          # jsonschema is duly_review's lazily-imported validation dependency;
-          # the smoke run needs it to reach the code path that fails. It is in
-          # no extra — a gap, not a design (docs/m5-plan.md A2 note).
-          /tmp/smoke-venv/bin/pip install --quiet "$(ls dist/duly-*.whl)[demo,report]" jsonschema
+          # jsonschema rides in [project] dependencies since 1.0.0 (C6
+          # enforcement is core, DECIDED at the packaging pause) — the smoke
+          # no longer installs it separately.
+          /tmp/smoke-venv/bin/pip install --quiet "$(ls dist/duly-*.whl)[demo,report]"
 
       - name: Smoke every package from outside the repository
         run: |

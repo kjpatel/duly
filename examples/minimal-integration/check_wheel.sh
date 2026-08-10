@@ -30,22 +30,41 @@ python3 -m venv "$WORK/venv"
 
 echo "==> asserting the bare install stays bare"
 # Two: duly itself and PyYAML, which is the whole of `[project] dependencies`
-# — a rule pack is YAML, so the document→receipt path needs a YAML parser and
-# nothing else. pip itself does not appear in `pip freeze`.
+# — a rule pack is YAML, so the document→receipt path needs a YAML parser, and
+# the review queue's C6 enforcement needs jsonschema (promoted to core at
+# 1.0.0 — a compatibility rule is not behaviour an extra may withhold), whose
+# closure brings attrs/referencing/rpds-py/jsonschema-specifications. pip
+# itself does not appear in `pip freeze`.
 #
 # Everything the demo, the review API and the PDF report need is behind the
-# `demo` and `report` extras, so this number moves only when someone adds a
-# dependency to `[project]`. If that is deliberate, update the number *and*
-# SECURITY.md's "Dependencies" section, which makes the claim this pins.
-EXPECTED_PACKAGES=2
+# `demo` and `report` extras, so this set grows only when someone adds a
+# dependency to `[project]`.
+#
+# An allowlist rather than a count: jsonschema's closure includes
+# typing_extensions only on older Pythons, so a count is Python-version-
+# dependent — it read 7 on 3.14 and 8 on CI, and a guard that flaps with the
+# interpreter teaches people to bump it without reading. What the guard is
+# FOR is catching an unexpected rider; the set states exactly what is
+# expected, conditional members included.
+ALLOWED="duly PyYAML jsonschema jsonschema-specifications attrs referencing rpds-py typing_extensions"
 FROZEN="$("$WORK/venv/bin/pip" freeze)"
-COUNT="$(printf '%s\n' "$FROZEN" | grep -c . || true)"
-if [ "$COUNT" -ne "$EXPECTED_PACKAGES" ]; then
+UNEXPECTED=""
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  name="${line%%=*}"; name="${name%% @*}"
+  case " $ALLOWED " in
+    *" $name "*) ;;
+    *) UNEXPECTED="$UNEXPECTED $name" ;;
+  esac
+done <<EOF_FROZEN
+$FROZEN
+EOF_FROZEN
+if [ -n "$UNEXPECTED" ]; then
   echo
-  echo "FAIL: a bare 'pip install duly' now brings $COUNT packages, expected $EXPECTED_PACKAGES." >&2
+  echo "FAIL: a bare 'pip install duly' brought unexpected package(s):$UNEXPECTED" >&2
   printf '%s\n' "$FROZEN" | sed 's/^/    /' >&2
-  echo "If a new core dependency is intentional, update EXPECTED_PACKAGES here" >&2
-  echo "and the dependency claim in SECURITY.md." >&2
+  echo "If a new core dependency is intentional, add it to ALLOWED here" >&2
+  echo "and update the dependency claim in SECURITY.md." >&2
   exit 1
 fi
 printf '%s\n' "$FROZEN" | sed 's/^/    /'

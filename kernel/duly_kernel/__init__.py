@@ -20,7 +20,7 @@ from .api import adjudicate  # noqa: E402,F401
 # Content addressing is the first thing an integration touches — a fact must
 # be sealed before anything can consume it — so it belongs at the package
 # root, not behind `duly_kernel.receipt`, which reads private and was where
-# every adopter had to reach (docs/m5-plan.md, Appendix A finding A1).
+# every adopter had to reach (M5 finding A1; CHANGELOG.md, v1.0.0).
 from .receipt import content_hash, seal_fact  # noqa: E402,F401
 
 # The two halves of the compatibility promise (spec/compatibility.md): which

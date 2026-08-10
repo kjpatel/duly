@@ -4,7 +4,7 @@ Content addressing is the first thing an integration touches: a fact must be
 sealed before anything can consume it. It used to live only at
 `duly_kernel.receipt`, a module path that reads private, so every adopter
 either reached into it or wrote their own three-line variant — and a private
-variant produces facts nobody else can verify (docs/m5-plan.md, A1).
+variant produces facts nobody else can verify (M5 finding A1; CHANGELOG.md, v1.0.0).
 
 The freeze added the other half: what an integration needs to *consume* a
 receipt someone else produced. `check_replayable` says whether this kernel is

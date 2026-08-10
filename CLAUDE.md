@@ -4,8 +4,6 @@ duly is a neurosymbolic document-adjudication toolkit: extractors *propose* grou
 
 New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour.md) for the walkthrough, [examples/rulepacks/README.md](examples/rulepacks/README.md) before touching any rule pack.
 
-**Executing M5 work?** [docs/m5-plan.md](docs/m5-plan.md) is the execution plan: locked decisions, phase graph, per-phase tasks with acceptance criteria and landmines. Read your phase in full before touching anything; the decisions in its §1 are settled — do not re-litigate them in a PR.
-
 ## Layout
 
 | Directory | What lives there |
@@ -117,7 +115,7 @@ The pass is mechanical enough to run every time:
 
 ## Conventions
 
-- **Branches/PRs**: never commit to `main`; branch, PR, squash-merge. CI runs the full test matrix plus rule-impact.
+- **Branches/PRs**: never commit to `main`; branch, PR, squash-merge. CI runs the full test matrix plus rule-impact. Stacked PRs do not re-target when their base merges — GitHub leaves them pointed at the dead branch, and merging one then puts the work where `main` never sees it (it happened twice in M5). The check is `git log main` containing your commit.
 - **Commits**: imperative subject; body says *why*, includes test counts and (for rule/corpus changes) the impact result.
 - **New packages** register in `pyproject.toml` `[tool.hatch.build.targets.wheel] packages`. Heavy optional deps go in an extras group with marker-gated tests (see `docling`).
 - **Test helpers** are `<pkg>test_helpers.py` modules, not `conftest.py` (test dirs have no `__init__.py`; identical filenames across suites collide).

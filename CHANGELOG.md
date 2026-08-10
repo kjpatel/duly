@@ -8,6 +8,8 @@ Entries are written after the fact, from merged work.
 
 ## v1.1.1 — both edges walkable, and the envelope measured
 
+**M5 closes with this release.** Its exit criterion was met the only way it could be honestly: an agent with no repository context followed the guide with an invented domain and reached a verified, replaying corpus in one sitting. The plan that ran the milestone (26 PRs at estimate, 40 shipped, every overrun a measurement replacing a guess) is deleted with the milestone; what it proved out lives in CLAUDE.md's rules, the stability policy, and this file.
+
 ### Added
 
 - **Both contribution paths are walkable** — the roadmap's "only one of them has a path" is closed. [examples/rulepacks/README.md](examples/rulepacks/README.md) gained "Contributing it back" (what a pack PR triggers, what each check cannot see, what nobody wires for you); [extraction/README.md](extraction/README.md) is the adapter edge's new component contract, whose central observation makes recording harnesses unnecessary: conversion and proposal are separable stages with a content-addressed artifact between them, so *the rendition is the recording* and `StubAdapter` is the replay adapter that already exists.

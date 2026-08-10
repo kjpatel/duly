@@ -11,7 +11,7 @@ gap is not theoretical: `duly_review` shipped reading the grounded-fact schema
 from `<package>/../../spec/schemas/`, a path that exists in a git checkout and
 in no wheel ever built, so `ReviewQueue.resolve()` raised `FileNotFoundError`
 for every adopter — and every test in this repository passed, because in a
-checkout the path is real (docs/m5-plan.md, Appendix A finding A8).
+checkout the path is real (M5 finding A8; CHANGELOG.md, v1.0.0).
 
 So this touches one genuine entry point per package. It is a smoke test, not a
 test suite: the suites are thorough and run in the repo, where all of duly's

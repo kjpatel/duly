@@ -8,12 +8,12 @@ A guided walkthrough of the duly demonstration. Take it in order — it builds f
 
 ```bash
 uv sync
-uv run uvicorn demo.app:app --port 8788
+uv run uvicorn duly_demo.app:app --port 8788
 ```
 
 Open http://localhost:8788.
 
-Each of the four pages opens with a three-step orientation strip under its title — what to click, in what order. Dismiss it with **Got it** and the choice is remembered per page; **Show guide** under the page title brings it back. The strip is the short version of this tour, and the two are kept in step by hand: if a change moves what a page's first three actions are, the strip's copy in [demo/static/guide.js](../demo/static/guide.js) is part of that change. `demo/tests/test_guide.py` enforces that every page has one and that no guide is orphaned, but it cannot tell you the words went stale.
+Each of the four pages opens with a three-step orientation strip under its title — what to click, in what order. Dismiss it with **Got it** and the choice is remembered per page; **Show guide** under the page title brings it back. The strip is the short version of this tour, and the two are kept in step by hand: if a change moves what a page's first three actions are, the strip's copy in [duly_demo/static/guide.js](../duly_demo/static/guide.js) is part of that change. `duly_demo/tests/test_guide.py` enforces that every page has one and that no guide is orphaned, but it cannot tell you the words went stale.
 
 ## 1. Start with the insurance scenario
 

@@ -47,7 +47,7 @@ stated in full in [CLAUDE.md](CLAUDE.md); in short:
 
 ```bash
 uv sync
-uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests \
+uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests \
   calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the baseline

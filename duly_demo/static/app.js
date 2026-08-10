@@ -330,7 +330,7 @@ function highlightActiveQuestion() {
 }
 
 /* How a decision reads is decided server-side and sent as `determination`, so
- * verdict wording lives in exactly one place. See _determination in demo/app.py. */
+ * verdict wording lives in exactly one place. See _determination in duly_demo/app.py. */
 const TONE_ICONS = { pos: "✓", neg: "×", warn: "!" };
 
 async function runAdjudication() {

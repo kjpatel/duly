@@ -41,7 +41,7 @@ the difference is the whole distinction — its subject is the built-in
 passing under the deletion measurement.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
+    PATH="/opt/homebrew/bin:$PATH" uv run pytest duly_demo/tests -q
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-import demo.app as demo_app  # noqa: E402
+import duly_demo.app as demo_app  # noqa: E402
 from demotest_helpers import (  # noqa: E402
     SCENARIO,
     SEEDED_REVIEW_CASE,
@@ -165,13 +165,13 @@ def test_store_backed_scenario_facts_are_byte_identical_to_disk(client):
     projection the demo serves must match the disk JSON document for document
     (canonical form — key order is presentation, not content).
 
-    Read through `demo.content.CONTENT`, not through this repository's
+    Read through `duly_demo.content.CONTENT`, not through this repository's
     `starters/`: reaching past the content root would compare a store built
     from the fixtures against files the runtime never saw, and the assertion
     would be about which directory the test knows rather than about the
     pipeline.
     """
-    import demo.content as demo_content
+    import duly_demo.content as demo_content
 
     runtime = demo_app._active_runtime()
     assert runtime is not None
@@ -232,7 +232,7 @@ def test_review_scenario_abstains_below_the_confidence_floor(client):
     # The presumption stands, because the abstained score is out of the
     # projection and `FX-EXCEPTION-01` needs it. The wording is the kernel's
     # boolean fallback: the fixture pack gives `fx:permitted` no `phrasing:`
-    # block, and inventing one in demo/app.py is exactly what the pack-data
+    # block, and inventing one in duly_demo/app.py is exactly what the pack-data
     # rule forbids. The confidence numbers live on the abstention below.
     found = payload["determination"]
     assert found["verdict"] == "Yes"

@@ -1,4 +1,4 @@
-"""API tests for the demo's receipt viewer (demo/receipts_api.py).
+"""API tests for the demo's receipt viewer (duly_demo/receipts_api.py).
 
 These run against a content root assembled from
 [`fixtures/`](../../fixtures/README.md) — the viewer is toolkit (M5 plan, D2),
@@ -13,7 +13,7 @@ re-hashed passes it, and is caught only by re-adjudication. Both are asserted,
 because the second is the one that makes verification worth doing.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
+    PATH="/opt/homebrew/bin:$PATH" uv run pytest duly_demo/tests -q
 """
 
 from __future__ import annotations
@@ -57,9 +57,9 @@ def client(content_root, monkeypatch):
     GOLDEN = content_root / "golden"
 
     reload_demo()
-    import demo.app
+    import duly_demo.app
 
-    with TestClient(demo.app.app) as c:
+    with TestClient(duly_demo.app.app) as c:
         yield c
 
     # Restore, or every later module in the directory run inherits a demo
@@ -309,7 +309,7 @@ class TestPackResolution:
         # Rendering rule text out of a pack version the receipt never saw
         # would attribute descriptions to rules that never carried them. The
         # gap is reported instead.
-        from demo import receipts_api
+        from duly_demo import receipts_api
 
         real = receipts_api.yaml.safe_load
 
@@ -393,7 +393,7 @@ class TestWithoutTheKernel:
 
     This module is the only one of the four that cannot do its job at all
     without the kernel, which makes it the one most likely to reach for a
-    module-scope import — and `demo/app.py` includes its router
+    module-scope import — and `duly_demo/app.py` includes its router
     unconditionally, so such an import would take all four pages down at
     once. Both halves are asserted: the module imports, and its checks report
     "not checked" naming the kernel rather than raising.
@@ -411,7 +411,7 @@ class TestWithoutTheKernel:
             "        if name.split('.')[0] == 'duly_kernel':\n"
             "            raise ImportError(name)\n"
             "sys.meta_path.insert(0, Block())\n"
-            "import demo.app\n"
+            "import duly_demo.app\n"
             "print('ok')\n"
         )
         result = subprocess.run(
@@ -424,7 +424,7 @@ class TestWithoutTheKernel:
     def test_every_check_says_the_kernel_is_missing_rather_than_raising(
         self, client, monkeypatch
     ):
-        from demo import receipts_api
+        from duly_demo import receipts_api
 
         monkeypatch.setattr(receipts_api, "_kernel", lambda name: None)
         view = client.get(f"/api/receipts/corpus/{CASE}").json()

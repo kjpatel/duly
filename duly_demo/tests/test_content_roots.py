@@ -28,14 +28,14 @@ if str(_REPO_ROOT) not in sys.path:
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demo.content import CONTENT, ENV_VAR, REPO_ROOT, ContentRoots  # noqa: E402
+from duly_demo.content import CONTENT, ENV_VAR, REPO_ROOT, ContentRoots  # noqa: E402
 
 
 # --- the roots themselves ---------------------------------------------------
 
 
 def test_the_default_root_is_this_repositorys_example_content():
-    """So `uvicorn demo.app:app` needs no configuration, as before.
+    """So `uvicorn duly_demo.app:app` needs no configuration, as before.
 
     The default moved with the content: this repository keeps its teaching
     content under `examples/`, so that is what it offers as the default root.
@@ -100,16 +100,16 @@ def empty_content(tmp_path, monkeypatch):
 def _reloaded_client():
     import importlib
 
-    import demo.app
-    import demo.content
-    import demo.evidence_api
-    import demo.receipts_api
-    import demo.rules_api
+    import duly_demo.app
+    import duly_demo.content
+    import duly_demo.evidence_api
+    import duly_demo.receipts_api
+    import duly_demo.rules_api
 
-    importlib.reload(demo.content)
-    for module in (demo.rules_api, demo.evidence_api, demo.receipts_api, demo.app):
+    importlib.reload(duly_demo.content)
+    for module in (duly_demo.rules_api, duly_demo.evidence_api, duly_demo.receipts_api, duly_demo.app):
         importlib.reload(module)
-    yield TestClient(demo.app.app)
+    yield TestClient(duly_demo.app.app)
 
 
 @pytest.mark.parametrize("path", ["/", "/rules", "/evidence", "/receipt"])
@@ -146,8 +146,8 @@ def test_the_built_in_fixture_scenario_ships_with_the_demo(empty_content):
     A deployment with an empty corpus therefore still has one honest thing to
     show, and `git rm -r examples/` leaves the demo demonstrating the contract
     rather than nothing at all."""
-    import demo.app
+    import duly_demo.app
 
-    scenario = demo.app._build_fixture_scenario()
+    scenario = duly_demo.app._build_fixture_scenario()
     assert scenario is not None
     assert scenario["extraction"]["source"] == "fixture"

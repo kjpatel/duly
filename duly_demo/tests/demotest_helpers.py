@@ -47,7 +47,7 @@ ABSTAINING_CASE = "fx-0003"
 #: attestation grounding, which leaves the span machinery untested.
 SCENARIO = "fx-0005"
 
-#: The scenario's review arc, as `demo/app.py` names it (`REVIEW_ID_SUFFIX`).
+#: The scenario's review arc, as `duly_demo/app.py` names it (`REVIEW_ID_SUFFIX`).
 #: Derived there from whichever scenario opts in, so it is derived here too.
 REVIEW_SCENARIO = f"{SCENARIO}-review"
 
@@ -176,12 +176,12 @@ def reload_demo() -> None:
     longer exists. A guard rewritten per call site is a guard that will
     eventually be rewritten wrong.
     """
-    import demo.app
-    import demo.content
-    import demo.evidence_api
-    import demo.receipts_api
-    import demo.rules_api
+    import duly_demo.app
+    import duly_demo.content
+    import duly_demo.evidence_api
+    import duly_demo.receipts_api
+    import duly_demo.rules_api
 
-    importlib.reload(demo.content)
-    for module in (demo.rules_api, demo.evidence_api, demo.receipts_api, demo.app):
+    importlib.reload(duly_demo.content)
+    for module in (duly_demo.rules_api, duly_demo.evidence_api, duly_demo.receipts_api, duly_demo.app):
         importlib.reload(module)

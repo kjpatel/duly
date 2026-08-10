@@ -4,27 +4,27 @@ The example content's own tests (see `exampletest_helpers`): they run while
 `examples/` exists, they are deleted with it, and CI runs them as
 `uv run pytest examples/tests -q`.
 
-Extracted from `demo/tests/test_api.py`, whose `_pack()` helper had already
+Extracted from `duly_demo/tests/test_api.py`, whose `_pack()` helper had already
 been converted to the toolkit's own `fixtures/pack.yaml` — leaving exactly the
 tests that passed it a *name*, i.e. the ones whose subject genuinely is a
 committed pack. Those are here.
 
 Verdict wording is pack data (CLAUDE.md, "Demo discipline"): `_determination`
 resolves a decision's `phrasing:` block server-side, so every string asserted
-below is a claim about the pack file, not about `demo/app.py`. The renderer's
+below is a claim about the pack file, not about `duly_demo/app.py`. The renderer's
 own contract — the Yes/No fallback, the honest `attribute = value` degradation,
-placeholder resolution — stays in `demo/tests/test_api.py` on the fixture pack.
+placeholder resolution — stays in `duly_demo/tests/test_api.py` on the fixture pack.
 
 No `DULY_DEMO_CONTENT` is set here. The demo's default content root is this
-directory's parent, so importing `demo.app` serves the teaching content
-exactly as a plain `uvicorn demo.app:app` does.
+directory's parent, so importing `duly_demo.app` serves the teaching content
+exactly as a plain `uvicorn duly_demo.app:app` does.
 
 The two sweeps at the bottom go further and drive the *running* app over that
 default root — every scenario the six starters ship, every question their packs
-advertise. They came from `demo/tests/test_api.py` too, and by the same rule:
+advertise. They came from `duly_demo/tests/test_api.py` too, and by the same rule:
 "`notice-ny` is in the insurance domain" and "`county-recording` offers more
 than one question" are claims about manifests under `examples/starters/`, not
-about `demo/app.py`, and a `/api/scenarios` sweep over a content root with no
+about `duly_demo/app.py`, and a `/api/scenarios` sweep over a content root with no
 starters in it would iterate the built-in fixture scenario and report success.
 """
 
@@ -42,13 +42,13 @@ if str(REPO_ROOT) not in sys.path:
 
 # `reload_demo` is imported rather than copied — see the note in
 # `test_example_review_arc.py`, which uses the same fixture shape for the same
-# reason. The dependency only points this way; `demo/tests/` never reaches here.
-_DEMO_TESTS = str(REPO_ROOT / "demo" / "tests")
+# reason. The dependency only points this way; `duly_demo/tests/` never reaches here.
+_DEMO_TESTS = str(REPO_ROOT / "duly_demo" / "tests")
 if _DEMO_TESTS not in sys.path:
     sys.path.insert(0, _DEMO_TESTS)
 
-import demo.app as demo_app  # noqa: E402
-from demo.app import _determination, _render_answer  # noqa: E402
+import duly_demo.app as demo_app  # noqa: E402
+from duly_demo.app import _determination, _render_answer  # noqa: E402
 from demotest_helpers import reload_demo  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -58,7 +58,7 @@ def example_client(monkeypatch):
     """The demo over this repository's example content, as deployed.
 
     No `DULY_DEMO_CONTENT`, so the roots stay at their default. Dropping
-    `DULY_DEMO_FORCE_FIXTURE` is not optional: `demo/tests/test_api.py` sets it
+    `DULY_DEMO_FORCE_FIXTURE` is not optional: `duly_demo/tests/test_api.py` sets it
     process-wide at *import*, so a combined run arrives here with the app
     refusing to adjudicate anything (CLAUDE.md, "the evidence browser
     recomputes liveness"). The reload on both sides is for the other half of
@@ -81,7 +81,7 @@ def _pack(name: str) -> dict:
 
     Determination tests build their scenario around a *real* pack because the
     wording under test lives in the pack's `phrasing:` block, not in
-    `demo/app.py` — fabricating one inline would only test the renderer.
+    `duly_demo/app.py` — fabricating one inline would only test the renderer.
     """
     path = RULEPACKS / name / "pack.yaml"
     return yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -161,7 +161,7 @@ def test_every_placeholder_the_validator_accepts_is_one_the_demo_renders():
     """The two halves of the phrasing contract must not drift apart.
 
     `validate_pack` owns the vocabulary (a pack author's typo has to fail
-    where the pack loads); `demo/app.py` owns the rendering. A placeholder the
+    where the pack loads); `duly_demo/app.py` owns the rendering. A placeholder the
     kernel blesses and the renderer cannot resolve would silently discard a
     template alternative instead of erroring.
 

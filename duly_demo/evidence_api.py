@@ -74,13 +74,14 @@ FACT_STATES = ("live", "superseded", "retracted", "future")
 # Wiring
 # ---------------------------------------------------------------------------
 #
-# demo/app.py includes this router at the bottom of its own module body, so a
-# top-level `from demo.app import ...` here would import a half-built module.
+# duly_demo/app.py includes this router at the bottom of its own module body,
+# so a top-level `from duly_demo.app import ...` here would import a half-built
+# module.
 # The accessor keeps the cycle honest and local.
 
 
 def _demo() -> Any:
-    from demo import app as demo_app  # noqa: PLC0415
+    from . import app as demo_app  # noqa: PLC0415
 
     return demo_app
 

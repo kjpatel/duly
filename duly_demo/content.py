@@ -9,7 +9,7 @@ That only works if the directories they read are configuration. Each module
 used to compute `REPO_ROOT = Path(__file__).resolve().parent.parent` for
 itself — four copies of an assumption that duly's own checkout is the content,
 which is true exactly once: here. Now there is one `CONTENT`, it defaults to
-this repository so `uvicorn demo.app:app` is unchanged, and a deployment
+this repository so `uvicorn duly_demo.app:app` is unchanged, and a deployment
 pointing at its own corpus sets `DULY_DEMO_CONTENT`.
 
 **A missing directory is not an error.** Every root below may be absent, and

@@ -61,7 +61,26 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core/duly_core", "kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration", "extraction/duly_extraction", "review/duly_review", "conformance/duly_conformance", "dmn/duly_dmn", "whatif/duly_whatif"]
+packages = ["core/duly_core", "kernel/duly_kernel", "store/duly_store", "assurance/duly_assurance", "calibration/duly_calibration", "extraction/duly_extraction", "review/duly_review", "conformance/duly_conformance", "dmn/duly_dmn", "whatif/duly_whatif", "duly_demo"]
+
+# `duly_demo` is the one entry whose directory sits at the repository root
+# rather than inside a component directory. Every other package is
+# `<component>/<package>`; the demo surfaces have no component wrapper, so the
+# package directory *is* the top-level directory and the entry is bare.
+#
+# Its `static/` tree (pages, JS, CSS, fonts) is data the package cannot run
+# without: `duly_demo.app` mounts it with `StaticFiles` in its module body, so
+# a wheel that shipped the code and dropped the assets fails at import. That is
+# what `.github/scripts/wheel_smoke.py`'s `duly_demo` check exists to catch.
+#
+# The same rootedness is why this is the only target needing an `exclude`.
+# Every other package keeps its suite in a sibling directory (`kernel/tests`
+# beside `kernel/duly_kernel`), so no suite is inside a package and none can
+# be swept into the wheel. `duly_demo/tests` is inside one, and would ship to
+# every adopter without this — as would `duly_demo/CLAUDE.md`, which is
+# guidance for agents editing this directory, not for anyone importing it.
+exclude = ["duly_demo/tests", "duly_demo/CLAUDE.md"]
+
 
 [tool.uv]
 package = true
@@ -70,6 +89,6 @@ package = true
 markers = [
     "docling: exercises the live Docling converter; requires `uv sync --extra extraction` (skipped when docling is not importable)",
     "linkml: proves the committed ontologies are genuine LinkML with real tooling; run via `uv run --with linkml --with pyshacl pytest conformance/tests -m linkml` (skipped when linkml is not importable)",
-    "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests whatif/tests demo/tests -m z3` (skipped when z3 is not importable)",
+    "z3: exercises the Z3 static pack verifier; run via `uv run --with z3-solver pytest assurance/tests whatif/tests duly_demo/tests -m z3` (skipped when z3 is not importable)",
     "ortools: exercises the CP-SAT closing scheduler example; run via `uv run --with ortools pytest examples/closing-scheduler -m ortools` (skipped when ortools is not importable)",
 ]

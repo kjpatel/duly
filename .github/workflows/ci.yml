@@ -22,7 +22,7 @@ jobs:
       - name: Run test suites
         run: |
           suites=""
-          for d in core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests examples/tests; do
+          for d in core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests examples/tests; do
             if [ -d "$d" ]; then
               suites="$suites $d"
             else
@@ -63,7 +63,7 @@ jobs:
           rm -rf examples
 
       - name: Toolkit suites pass with the content gone
-        run: uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+        run: uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 
       # Deleting the directory is not the same state as an empty corpus:
       # Phase 1 gave "0 of 0" its own honest wording, and a *missing*
@@ -89,9 +89,9 @@ jobs:
           uv run python - <<'CHECK'
           from fastapi.testclient import TestClient
 
-          import demo.app
+          import duly_demo.app
 
-          with TestClient(demo.app.app) as c:
+          with TestClient(duly_demo.app.app) as c:
               scenarios = c.get("/api/scenarios")
               packs = c.get("/api/rules/packs")
               receipts = c.get("/api/receipts/corpus")

@@ -183,7 +183,7 @@ SCENARIO_DOC = "doc:widget-report:FX-INSPECTION-0005"
 #: The extraction run this scenario's facts come from. Named rather than
 #: derived (`derive_run_id` would do) so the id is legible in an envelope and
 #: in `assertion.extractor.runId`, and so the review arc's own run id —
-#: `demo/app.py` rewrites it to `run:<scenario>:review-demo` — is visibly a
+#: `duly_demo/app.py` rewrites it to `run:<scenario>:review-demo` — is visibly a
 #: *different* run over the same document rather than an unlabeled second one.
 SCENARIO_RUN = "run:fixture:0005"
 
@@ -269,7 +269,7 @@ def _build_scenario() -> None:
     # because that is where it lives in a deployment: the demo indexes
     # `starters/tools/targets/*.json` by the `documentId` *field*, one shared
     # directory for every scenario, and the filename is a human convention
-    # (`<scenario>-<document>.json`). `demo/tests/demotest_helpers.py` maps
+    # (`<scenario>-<document>.json`). `duly_demo/tests/demotest_helpers.py` maps
     # this directory onto that one.
     targets = {
         "documentId": SCENARIO_DOC,
@@ -315,7 +315,7 @@ def _build_scenario() -> None:
             "demoExtractor": "stub",
             # Opt into the demo's review arc. The arc is content, not code:
             # a scenario names the attribute to script below the pack's floor
-            # and the demo derives the rest (see demo/app.py `_review_spec`).
+            # and the demo derives the rest (see duly_demo/app.py `_review_spec`).
             "reviewArc": {
                 "attribute": "fx:score",
                 "confidence": {"score": 0.55, "method": "platt"},

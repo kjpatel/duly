@@ -26,7 +26,7 @@ Five version declarations, four scopes.
 | [`pyproject.toml`](../pyproject.toml) `version` | distribution | packaging, `importlib.metadata.version("duly")` |
 | [`receipt.py`](../kernel/duly_kernel/receipt.py) `SEMANTICS_VERSION` | decision semantics | **every receipt hash**, and `duly_kernel.semantics` |
 | [`kernel/duly_kernel/__init__.py`](../kernel/duly_kernel/__init__.py) `__version__` | kernel package | `test_engine_identity.py`; the only package `__version__` in the repository |
-| [`demo/app.py`](../demo/app.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
+| [`duly_demo/app.py`](../duly_demo/app.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 | [`review/duly_review/api.py`](../review/duly_review/api.py) `FastAPI(version=…)` | HTTP API | the OpenAPI document |
 
 The scopes nest **one way only**:
@@ -231,7 +231,7 @@ In order. Do not reorder — the cheap checks are first on purpose.
 
 ```bash
 uv sync
-uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify
 uv run spec/validate.py
 uv run python3 examples/starters/tools/check_facts.py
@@ -246,7 +246,7 @@ not rely on a path filter having triggered:
 
 ```bash
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml
-uv sync --extra prove && uv run pytest assurance/tests whatif/tests demo/tests -q -m z3
+uv sync --extra prove && uv run pytest assurance/tests whatif/tests duly_demo/tests -q -m z3
 uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling
 ```

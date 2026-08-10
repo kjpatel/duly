@@ -1,7 +1,7 @@
 """API tests for the duly demo app.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
+    PATH="/opt/homebrew/bin:$PATH" uv run pytest duly_demo/tests -q
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ if str(REPO_ROOT) not in sys.path:
 import yaml  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from demo.app import _determination, _render_answer, app  # noqa: E402
+from duly_demo.app import _determination, _render_answer, app  # noqa: E402
 
 client = TestClient(app)
 
@@ -34,7 +34,7 @@ def _pack() -> dict:
 
     Determination tests build their scenario around a *real* pack because the
     wording under test lives in the pack's `phrasing:` block, not in
-    demo/app.py — fabricating one inline would only test the renderer.
+    duly_demo/app.py — fabricating one inline would only test the renderer.
 
     That pack is the toolkit's own fixture, which grew a non-boolean decision
     (`fx:assessedFee`, money, with phrasing) precisely so these tests stop
@@ -171,7 +171,7 @@ def test_verdict_wording_is_pack_data_not_demo_code():
 
     This is the contribution-surface promise: a pack author who wants
     different wording edits their pack, and a *new* pack's decision renders
-    without anyone touching demo/app.py.
+    without anyone touching duly_demo/app.py.
     """
     receipt = {
         "decision": {
@@ -201,7 +201,7 @@ def test_fixture_mode_refuses_questions_the_fixture_receipt_cannot_answer(monkey
     it were the answer to the one that was asked.
     """
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
-    monkeypatch.setattr("demo.app._run_kernel", lambda *args, **kwargs: (None, None))
+    monkeypatch.setattr("duly_demo.app._run_kernel", lambda *args, **kwargs: (None, None))
 
     served = client.post(
         "/api/adjudicate",

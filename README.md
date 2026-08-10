@@ -67,7 +67,7 @@ workspace, a rule studio, an evidence browser with a knowledge-time dial, and a
 receipt viewer that re-verifies anything you paste into it.
 
 ```bash
-uv run uvicorn demo.app:app --port 8788     # → http://localhost:8788
+uv run uvicorn duly_demo.app:app --port 8788     # → http://localhost:8788
 ```
 
 **And check the claim**, which takes one command and about ten seconds:
@@ -131,7 +131,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered report for compliance and technical readers ([example](docs/example-audit-report.md)). One section structure, three renderers over it — Markdown, PDF, and JSON blocks for the browser — so a new medium is a new walk, not a second report | working |
 | [Rule packs](examples/rulepacks/) | Insurance: state termination-notice timing (NY/FL/CA). Mortgage closing: TRID fee tolerance, RON eligibility by state (real authorization dates, incl. California's not-until-2030 statute), eSign/eNote signing-method routing (ESIGN + GSE eNote requirements), TILA right of rescission (12 CFR 1026.23), and county recording readiness (CA/AZ) — each rule cited to its statute or marked TODO(verify), with declared expected outcomes run in CI | six packs, two domains |
 | [Starters](examples/starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for every vertical ([layout and tooling](examples/starters/README.md)) | six shipped |
-| [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay, and the review arc — abstention, inline correction, golden-case export | working |
+| [Demo](duly_demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay, and the review arc — abstention, inline correction, golden-case export. Ships in the wheel as `duly_demo`, static assets included, so `uvicorn duly_demo.app:app` needs no checkout | working |
 | [Rule studio](docs/demo_tour.md#10-the-rule-studio) | The demo's second surface, for the rules rather than the documents: every pack rendered as decision-table grids, editable as cells, forms or YAML, with the validator, the pack's declared cases, an ad-hoc case, golden-corpus impact and the solver all run over one in-memory draft. Drafts are session-only — it hands you `pack.yaml` and a diff, and committing stays a human act | working |
 | [Evidence browser](docs/demo_tour.md#11-the-evidence-browser) | The demo's third surface, for the evidence rather than the answer: every document a case holds (source bytes beside the extractor's rendition) and every fact ever asserted about it, each with its provenance, confidence, content hash, ontology slot and supersession chain. A knowledge-time dial replays the store's event log — drag it back and a correction becomes not-yet-known, the fact it replaced goes live again, and the citations move with it | working |
 | [Receipt viewer](docs/demo_tour.md#12-the-receipt-viewer) | The demo's surface for a receipt that already exists: search the 351 committed receipts by case id or hash, or paste one from anywhere, read it as the kernel's audit report, and see it re-verified on open — its own hash, its facts' content hashes, and a full re-adjudication. A forged receipt that was re-sealed passes the first two and fails the third, which is the reason there are three | working |
@@ -159,7 +159,7 @@ duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is 
 |---|---|---|
 | **The toolkit** — the seam itself | `spec/`, `kernel/`, `store/`, `extraction/`, `conformance/`, `calibration/`, `review/`, `assurance/` | imports and runs these unchanged; they contain zero domain knowledge |
 | **Example content** — what a *user* of the toolkit authors | `examples/rulepacks/`, `examples/starters/`, `examples/ontologies/`, `examples/golden/`, `examples/dmn/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
-| **Reference wiring** | `demo/`, `examples/minimal-integration/`, `examples/closing-scheduler/` | treats these as worked examples of tying the pieces into a service (`demo/`) or of consuming duly from a system that is not duly, not as the product |
+| **Reference wiring** | `duly_demo/`, `examples/minimal-integration/`, `examples/closing-scheduler/` | treats these as worked examples of tying the pieces into a service (`duly_demo/`) or of consuming duly from a system that is not duly, not as the product |
 
 The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M5 below; until it lands, [examples/rulepacks/README.md](examples/rulepacks/README.md) and the per-component READMEs cover each edge individually.
 
@@ -216,7 +216,7 @@ The milestone that validates the architecture end to end now runs. Seven scenari
 ```bash
 uv sync                     # core install — extraction falls back to the scripted stub
 uv sync --extra extraction  # optional: live Docling extraction in the demo (large install)
-uv run uvicorn demo.app:app --port 8788
+uv run uvicorn duly_demo.app:app --port 8788
 ```
 
 Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
@@ -379,11 +379,11 @@ Verify everything locally:
 
 ```bash
 uv sync
-uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify   # replay all 351 golden receipts byte-for-byte
 uv run python -m duly_assurance impact   # what your change would flip
 uv run spec/validate.py                  # spec examples: schemas + hashes
-uv run uvicorn demo.app:app --port 8788  # the interactive demo
+uv run uvicorn duly_demo.app:app --port 8788  # the interactive demo
 ```
 
 That command **skips every marker-gated test** — four optional-dependency markers, spread across six suites, for dependencies the kernel deliberately does not require. They run in [their own workflow](.github/workflows/optional-deps.yml), and locally like this:
@@ -392,7 +392,7 @@ That command **skips every marker-gated test** — four optional-dependency mark
 uv run --with linkml --with pyshacl pytest conformance/tests -q -m linkml       # ontologies are real LinkML
 uv sync --extra prove      && uv run pytest assurance/tests -q -m z3            # verifier encoding is sound
 uv sync --extra prove      && uv run pytest whatif/tests    -q -m z3            # what-if survives kernel verification
-uv sync --extra prove      && uv run pytest demo/tests      -q -m z3            # the rule studio's equivalence panel
+uv sync --extra prove      && uv run pytest duly_demo/tests      -q -m z3            # the rule studio's equivalence panel
 uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```

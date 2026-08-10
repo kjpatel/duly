@@ -55,9 +55,8 @@ except ImportError:  # pragma: no cover
 Z3_MISSING = (
     "z3-solver is not installed. `prove` is an optional analysis behind an "
     "optional dependency:\n"
-    "    uv run --with z3-solver python -m duly_assurance prove \\\n"
-    "        --ontologies ontologies rulepacks/*/pack.yaml\n"
-    "or `uv sync --extra prove`."
+    "    pip install 'duly[prove]'   # or, in this repository: uv sync --extra prove\n"
+    "then re-run this command."
 )
 
 # Deterministic resource ceiling. Not a timeout: z3's rlimit counts solver

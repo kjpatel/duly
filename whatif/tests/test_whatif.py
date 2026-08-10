@@ -314,6 +314,50 @@ def test_a_finite_domain_that_satisfies_nothing_is_still_complete():
 
 
 # ---------------------------------------------------------------------------
+# Reading a case: the asOf point, in either form the toolchain writes
+# ---------------------------------------------------------------------------
+#
+# Two shipped components write case.yaml and they write `asOfEffective`
+# differently: `duly_assurance.generate` emits a bare date, while
+# `duly_review.golden` copies the receipt's `asOf.effective`, which the receipt
+# schema types `date-time`. What-if read the field with `date.fromisoformat`
+# and tracebacked on the second form — a component crashing on a file another
+# component in the same wheel writes, with `duly-verify` accepting both and
+# nothing warning. The parse is the kernel's `normalize_point` now, so
+# "what what-if accepts" and "what the kernel accepts" cannot drift apart.
+
+
+def test_an_as_of_point_reads_the_same_in_either_form_the_toolchain_writes():
+    import datetime as _dt
+
+    from duly_whatif.casefacts import parse_date, parse_point
+
+    assert parse_date("2026-07-25") == _dt.date(2026, 7, 25)
+    assert parse_date("2026-07-25T00:00:00Z") == _dt.date(2026, 7, 25)
+    # A bare date is midnight UTC — the kernel's reading of it, not a guess.
+    assert parse_point("2026-07-25") == parse_point("2026-07-25T00:00:00Z")
+    assert parse_point("2026-07-25").tzinfo is not None
+
+
+def test_a_point_that_is_not_a_date_is_a_diagnostic_naming_field_and_file():
+    """The posture the CLI takes everywhere else. `Invalid isoformat string:
+    '2026-07-25T00:00:00Z'` named neither the field nor the file it came from,
+    which is most of why the defect read as a duly bug rather than a bad
+    input — and for a value that was not bad at all."""
+    from duly_whatif.casefacts import BadDate, parse_date
+
+    with pytest.raises(BadDate) as exc:
+        parse_date("yesterday", "asOfEffective", "golden/cases/x/case.yaml")
+    message = str(exc.value)
+    assert "asOfEffective" in message
+    assert "golden/cases/x/case.yaml" in message
+    assert "yesterday" in message
+    assert "2026-07-25T00:00:00Z" in message, "the message shows both legal forms"
+    # A ValueError subclass: the raise stays where callers expect one.
+    assert isinstance(exc.value, ValueError)
+
+
+# ---------------------------------------------------------------------------
 # Named refusals — never a guess
 # ---------------------------------------------------------------------------
 

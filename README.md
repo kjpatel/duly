@@ -80,12 +80,17 @@ That is every committed decision in the repository re-adjudicated from its facts
 its pack, and compared byte-for-byte against the receipt committed months earlier.
 
 > [!IMPORTANT]
-> **Before you build on it — pre-1.0, and honest about which parts.** The fact,
-> receipt and rule-IR contracts are **frozen**:
-> [what v1.0 promises, per contract](spec/compatibility.md), including what it
-> deliberately does not cover. Not on PyPI — installation is `git clone`
-> (`pip install .` builds a real wheel; the `v1.0.0` tag marks the first
-> release-shaped distribution). The SQLite stores and in-process demo are a reference
+> **Before you build on it — pre-adoption, and honest about which parts.** The
+> fact, receipt and rule-IR contracts are at v1.0 and **held stable**: what that
+> covers per contract, what it deliberately does not, and — the clause that makes
+> the rest credible — [how a break happens](spec/compatibility.md) when one is
+> genuinely right. duly has an architecture that *can* be locked (content
+> addressing, a semantics version whose replay guard refuses receipts it cannot
+> answer for, committed canonical-form and digest vectors, 351 receipts replaying
+> on every push) and no external adopter yet, so a break is still a deliberate,
+> versioned, documented major-version event rather than an unthinkable one. Not on
+> PyPI — install from a [GitHub release](https://github.com/kjpatel/duly/releases)
+> (wheel and sdist attached to every version tag) or `git clone`. The SQLite stores and in-process demo are a reference
 > wiring, not a deployment blueprint. Demo content that is invented rather than
 > real is labelled `DEMO-SYNTHETIC` in the file that carries it.
 
@@ -129,14 +134,14 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Grounded fact contract](spec/grounded-facts.md) | The interchange format: facts with provenance, confidence, and bitemporal fields; decision receipts with derivation trees | v0 shipped |
 | [Rule IR](spec/rule-ir.md) | Defeasible rules — priority, overrides, legal citation, effective window — in a YAML authoring format; Datalog/ASP compilation targets come later | v0 shipped |
 | [Reference kernel](kernel/) | Deterministic interpreter: typed expressions (decimal-only money), stratified evaluation, defeat semantics, effective-dated rule selection, receipt emission | working, tested |
-| [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered report for compliance and technical readers ([example](docs/example-audit-report.md)). One section structure, three renderers over it — Markdown, PDF, and JSON blocks for the browser — so a new medium is a new walk, not a second report | working |
+| [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered report for compliance and technical readers ([example](docs/example-audit-report.md)). One section structure, three renderers over it — Markdown, PDF, and JSON blocks for the browser — so a new medium is a new walk, not a second report. Its headline verdict is the pack's own wording, resolved by [`duly_kernel.phrasing`](kernel/duly_kernel/phrasing.py), the single renderer the demo shares | working |
 | [Rule packs](examples/rulepacks/) | Insurance: state termination-notice timing (NY/FL/CA). Mortgage closing: TRID fee tolerance, RON eligibility by state (real authorization dates, incl. California's not-until-2030 statute), eSign/eNote signing-method routing (ESIGN + GSE eNote requirements), TILA right of rescission (12 CFR 1026.23), and county recording readiness (CA/AZ) — each rule cited to its statute or marked TODO(verify), with declared expected outcomes run in CI | six packs, two domains |
 | [Starters](examples/starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for every vertical ([layout and tooling](examples/starters/README.md)) | six shipped |
 | [Demo](duly_demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay, and the review arc — abstention, inline correction, golden-case export. Ships in the wheel as `duly_demo`, static assets included, so `uvicorn duly_demo.app:app` needs no checkout | working |
 | [Rule studio](docs/demo_tour.md#10-the-rule-studio) | The demo's second surface, for the rules rather than the documents: every pack rendered as decision-table grids, editable as cells, forms or YAML, with the validator, the pack's declared cases, an ad-hoc case, golden-corpus impact and the solver all run over one in-memory draft. Drafts are session-only — it hands you `pack.yaml` and a diff, and committing stays a human act | working |
 | [Evidence browser](docs/demo_tour.md#11-the-evidence-browser) | The demo's third surface, for the evidence rather than the answer: every document a case holds (source bytes beside the extractor's rendition) and every fact ever asserted about it, each with its provenance, confidence, content hash, ontology slot and supersession chain. A knowledge-time dial replays the store's event log — drag it back and a correction becomes not-yet-known, the fact it replaced goes live again, and the citations move with it | working |
 | [Receipt viewer](docs/demo_tour.md#12-the-receipt-viewer) | The demo's surface for a receipt that already exists: search the 351 committed receipts by case id or hash, or paste one from anywhere, read it as the kernel's audit report, and see it re-verified on open — its own hash, its facts' content hashes, and a full re-adjudication. A forged receipt that was re-sealed passes the first two and fails the third, which is the reason there are three | working |
-| [Extraction adapters](extraction/) | Document AI providers emitting contract-conformant facts with verified run envelopes | Docling + scripted stub; commercial adapters deferred to v1.1 |
+| [Extraction adapters](extraction/) | Document AI providers emitting contract-conformant facts with verified run envelopes | Docling + scripted stub; commercial adapters deferred to M6 |
 | [Bitemporal fact store](store/) | Append-only events, as-of projections across effective and knowledge time, supersession chains (SQLite; Postgres-portable schema) | working |
 | [Review queue](review/) | Abstention routing; human corrections re-enter as first-class facts and auto-become golden cases; calibration label export | working (API + library) |
 | [Calibration](calibration/) | Temperature/Platt/conformal calibrators and abstention math, consuming the review queue's labeled pairs | working |
@@ -149,7 +154,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Minimal integration example](examples/minimal-integration/) | duly consumed from outside at its smallest: three facts, three rules, one adjudication and one verified receipt in ~100 lines of author-owned code with its own ontology and pack, checked on every push against an installed wheel with duly's source tree absent | working |
 | [Closing scheduler example](examples/closing-scheduler/) | duly as a decision component inside an optimizer: CP-SAT plans a mortgage closing where every hard constraint is a table of days an adjudication permitted, and every chosen date cites the receipt ids that constrained it. The scheduler encodes no rule — a test perturbs the TILA pack from three business days to five and requires the plan to move without `schedule.py` being edited | shipped |
 | [Static pack verifier](spec/pack-verification.md) | Solver-backed validation-time analysis of a rulebase: proves same-priority rules mutually exclusive where the syntactic validator cannot, witnesses the overlaps it cannot prove away, enumerates the input regions no rule covers, and proves two packs decide alike over the input space instead of over a fixture list ([demo](spec/prove_demo.py), `python -m duly_assurance prove`) | shipped |
-| [Compatibility policy](spec/compatibility.md) | What v1.0 promises, per contract, and what it deliberately does not cover. The receipt has no extension point and never will; replay is scoped to a **semantics version**, enforced by a kernel that refuses a receipt whose semantics it does not implement rather than replaying it by coincidence; and `decision_digest()` says when two receipts record the same adjudication — which is how two evaluation backends are defined to agree, since their bytes cannot ([demo](spec/compatibility_demo.py), [vectors](spec/decision-digest-vectors.json)) | shipped |
+| [Compatibility policy](spec/compatibility.md) | What v1.0 holds stable, per contract, what it deliberately does not cover, and how a break happens when one is right — the clause the strictness of the others depends on. The receipt has no extension point; replay is scoped to a **semantics version**, enforced by a kernel that refuses a receipt whose semantics it does not implement rather than replaying it by coincidence; and `decision_digest()` says when two receipts record the same adjudication — which is how two evaluation backends are defined to agree, since their bytes cannot ([demo](spec/compatibility_demo.py), [vectors](spec/decision-digest-vectors.json)) | shipped |
 | [Ontology conformance gate](spec/ontology-conformance.md) | The enforcement half of bring-your-own-ontology: versioned LinkML artifacts ([examples/ontologies/](examples/ontologies/), two committed samples with a verified MISMO/FIBO crosswalk) + a pure-Python gate rejecting misspelled attributes, wrong value kinds, and out-of-enum codes at the contract line ([demo](spec/conformance_gate_demo.py), `python -m duly_conformance`) | shipped |
 
 ## What you keep and what you replace
@@ -217,7 +222,7 @@ duly ships no domain schema. MISMO, ACORD, FHIR, and FIBO already exist, and bui
 
 ### Why code-first
 
-Specifications that develop ahead of running code rarely get adopted. The contract was developed against real vertical slices — termination-notice compliance and TRID fee tolerance, both now running end to end — and implementation promptly forced spec revisions (recorded in [spec/rule-ir.md](spec/rule-ir.md) under "Resolved in v0"), which is exactly the point. The spec stabilizes at v1.0; until then, breaking changes are expected.
+Specifications that develop ahead of running code rarely get adopted. The contract was developed against real vertical slices — termination-notice compliance and TRID fee tolerance, both now running end to end — and implementation promptly forced spec revisions (recorded in [spec/rule-ir.md](spec/rule-ir.md) under "Resolved in v0"), which is exactly the point. That revision pressure is what the contracts were held open for; at v1.0 they close and the pressure moves into a [versioned break procedure](spec/compatibility.md) instead of into silent edits.
 
 ### What duly deliberately is not
 
@@ -309,10 +314,10 @@ The standards work strengthens the interchange contract; the rest makes rule cha
 - [x] Pack-embedded, receipt-pinned calendar arithmetic in the deterministic evaluator ([spec/rule-ir.md](spec/rule-ir.md))
 - [x] DMN decision-table authoring that compiles to the existing IR ([spec/dmn.md](spec/dmn.md))
 - [x] Z3 static pack verifier: disjointness, coverage, and pack equivalence, validation-time only ([spec/pack-verification.md](spec/pack-verification.md))
-- [x] Pack-owned decision phrasing, so non-boolean decisions need no core or demo change ([spec/rule-ir.md](spec/rule-ir.md))
+- [x] Pack-owned decision phrasing, resolved by one kernel renderer for the demo and the audit report alike, so non-boolean decisions need no core or demo change ([spec/rule-ir.md](spec/rule-ir.md))
 - [x] Rule-ID convention and contribution checks, with the pre-existing ids grandfathered ([spec/rule-ir.md](spec/rule-ir.md))
 - [x] OR-Tools scheduling example: adjudications produce the permissible windows, an optimizer chooses among them ([examples/closing-scheduler](examples/closing-scheduler/))
-- [x] Z3 what-if queries: free one input of a decided case and solve the pack backwards, every answer re-adjudicated by the kernel before it is reported ([spec/whatif.md](spec/whatif.md)) — planned for v1.2 and pulled forward once the verifier's encoding existed to reuse
+- [x] Z3 what-if queries: free one input of a decided case and solve the pack backwards, every answer re-adjudicated by the kernel before it is reported ([spec/whatif.md](spec/whatif.md)) — planned two milestones out and pulled forward once the verifier's encoding existed to reuse
 
 **Exit:** a domain author can create, validate, test, review, and impact-assess a rule change without modifying the kernel. Met.
 
@@ -321,7 +326,7 @@ The standards work strengthens the interchange contract; the rest makes rule cha
 The next consumer is an adopting engineering team. Make duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples; do this before implementing a second execution backend.
 
 - [x] **Example/toolkit separation** — the teaching content lives under `examples/`, and `git rm -r examples/` leaving a working toolkit is **enforced by CI on every push**: the deletion gate deletes the directory, runs every toolkit suite, asserts the replay verifier refuses honestly, and boots all four demo surfaces against nothing.
-- [ ] **Installable distribution** — publish versioned toolkit packages so adopters import the seam rather than fork the repository.
+- [x] **Installable distribution** — [released](https://github.com/kjpatel/duly/releases): wheel and sdist on the version tag, five console scripts, a plain install of seven packages with the floor asserted at build time. Since tags became releases, **milestones are M-numbers and version numbers belong to releases** — a minor release mid-milestone (1.1.0's API additions) moves the version without moving the plan.
 - [ ] **Adopter's guide** — one end-to-end bring-your-own walkthrough: documents, extraction adapter, grounded facts, ontology conformance, rule packs, golden corpus, review queue, and calibration labels. Executed from the published packages on a clean machine, not from a working tree, because that is the only version of the walkthrough an adopter will ever run.
 - [ ] **Contribution paths, both edges** — the [contribution model](#contribution-model) rests on two surfaces, and only one of them has a path. Complete the rule-pack authoring guide and contribution checks across packs, ontologies, starters and golden-corpus coverage, *and* the adapter path: protocol conformance, recorded-response fixtures, span verification, and run envelopes. A first-week outcome offered on either edge has to be walkable on either edge.
 - [ ] **Reference capacity envelope** — publish what one adjudication costs on the committed corpus and where a pure-Python reference interpreter stops being the right thing to run. Measurement, not optimization: an adopter sizing a workload needs a number before a deployment exists to produce one, and this answers the standing question in the [PRD](docs/guiding-prd.md#open-questions).
@@ -335,13 +340,13 @@ Shipped so far in M5. What each turned out to mean is in the [changelog](CHANGEL
 - [x] **Minimal integration example** ([examples/minimal-integration](examples/minimal-integration/)) — three facts, three rules, one adjudication and one verified receipt in author-owned code, checked against an installed wheel with duly's source tree absent.
 - [x] **Version scopes and the release procedure** ([docs/release-process.md](docs/release-process.md)) — the receipt's `engine.version` decoupled from every package number, and a decision procedure for which of the four scopes moves for a given change.
 - [x] **One canonical form** ([`duly_core`](core/duly_core/), [vectors](spec/canonical-vectors.json)) — content addressing and the JSON Schemas in one place that ships, with committed test vectors any implementation in any language must reproduce.
-- [x] **Compatibility policy** ([spec/compatibility.md](spec/compatibility.md)) — what v1.0 promises per contract and what it deliberately does not cover, plus the two claims that needed code: replay refuses semantics it does not implement, and `decision_digest()` says when two receipts record the same adjudication.
-- [x] **Contract closeout** — the fact, receipt and IR contracts are frozen, with all three of the questions that had to be answered first decided in the compatibility policy: quantified bindings deferred past v1.0, the run envelope reserving no signature affordance, and a `low_confidence` review resolution now required to supersede the fact it rules on.
+- [x] **Compatibility policy** ([spec/compatibility.md](spec/compatibility.md)) — what v1.0 holds stable per contract, what it deliberately does not cover, how a break happens, plus the two claims that needed code: replay refuses semantics it does not implement, and `decision_digest()` says when two receipts record the same adjudication.
+- [x] **Contract closeout** — the fact, receipt and IR contracts reached v1.0 and are held stable, with all three of the questions that had to be answered first decided in the compatibility policy: quantified bindings deferred past v1.0, the run envelope reserving no signature affordance, and a `low_confidence` review resolution now required to supersede the fact it rules on. Stability here is a procedure rather than a vow — a break is a major version with a written cost, and every contract it covers has a check that fails on an unintended one.
 - [x] **The install is the seam** ([what a plain install brings](#what-a-plain-install-brings)) — `pip install duly` went from 18 packages to two, with every surface behind an extra and the floor asserted by a build check rather than documented.
 
-**v1.0 exit:** a maintainer working from the published packages on a clean machine, with no repository checkout, can integrate a new document and extractor, author a pack, and reproduce a receipt — from the written guides alone. That proves nothing required insider knowledge. That an adopter finds it usable is [v1.1](#v11--durable-deployment-and-extraction-evaluation)'s to report.
+**v1.0 exit:** a maintainer working from the published packages on a clean machine, with no repository checkout, can integrate a new document and extractor, author a pack, and reproduce a receipt — from the written guides alone. That proves nothing required insider knowledge. That an adopter finds it usable is [M6](#m6--durable-deployment-and-extraction-evaluation)'s to report.
 
-### v1.1 — durable deployment and extraction evaluation
+### M6 — durable deployment and extraction evaluation
 
 Make the toolkit dependable inside a long-running service and measure the quality of the probabilistic edge it admits. This is where the sequencing principle resumes: each item below names the consumer that unlocks it, and none of them is worth building for a deployment nobody has described. Only the first gates the rest; durability and extraction quality are independent tracks after it.
 
@@ -354,7 +359,7 @@ Make the toolkit dependable inside a long-running service and measure the qualit
 
 **Exit:** a deployment can preserve and replay decisions across processes and upgrades, while measuring extraction and review quality on its own corpus.
 
-### v1.2 — governed operation and decision support
+### M7 — governed operation and decision support
 
 Add the controls and analysis that regulated deployments need, without moving them into the decision semantics.
 
@@ -363,11 +368,11 @@ Ordered by whether the consumer already exists. The first two have one; the last
 - [ ] Rule-pack lifecycle guidance and reference APIs: draft, test, approval, promotion, rollback, and auditable change history. First because M5 created the need — the studio validates a draft against the corpus and then has nowhere to send it. The actor is caller-supplied, the way evaluation time already is, so this does not wait on identity below.
 - [ ] Customer-corpus impact analysis surfaced through a service/API integration — the same analysis CI already runs on pack PRs, addressed to an operator holding their own corpus rather than to a reviewer holding ours.
 - [ ] Identity, role-based access control, tenant isolation, secrets/configuration guidance, and evidence-retention controls — gated on a deployment with more than one tenant or more than one role. Built earlier, it is a guess at someone else's authorization model. Turns the lifecycle's caller-supplied actor into an enforced one.
-- [ ] Optional asymmetric signatures for extraction-run envelopes, adding producer authenticity to the existing integrity hashes — gated on cross-organization trust, where key distribution and rotation become worth their cost. Whether the frozen envelope shape can accept them additively is decided in M5's contract closeout, not here.
+- [ ] Optional asymmetric signatures for extraction-run envelopes, adding producer authenticity to the existing integrity hashes — gated on cross-organization trust, where key distribution and rotation become worth their cost. Whether the v1.0 envelope shape can accept them additively is decided in M5's contract closeout, not here — it cannot, so they arrive in a separately-hashed sidecar ([compatibility C7](spec/compatibility.md)).
 
 **Exit:** operators can explain who changed a rule, what historical decisions it affected, and why a particular decision was made.
 
-### v1.3+ — integration and scale by demonstrated need
+### M8+ — integration and scale by demonstrated need
 
 Build integrations and alternate execution only when a consumer supplies the workload and acceptance criteria. The reference interpreter remains authoritative for semantics and receipt shape.
 
@@ -420,7 +425,7 @@ uv run --with ortools      pytest examples/closing-scheduler -q -m ortools      
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling      # heavy: pulls torch
 ```
 
-Breaking changes remain expected until v1.0. The most useful contribution right now is adoption pressure: try duly against a real document workflow — your documents, your extractor, your ontology, your rules — and report where the contract fits, where it fights you, and what it would take to serve your organization's decisioning for real. The [PRD's open questions](docs/guiding-prd.md#open-questions) name exactly what only an adopter can answer; a skeptical read of the spec's [open questions](spec/grounded-facts.md#open-questions) is still welcome, but it is no longer the bottleneck.
+The contracts are at v1.0 and held stable, and a break is a deliberate, versioned, documented major-version event rather than an impossibility — [the procedure is written down](spec/compatibility.md), and with no adopter yet it is a move this project is still willing to make when one is right. Which is why the most useful contribution right now is adoption pressure: try duly against a real document workflow — your documents, your extractor, your ontology, your rules — and report where the contract fits, where it fights you, and what it would take to serve your organization's decisioning for real. The [PRD's open questions](docs/guiding-prd.md#open-questions) name exactly what only an adopter can answer; a skeptical read of the spec's [open questions](spec/grounded-facts.md#open-questions) is still welcome, but it is no longer the bottleneck.
 
 ## License
 

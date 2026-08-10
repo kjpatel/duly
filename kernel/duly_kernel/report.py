@@ -17,6 +17,13 @@ that a new medium is a new *walk* of the section list rather than a second
 report implementation — the property that keeps the Markdown and the PDF
 saying the same thing is the one that has to keep holding.
 
+The report's headline verdict is not this module's wording. It comes from the
+pack's own `phrasing:` block through `duly_kernel.phrasing.determination` —
+the same implementation the demo's answer line uses — falling back to naming
+the value when the pack phrases this decision nowhere. A report is the
+examiner-facing artifact, so the sentence it leads with has to be the one the
+rule author wrote, not one the renderer guessed from an attribute name.
+
 CRITICAL PROPERTY — determinism. Rendering is pure templating over its
 inputs: no wall clock (every date printed comes from the receipt or facts),
 no randomness, no dict-order dependence. Same inputs, byte-identical output.
@@ -27,6 +34,10 @@ or random document ids.
 from __future__ import annotations
 
 from dataclasses import dataclass
+
+from .phrasing import determination
+from .phrasing import format_value as _fmt_value
+from .phrasing import local_name as _local
 
 # ---------------------------------------------------------------------------
 # Intermediate representation: a report is a list of sections; each section
@@ -54,35 +65,32 @@ class _Section:
 # ---------------------------------------------------------------------------
 
 
-def _local(curie: str) -> str:
-    """The local part of a CURIE ('nc:noticeCompliant' -> 'noticeCompliant')."""
-    i = curie.find(":")
-    return curie[i + 1:] if i >= 0 else curie
+def _verdict(receipt: dict, facts: list[dict], pack: dict | None) -> str:
+    """The decision phrased for the report header.
 
+    Wording is **pack data**. When the pack declares a `phrasing:` case that
+    applies to this decision, that case's verdict is the verdict — the same
+    selection this repo's UIs use, because it is the same implementation
+    (`duly_kernel.phrasing.determination`).
 
-def _fmt_value(value: dict) -> str:
-    kind = value.get("kind")
-    if kind == "money":
-        return f"{value.get('amount')} {value.get('currency')}"
-    if kind == "boolean":
-        return "true" if value.get("value") else "false"
-    if kind == "code":
-        return str(value.get("value"))
-    return str(value.get("value"))
-
-
-def _verdict(decision: dict) -> str:
-    """The decision phrased plainly for the report header."""
+    Without a pack, or with a pack that phrases this decision nowhere, the
+    report falls back to naming the value: `permitted: no` for a boolean,
+    `250.00 USD` for money. That fallback is deliberately flat. It used to
+    special-case any attribute whose local name contained "compliant" and
+    render it "Compliant"/"Not compliant" — a domain heuristic tuned to one of
+    duly's own packs, sitting in the kernel, quietly outranking whatever the
+    pack said. Every pack that wanted those words can and does say so in its
+    own `phrasing:` block; a pack that says nothing gets its attribute named
+    back, which is the honest answer.
+    """
+    decision = receipt.get("decision", {})
+    phrased = determination(receipt, facts, pack)
+    if phrased is not None:
+        return phrased["verdict"]
     value = decision.get("value", {})
-    attribute = decision.get("attribute", "")
-    kind = value.get("kind")
-    if kind == "boolean":
-        name = _local(attribute)
-        if "compliant" in name.lower():
-            return "Compliant" if value.get("value") else "Not compliant"
+    if value.get("kind") == "boolean":
+        name = _local(decision.get("attribute", ""))
         return f"{name}: yes" if value.get("value") else f"{name}: no"
-    if kind == "money":
-        return _fmt_value(value)
     return _fmt_value(value)
 
 
@@ -183,14 +191,14 @@ def _walk_postorder(node: dict, out: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _build_header(receipt: dict, pack: dict | None) -> _Section:
+def _build_header(receipt: dict, facts: list[dict], pack: dict | None) -> _Section:
     as_of = receipt.get("asOf", {})
     rule_pack = receipt.get("rulePack", {})
     engine = receipt.get("engine", {})
     rows = (
         ("Case", receipt.get("caseId", ""), False),
         ("Question", _question_for(receipt, pack), False),
-        ("Verdict", _verdict(receipt.get("decision", {})), False),
+        ("Verdict", _verdict(receipt, facts, pack), False),
         ("As of (effective)", as_of.get("effective", ""), False),
         ("As of (knowledge)", as_of.get("knowledge", ""), False),
         (
@@ -209,11 +217,13 @@ def _build_header(receipt: dict, pack: dict | None) -> _Section:
     return _Section(None, (("kv", rows),))
 
 
-def _build_conclusion(receipt: dict, pack: dict | None) -> _Section:
+def _build_conclusion(
+    receipt: dict, facts: list[dict], pack: dict | None
+) -> _Section:
     decision = receipt.get("decision", {})
     root = receipt.get("derivation", {})
     question = _question_for(receipt, pack)
-    verdict = _verdict(decision)
+    verdict = _verdict(receipt, facts, pack)
     if decision.get("value", {}).get("kind") == "boolean":
         verdict = verdict.lower()
     sentences = [
@@ -453,8 +463,8 @@ def _build_sections(
 ) -> list[_Section]:
     facts_by_id = {f["id"]: f for f in facts if isinstance(f, dict) and "id" in f}
     return [
-        _build_header(receipt, pack),
-        _build_conclusion(receipt, pack),
+        _build_header(receipt, facts, pack),
+        _build_conclusion(receipt, facts, pack),
         _build_reasoning(receipt, facts_by_id, pack),
         _build_rules_applied(receipt, pack),
         _build_evidence(receipt, facts_by_id),

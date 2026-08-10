@@ -3,7 +3,8 @@
 The most useful contribution right now is not a patch. It is **trying duly against
 a real document workflow and telling us where it does not fit** — the vocabulary it
 cannot express, the rule shape it cannot state, the seam that assumes something your
-organization does differently. duly is pre-1.0 with one author and no adopters; the
+organization does differently. duly has one author and no adopters yet — its contracts
+are at v1.0 and held stable, but nothing has ever depended on them; the
 gap between "the design is coherent" and "the design survives contact" is the thing
 we cannot close alone. Open an issue describing the workflow, not a feature request.
 
@@ -118,8 +119,9 @@ Rule packs are the contribution path with the most leverage and the most rules.
 Open an issue before writing code if your change would:
 
 - add a field to the fact, receipt, or run-envelope schema — the contracts are
-  frozen and the receipt has **no extension point**
-  ([spec/compatibility.md](spec/compatibility.md));
+  held stable at v1.0, the receipt has **no extension point**, and a schema
+  change is therefore a major-version event with a written procedure rather
+  than a PR ([spec/compatibility.md](spec/compatibility.md) C1, C2, C9);
 - change what the kernel *means* by an existing pack (a semantics change, which
   rewrites every committed receipt);
 - add a required dependency to the kernel path — `[project] dependencies` is

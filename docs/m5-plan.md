@@ -898,7 +898,23 @@ install duly, integrate its own document and extractor, author a pack, and
 reproduce its own receipt without a repository fork or maintainer assistance.
 The PRD's bar: one working day.
 
-- [ ] **Adopter's guide.** One end-to-end bring-your-own walkthrough:
+- [x] **Adopter's guide.** Done — [docs/adopters-guide.md](adopters-guide.md),
+      written by executing every command against the installed wheel outside
+      the repository, revised four times, then **executed cold by an agent
+      with no repository context and an invented domain** (the PRD's
+      independent-team bar, manufactured). The cold run reached the end in
+      one sitting and found three real defects, all in seams the guide's
+      claims never covered: the report renderer guessing verdicts instead of
+      reading `phrasing:` (now one implementation in `duly_kernel.phrasing`,
+      two callers), whatif parsing case dates privately and crashing on the
+      review freezer's legal `date-time` form (now the kernel's parser), and
+      the receipt viewer coupling pack resolution to directory names (now
+      discovery by declared name — the repo-relative defect's eighth
+      costume). Also: first-contact re-exports for `duly_extraction` and
+      `duly_store`, de-repo'd solver diagnostics, and the corpus contract
+      (`case.yaml` fields and both legal date forms) documented in the guide
+      and `examples/golden/README.md`. Original task text:
+      One end-to-end bring-your-own walkthrough:
       documents → extraction adapter → grounded facts → ontology conformance
       → rule packs → golden corpus → review queue → calibration labels.
       Written against the *final* layout, executed literally start-to-finish
@@ -1437,3 +1453,13 @@ and every exception behind it.**
   packaging 1.0.0** — version, the five console scripts, prog= corrections,
   console smoke; release-process §7 run in full; paused for Kushan (tag
   decision attached, plus the jsonschema and FastAPI-version questions).
+
+- 2026-08-10 — [#74](https://github.com/kjpatel/duly/pull/74) — **Phase 5: the
+  adopter's guide, and the wave it caused** — guide written, executed, and
+  cold-executed; three defects fixed (report phrasing unified into the kernel,
+  whatif's date parse, the viewer's directory coupling); first-contact
+  exports; the contract-stability posture corrected repo-wide per Kushan
+  ("held stable" + a priced break procedure, never "frozen"); roadmap
+  milestones renamed to M-numbers; version 1.1.0 with the release cut on
+  merge. The CHANGELOG restructured: v1.0.0 restored to its released shape,
+  the wave in its own v1.1.0 section.

@@ -1,20 +1,28 @@
-# Compatibility — what v1.0 promises
+# Compatibility — the stability policy
 
-Who this is for: an adopter deciding whether to build on duly, and whoever is about to change something that adopter depends on. [docs/release-process.md](../docs/release-process.md) is the mechanical companion — which number moves for a given change, what to run before tagging. This document is the *promise* those numbers encode.
+Who this is for: an adopter deciding whether to build on duly, and whoever is about to change something that adopter depends on. [docs/release-process.md](../docs/release-process.md) is the mechanical companion — which number moves for a given change, what to run before tagging. This document is what those numbers *mean*.
 
-Every contract in this repository has carried "v0 — may break" since M1. This is what that stops meaning, stated per contract, because the three contracts break differently and freezing them is three different acts.
+Every contract in this repository carried "v0 — may break" from M1 to v1.0. This is what that stops meaning, stated per contract, because the three contracts break differently and stabilising them is three different acts.
 
-The one-sentence version: **duly freezes the bytes, not the roadmap.** A fact, a receipt or a pack written against v1.0 keeps meaning exactly what it meant, forever. What the toolkit can *additionally* express afterwards is governed by the semantics version (C3), not by this freeze — which is why the freeze can be strict without being a ceiling.
+The one-sentence version: **duly holds the bytes stable, and prices a break rather than forbidding one.** A fact, a receipt or a pack written against v1.0 goes on meaning exactly what it meant. What the toolkit can *additionally* express afterwards is governed by the semantics version (C3), not by this policy — which is why the policy can be strict without being a ceiling.
 
-Two of the promises below are behaviour rather than intention, and both run: [`compatibility_demo.py`](compatibility_demo.py) takes a committed receipt, shows four run-level changes that move its hash and not its decision digest (C4), and has this kernel refuse a perfectly-sealed receipt claiming semantics it does not implement (C3).
+**Read C9 first if you read one clause.** It is the load-bearing one, and the reason every clause above it can be strict: a break here is not forbidden, it is *procedural*. What this project deliberately does not claim is the unauditable version of the promise —
+
+> "We will never break this" is a claim no reader can check and no test can hold anyone to. "Every break is a major version, follows a written procedure, and is caught by a named check if it is taken by accident" is a claim this repository **enforces**, and the enforcement is the thing worth reading. The adjective is not the guarantee; the machinery is.
+
+The machinery is what v1.0 actually ships: content addressing over canonical bytes, a decision-semantics version with a replay guard that refuses receipts it has no standing to check, committed canonical-form and decision-digest vectors, a corpus of 351 receipts that replays byte-for-byte on every push, and the version-scope discipline in [release-process.md](../docs/release-process.md). That is an architecture that **can** be locked, and every clause below is duly holding itself to it.
+
+**The pre-adoption clause.** duly has no external adopters yet — [first adoption is an M6 item](../README.md#m6--durable-deployment-and-extraction-evaluation), reported by an outside team rather than claimed here. Until one exists, these contracts are held stable by policy and by the checks above rather than by anyone's dependency on them, and **a break remains a move this project is willing to make**: a deliberate, versioned, documented major-version event, not the betrayal of a promise. What real adoption changes is not the discipline — none of it is loosened by the absence of an adopter — but the *cost* of a break, which is exactly the pressure that should decide whether one is worth taking. Stating this is the point: a stability claim that outruns its evidence is the kind of claim this project spends the rest of its documentation refusing to make.
+
+Two of the clauses below are behaviour rather than intention, and both run: [`compatibility_demo.py`](compatibility_demo.py) takes a committed receipt, shows four run-level changes that move its hash and not its decision digest (C4), and has this kernel refuse a perfectly-sealed receipt claiming semantics it does not implement (C3).
 
 As with the fact contract, the DMN compiler, the conformance gate and the static verifier, everything below is a decision with its rationale and the alternative that was rejected.
 
 ---
 
-## C1. What is frozen, and what frozen means for each
+## C1. What is held stable, and what that means for each
 
-| Contract | Frozen means | A break is | Detected by |
+| Contract | Held stable means | A break is | Detected by |
 |---|---|---|---|
 | **Fact** ([schema](../core/duly_core/schemas/grounded-fact.schema.json)) | the schema is closed; a given fact's hashed bytes never change | any schema change at all | `spec/validate.py`, conformance sweep |
 | **Receipt** ([schema](../core/duly_core/schemas/decision-receipt.schema.json)) | the same, and there is no extension point (C2) | any schema change at all | `verify` |
@@ -28,11 +36,11 @@ The IR row is different in kind: it is a **floor, not a ceiling**. Later 1.x ver
 
 [rule-ir.md](rule-ir.md) open question 4 — should `validate_pack` type-check expressions — is exactly this shape. Answering it *yes* after v1.0 rejects packs that used to load. It stays open, and this is the sentence that prices it.
 
-**Rejected:** *freezing the IR by capability ("v1.0 supports these constructs") rather than by pack ("a pack that loads keeps working").* Capability lists sound more precise and are unenforceable — no test in this repository can assert a capability list, and every test can assert that the six committed packs still load and still produce their declared outcomes. A promise the corpus can check is worth more than a promise the prose is more specific about.
+**Rejected:** *stating the IR's stability by capability ("v1.0 supports these constructs") rather than by pack ("a pack that loads keeps working").* Capability lists sound more precise and are unenforceable — no test in this repository can assert a capability list, and every test can assert that the six committed packs still load and still produce their declared outcomes. A promise the corpus can check is worth more than a promise the prose is more specific about.
 
-## C2. The receipt has no extension point, and never will
+## C2. The receipt has no extension point
 
-The receipt schema is closed. Nothing may be added to it — not by duly, not by an adopter, not behind a feature flag. Anything that wants to travel with a receipt travels **beside** it, in a separately-hashed document that references it by `receiptSha256`. This is the idiom [prov-o.md](prov-o.md) already established for exports: *wrap, never edit*.
+The receipt schema is closed. Nothing may be added to it — not by duly, not by an adopter, not behind a feature flag. This is a v1.x prohibition with a real argument behind it, not a vow: a major version could decide otherwise, and C4 is careful to leave that door open (the digest is a function, never a field, so nothing has been committed to the alternative). What follows is the argument, which is what should keep the door shut. Anything that wants to travel with a receipt travels **beside** it, in a separately-hashed document that references it by `receiptSha256`. This is the idiom [prov-o.md](prov-o.md) already established for exports: *wrap, never edit*.
 
 Three candidates were on the table when this was decided, and each has a home that is not the receipt:
 
@@ -58,7 +66,7 @@ Three things follow, and the third needed code.
 
 **A semantics rev stops being catastrophic.** [release-process.md](../docs/release-process.md) §4 could previously only say that revving `SEMANTICS_VERSION` invalidates every committed receipt, and therefore that a rev was blocked. Under this clause a kernel that implements both V1 and V2 replays V1 receipts under V1 semantics; the corpus keeps its V1 cases and gains V2 ones. What was an unsurvivable event becomes an ordinary support-window question.
 
-**Additive capability is a new V, not a free extension.** This is the counterintuitive half. A kernel that grows a construct the IR did not have — quantified bindings, say (C5) — cannot keep claiming V1, because a receipt produced from a pack using that construct would be stamped V1 and would *not* replay under an honest V1 kernel. The freeze does not forbid new expressive power. It prices it: one semantics version each.
+**Additive capability is a new V, not a free extension.** This is the counterintuitive half. A kernel that grows a construct the IR did not have — quantified bindings, say (C5) — cannot keep claiming V1, because a receipt produced from a pack using that construct would be stamped V1 and would *not* replay under an honest V1 kernel. This policy does not forbid new expressive power. It prices it: one semantics version each.
 
 **A kernel that meets a V it does not implement must refuse.** Not attempt and fail, and not attempt and succeed by coincidence — refuse, naming the version. Before this document nothing read `engine.version` at all: `duly_assurance.verify` re-adjudicated every receipt without ever checking whose semantics it claimed, which meant the guarantee had no mechanism. [`duly_kernel.semantics`](../kernel/duly_kernel/semantics.py) is that mechanism, and it is deliberately tiny.
 
@@ -93,7 +101,7 @@ Nothing hashes the digest into any document, and nothing may. It is a function o
 
 **Rejected:** *removing `engine.backend` from the hashed body so that backends agree byte-for-byte.* It is a one-line change that makes the appealing property true, and it costs the receipt its answer to "what evaluated this". A receipt that cannot say which implementation produced it is a worse audit record in exchange for a convenience the digest already provides.
 
-## C5. The IR freezes at one entity per type
+## C5. v1.0 holds the IR at one entity per type
 
 [rule-ir.md](rule-ir.md) open question 1 — quantified bindings, "two fees on one loan" — **is deferred past v1.0**, and v1.0 states the boundary rather than working around it.
 
@@ -102,7 +110,7 @@ The honest statement of what a v1.0 pack can say: a rule binds at most one entit
 Three reasons, in the order they mattered:
 
 1. **No committed pack needs it.** Six packs across two verticals; one workaround, documented at the site.
-2. **It is not a freeze-sized change.** [pack-verification.md](pack-verification.md) OQ6 states the real cost: quantified bindings mean quantified formulas, and the decidable fragment that keeps `prove`'s `PROVED` an actual proof would have to be re-established. That is solver design.
+2. **It is not a change this milestone could absorb.** [pack-verification.md](pack-verification.md) OQ6 states the real cost: quantified bindings mean quantified formulas, and the decidable fragment that keeps `prove`'s `PROVED` an actual proof would have to be re-established. That is solver design.
 3. **C3 makes deferral safe.** Quantified bindings arrive as a new semantics version whose kernel also implements this one. Packs written against v1.0 keep loading and deciding identically; their receipts keep replaying.
 
 The README's concern when this was sequenced was that a guide teaching the pre-quantifier binding model would have to be rewritten. It would need a paragraph, not a rewrite — and a documented limitation an adopter can check against their own domain is worth more than a silent approximation, which is a discipline this project applies to rules and should not exempt itself from.
@@ -113,7 +121,7 @@ The README's concern when this was sequenced was that a guide teaching the pre-q
 
 [grounded-facts.md](grounded-facts.md) open question 2 is **decided: yes, for `low_confidence` items.** Resolving one is, by construction, a ruling on one specific fact, and `supersedes` is the truthful record of that act.
 
-The evidence made this easier than the argument did. `review-0001` — the preserved-forever golden case, which no seed can recreate — already uses the superseding form, and its receipt's `abstentions` array is empty. The coexisting form, which leaves the below-floor fact live and therefore leaves a permanent `low_confidence` entry on every future receipt for an attribute that *was* used, is a branch no committed artifact exercises. Freezing a contract while a reachable state contradicts that contract's own definition of `abstentions` is precisely what a freeze exists to prevent.
+The evidence made this easier than the argument did. `review-0001` — the preserved-forever golden case, which no seed can recreate — already uses the superseding form, and its receipt's `abstentions` array is empty. The coexisting form, which leaves the below-floor fact live and therefore leaves a permanent `low_confidence` entry on every future receipt for an attribute that *was* used, is a branch no committed artifact exercises. Declaring a contract stable while a reachable state contradicts that contract's own definition of `abstentions` is precisely what a stability review exists to catch.
 
 Scope, deliberately narrow:
 
@@ -133,7 +141,7 @@ One cost, stated because it is real: supersession requires the store to have hel
 
 A signature inside the envelope's hashed body is circular: `contentHash` covers every field, so signing the canonical bytes and then storing the signature changes the bytes that were signed. The escape is to exclude `signatures` from the hash, and that is C2's rejected `extensions` object wearing a different hat — the hash would cover less than the document.
 
-So signatures travel as a separately-hashed sidecar keyed by the envelope's `contentHash`, exactly as receipt sidecars are keyed by `receiptSha256`. The consequence is that the frozen envelope shape needs no hole for a feature that has not been designed, and the existing claim that "adding signatures later breaks nothing" stops being a hope and becomes a mechanism.
+So signatures travel as a separately-hashed sidecar keyed by the envelope's `contentHash`, exactly as receipt sidecars are keyed by `receiptSha256`. The consequence is that the v1.0 envelope shape needs no hole for a feature that has not been designed, and the existing claim that "adding signatures later breaks nothing" stops being a hope and becomes a mechanism.
 
 **Rejected:** *reserving an optional `signatures` array now, excluded from the hash.* A field with no reader, that nothing forces to move, in a document whose value is that everything in it is covered by one hash.
 
@@ -168,6 +176,8 @@ A pack version is never changed in place ([release-process.md](../docs/release-p
 
 ## C9. How a break happens
 
+This is the clause the other eight rest on, and it is stated last only because it needs their vocabulary. **A break is available.** Every rule above can be absolute — *any schema change at all*, *never a redefinition of an existing V*, *no committed ontology version file is edited* — precisely because there is a named, affordable, visible way to make one when it is genuinely right. A contract with no break procedure is not stricter than one with a break procedure; it is a contract whose breaks happen off the record.
+
 Within `1.x`, nothing in C1's table changes. Specifically: no field is added to or removed from the fact or receipt schema, no committed ontology version file is edited, and no pack that loads stops loading.
 
 A break requires a **major version**, and with it:
@@ -178,9 +188,25 @@ A break requires a **major version**, and with it:
 
 A **Python or HTTP API** symbol is deprecated for one minor version before removal, with the replacement named in the deprecation.
 
-### What this freeze does not cover
+### An accidental break is a red check, not a discovery
 
-Stated plainly, because a freeze that quietly covers everything is not believed:
+The procedure above governs breaks somebody *chose*. The reason to believe this document at all is what happens to the ones nobody chose — and in every contract it covers, that is a named failing check rather than a reader noticing:
+
+| An unintended break in | Fails at |
+|---|---|
+| a fact's or receipt's hashed bytes | [`spec/validate.py`](validate.py), `python -m duly_assurance verify` over 351 committed receipts, the eleven canonical-form vectors in [`canonical-vectors.json`](canonical-vectors.json) |
+| the digest's determinant set (C4) | [`decision-digest-vectors.json`](decision-digest-vectors.json) and the corpus-aggregate digest in [`test_decision_digest.py`](../kernel/tests/test_decision_digest.py) |
+| what the kernel *means* (C3) | `check_replayable` refuses a foreign `engine.version` on every replay path; `impact` reports the flipped decisions |
+| the rule IR's floor (C1) | [`examples/tests/test_rulepacks.py`](../examples/tests/test_rulepacks.py) and each pack's `expected.yaml` |
+| the version-scope discipline (C8) | [`test_engine_identity.py`](../kernel/tests/test_engine_identity.py), which fails on `SEMANTICS_VERSION` being re-coupled to any package number |
+
+Two of the checks are worth their asymmetry. `verify` catches a break in the bytes without knowing what the bytes are *for*; the digest vectors catch a change to what "the same decision" means, which no byte comparison can see because it is a change to the comparison itself.
+
+**Rejected:** *promising that the contracts will never break.* It is the sentence an adopter wants and the one that costs the most to have written, in two directions at once. It cannot be kept — an evaluator bug is fixed by changing what the kernel means, and the fix is right (C3) — and it cannot be checked, so it converts an auditable engineering claim into a matter of the project's word. The version discipline is strictly stronger: it survives being wrong.
+
+### What this policy does not cover
+
+Stated plainly, because a policy that quietly covers everything is not believed:
 
 - **The four demo surfaces** and their HTTP APIs. The demo is toolkit, not a product; its routes carry their own `FastAPI(version=…)` and move independently.
 - **CLI output formats** for `prove`, `whatif`, `impact` and the conformance gate. Their *verdicts* are stable vocabulary; their rendering is not.

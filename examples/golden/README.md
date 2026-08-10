@@ -17,6 +17,8 @@ examples/golden/
 
 `pack` is a repo-relative path to a `pack.yaml`.
 
+`asOfEffective` and `asOfKnowledge` are each **a plain date or an RFC 3339 instant**, and the corpus carries both: the generator writes dates from its templates, while a review-born case copies the receipt's `asOf.effective`, which the receipt schema types `date-time` (`review-0001` reads `"2026-07-25T00:00:00Z"`). A bare date means midnight UTC — the kernel's `normalize_point` decides that, and any tool reading a case must parse these fields the same way rather than with its own `date.fromisoformat`. What-if did the latter and crashed on `review-0001` while `verify` passed over the same file; both forms are legal and neither is being deprecated.
+
 ## Case id series
 
 - **Synthetic** (`notice-*`, `trid-*`, `ron-*`, `esign-*`, `resc-*`, `rec-*`): produced by the generator. Ids are stable, sorted, and derived from the generator seed — regeneration with the same seed and templates is byte-identical. Each template is an independent seeded draw stream (`f"{seed}:{name}"`), so adding a template never disturbs another template's cases.

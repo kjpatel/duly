@@ -193,6 +193,42 @@ def _index() -> list[dict[str, Any]]:
 # So the report has two tiers, and which one you got is part of the answer.
 
 
+def _packs_named(name: str) -> list[tuple[Path, dict]]:
+    """Every pack under the content root that *declares* this `pack.name`.
+
+    Discovery, not path construction — and the distinction is the whole
+    function. `rulepacks/<directory>/pack.yaml` and the `pack.name` inside that
+    file are two different strings, and nothing in this repository requires
+    them to match: not the kernel, not the receipt (which records the declared
+    name and never the path), not the pack schema. Only duly's own six packs
+    happen to agree, which is exactly the condition under which an assumption
+    survives every test.
+
+    Resolving by joining the receipt's name into a path therefore answered
+    "unavailable" for any adopter whose directory is named anything else —
+    silently, as `replay: unavailable`, which reads like a missing pack rather
+    than like a lookup that was never going to succeed. Reading each pack's own
+    declaration is the same discovery the rule studio does (`_known_slugs`) and
+    costs a handful of small YAML parses per request.
+
+    Not cached, deliberately: `_INDEX` above caches an immutable corpus, but a
+    pack file is the one thing here someone edits mid-session.
+    """
+    found: list[tuple[Path, dict]] = []
+    if not RULEPACKS_DIR.is_dir():
+        return found
+    for path in sorted(RULEPACKS_DIR.glob("*/pack.yaml")):
+        try:
+            pack = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue  # an unreadable neighbour is not this receipt's problem
+        if not isinstance(pack, dict):
+            continue
+        if str(((pack.get("pack") or {}).get("name") or "")) == name:
+            found.append((path, pack))
+    return found
+
+
 def _resolve_pack(receipt: dict) -> tuple[dict | None, dict[str, Any]]:
     """The pack this receipt was produced by, if the working tree still has
     that exact version.
@@ -206,42 +242,51 @@ def _resolve_pack(receipt: dict) -> tuple[dict | None, dict[str, Any]]:
     if not name:
         return None, {"state": "unavailable", "reason": "receipt names no rule pack"}
 
-    # `name` is caller data — a pasted receipt can carry anything — and it is
-    # about to become a path. A pack name is a directory name, so anything that
-    # is not one cannot be a pack in this working tree either.
+    # `name` is caller data — a pasted receipt can carry anything. Nothing below
+    # joins it into a path any more, so this is no longer the traversal guard it
+    # once was; it stays because a string that cannot be a pack name cannot name
+    # a pack, and saying so is a better answer than an empty search. Keeping it
+    # also keeps the invariant cheap to re-check if a future caller does build a
+    # path from this value.
     if not _PACK_NAME.fullmatch(str(name)):
         return None, {
             "state": "unavailable",
             "reason": f"{name!r} is not a rule-pack name, so no pack was looked up",
         }
 
-    path = RULEPACKS_DIR / str(name) / "pack.yaml"
-    if not path.is_file():
+    candidates = _packs_named(str(name))
+    if not candidates:
         return None, {
             "state": "unavailable",
-            "reason": f"no pack at rulepacks/{name}/pack.yaml",
+            "reason": f"no pack named {name!r} under rulepacks/",
         }
-    try:
-        pack = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as exc:
-        return None, {"state": "unavailable", "reason": f"pack unreadable: {exc}"}
 
-    on_disk = str(((pack or {}).get("pack") or {}).get("version", ""))
-    if on_disk != str(version):
-        return None, {
-            "state": "moved",
-            "reason": (
-                f"rulepacks/{name}/pack.yaml is now v{on_disk}; this receipt "
-                f"was produced by v{version}. Rule text is not shown from a "
-                f"different version."
-            ),
-            "receiptVersion": str(version),
-            "workingTreeVersion": on_disk,
-        }
-    return pack, {
-        "state": "resolved",
-        "source": f"rulepacks/{name}/pack.yaml",
-        "version": on_disk,
+    for path, pack in candidates:
+        on_disk = str(((pack.get("pack") or {}).get("version", "")))
+        if on_disk == str(version):
+            return pack, {
+                "state": "resolved",
+                "source": f"rulepacks/{path.parent.name}/pack.yaml",
+                "version": on_disk,
+            }
+
+    # Named, but at no version this receipt was produced by. Report every
+    # version carrying the name rather than the first: two directories can
+    # declare one pack at two versions, and naming only one of them would make
+    # the answer depend on directory order.
+    path, pack = candidates[0]
+    on_disk = ", ".join(
+        str(((p.get("pack") or {}).get("version", ""))) for _, p in candidates
+    )
+    return None, {
+        "state": "moved",
+        "reason": (
+            f"rulepacks/{path.parent.name}/pack.yaml is now v{on_disk}; this "
+            f"receipt was produced by v{version}. Rule text is not shown from "
+            f"a different version."
+        ),
+        "receiptVersion": str(version),
+        "workingTreeVersion": on_disk,
     }
 
 

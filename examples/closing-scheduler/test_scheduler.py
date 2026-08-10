@@ -176,7 +176,7 @@ def test_moving_the_rule_moves_the_plan(planned):
     exists to prevent. The scheduler is not edited; only the pack is.
     """
     closing, _plan, _windows, _probe = planned
-    pack_path = "rulepacks/tila-rescission-us-federal/pack.yaml"
+    pack_path = "examples/rulepacks/tila-rescission-us-federal/pack.yaml"
     pack = yaml.safe_load((REPO_ROOT / pack_path).read_text(encoding="utf-8"))
     perturbed = copy.deepcopy(pack)
     rule = next(r for r in perturbed["rules"] if r["id"] == "RESC-DL-01")
@@ -233,7 +233,7 @@ def test_every_minted_fact_passes_the_ontology_conformance_gate(planned):
     from duly_conformance.registry import load_repo_registry
 
     closing, _plan, _windows, _probe = planned
-    registry = load_repo_registry(REPO_ROOT / "ontologies")
+    registry = load_repo_registry(REPO_ROOT / "examples" / "ontologies")
     facts = S.facts_for(closing, "2026-02-17")
     assert len(facts) == len(closing["known"]) + 3
     for fact in facts:
@@ -332,7 +332,7 @@ def test_the_funding_boundary_agrees_with_what_if(planned):
 
     closing, _plan, _windows, _probe = planned
     pack = yaml.safe_load(
-        (REPO_ROOT / "rulepacks/tila-rescission-us-federal/pack.yaml").read_text(encoding="utf-8")
+        (REPO_ROOT / "examples/rulepacks/tila-rescission-us-federal/pack.yaml").read_text(encoding="utf-8")
     )
     report = solve(
         Query(
@@ -345,7 +345,7 @@ def test_the_funding_boundary_agrees_with_what_if(planned):
             target={"kind": "boolean", "value": True},
             extremal="min",
         ),
-        load_repo_registry(REPO_ROOT / "ontologies"),
+        load_repo_registry(REPO_ROOT / "examples" / "ontologies"),
     )
     assert report.verdict == SATISFIABLE
     assert report.extremal is not None

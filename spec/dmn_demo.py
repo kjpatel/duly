@@ -34,10 +34,10 @@ from duly_dmn import DmnCompileError, compile_file
 from duly_kernel.api import adjudicate
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DMN = ROOT / "dmn/examples/trid-fee-tolerance.dmn"
-HAND_WRITTEN = ROOT / "rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
-FACTS_DIR = ROOT / "starters/trid/facts"
-REFUSALS = ROOT / "dmn/examples/refusals"
+DMN = ROOT / "examples/dmn/trid-fee-tolerance.dmn"
+HAND_WRITTEN = ROOT / "examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
+FACTS_DIR = ROOT / "examples/starters/trid/facts"
+REFUSALS = ROOT / "examples/dmn/refusals"
 
 AS_OF = "2026-03-15"
 QUESTION = "trid:toleranceCureAmount"
@@ -142,7 +142,7 @@ def main() -> int:
     # it: a money column tested against a bare number is the only defect DMN
     # cannot self-diagnose from the document alone.
     kinds: dict[str, str] = {}
-    for ontology in load_repo_registry(ROOT / "ontologies"):
+    for ontology in load_repo_registry(ROOT / "examples" / "ontologies"):
         for klass in ontology.classes.values():
             for slot in klass.slots.values():
                 kinds[slot.curie] = slot.kind

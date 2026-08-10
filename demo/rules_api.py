@@ -925,7 +925,8 @@ def api_download_bundle(slug: str) -> Response:
         attribute = str(decisions[0].get("attribute") or "")
     expected = (
         "# Declared adjudication outcomes — this pack's own test suite.\n"
-        "# Run by kernel/tests/test_rulepacks.py, which globs rulepacks/*/expected.yaml.\n"
+        "# Run by examples/tests/test_rulepacks.py while the example content exists;\n"
+        "# an adopter runs them with `python -m duly_kernel` or the studio.\n"
         "# Cover every rule, every defeat chain, and both sides of each effective-date\n"
         "# boundary. `factsFrom` points at a starter's facts or at fixtures/.\n"
         "cases: []\n"
@@ -1002,7 +1003,7 @@ def _reasoning(receipt: dict[str, Any] | None) -> list[dict[str, Any]]:
 @router.post("/packs/{slug}/test/expected")
 def api_test_expected(slug: str) -> dict[str, Any]:
     """Run the pack's declared `expected.yaml` cases against the effective
-    pack — the same assertions `kernel/tests/test_rulepacks.py` makes, minus
+    pack — the same assertions `examples/tests/test_rulepacks.py` makes, minus
     pytest, so an author sees them fail while editing rather than at commit."""
     slug = _slug_ok(slug)
     pack = _parse_yaml(_effective_yaml(slug))

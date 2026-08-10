@@ -133,7 +133,7 @@ def build_content_root(root: Path) -> Path:
     # discovers them by. One table that compiles and one that is refused: the
     # refusal is the more important of the two, because "a refusal is a result,
     # not a 500" is the claim the panel exists to make.
-    shutil.copytree(FIXTURES / "dmn", root / "dmn" / "examples")
+    shutil.copytree(FIXTURES / "dmn", root / "dmn")
 
     # The scenario, under the name the demo discovers starters by. Its
     # `rulePack` is repo-relative (`fixtures/pack.yaml`) in the committed

@@ -104,7 +104,7 @@ Receipts are content-addressed the same way facts are (`receiptSha256`, JCS cano
 ## Relationship to standards
 
 - **PROV-O** — a JSON-LD context mapping facts and receipts onto `prov:Entity` / `prov:Activity` / `prov:wasQuotedFrom` and friends is specified in [prov-o.md](prov-o.md) and shipped in [contexts/](contexts/). The mapping is deliberately partial, not lossless: bitemporal effective time, confidence, and abstentions have no faithful PROV equivalent and stay in the `duly:` namespace (prov-o.md, P8).
-- **SHACL / LinkML** — the ontology conformance gate at the ingestion seam, specified in [ontology-conformance.md](ontology-conformance.md) and shipped in `conformance/duly_conformance` with sample artifacts in `ontologies/`. LinkML is the source language — one definition yields SHACL (via LinkML's generator, exercised in marker-gated tests) while the enforcing validator interprets a documented pure-Python subset.
+- **SHACL / LinkML** — the ontology conformance gate at the ingestion seam, specified in [ontology-conformance.md](ontology-conformance.md) and shipped in `conformance/duly_conformance` with sample artifacts in `examples/ontologies/`. LinkML is the source language — one definition yields SHACL (via LinkML's generator, exercised in marker-gated tests) while the enforcing validator interprets a documented pure-Python subset.
 - **DMN** — a compliance-editable authoring surface that compiles to the same rule IR; receipts are identical regardless of authoring surface.
 
 ## Resolved questions

@@ -15,13 +15,7 @@ from duly_extraction.adapter import (
 )
 from duly_extraction.stub import StubAdapter
 
-from extractiontest_helpers import (
-    STARTER_RUNS,
-    STARTERS,
-    load_fixture_fact,
-    run_fixture_stub,
-    run_stub,
-)
+from extractiontest_helpers import load_fixture_fact, run_fixture_stub
 
 
 # --- interface conformance ---------------------------------------------------
@@ -198,25 +192,3 @@ def test_locate_quote_normalized_ambiguous():
 def test_locate_quote_not_found():
     assert locate_quote("nothing here", "absent", allow_normalized=True) is None
     assert locate_quote("nothing here", "   ", allow_normalized=True) is None
-
-
-# --- EXAMPLE CONTENT (moves with examples/) ----------------------------------
-#
-# The subject of the test below IS the committed starter content: that the
-# facts shipped under `starters/` are still exactly what the adapter emits from
-# the starter targets. It asserts nothing about the toolkit that the fixture
-# twin above does not already assert, so it travels with `starters/` rather
-# than being converted.
-
-@pytest.mark.parametrize("targets_name", sorted(STARTER_RUNS))
-def test_stub_reproduces_committed_facts(targets_name):
-    result, targets, _text = run_stub(targets_name)
-    scenario, _doc = STARTER_RUNS[targets_name]
-    assert len(result.facts) == len(targets["facts"])
-    for target, fact in zip(targets["facts"], result.facts):
-        committed_path = STARTERS / scenario / "facts" / target["file"]
-        # Byte-for-byte, including key order — the same serialization
-        # starters/tools/extract.py writes.
-        assert json.dumps(fact, indent=2, ensure_ascii=False) + "\n" == committed_path.read_text(
-            encoding="utf-8"
-        )

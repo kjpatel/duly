@@ -104,7 +104,7 @@ To replay this decision:
 ```
 uv run python -m duly_kernel \
     --facts <directory of the facts pinned in inputFacts> \
-    --pack rulepacks/termination-notice-us-states/pack.yaml \
+    --pack examples/rulepacks/termination-notice-us-states/pack.yaml \
     --asof 2026-07-25T00:00:00Z \
     --asof-knowledge 2026-07-25T23:59:59Z \
     --question nc:noticeCompliant

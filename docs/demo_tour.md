@@ -68,15 +68,15 @@ Click **Review & correct**. The inline form is prefilled with the machine's valu
 
 ### 9c. Export the regression case
 
-A **Corrections applied** panel now records the resolution. **Export as golden case** downloads a zip in the golden corpus layout — `cases/review-NNNN/` with `case.yaml` and the post-correction fact set (a store projection at the resolution's knowledge time), plus `receipts/review-NNNN.json`, freshly adjudicated. Unzip it into `golden/` and `uv run python -m duly_assurance verify` replays it byte-for-byte. The demo never writes into the repository itself; committing the case is deliberately a human act. One resolved item also yields one labeled calibration pair — the panel says how to export such labels (`python -m duly_review pairs`) and points at the calibration module, with the censored-sample caveat attached.
+A **Corrections applied** panel now records the resolution. **Export as golden case** downloads a zip in the golden corpus layout — `cases/review-NNNN/` with `case.yaml` and the post-correction fact set (a store projection at the resolution's knowledge time), plus `receipts/review-NNNN.json`, freshly adjudicated. Unzip it into `examples/golden/` and `uv run python -m duly_assurance verify` replays it byte-for-byte. The demo never writes into the repository itself; committing the case is deliberately a human act. One resolved item also yields one labeled calibration pair — the panel says how to export such labels (`python -m duly_review pairs`) and points at the calibration module, with the censored-sample caveat attached.
 
-The committed [review-0001](../golden/cases/review-0001) golden case is this exact arc, frozen at the API level.
+The committed [review-0001](../examples/golden/cases/review-0001) golden case is this exact arc, frozen at the API level.
 
 ## 10. The rule studio
 
 Everything so far asked *what did the rules decide about this document*. Click **Rule studio** in the header (or open <http://localhost:8788/rules>) to ask the two questions that come next: *what do the rules say*, and *what happens if I change them*.
 
-The left rail lists the six packs discovered under `rulepacks/`, each with its rule count, how many outcomes it declares, and how many committed golden receipts cite it. Pick **termination-notice-us-states** — 226 of the 351 golden receipts are its.
+The left rail lists the six packs discovered under `examples/rulepacks/`, each with its rule count, how many outcomes it declares, and how many committed golden receipts cite it. Pick **termination-notice-us-states** — 226 of the 351 golden receipts are its.
 
 ### 10a. Read the rules as a decision table
 
@@ -93,7 +93,7 @@ This grid is a *view of the rule IR*, not a DMN document: `duly_dmn` compiles DM
 Click into `NY-NR-45`'s conclusion cell and change `45` to `60`. The **Rules** tab has the same edit as a form (with citation, version, effective window and bindings); the **pack.yaml** tab has it as text. Whichever you use, the right-hand **Verify** rail is the point:
 
 - **Validation** re-runs the kernel's own `validate_pack` on every keystroke-commit. An invalid draft is kept and reported, not discarded — an author mid-edit has an invalid pack most of the time.
-- **Declared cases** runs the pack's `expected.yaml` — the same assertions `kernel/tests/test_rulepacks.py` makes. All four still pass.
+- **Declared cases** runs the pack's `expected.yaml` — the same assertions `examples/tests/test_rulepacks.py` makes. All four still pass.
 - **Try a case** adjudicates one case by hand: pick a fact set, change an input value, watch the verdict, the rules fired and the defeat chain move. It also tells you whether your draft changed *this* case relative to the committed pack.
 - **Golden impact** re-adjudicates all 351 committed cases with your draft swapped in: **1 of 351 decisions flip**, `notice-ny-0048`, true → false.
 - **Static verification** (needs `uv sync --extra prove`) proves the same-priority rules disjoint, names the input regions no rule covers, and — the one that matters while editing — proves whether your draft and the committed pack decide alike. They do not, and it hands you the exact input where they part: `governingState = "US-NY"`, `noticeType = "Nonrenewal"`, committed 45, draft 60.
@@ -104,7 +104,7 @@ Stop on the two lines that disagree. **Every declared case passes, and the corpu
 
 The **Diff** section shows the change twice. The first diff normalises both sides through the pack emitter, so a one-value edit is a two-line diff. The second — behind *Show the file diff* — is what `git` would see, and for a structured edit that includes every YAML comment the re-emission drops. The comments in these packs are not decoration (`DEMO-SYNTHETIC`, `TODO(verify)`, the `MODELING BOUNDARY` header in the TILA pack), so their loss is shown rather than hidden. Editing on the **pack.yaml** tab is the lossless path.
 
-**Export** downloads `pack.yaml`, or a `rulepacks/<name>/` bundle with an `expected.yaml` skeleton and a NEXT-STEPS note. The studio never writes into `rulepacks/` — same rule as the golden-case export in step 9c, for the same reason: committing an artifact into the repository is a human act, made through a diff a human read.
+**Export** downloads `pack.yaml`, or a `rulepacks/<name>/` bundle with an `expected.yaml` skeleton and a NEXT-STEPS note. The studio never writes into `examples/rulepacks/` — same rule as the golden-case export in step 9c, for the same reason: committing an artifact into the repository is a human act, made through a diff a human read.
 
 ### 10d. Compile a decision table
 
@@ -114,7 +114,7 @@ Then click one of the red examples. Each is a minimal document that breaks one w
 
 ### 10e. Start a pack from nothing
 
-**New pack** drafts a skeleton that already obeys the conventions new packs most often miss: an `idPrefix`, a convention-shaped rule id, an explicit `TODO(verify)` where the citation belongs, and decision phrasing so a non-boolean answer never renders as a raw CURIE. Its Verify rail is honest about what it cannot yet do — no declared cases, and no golden case exercises it, so impact analysis literally cannot see it. That is the "0 of 351 decisions flip, forever" trap from [rulepacks/README.md](../rulepacks/README.md), said out loud before you fall into it.
+**New pack** drafts a skeleton that already obeys the conventions new packs most often miss: an `idPrefix`, a convention-shaped rule id, an explicit `TODO(verify)` where the citation belongs, and decision phrasing so a non-boolean answer never renders as a raw CURIE. Its Verify rail is honest about what it cannot yet do — no declared cases, and no golden case exercises it, so impact analysis literally cannot see it. That is the "0 of 351 decisions flip, forever" trap from [examples/rulepacks/README.md](../examples/rulepacks/README.md), said out loud before you fall into it.
 
 ## 11. The evidence browser
 
@@ -168,15 +168,15 @@ The right rail ran three checks before the report appeared, and reports them sep
 - **Input facts** — every fact the receipt pinned is present, and each one hashes to the content hash in its own id.
 - **Replay** — re-run `duly_kernel.api.adjudicate` over those facts, that pack version and the receipt's own asOf pair, and compare byte-for-byte. This is `python -m duly_assurance verify` narrowed to one receipt.
 
-Now **Paste a receipt**, drop in `golden/receipts/notice-ny-0001.json`, and edit one character of the verdict before verifying. The hash check fails: the document has been altered. That is the easy forgery.
+Now **Paste a receipt**, drop in `examples/golden/receipts/notice-ny-0001.json`, and edit one character of the verdict before verifying. The hash check fails: the document has been altered. That is the easy forgery.
 
-The instructive one takes a second step. Flip the verdict *and* recompute `receiptSha256` so the document is internally consistent again, paste it with the genuine facts from `golden/cases/notice-ny-0001/facts/`, and watch what happens: **receipt hash passes, facts pass, replay fails.** The report reads "Compliant" in full sentences with real citations and real quoted evidence, and it is a lie — because the rules, run again, do not produce it. A hash proves a document has not changed since someone sealed it. Only re-running the rules proves the seal was ever honest. That gap is the whole reason verification is three checks and not one.
+The instructive one takes a second step. Flip the verdict *and* recompute `receiptSha256` so the document is internally consistent again, paste it with the genuine facts from `examples/golden/cases/notice-ny-0001/facts/`, and watch what happens: **receipt hash passes, facts pass, replay fails.** The report reads "Compliant" in full sentences with real citations and real quoted evidence, and it is a lie — because the rules, run again, do not produce it. A hash proves a document has not changed since someone sealed it. Only re-running the rules proves the seal was ever honest. That gap is the whole reason verification is three checks and not one.
 
 ### 12c. What it refuses to guess
 
 Paste a receipt with no facts alongside it. The hash still verifies; the evidence and replay checks report **not checked** and say why — a receipt pins its facts by content hash, so it genuinely cannot reproduce them, and a viewer that quietly rendered a thinner report would be claiming completeness it does not have. **Rendered against** at the bottom of the rail always names what the report was built from.
 
-The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to the file now at `rulepacks/<name>/pack.yaml`: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
+The sharpest case is a pack whose version has moved since the receipt was written. The viewer does not fall back to the file now at `examples/rulepacks/<name>/pack.yaml`: rule descriptions out of a different version would read as the text these rules carried, which they never did. It reports `pack-moved` with both versions and omits what it cannot source.
 
 One consequence worth knowing if you build on the API: `/api/receipts/inspect` takes raw JSON **text**, not objects. JavaScript has a single number type, so a fact's `"score": 1.0` survives a browser round trip as `1` — a different canonical body, a different content hash, and every genuine fact reported as tampered with. Content addressing is over bytes, so the bytes are what travel and Python does the only parse.
 
@@ -186,8 +186,8 @@ The same adjudication with no UI at all:
 
 ```bash
 uv run python -m duly_kernel \
-  --facts starters/notice-ny/facts \
-  --pack rulepacks/termination-notice-us-states/pack.yaml \
+  --facts examples/starters/notice-ny/facts \
+  --pack examples/rulepacks/termination-notice-us-states/pack.yaml \
   --asof 2026-07-25 \
   --question nc:noticeCompliant
 ```

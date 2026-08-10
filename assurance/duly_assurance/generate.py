@@ -72,12 +72,12 @@ from duly_core import content_hash as _content_hash, load_schema
 GENERATOR_NAME = "duly-golden-generator"
 GENERATOR_VERSION = "0.1.0"
 
-NOTICE_PACK = "rulepacks/termination-notice-us-states/pack.yaml"
-TRID_PACK = "rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
-RON_PACK = "rulepacks/notarization-ron-us-states/pack.yaml"
-ESIGN_PACK = "rulepacks/esign-closing-package/pack.yaml"
-RESC_PACK = "rulepacks/tila-rescission-us-federal/pack.yaml"
-RECORDING_PACK = "rulepacks/county-recording-us/pack.yaml"
+NOTICE_PACK = "examples/rulepacks/termination-notice-us-states/pack.yaml"
+TRID_PACK = "examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
+RON_PACK = "examples/rulepacks/notarization-ron-us-states/pack.yaml"
+ESIGN_PACK = "examples/rulepacks/esign-closing-package/pack.yaml"
+RESC_PACK = "examples/rulepacks/tila-rescission-us-federal/pack.yaml"
+RECORDING_PACK = "examples/rulepacks/county-recording-us/pack.yaml"
 
 # Synthetic policy expiration dates span this window (2025-2026) so that
 # mailed dates (= asOf.effective) land on both sides of the pack's
@@ -229,7 +229,7 @@ ESIGN_STRATA: tuple[dict, ...] = (
 # Consummation dates (all 2026, all weekdays, none itself a federal holiday)
 # grouped by what the three-business-day rescission window that FOLLOWS the
 # latest trigger contains under 12 CFR 1026.2(a)(6). Every date is verified by
-# assurance/tests/test_generate.py against add_business_days(), so a wrong
+# examples/tests/test_generate.py against add_business_days(), so a wrong
 # entry fails the suite rather than quietly weakening the corpus:
 #   both     — a Sunday AND a 5 U.S.C. 6103(a) holiday: 5 calendar days
 #   sunday   — a Sunday only: 4 calendar days (Saturday counts!)
@@ -947,7 +947,7 @@ def build_resc_facts(
     The business-day arithmetic in this module (add_business_days /
     federal_holidays) stays deliberately independent of the kernel's: it
     seeds the draws and cross-checks the pack's embedded calendar in
-    assurance/tests/test_generate.py.
+    examples/tests/test_generate.py.
     """
     ts = f"{consummation.isoformat()}T12:00:00Z"
     case_ref = f"case:golden:{case_id}"
@@ -1356,7 +1356,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m duly_assurance generate",
         description="Generate the golden corpus (deterministic; see golden/README.md).",
     )
-    parser.add_argument("--out", default="golden", help="output directory (default: golden)")
+    parser.add_argument("--out", default="examples/golden", help="output directory (default: examples/golden)")
     parser.add_argument("--count", type=int, default=350, help="total cases across templates")
     parser.add_argument("--seed", type=int, default=7, help="generator seed")
     parser.add_argument(

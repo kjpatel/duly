@@ -4,7 +4,7 @@
 
 The promise a decision table makes is that a **business analyst can read the rulebase**. The promise duly makes is that **every decision is defensible**. This compiler exists at the seam, and where the two promises pull apart it sides with the second one — loudly, in the author's face, at compile time. A DMN table that would compile into a rule duly cannot justify is a compile error, not a warning and not a best effort.
 
-Runnable demonstration: [`dmn_demo.py`](dmn_demo.py) compiles [`dmn/examples/trid-fee-tolerance.dmn`](../dmn/examples/trid-fee-tolerance.dmn) and adjudicates the committed TRID starter facts twice — once under the compiled pack, once under the hand-written [`rulepacks/trid-fee-tolerance-us-federal`](../rulepacks/trid-fee-tolerance-us-federal/pack.yaml) — showing the same decision, the same rules fired, and the same defeat chain.
+Runnable demonstration: [`dmn_demo.py`](dmn_demo.py) compiles [`examples/dmn/trid-fee-tolerance.dmn`](../examples/dmn/trid-fee-tolerance.dmn) and adjudicates the committed TRID starter facts twice — once under the compiled pack, once under the hand-written [`examples/rulepacks/trid-fee-tolerance-us-federal`](../examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml) — showing the same decision, the same rules fired, and the same defeat chain.
 
 As with the fact contract and the conformance gate, everything below is a design decision with its rationale and the alternative that was rejected.
 
@@ -101,7 +101,7 @@ Columns whose name does not start with `duly:` are free-form and ignored — a `
 
 **Why `duly:ruleId` is required rather than derived.** A rule id is the handle every receipt cites, forever. Deriving it from row position (`TABLE-03`) would mean that inserting a row above it silently re-labels history: the same legal rule acquires a new id, or worse, an old id starts naming a different rule. Nothing in the audit chain would show it. So the id is authored — the one piece of DMN-side bookkeeping this compiler makes mandatory.
 
-**Why an uncited row is an error and not an auto-`TODO(verify)`.** The repo's honesty convention (rulepacks/README.md) allows an unverified rule *provided it says what was not confirmed*. That marker is a human act: somebody looked, failed to confirm, and recorded it. A compiler writing `TODO(verify)` on an author's behalf produces a marker indistinguishable from a considered one, which degrades every genuine marker in the corpus. The same argument covers `duly:effectiveFrom`: defaulting to `1900-01-01` would be a claim about legal history nobody made.
+**Why an uncited row is an error and not an auto-`TODO(verify)`.** The repo's honesty convention (examples/rulepacks/README.md) allows an unverified rule *provided it says what was not confirmed*. That marker is a human act: somebody looked, failed to confirm, and recorded it. A compiler writing `TODO(verify)` on an author's behalf produces a marker indistinguishable from a considered one, which degrades every genuine marker in the corpus. The same argument covers `duly:effectiveFrom`: defaulting to `1900-01-01` would be a claim about legal history nobody made.
 
 A genuine presumption is still expressible — write `Default presumption` in the citation column, exactly as the hand-written packs do. The compiler requires an author to *say* it.
 
@@ -199,19 +199,19 @@ DMN namespaces accepted: 1.3 (`…/20191111/MODEL/`), 1.4 (`…/20211108/MODEL/`
 
 ## Refusal classes
 
-Every refusal carries a machine-readable class and a location. One minimal example per class is committed under [`dmn/examples/refusals/`](../dmn/examples/refusals/) and exercised by [`dmn/tests/test_refusals.py`](../dmn/tests/test_refusals.py), which asserts the message names the actual problem — not merely that something was raised. Every class additionally has example-independent unit coverage in `dmn/tests/test_compile.py` (synthetic tables built in-code, plus the toolkit's own committed refusal at `fixtures/dmn/refusals/`), so the refusal contract stays tested when the teaching examples relocate under `examples/`.
+Every refusal carries a machine-readable class and a location. One minimal example per class is committed under [`examples/dmn/refusals/`](../examples/dmn/refusals/) and exercised by [`examples/tests/test_refusals.py`](../examples/tests/test_refusals.py), which asserts the message names the actual problem — not merely that something was raised. Every class additionally has example-independent unit coverage in `dmn/tests/test_compile.py` (synthetic tables built in-code, plus the toolkit's own committed refusal at `fixtures/dmn/refusals/`), so the refusal contract stays tested when the teaching examples relocate under `examples/`.
 
 | Class | Raised when | Example |
 |---|---|---|
 | `unsupported-dmn-version` | the `definitions` namespace is not DMN 1.3–1.5 | — |
 | `malformed-document` | no `decision`, no `decisionTable`, missing `duly:pack`/`duly:decision`, unknown `duly:*` annotation, duplicate rule id, or a compiled pack the kernel rejects | — |
-| `unsupported-hit-policy` | `ANY`/`COLLECT`/`RULE ORDER`/`OUTPUT ORDER`, or `PRIORITY` with `outputValues` | [`unsupported-hit-policy.dmn`](../dmn/examples/refusals/unsupported-hit-policy.dmn) |
-| `unsupported-expression` | a cell outside S-FEEL, or a literal whose type contradicts the declared `valueKind`, or (given value kinds) a bare number tested against a `money` column | [`non-sfeel-cell.dmn`](../dmn/examples/refusals/non-sfeel-cell.dmn), [`money-vs-number.dmn`](../dmn/examples/refusals/money-vs-number.dmn) |
-| `missing-citation` | a row with no `duly:citation` | [`uncited-row.dmn`](../dmn/examples/refusals/uncited-row.dmn) |
-| `missing-effective-date` | a row with no `duly:effectiveFrom`, or a non-ISO date | [`undated-row.dmn`](../dmn/examples/refusals/undated-row.dmn) |
+| `unsupported-hit-policy` | `ANY`/`COLLECT`/`RULE ORDER`/`OUTPUT ORDER`, or `PRIORITY` with `outputValues` | [`unsupported-hit-policy.dmn`](../examples/dmn/refusals/unsupported-hit-policy.dmn) |
+| `unsupported-expression` | a cell outside S-FEEL, or a literal whose type contradicts the declared `valueKind`, or (given value kinds) a bare number tested against a `money` column | [`non-sfeel-cell.dmn`](../examples/dmn/refusals/non-sfeel-cell.dmn), [`money-vs-number.dmn`](../examples/dmn/refusals/money-vs-number.dmn) |
+| `missing-citation` | a row with no `duly:citation` | [`uncited-row.dmn`](../examples/dmn/refusals/uncited-row.dmn) |
+| `missing-effective-date` | a row with no `duly:effectiveFrom`, or a non-ISO date | [`undated-row.dmn`](../examples/dmn/refusals/undated-row.dmn) |
 | `missing-rule-id` | a row with no `duly:ruleId` | — |
-| `unprovable-unique` | `UNIQUE` rows whose disjointness the kernel cannot prove | [`unprovable-unique.dmn`](../dmn/examples/refusals/unprovable-unique.dmn) |
-| `unsupported-table-shape` | more or fewer than one output column, or a table with no rows | [`multiple-outputs.dmn`](../dmn/examples/refusals/multiple-outputs.dmn) |
+| `unprovable-unique` | `UNIQUE` rows whose disjointness the kernel cannot prove | [`unprovable-unique.dmn`](../examples/dmn/refusals/unprovable-unique.dmn) |
+| `unsupported-table-shape` | more or fewer than one output column, or a table with no rows | [`multiple-outputs.dmn`](../examples/dmn/refusals/multiple-outputs.dmn) |
 | `binding-error` | a column label that is not a duly identifier, is reserved, collides with the entity variable, or duplicates another column | — |
 
 **One refusal needs help, and it is the only one that does.** Every class above is raised from the DMN document alone. A bare number tested against a money column is not: `> 200` on `trid:actualAmountAtClosing` is valid S-FEEL, renders to valid duly source (`actual > 200`), and produces a pack `validate_pack` **accepts**, because the rule IR does not type-check expressions at load time. It fails at adjudication, on the first real fact, with `cannot compare money with decimal` — silent until production, which is the failure mode this compiler exists to avoid.
@@ -222,12 +222,12 @@ The fix is never to quote the amount: duly has no money literal on purpose ([rul
 
 ## Equivalence, exactly
 
-[`dmn/examples/trid-fee-tolerance.dmn`](../dmn/examples/trid-fee-tolerance.dmn) is the three rules of [`rulepacks/trid-fee-tolerance-us-federal/pack.yaml`](../rulepacks/trid-fee-tolerance-us-federal/pack.yaml) re-authored as two decision tables. [`dmn/tests/test_equivalence.py`](../dmn/tests/test_equivalence.py) adjudicates the committed [`starters/trid/facts`](../starters/trid/facts) with both packs and asserts they agree on:
+[`examples/dmn/trid-fee-tolerance.dmn`](../examples/dmn/trid-fee-tolerance.dmn) is the three rules of [`examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml`](../examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml) re-authored as two decision tables. [`examples/tests/test_equivalence.py`](../examples/tests/test_equivalence.py) adjudicates the committed [`examples/starters/trid/facts`](../examples/starters/trid/facts) with both packs and asserts they agree on:
 
 - the decision value,
 - `rulesFired` — the ids, **their order on the receipt**, each rule's citation and effective window, and each rule's `defeated` list,
 - `inputFacts` — id and content hash,
-- the pack's own [`expected.yaml`](../rulepacks/trid-fee-tolerance-us-federal/expected.yaml) cases, run against the compiled pack,
+- the pack's own [`expected.yaml`](../examples/rulepacks/trid-fee-tolerance-us-federal/expected.yaml) cases, run against the compiled pack,
 - and the off-effective-date behaviour: on 2015-10-02 both packs raise the *same* `AdjudicationError`.
 
 The two receipts differ in exactly two places, and the test asserts the difference as precisely as it asserts the agreement:
@@ -256,7 +256,7 @@ Two things above remain true. The suite is still fixture-bounded, so a compiler 
 - **Calendar arithmetic.** `add_business_days` needs a pack-level `calendars:` block (rule-ir.md, "Calendars") and a quoted calendar name. A decision table has nowhere to put a holiday list, and a cell that invoked a calendar function would reference a calendar the DMN cannot declare. A pack needing business-day arithmetic is hand-written today.
 - **Abstention policy.** `abstentionPolicy` is pack-level, versioned, and changes receipts. No DMN element corresponds to it and inventing one would put a floor in a table where nobody would look for it.
 - **Multi-entity rules.** rule-ir.md open question 1. DMN's `COLLECT` and `every`/`some` are exactly what an author reaches for here, and all three are refused for the same underlying reason.
-- **Wire the compiled pack into the demo, the golden corpus, or `rulepacks/`.** [`dmn/examples/trid-fee-tolerance.pack.yaml`](../dmn/examples/trid-fee-tolerance.pack.yaml) is a committed build artifact proving the compiler works, not a seventh rule pack. It duplicates rules that already ship; adding it to `rulepacks/` would double-count them in every corpus and impact number. An adopter compiling their own DMN writes it to `rulepacks/<name>/pack.yaml` and follows [rulepacks/README.md](../rulepacks/README.md) from step 2 — `expected.yaml` and a generator template are still theirs to write, and `python -m duly_dmn verify` is what keeps the committed pack and its `.dmn` from drifting apart.
+- **Wire the compiled pack into the demo, the golden corpus, or `examples/rulepacks/`.** [`examples/dmn/trid-fee-tolerance.pack.yaml`](../examples/dmn/trid-fee-tolerance.pack.yaml) is a committed build artifact proving the compiler works, not a seventh rule pack. It duplicates rules that already ship; adding it to `examples/rulepacks/` would double-count them in every corpus and impact number. An adopter compiling their own DMN writes it to their own `<name>/pack.yaml` and follows [examples/rulepacks/README.md](../examples/rulepacks/README.md) from step 2 — `expected.yaml` and a generator template are still theirs to write, and `python -m duly_dmn verify` is what keeps the committed pack and its `.dmn` from drifting apart.
 
 ## Open questions (v0)
 

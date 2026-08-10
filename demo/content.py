@@ -30,6 +30,14 @@ __all__ = ["ContentRoots", "CONTENT", "REPO_ROOT"]
 # This repository, as a default. Not "the content" — the default value of it.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Where this repository keeps its own teaching content. The *contract* for a
+# content root did not move when the content did: a deployment's root still
+# holds `starters/`, `golden/`, `rulepacks/`, `ontologies/`, `dmn/` directly —
+# nobody adopting duly should have to mirror this repository's `examples/`
+# nesting. What changed is only which directory this repo offers as the
+# default root.
+DEFAULT_ROOT = REPO_ROOT / "examples"
+
 ENV_VAR = "DULY_DEMO_CONTENT"
 
 
@@ -57,11 +65,23 @@ class ContentRoots:
 
     @property
     def spec_examples(self) -> Path:
-        return self.root / "spec" / "examples"
+        """The demo's built-in fixture scenario — NOT deployment content.
+
+        Pinned to this repository's `spec/examples` rather than derived from
+        `root`: it is the committed contract example the demo serves when it
+        has no content at all, so it ships with the demo and does not move
+        when a deployment points `root` elsewhere. Deriving it from `root`
+        would make the built-in disappear under any custom content root —
+        which is exactly the state it exists to make honest.
+        """
+        return REPO_ROOT / "spec" / "examples"
 
     @property
     def dmn_examples(self) -> Path:
-        return self.root / "dmn" / "examples"
+        # `<root>/dmn`, not `<root>/dmn/examples`: the old shape leaked this
+        # repository's pre-move layout (the compiler package at dmn/ with its
+        # examples nested inside) into the content contract.
+        return self.root / "dmn"
 
     def contains(self, path: Path) -> bool:
         """Is `path` inside the content root?
@@ -80,7 +100,7 @@ class ContentRoots:
     @classmethod
     def from_env(cls, environ: dict[str, str] | None = None) -> "ContentRoots":
         env = environ if environ is not None else os.environ
-        return cls(root=Path(env.get(ENV_VAR, REPO_ROOT)).resolve())
+        return cls(root=Path(env.get(ENV_VAR, DEFAULT_ROOT)).resolve())
 
 
 CONTENT = ContentRoots.from_env()

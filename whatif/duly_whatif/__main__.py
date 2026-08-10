@@ -210,16 +210,22 @@ def main(argv: list[str] | None = None) -> int:
         print("give --case, or both --facts and --pack", file=sys.stderr)
         return 2
 
-    try:
-        import z3  # noqa: F401
-    except ImportError:
-        print(Z3_MISSING, file=sys.stderr)
-        return 2
-
+    # Argument validation comes before the optional-dependency check: a typed
+    # path that does not exist must be refused as a bad path, not as a missing
+    # solver. The old order made the CLI's answer depend on which venv it ran
+    # in — refusing `--ontologies no/such/place` correctly with z3 installed
+    # and blaming z3 without it — and the test pinning the refusal only held
+    # in venvs that happened to have the prove extra.
     try:
         registry = _registry(_resolve_ontologies(args))
     except BadOntologies as exc:
         print(str(exc), file=sys.stderr)
+        return 2
+
+    try:
+        import z3  # noqa: F401
+    except ImportError:
+        print(Z3_MISSING, file=sys.stderr)
         return 2
 
     if args.case:

@@ -100,10 +100,10 @@ everywhere recomputes, so a private variant is a fact nobody else can check.
   abstains. The abstain → correct → flip loop is [demo tour
   §9](../../docs/demo_tour.md).
 - **No golden corpus.** One case cannot show drift. The corpus is what
-  catches a pack whose *meaning* moved; see [golden/](../../golden/).
+  catches a pack whose *meaning* moved; see [examples/golden/](../golden/).
 - **No real policy.** Acme is fictional and so is its expense policy. A real
   pack cites the authority behind each rule or carries `TODO(verify)` naming
-  what was not confirmed — [rulepacks/README.md](../../rulepacks/README.md).
+  what was not confirmed — [examples/rulepacks/README.md](../rulepacks/README.md).
 
 ## Why `check_wheel.sh` exists
 

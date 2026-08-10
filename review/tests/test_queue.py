@@ -1,5 +1,12 @@
 """Review queue core: enqueue dedup, lifecycle, correction ingestion.
 
+TOOLKIT. Every test here is about the queue as such — natural keys, dedup,
+the lifecycle state machine, what a correction must carry — and none of it
+names a jurisdiction. So the arc it runs on comes from
+[`fixtures/`](../../fixtures/README.md), not from the teaching packs under
+`examples/`: the committed case `fx-0003` is already a below-floor abstention
+and `fx-0004` is already its post-review resolution (see reviewtest_helpers).
+
 Run from the repo root:
     PATH="/opt/homebrew/bin:$PATH" uv run pytest review/tests -q
 """
@@ -15,19 +22,20 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from reviewtest_helpers import (  # noqa: E402
+    ARC_AS_OF_EFFECTIVE,
     ARC_AS_OF_KNOWLEDGE,
     ARC_CASE_ID,
     ARC_CORRECTION_TS,
-    ARC_NOTICE_ENTITY,
-    MAILED,
+    ARC_WIDGET_ENTITY,
     QUESTION,
+    SCORE,
     adjudicate_arc,
     build_arc_facts,
-    load_notice_pack,
-    mailed_fact,
-    make_fact,
+    load_fixture_pack,
     make_correction,
     rehash,
+    rival_fact,
+    scored_fact,
 )
 
 from duly_kernel.api import adjudicate  # noqa: E402
@@ -82,8 +90,8 @@ class TestEnqueue:
         entry = receipt["abstentions"][0]
         assert item["itemId"] == item_natural_key(ARC_CASE_ID, entry)
         assert item["caseId"] == ARC_CASE_ID
-        assert item["entity"] == ARC_NOTICE_ENTITY
-        assert item["attribute"] == MAILED
+        assert item["entity"] == ARC_WIDGET_ENTITY
+        assert item["attribute"] == SCORE
         assert item["reason"] == "low_confidence"
         assert item["entry"] == entry  # verbatim
         assert item["receipt"] == {"id": receipt["id"], "receiptSha256": receipt["receiptSha256"]}
@@ -104,7 +112,9 @@ class TestEnqueue:
         facts, receipt = arc
         # Same case, same pack, later knowledge point: new receipt hash,
         # identical abstention entry.
-        later = adjudicate(facts, load_notice_pack(), "2026-07-25", "2026-08-01T09:00:00Z", QUESTION)
+        later = adjudicate(
+            facts, load_fixture_pack(), ARC_AS_OF_EFFECTIVE, "2026-03-10T09:00:00Z", QUESTION
+        )
         assert later["receiptSha256"] != receipt["receiptSha256"]
         assert later["abstentions"] == receipt["abstentions"]
         first = enqueue_receipt(queue, receipt, recorded_at=T0)
@@ -114,20 +124,20 @@ class TestEnqueue:
     def test_terminal_items_do_not_reopen(self, queue, store, arc):
         facts, receipt = arc
         (result,) = enqueue_receipt(queue, receipt, recorded_at=T0)
-        queue.resolve(result["itemId"], make_correction(mailed_fact(facts)), store, T1)
+        queue.resolve(result["itemId"], make_correction(scored_fact(facts)), store, T1)
         again = enqueue_receipt(queue, receipt, recorded_at="2026-08-02T00:00:00Z")
         assert again == [{"itemId": result["itemId"], "created": False}]
         assert queue.item(result["itemId"])["status"] == "resolved"
 
     def test_different_case_yields_different_item(self, queue, store):
         for case in ("case:review:a", "case:review:b"):
-            facts = build_arc_facts(case, notice_entity=f"notice:{case}", policy_entity=f"policy:{case}")
+            facts = build_arc_facts(case, entity=f"widget:{case}")
             receipt = adjudicate_arc(facts)
             enqueue_receipt(queue, receipt, recorded_at=T0)
         assert len(queue.items()) == 2
 
     def test_receipt_without_abstentions_enqueues_nothing(self, queue):
-        facts = build_arc_facts(mailed_confidence={"score": 0.95, "method": "platt"})
+        facts = build_arc_facts(score_confidence={"score": 0.95, "method": "platt"})
         receipt = adjudicate_arc(facts)
         assert receipt["abstentions"] == []
         assert enqueue_receipt(queue, receipt, recorded_at=T0) == []
@@ -141,19 +151,24 @@ class TestEnqueue:
             enqueue_receipt(queue, tampered, recorded_at=T0)
 
     def test_routed_to_filter(self, queue):
-        pack = load_notice_pack()
-        pack["abstentionPolicy"]["routeTo"] = "notice-review"
+        # The fixture pack declares `routeTo: fixture-review`, so the routed
+        # receipt is the *default* here and the unrouted one is the variant —
+        # the inverse of how the teaching packs are written, and the reason
+        # this reads backwards from what a reader may expect.
         facts = build_arc_facts()
-        routed = adjudicate_arc(facts, pack)
-        assert routed["abstentions"][0]["routedTo"] == "notice-review"
+        routed = adjudicate_arc(facts)
+        assert routed["abstentions"][0]["routedTo"] == "fixture-review"
         # A queue serving another route ignores the entry entirely.
         assert enqueue_receipt(queue, routed, recorded_at=T0, routed_to="other-queue") == []
         # The matching route enqueues it.
-        (result,) = enqueue_receipt(queue, routed, recorded_at=T0, routed_to="notice-review")
+        (result,) = enqueue_receipt(queue, routed, recorded_at=T0, routed_to="fixture-review")
         assert result["created"] is True
         # Unrouted entries are skipped by a route-scoped queue...
-        unrouted = adjudicate_arc(facts)
-        assert enqueue_receipt(queue, unrouted, recorded_at=T0, routed_to="notice-review") == []
+        unscoped_pack = load_fixture_pack()
+        del unscoped_pack["abstentionPolicy"]["routeTo"]
+        unrouted = adjudicate_arc(facts, unscoped_pack)
+        assert "routedTo" not in unrouted["abstentions"][0]
+        assert enqueue_receipt(queue, unrouted, recorded_at=T0, routed_to="fixture-review") == []
         # ...but enqueued by an unscoped one (routing is a label, not a gate).
         (r2,) = enqueue_receipt(queue, unrouted, recorded_at=T0)
         assert r2["created"] is True
@@ -179,7 +194,7 @@ class TestLifecycle:
 
     def test_resolve_open_item(self, queue, store, arc, open_item):
         facts, _ = arc
-        item = queue.resolve(open_item, make_correction(mailed_fact(facts)), store, T1)
+        item = queue.resolve(open_item, make_correction(scored_fact(facts)), store, T1)
         assert item["status"] == "resolved"
         assert item["closedAt"] == T1
         assert item["resolution"]["factId"].startswith("urn:duly:fact:sha256:")
@@ -194,9 +209,9 @@ class TestLifecycle:
 
     def test_terminal_states_reject_all_transitions(self, queue, store, arc, open_item):
         facts, _ = arc
-        queue.resolve(open_item, make_correction(mailed_fact(facts)), store, T1)
+        queue.resolve(open_item, make_correction(scored_fact(facts)), store, T1)
         with pytest.raises(InvalidTransitionError):
-            queue.resolve(open_item, make_correction(mailed_fact(facts)), store, T1)
+            queue.resolve(open_item, make_correction(scored_fact(facts)), store, T1)
         with pytest.raises(InvalidTransitionError):
             queue.dismiss(open_item, "late dismissal", T1)
         with pytest.raises(InvalidTransitionError):
@@ -206,7 +221,7 @@ class TestLifecycle:
         facts, _ = arc
         queue.dismiss(open_item, "unusable", T1)
         with pytest.raises(InvalidTransitionError):
-            queue.resolve(open_item, make_correction(mailed_fact(facts)), store, T1)
+            queue.resolve(open_item, make_correction(scored_fact(facts)), store, T1)
 
     def test_unknown_item(self, queue, store, arc):
         facts, _ = arc
@@ -216,7 +231,7 @@ class TestLifecycle:
         with pytest.raises(UnknownItemError):
             queue.claim(bogus, "reviewer:kp", T1)
         with pytest.raises(UnknownItemError):
-            queue.resolve(bogus, make_correction(mailed_fact(facts)), store, T1)
+            queue.resolve(bogus, make_correction(scored_fact(facts)), store, T1)
         with pytest.raises(UnknownItemError):
             queue.dismiss(bogus, "no", T1)
 
@@ -229,7 +244,7 @@ class TestLifecycle:
         assert [i["itemId"] for i in queue.items(status="open")] == [open_item]
         assert queue.items(status="resolved") == []
         assert queue.items(case_id="case:nothing") == []
-        queue.resolve(open_item, make_correction(mailed_fact(facts)), store, T1)
+        queue.resolve(open_item, make_correction(scored_fact(facts)), store, T1)
         assert queue.items(status="open") == []
         assert [i["itemId"] for i in queue.items(status="resolved", case_id=ARC_CASE_ID)] == [open_item]
 
@@ -251,53 +266,53 @@ class TestCorrectionValidation:
 
     def test_machine_assertion_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
-        bad["assertion"] = dict(mailed_fact(facts)["assertion"])
+        bad = make_correction(scored_fact(facts))
+        bad["assertion"] = dict(scored_fact(facts)["assertion"])
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "human assertion")
 
     def test_actor_role_required(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts), actor={"id": "reviewer:kp"})
+        bad = make_correction(scored_fact(facts), actor={"id": "reviewer:kp"})
         self._reject(queue, store, open_item, bad, "id and role")
 
     def test_schema_invalid_correction_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
+        bad = make_correction(scored_fact(facts))
         del bad["grounding"]
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "grounded-fact schema")
 
     def test_hash_mismatch_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
-        bad["value"] = {"kind": "date", "value": "2026-07-20"}  # not rehashed
+        bad = make_correction(scored_fact(facts))
+        bad["value"] = {"kind": "decimal", "value": "80"}  # not rehashed
         self._reject(queue, store, open_item, bad, "contentHash mismatch")
 
     def test_wrong_case_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
+        bad = make_correction(scored_fact(facts))
         bad["caseId"] = "case:someone-else"
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "caseId")
 
     def test_wrong_entity_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
-        bad["entity"] = {"id": "notice:other", "type": "nc:TerminationNotice"}
+        bad = make_correction(scored_fact(facts))
+        bad["entity"] = {"id": "widget:other", "type": "fx:Widget"}
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "entity")
 
     def test_wrong_attribute_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
-        bad["attribute"] = "nc:policyExpirationDate"
+        bad = make_correction(scored_fact(facts))
+        bad["attribute"] = "fx:category"
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "attribute")
 
     def test_supersedes_outside_abstained_facts_rejected(self, queue, store, arc, open_item):
         facts, _ = arc
-        bad = make_correction(mailed_fact(facts))
+        bad = make_correction(scored_fact(facts))
         bad["supersedes"] = "urn:duly:fact:sha256:" + "a" * 64
         bad = rehash(bad)
         self._reject(queue, store, open_item, bad, "not among the item's abstained facts")
@@ -307,7 +322,7 @@ class TestCorrectionValidation:
         validation with a bad hash, the store's own ingest gate holds and
         the item stays open."""
         facts, _ = arc
-        correction = make_correction(mailed_fact(facts))
+        correction = make_correction(scored_fact(facts))
         # Sabotage after validation would be needed to reach the store; here
         # we simply verify the store rejects a bad-hash fact directly.
         broken = dict(correction)
@@ -330,24 +345,24 @@ class TestCorrectionRoundTrip:
         facts, receipt = arc
         assert receipt["decision"]["value"] == {"kind": "boolean", "value": True}
         (result,) = enqueue_receipt(queue, receipt, recorded_at=T0)
-        correction = make_correction(mailed_fact(facts))
+        correction = make_correction(scored_fact(facts))
         queue.resolve(result["itemId"], correction, store, T1)
 
         # Knowledge-time travel: before the correction, the machine fact.
         before = store.as_of(ARC_CASE_ID, knowledge=T0)
-        assert mailed_fact(facts)["id"] in {f["id"] for f in before}
+        assert scored_fact(facts)["id"] in {f["id"] for f in before}
 
         after = store.as_of(ARC_CASE_ID, knowledge=T1)
         by_attr = {f["attribute"]: f for f in after}
-        assert by_attr[MAILED]["id"] == correction["id"]
-        assert by_attr[MAILED]["assertion"]["kind"] == "human"
-        assert mailed_fact(facts)["id"] not in {f["id"] for f in after}
+        assert by_attr[SCORE]["id"] == correction["id"]
+        assert by_attr[SCORE]["assertion"]["kind"] == "human"
+        assert scored_fact(facts)["id"] not in {f["id"] for f in after}
 
         # The supersession chain is the correction history (spec D7).
-        chain = store.history(mailed_fact(facts)["id"])
+        chain = store.history(scored_fact(facts)["id"])
         assert [e["event_kind"] for e in chain] == ["asserted", "asserted", "superseded"]
 
-        fixed = adjudicate(after, load_notice_pack(), "2026-07-25", T1, QUESTION)
+        fixed = adjudicate(after, load_fixture_pack(), ARC_AS_OF_EFFECTIVE, T1, QUESTION)
         assert fixed["abstentions"] == []
         assert fixed["decision"]["value"] == {"kind": "boolean", "value": False}
 
@@ -357,7 +372,7 @@ class TestCorrectionRoundTrip:
         state it pinned is the one the freeze made unrepresentable.
 
         The receipt it produced was the argument against it: a persistent
-        `low_confidence` entry for `nc:noticeMailedDate` on every future
+        `low_confidence` entry for the abstained attribute on every future
         adjudication, for an attribute the decision *used*, which contradicts
         the fact spec's own definition of `abstentions`. Outranking still works
         in the kernel — that is resolved question 2 and it is untouched — but
@@ -366,13 +381,13 @@ class TestCorrectionRoundTrip:
         """
         facts, receipt = arc
         (result,) = enqueue_receipt(queue, receipt, recorded_at=T0)
-        correction = make_correction(mailed_fact(facts), supersedes=False)
+        correction = make_correction(scored_fact(facts), supersedes=False)
 
         with pytest.raises(InvalidCorrectionError) as excinfo:
             queue.resolve(result["itemId"], correction, store, T1)
 
         message = str(excinfo.value)
-        assert mailed_fact(facts)["id"] in message, (
+        assert scored_fact(facts)["id"] in message, (
             "the refusal must name the fact id the correction has to carry — "
             "the queue cannot stamp it in, so the caller needs it"
         )
@@ -388,11 +403,15 @@ class TestCorrectionRoundTrip:
         rather than an oversight. A conflict entry names several facts, so
         "the fact it rules on" has no referent — the analogous rule would have
         to say which of them, and nobody has a reason yet."""
-        facts = build_arc_facts(mailed_confidence={"score": 0.95, "method": "platt"})
-        rival = make_fact(
-            ARC_CASE_ID, ARC_NOTICE_ENTITY, "nc:TerminationNotice", MAILED,
-            {"kind": "date", "value": "2026-07-20"},
-            "2026-07-26T00:00:00Z", confidence={"score": 0.95, "method": "platt"},
+        above_floor = {"score": 0.95, "method": "platt"}
+        facts = build_arc_facts(score_confidence=above_floor)
+        # A second machine reading of the same score, also above the floor:
+        # neither outranks the other, so the pair conflicts.
+        rival = rival_fact(
+            scored_fact(facts),
+            value={"kind": "decimal", "value": "80"},
+            ts="2026-03-02T00:00:00Z",
+            confidence=above_floor,
         )
         facts = facts + [rival]
         for f in facts:
@@ -415,14 +434,14 @@ class TestCorrectionRoundTrip:
         extraction, and the conflict policy already handles it. Enforcing
         supersession one layer lower would make that fact unrecordable."""
         facts, _ = arc
-        independent = make_correction(mailed_fact(facts), supersedes=False)
+        independent = make_correction(scored_fact(facts), supersedes=False)
         store.ingest(independent)
 
         after = store.as_of(ARC_CASE_ID, knowledge=T1)
-        mailed = [f for f in after if f["attribute"] == MAILED]
-        assert len(mailed) == 2  # both live: outranking, not supersession
+        live_scores = [f for f in after if f["attribute"] == SCORE]
+        assert len(live_scores) == 2  # both live: outranking, not supersession
 
-        fixed = adjudicate(after, load_notice_pack(), "2026-07-25", T1, QUESTION)
+        fixed = adjudicate(after, load_fixture_pack(), ARC_AS_OF_EFFECTIVE, T1, QUESTION)
         assert [a["reason"] for a in fixed["abstentions"]] == ["low_confidence"]
         assert fixed["decision"]["value"] == {"kind": "boolean", "value": False}
         assert independent["id"] in {f["id"] for f in fixed["inputFacts"]}

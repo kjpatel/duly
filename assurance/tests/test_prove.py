@@ -407,7 +407,7 @@ def test_the_committed_packs_exit_zero(capsys, monkeypatch):
     from duly_assurance.prove import main
 
     monkeypatch.chdir(REPO_ROOT)
-    assert main(["--ontologies", "ontologies", *[f"rulepacks/{name}/pack.yaml" for name in COMMITTED_PACKS]]) == 0
+    assert main(["--ontologies", "examples/ontologies", *[f"examples/rulepacks/{name}/pack.yaml" for name in COMMITTED_PACKS]]) == 0
     out = capsys.readouterr().out
     assert "PROVED-DISJOINT" in out
     assert "unresolved ambiguity" not in out

@@ -5,17 +5,19 @@ store/tests/storetest_helpers.py: these test dirs have no __init__.py, so a
 second module named `conftest` would collide in sys.modules when the suites
 run together.
 
-Two corpora, and the distinction is load-bearing (CLAUDE.md, "a test that would
-still pass with its subject deleted"):
+One corpus, and the distinction is load-bearing (CLAUDE.md, "a test that would
+still pass with its subject deleted"). **`fixtures/`** is the toolkit corpus:
+everything asserting *adapter or envelope* behaviour runs on the fixture
+scenario — one PDF, its committed rendition, and the targets file the
+committed facts were emitted from. It survives `git rm -r examples/`, so those
+suites keep failing loudly when the toolkit breaks rather than quietly ceasing
+to exist.
 
-* **`fixtures/`** — the toolkit corpus. Everything asserting *adapter or
-  envelope* behaviour runs on the fixture scenario: one PDF, its committed
-  rendition, and the targets file the committed facts were emitted from. It
-  survives `git rm -r examples/`, so those suites keep failing loudly when the
-  toolkit breaks rather than quietly ceasing to exist.
-* **`starters/`** — example content, relocating under `examples/`. Only tests
-  whose *subject* is that content (the committed starter facts are still what
-  the adapter emits) may reach for the helpers below it; they move with it.
+The starter-pointed loaders that used to sit at the bottom of this module went
+with the one test that used them, to
+`examples/tests/test_example_extraction.py`: whether the committed starter
+facts are still what the adapter emits is a claim about those starters, and it
+is deleted with them.
 """
 
 import hashlib
@@ -72,50 +74,6 @@ def run_fixture_stub(targets: dict | None = None):
     targets = load_fixture_targets() if targets is None else targets
     text = load_fixture_rendition_text()
     document = SourceDocument.from_bytes(targets["documentId"], load_fixture_pdf_bytes())
-    result = StubAdapter(text).extract(document, targets)
-    return result, targets, text
-
-
-# --- EXAMPLE CONTENT (moves with examples/) ----------------------------------
-#
-# Used only by the tests whose subject is the committed starter content. When
-# `starters/` relocates, these helpers and those tests go with it.
-
-STARTERS = REPO_ROOT / "starters"
-TARGETS = STARTERS / "tools" / "targets"
-
-# targets file -> (scenario dir, committed rendition, committed pdf)
-STARTER_RUNS = {
-    "notice-ny-dec-page.json": ("notice-ny", "dec-page"),
-    "notice-ny-nonrenewal-notice.json": ("notice-ny", "nonrenewal-notice"),
-    "trid-loan-estimate.json": ("trid", "loan-estimate"),
-    "trid-closing-disclosure.json": ("trid", "closing-disclosure"),
-}
-
-
-def load_targets(targets_name: str) -> dict:
-    return json.loads((TARGETS / targets_name).read_text(encoding="utf-8"))
-
-
-def load_rendition_text(scenario: str, doc: str) -> str:
-    return (STARTERS / scenario / "renditions" / f"{doc}.txt").read_text(encoding="utf-8")
-
-
-def load_pdf_bytes(scenario: str, doc: str) -> bytes:
-    return (STARTERS / scenario / "documents" / f"{doc}.pdf").read_bytes()
-
-
-def load_committed_fact(scenario: str, filename: str) -> dict:
-    return json.loads((STARTERS / scenario / "facts" / filename).read_text(encoding="utf-8"))
-
-
-def run_stub(targets_name: str):
-    """Run the stub adapter over one committed starter document; returns
-    (ExtractionResult, targets dict, rendition text)."""
-    scenario, doc = STARTER_RUNS[targets_name]
-    targets = load_targets(targets_name)
-    text = load_rendition_text(scenario, doc)
-    document = SourceDocument.from_bytes(targets["documentId"], load_pdf_bytes(scenario, doc))
     result = StubAdapter(text).extract(document, targets)
     return result, targets, text
 

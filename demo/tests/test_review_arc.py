@@ -32,12 +32,13 @@ the toolkit:
 * **The source scenario abstains too**, which retired
   `test_other_scenarios_carry_no_abstentions` — see that test's replacement.
 
-`test_county_recording_abstains_regardless_of_installed_extractor` and
-`test_fixture_mode_lists_the_committed_example_honestly` stay pointed at this
-repository, because their subject genuinely *is* committed content. The county
-test moves under `examples/` with the starters; the fixture-mode test STAYS —
-its subject is the built-in `spec/examples` scenario, and `spec/` is not
-relocating, which is why it keeps passing under the deletion measurement.
+`test_county_recording_abstains_regardless_of_installed_extractor` has left
+this file: its subject was the recording *starter*, so it now lives in
+`examples/tests/test_example_review_arc.py` and is deleted with the content it
+describes. `test_fixture_mode_lists_the_committed_example_honestly` STAYS, and
+the difference is the whole distinction — its subject is the built-in
+`spec/examples` scenario, and `spec/` is not relocating, which is why it keeps
+passing under the deletion measurement.
 
 Run from the repo root:
     PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
@@ -113,28 +114,6 @@ def client(content_root, monkeypatch):
     the directory serving a temp directory that no longer exists.
     """
     monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
-    monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
-    monkeypatch.setenv("DULY_DEMO_EXTRACTOR", "stub")
-    reload_demo()
-    demo_app._reset_runtime()
-
-    with TestClient(demo_app.app) as c:
-        yield c
-
-    demo_app._reset_runtime()
-    monkeypatch.undo()
-    reload_demo()
-
-
-@pytest.fixture
-def example_client(monkeypatch):
-    """A store-backed runtime over *this repository's* content.
-
-    For the two tests below whose subject is the committed example content
-    rather than toolkit behaviour. No `DULY_DEMO_CONTENT`, so the roots stay
-    where they default; the reload on teardown is still here because a prior
-    test in this file may have left them elsewhere.
-    """
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     monkeypatch.setenv("DULY_DEMO_EXTRACTOR", "stub")
     reload_demo()
@@ -328,46 +307,6 @@ def test_the_arc_scripts_a_separate_case_and_leaves_its_source_alone(client):
     assert source["receipt"]["caseId"] != arc["receipt"]["caseId"]
 
 
-def test_county_recording_abstains_regardless_of_installed_extractor(example_client):
-    """EXAMPLE CONTENT (moves with `starters/`): the recording scenario's 0.58
-    top-space confidence is scripted in its targets file, which only the stub
-    passes through — Docling measures its own confidence and would sail over
-    the floor, silently skipping the abstention arc the scenario exists to
-    show. The manifest pins the stub (demoExtractor), so this must hold whether
-    or not docling is importable.
-
-    Its subject is that scenario, so it stays pointed at this repository rather
-    than at a fixture content root — unlike everything above it, deleting the
-    starter should take this test with it and not leave it passing vacuously.
-    """
-    scenario = next(
-        s
-        for s in example_client.get("/api/scenarios").json()
-        if s["id"] == "county-recording"
-    )
-    payload = _adjudicate(
-        example_client,
-        "county-recording",
-        attribute="rec:recordable",
-        as_of=scenario["defaultAsOf"],
-    )
-    assert payload["engineMode"] == "live"
-
-    found = payload["determination"]
-    assert found["verdict"] == "Recordable"
-    assert found["tone"] == "warn"
-    assert "0.58" in found["detail"] and "0.85" in found["detail"]
-
-    (entry,) = payload["abstentions"]
-    assert entry["reason"] == "low_confidence"
-    assert entry["attribute"] == "rec:firstPageTopSpaceInches"
-    assert entry["routedTo"] == "recording-review"
-
-    scenarios = {s["id"]: s for s in example_client.get("/api/scenarios").json()}
-    extractor = scenarios["county-recording"]["extraction"]["extractor"]
-    assert extractor["name"] == "duly-demo-extractor"
-
-
 # ---------------------------------------------------------------------------
 # The correction flow
 # ---------------------------------------------------------------------------
@@ -460,10 +399,11 @@ def test_fixture_mode_disables_the_review_flow_honestly(content_root, monkeypatc
     """Without the session store there is no arc, and both review endpoints say
     so with a 503 rather than a 500 or an empty success.
 
-    The scenario list is empty here, and that is the second honest degradation
-    rather than a gap in the test: fixture mode serves the committed
-    `spec/examples` receipt, a content root need not have one, and the workspace
-    reports "no scenarios" instead of failing to boot.
+    The scenario list holds exactly the demo's built-in `spec/examples`
+    scenario — which ships with the demo and survives every content root
+    since the examples/ move — and nothing else: the arc needs the session
+    store, so no review scenario may appear, and the built-in's own review
+    affordance must be honestly unavailable.
     """
     monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
     monkeypatch.setenv("DULY_DEMO_FORCE_FIXTURE", "1")
@@ -473,7 +413,13 @@ def test_fixture_mode_disables_the_review_flow_honestly(content_root, monkeypatc
     with TestClient(demo_app.app) as fixture_client:
         res = fixture_client.get("/api/scenarios")
         assert res.status_code == 200
-        assert res.json() == []  # the arc needs the session store
+        scenarios = res.json()
+        [built_in] = scenarios  # the built-in only; the arc needs the store
+        assert built_in["extraction"]["source"] == "fixture"
+        assert built_in["review"]["available"] is False
+        assert not any(
+            s["id"].endswith(demo_app.REVIEW_ID_SUFFIX) for s in scenarios
+        )
 
         refused = _correct(
             fixture_client,

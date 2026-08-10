@@ -5,10 +5,10 @@ A receipt answers "what was decided, and why". [`prove`](pack-verification.md) a
 [`whatif/duly_whatif`](../whatif/duly_whatif) answers it by freeing exactly one input of a decided case and solving the pack backwards.
 
 ```bash
-uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
-    --case golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true
-uv run --with z3-solver python -m duly_whatif --ontologies ontologies \
-    --case golden/cases/resc-0001 --free asOf --target true --extremal min
+uv run --with z3-solver python -m duly_whatif --ontologies examples/ontologies \
+    --case examples/golden/cases/notice-ny-0001 --free nc:noticeMailedDate --target true
+uv run --with z3-solver python -m duly_whatif --ontologies examples/ontologies \
+    --case examples/golden/cases/resc-0001 --free asOf --target true --extremal min
 ```
 
 `--ontologies` is **optional and has no default** (it also reads

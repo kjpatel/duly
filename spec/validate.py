@@ -129,8 +129,8 @@ def main() -> int:
     # Ontology conformance gate (spec/ontology-conformance.md), additive:
     # committed example facts must conform to the committed ontologies.
     ontology_registry = None
-    if load_repo_registry is not None and (SPEC.parent / "ontologies").is_dir():
-        ontology_registry = load_repo_registry(SPEC.parent / "ontologies")
+    if load_repo_registry is not None and (SPEC.parent / "examples" / "ontologies").is_dir():
+        ontology_registry = load_repo_registry(SPEC.parent / "examples" / "ontologies")
 
     failures = 0
     fact_ids = set()

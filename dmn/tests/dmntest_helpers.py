@@ -7,10 +7,7 @@ across suites (CLAUDE.md, "Conventions").
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-
-import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -24,35 +21,12 @@ FIXTURE_COMPILED = FIXTURE_DMN_DIR / "widget-fee.pack.yaml"
 FIXTURE_REFUSALS = FIXTURE_DMN_DIR / "refusals"
 FIXTURE_ONTOLOGIES = FIXTURES / "ontology"
 
-# EXAMPLE CONTENT (moves with `examples/`). Teaching content: the TRID table is
-# the one an adopter reads and then deletes. Only the two suites whose *subject*
-# is that content may reach for these — `test_equivalence.py` (does the compiled
-# pack decide what the hand-written one decides?) and `test_refusals.py` (does
-# every committed refusal example refuse?). A test about the compiler belongs on
-# the fixture constants above, or a `git rm -r dmn/examples/` leaves it passing
-# over an empty glob (CLAUDE.md).
-EXAMPLES = REPO / "dmn" / "examples"
-REFUSALS = EXAMPLES / "refusals"
-
-TRID_DMN = EXAMPLES / "trid-fee-tolerance.dmn"
-TRID_COMPILED = EXAMPLES / "trid-fee-tolerance.pack.yaml"
-TRID_HAND_WRITTEN = REPO / "rulepacks" / "trid-fee-tolerance-us-federal" / "pack.yaml"
-TRID_EXPECTED = REPO / "rulepacks" / "trid-fee-tolerance-us-federal" / "expected.yaml"
-TRID_FACTS = REPO / "starters" / "trid" / "facts"
-
-
-def load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
-
-
-def load_facts(directory: Path) -> list[dict]:
-    facts = []
-    for path in sorted(directory.glob("*.json")):
-        doc = json.loads(path.read_text(encoding="utf-8"))
-        if "receiptSha256" in doc:
-            continue
-        facts.append(doc)
-    return facts
+# The teaching corpus that used to be named here — the TRID table, its compiled
+# pack, the hand-written pack it recreates, and the committed refusal examples —
+# moved to `examples/tests/exampletest_helpers.py` with the only two suites that
+# read it (`test_equivalence.py`, `test_refusals.py`). Their subject is content
+# an adopter reads and then deletes, so it is deleted with them. Everything left
+# in this module is the fixture corpus, which survives.
 
 
 # A one-decision, one-row table with every required annotation filled in.
@@ -134,9 +108,3 @@ def value_kinds(ontologies: Path) -> dict[str, str]:
 def fixture_value_kinds() -> dict[str, str]:
     """The mapping for the fixture DMN's vocabulary (`fixtures/ontology/`)."""
     return value_kinds(FIXTURE_ONTOLOGIES)
-
-
-def refusal_value_kinds() -> dict[str, str]:
-    """EXAMPLE CONTENT (moves with `examples/`): the mapping the committed
-    refusal *examples* pin, from this repository's own `ontologies/`."""
-    return value_kinds(REPO / "ontologies")

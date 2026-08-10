@@ -67,8 +67,8 @@ def main() -> int:
 
     # Two live adjudications over span-grounded starter facts.
     for facts_dir, pack_path, question in [
-        ("starters/notice-ny/facts", "rulepacks/termination-notice-us-states/pack.yaml", "nc:noticeCompliant"),
-        ("starters/trid/facts", "rulepacks/trid-fee-tolerance-us-federal/pack.yaml", "trid:toleranceCureAmount"),
+        ("examples/starters/notice-ny/facts", "examples/rulepacks/termination-notice-us-states/pack.yaml", "nc:noticeCompliant"),
+        ("examples/starters/trid/facts", "examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml", "trid:toleranceCureAmount"),
     ]:
         facts = [json.loads(p.read_text(encoding="utf-8")) for p in sorted((ROOT / facts_dir).glob("*.json"))]
         pack = yaml.safe_load((ROOT / pack_path).read_text(encoding="utf-8"))
@@ -78,8 +78,8 @@ def main() -> int:
             add(fact, "fact")
 
     # Plus the committed human-correction case.
-    add(json.loads((ROOT / "golden/receipts/review-0001.json").read_text(encoding="utf-8")), "receipt")
-    for path in sorted((ROOT / "golden/cases/review-0001/facts").glob("*.json")):
+    add(json.loads((ROOT / "examples/golden/receipts/review-0001.json").read_text(encoding="utf-8")), "receipt")
+    for path in sorted((ROOT / "examples/golden/cases/review-0001/facts").glob("*.json")):
         add(json.loads(path.read_text(encoding="utf-8")), "fact")
 
     print(f"graph: {len(graph)} triples (2 live adjudications + 1 committed correction case)\n")

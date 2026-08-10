@@ -7,9 +7,9 @@ and two DMN inputs. Nobody should learn anything from it.
 
 ## Why it exists
 
-`rulepacks/`, `starters/`, `golden/` and `dmn/examples/` are *example content* —
-they demonstrate the toolkit, and M5 relocates them under an `examples/`
-umbrella that an adopter can delete. The claim being tested is that
+`examples/rulepacks/`, `examples/starters/`, `examples/golden/` and
+`examples/dmn/` are *example content* — they demonstrate the toolkit, and M5
+relocated them under an `examples/` umbrella that an adopter can delete. The claim being tested is that
 `git rm -r examples/` leaves a **working, empty toolkit**.
 
 A test suite that reaches into example content cannot check that claim. Delete
@@ -34,7 +34,7 @@ deleted is not a test.**
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
 | `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
 | `targets/` | The scenario's extraction **targets** — the scripted quotes, values and confidences `StubAdapter` extracts from the rendition. The committed facts under `scenario/facts/` are what the adapter emits from this file, exactly how real starters are built; a demo content root places it at `starters/tools/targets/`, which is what makes the review arc reachable from a fixture-only deployment |
-| `dmn/` | Two DMN decision tables — one that compiles, one that is refused — plus `widget-fee.pack.yaml`, the committed compilation, kept honest by `python -m duly_dmn verify` in the CLI suite. The studio's import panel and the compiler's happy path were reachable only through `dmn/examples/`, which an adopter deletes |
+| `dmn/` | Two DMN decision tables — one that compiles, one that is refused — plus `widget-fee.pack.yaml`, the committed compilation, kept honest by `python -m duly_dmn verify` in the CLI suite. The studio's import panel and the compiler's happy path were reachable only through `examples/dmn/`, which an adopter deletes |
 | `build.py` | Regenerates the cases, receipts, targets and scenario, deterministically — the scenario's facts by running the real `StubAdapter` over the targets, never by hand-assembling |
 
 Five cases, chosen to cover what the toolkit's own tests need rather than to
@@ -73,7 +73,7 @@ And one scenario, which is a different artifact from a case:
   claims on emission. The first version of these facts was hand-assembled by
   the builder instead, and turned out to be schema-invalid in a way nothing
   was positioned to catch: the conformance gate validates attributes, not the
-  envelope, and the schema checker globs `starters/`. A fixture built by a
+  envelope, and the schema checker globs `examples/starters/`. A fixture built by a
   private code path drifts; one built by the shipped path cannot.
 
 ## Regenerating
@@ -86,12 +86,12 @@ Deterministic: no wall clock, no randomness, every timestamp fixed in the
 script. Re-running it on an unchanged tree rewrites the same bytes, and
 `git diff -- fixtures/` is the check that it did.
 
-**Regenerating is a deliberate act, exactly as it is for `golden/`.** These
+**Regenerating is a deliberate act, exactly as it is for `examples/golden/`.** These
 receipts are pinned by toolkit tests — replay, decision digests, the semantics
 guard — so a diff here means one of two things: you changed the fixture
 content on purpose, or you changed what the kernel *means*. The second is a
 semantics change ([docs/release-process.md](../docs/release-process.md) §4) and
-this corpus is not the place to discover it; `golden/` is.
+this corpus is not the place to discover it; `examples/golden/` is.
 
 ## Rules for adding to it
 

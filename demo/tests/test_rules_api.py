@@ -496,7 +496,7 @@ def test_the_committed_dmn_example_compiles_and_compiling_examples_come_first(cl
     assert any(e["refusal"] for e in examples)
 
     body = client.post(
-        "/api/rules/dmn/compile", json={"path": "dmn/examples/widget-fee.dmn"}
+        "/api/rules/dmn/compile", json={"path": "dmn/widget-fee.dmn"}
     ).json()
     assert body["ok"] is True
     assert body["ruleCount"] == 4
@@ -513,11 +513,11 @@ def test_every_refusal_example_is_reported_not_raised(client, content_root):
     the suite reported success by having nothing to say. Looping inside the
     test, with the count asserted, makes an empty directory a failure.
     """
-    names = sorted(p.stem for p in (content_root / "dmn" / "examples" / "refusals").glob("*.dmn"))
+    names = sorted(p.stem for p in (content_root / "dmn" / "refusals").glob("*.dmn"))
     assert names, "no refusal examples found; this test would otherwise be empty"
     for name in names:
         body = client.post(
-            "/api/rules/dmn/compile", json={"path": f"dmn/examples/refusals/{name}.dmn"}
+            "/api/rules/dmn/compile", json={"path": f"dmn/refusals/{name}.dmn"}
         ).json()
         assert body["ok"] is False, name
         assert body["error"], name
@@ -531,7 +531,7 @@ def test_only_committed_dmn_examples_load_by_path(client):
 def test_an_adopted_dmn_pack_is_a_pack_like_any_other(client):
     body = client.post(
         "/api/rules/dmn/adopt",
-        json={"slug": "studio-dmn", "path": "dmn/examples/widget-fee.dmn"},
+        json={"slug": "studio-dmn", "path": "dmn/widget-fee.dmn"},
     ).json()
     assert body["validation"]["ok"] is True
     assert body["committed"] is False
@@ -542,7 +542,7 @@ def test_an_adopted_dmn_pack_is_a_pack_like_any_other(client):
 def test_adopting_a_refused_dmn_creates_nothing(client):
     res = client.post(
         "/api/rules/dmn/adopt",
-        json={"slug": "studio-bad", "path": "dmn/examples/refusals/uncited-row.dmn"},
+        json={"slug": "studio-bad", "path": "dmn/refusals/uncited-row.dmn"},
     )
     assert res.status_code == 422
     assert client.get("/api/rules/packs/studio-bad").status_code == 404

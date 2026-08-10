@@ -1,5 +1,10 @@
 """API tests for the review-queue FastAPI surface (TestClient, like demo).
 
+TOOLKIT. Same subject as test_queue.py one layer up — status codes, the 409 on
+a terminal item, the 422 on a bad correction — so the arc behind the harness
+comes from [`fixtures/`](../../fixtures/README.md) rather than from a teaching
+pack under `examples/`.
+
 Run from the repo root:
     PATH="/opt/homebrew/bin:$PATH" uv run pytest review/tests -q
 """
@@ -17,12 +22,12 @@ from reviewtest_helpers import (  # noqa: E402
     ARC_AS_OF_KNOWLEDGE,
     ARC_CASE_ID,
     ARC_CORRECTION_TS,
-    ARC_MAILED_CONFIDENCE,
+    ARC_SCORE_CONFIDENCE,
     adjudicate_arc,
     build_arc_facts,
-    load_notice_pack,
-    mailed_fact,
+    load_fixture_pack,
     make_correction,
+    scored_fact,
 )
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -104,7 +109,7 @@ def test_claim_resolve_flow_and_store_roundtrip(harness):
     assert res.json()["assignee"] == "reviewer:kp"
     assert res.json()["status"] == "open"
 
-    correction = make_correction(mailed_fact(facts))
+    correction = make_correction(scored_fact(facts))
     res = client.post(f"/api/items/{item_id}/resolve",
                       json={"correction": correction, "recordedAt": T1})
     assert res.status_code == 200
@@ -116,7 +121,7 @@ def test_claim_resolve_flow_and_store_roundtrip(harness):
     # The correction reached the real fact store through the API.
     after = store.as_of(ARC_CASE_ID, knowledge=T1)
     assert correction["id"] in {f["id"] for f in after}
-    assert mailed_fact(facts)["id"] not in {f["id"] for f in after}
+    assert scored_fact(facts)["id"] not in {f["id"] for f in after}
 
     # Terminal: a second resolution is a conflict.
     res = client.post(f"/api/items/{item_id}/resolve",
@@ -140,7 +145,7 @@ def test_dismiss_flow(harness):
 def test_invalid_correction_is_422(harness):
     client, _, facts, receipt = harness
     item_id = _enqueue(client, receipt)
-    bad = make_correction(mailed_fact(facts), actor={"id": "reviewer:kp"})  # no role
+    bad = make_correction(scored_fact(facts), actor={"id": "reviewer:kp"})  # no role
     res = client.post(f"/api/items/{item_id}/resolve",
                       json={"correction": bad, "recordedAt": T1})
     assert res.status_code == 422
@@ -165,12 +170,12 @@ def test_calibration_pairs_endpoint(harness):
     assert "Censored sample" in res.json()["note"]
 
     item_id = _enqueue(client, receipt)
-    correction = make_correction(mailed_fact(facts))
+    correction = make_correction(scored_fact(facts))
     client.post(f"/api/items/{item_id}/resolve",
                 json={"correction": correction, "recordedAt": T1})
     res = client.get("/api/calibration/pairs")
     assert res.json() == {
-        "pairs": [[ARC_MAILED_CONFIDENCE["score"], 1]],
+        "pairs": [[ARC_SCORE_CONFIDENCE["score"], 1]],
         "count": 1,
         "note": res.json()["note"],
     }
@@ -178,12 +183,14 @@ def test_calibration_pairs_endpoint(harness):
 
 def test_routed_enqueue_filter_over_http(harness):
     client, _, _, _ = harness
-    pack = load_notice_pack()
-    pack["abstentionPolicy"]["routeTo"] = "notice-review"
-    routed = adjudicate_arc(build_arc_facts(), pack)
+    # The fixture pack already declares `routeTo: fixture-review`; loading it
+    # explicitly (rather than reusing the harness receipt) keeps this test's
+    # subject visible, which is that the route reaches the endpoint as a filter.
+    routed = adjudicate_arc(build_arc_facts(), load_fixture_pack())
+    assert routed["abstentions"][0]["routedTo"] == "fixture-review"
     res = client.post("/api/enqueue",
                       json={"receipt": routed, "recordedAt": T0, "routedTo": "other"})
     assert res.status_code == 200 and res.json()["items"] == []
     res = client.post("/api/enqueue",
-                      json={"receipt": routed, "recordedAt": T0, "routedTo": "notice-review"})
+                      json={"receipt": routed, "recordedAt": T0, "routedTo": "fixture-review"})
     assert len(res.json()["items"]) == 1

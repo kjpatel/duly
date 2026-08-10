@@ -36,7 +36,7 @@ receipt.abstentions ──enqueue──▶ queue item (open)
 
 ## Corrections become golden cases
 
-`resolved_item_to_golden_case` (CLI: `python -m duly_review golden`) freezes a resolved item's arc as a golden regression case: the case's facts as-of post-correction (a store projection at the resolution's knowledge time) plus a freshly adjudicated receipt, written in the corpus layout. Ids use the distinct `review-NNNN` series; the synthetic generator preserves them across regenerations (golden/README.md). The committed `review-0001` exercises the full arc: a low-confidence mailed-date fact abstained, a human confirmed the date (superseding the machine fact), and the decision flipped from the compliance presumption to non-compliant.
+`resolved_item_to_golden_case` (CLI: `python -m duly_review golden`) freezes a resolved item's arc as a golden regression case: the case's facts as-of post-correction (a store projection at the resolution's knowledge time) plus a freshly adjudicated receipt, written in the corpus layout. Ids use the distinct `review-NNNN` series; the synthetic generator preserves them across regenerations ([examples/golden/README.md](../examples/golden/README.md)). The committed `review-0001` exercises the full arc: a low-confidence mailed-date fact abstained, a human confirmed the date (superseding the machine fact), and the decision flipped from the compliance presumption to non-compliant.
 
 ## HTTP surface
 

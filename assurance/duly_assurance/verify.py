@@ -34,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m duly_assurance verify",
         description="Re-adjudicate every golden case and byte-compare receipts.",
     )
-    parser.add_argument("--golden", default="golden", help="golden corpus directory (default: golden)")
+    parser.add_argument("--golden", default="examples/golden", help="golden corpus directory (default: examples/golden)")
     args = parser.parse_args(argv)
 
     golden = Path(args.golden)

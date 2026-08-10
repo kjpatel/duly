@@ -18,7 +18,8 @@ from duly_extraction.stub import StubAdapter
 from extractiontest_helpers import (
     STARTER_RUNS,
     STARTERS,
-    load_targets,
+    load_fixture_fact,
+    run_fixture_stub,
     run_stub,
 )
 
@@ -39,55 +40,13 @@ def test_docling_adapter_satisfies_protocol_without_docling_installed():
     assert isinstance(DoclingAdapter(), ExtractionAdapter)
 
 
-# --- the stub reproduces the committed starter facts byte-for-byte -----------
+# --- targets with no content root behind them --------------------------------
 
-@pytest.mark.parametrize("targets_name", sorted(STARTER_RUNS))
-def test_stub_reproduces_committed_facts(targets_name):
-    result, targets, _text = run_stub(targets_name)
-    scenario, _doc = STARTER_RUNS[targets_name]
-    assert len(result.facts) == len(targets["facts"])
-    for target, fact in zip(targets["facts"], result.facts):
-        committed_path = STARTERS / scenario / "facts" / target["file"]
-        # Byte-for-byte, including key order — the same serialization
-        # starters/tools/extract.py writes.
-        assert json.dumps(fact, indent=2, ensure_ascii=False) + "\n" == committed_path.read_text(
-            encoding="utf-8"
-        )
-
-
-@pytest.mark.parametrize("targets_name", sorted(STARTER_RUNS))
-def test_every_emitted_fact_is_span_faithful(targets_name):
-    """The acceptance test: quote == rendition_text[start:end], every fact."""
-    result, _targets, text = run_stub(targets_name)
-    for fact in result.facts:
-        span = fact["grounding"]["charSpan"]
-        assert text[span["start"]:span["end"]] == fact["grounding"]["quote"]
-        verify_fact_span(fact, text)  # and the packaged checker agrees
-
-
-def test_stub_raises_on_missing_quote():
-    targets = load_targets("notice-ny-dec-page.json")
-    document = SourceDocument(targets["documentId"], "0" * 64)
-    with pytest.raises(QuoteNotFoundError):
-        StubAdapter("a rendition without the quotes").extract(document, targets)
-
-
-def test_stub_notes_ambiguous_quote():
-    targets = load_targets("notice-ny-dec-page.json")
-    targets["facts"] = [dict(targets["facts"][0], quote="09/01/2025")]
-    text = "period 09/01/2025 to 09/01/2025"
-    document = SourceDocument(targets["documentId"], "0" * 64)
-    result = StubAdapter(text).extract(document, targets)
-    assert len(result.facts) == 1
-    assert result.facts[0]["grounding"]["charSpan"] == {"start": 7, "end": 17}  # first occurrence
-    assert any("more than once" in note for note in result.notes)
-
-
-# --- what a target carries through, and what it does not ---------------------
-
-#: A targets file with no content root behind it: the pass-through rules below
-#: are adapter behaviour, so asserting them against committed starter targets
-#: would tie them to content an adopter deletes.
+#: The adapter behaviours below are properties of the *adapter*, so they are
+#: asserted against targets built here rather than against any committed
+#: corpus: a scripted miss and a scripted ambiguity are authoring errors no
+#: committed targets file may contain, and tying them to one would make them
+#: hostage to content an adopter deletes.
 def _standalone_targets(**fact_extras) -> dict:
     return {
         "documentId": "doc:widget:1",
@@ -115,6 +74,26 @@ def _one_fact(**fact_extras) -> dict:
     return fact
 
 
+def test_stub_raises_on_missing_quote():
+    targets = _standalone_targets()
+    document = SourceDocument(targets["documentId"], "0" * 64)
+    with pytest.raises(QuoteNotFoundError):
+        StubAdapter("a rendition without the quotes").extract(document, targets)
+
+
+def test_stub_notes_ambiguous_quote():
+    targets = _standalone_targets()
+    targets["facts"] = [dict(targets["facts"][0], quote="Dana Okafor")]
+    text = "Inspector of record: Dana Okafor, countersigned by Dana Okafor"
+    document = SourceDocument(targets["documentId"], "0" * 64)
+    result = StubAdapter(text).extract(document, targets)
+    assert len(result.facts) == 1
+    assert result.facts[0]["grounding"]["charSpan"] == {"start": 21, "end": 32}  # first occurrence
+    assert any("more than once" in note for note in result.notes)
+
+
+# --- what a target carries through, and what it does not ---------------------
+
 def test_a_target_can_declare_its_handling_class():
     """`sensitivity` passes through from the target, like the effective dates.
 
@@ -138,10 +117,40 @@ def test_an_undeclared_handling_class_is_absent_rather_than_defaulted():
     assert "sensitivity" not in _one_fact()
 
 
+# --- the stub reproduces the committed fixture facts byte-for-byte -----------
+
+def test_stub_reproduces_the_committed_fixture_facts():
+    """The fixture scenario's facts are *adapter output*, not hand assembly
+    (fixtures/build.py, "the scenario"), so this is the round trip that keeps
+    them so: run the committed targets through the stub and the bytes in git
+    must come back. A drift here means the committed scenario no longer
+    matches what a deployment ingesting the same targets would hold.
+    """
+    result, targets, _text = run_fixture_stub()
+    assert targets["facts"], "fixture targets carry no facts"
+    assert len(result.facts) == len(targets["facts"])
+    for target, fact in zip(targets["facts"], result.facts):
+        # Byte-for-byte, including key order — the same serialization
+        # fixtures/build.py writes.
+        assert json.dumps(fact, indent=2, ensure_ascii=False) + "\n" == load_fixture_fact(
+            target["file"]
+        )
+
+
+def test_every_emitted_fact_is_span_faithful():
+    """The acceptance test: quote == rendition_text[start:end], every fact."""
+    result, _targets, text = run_fixture_stub()
+    assert result.facts, "fixture run emitted no facts"
+    for fact in result.facts:
+        span = fact["grounding"]["charSpan"]
+        assert text[span["start"]:span["end"]] == fact["grounding"]["quote"]
+        verify_fact_span(fact, text)  # and the packaged checker agrees
+
+
 # --- verify_fact_span rejects what it should ---------------------------------
 
 def test_verify_fact_span_rejects_wrong_offsets():
-    result, _targets, text = run_stub("notice-ny-dec-page.json")
+    result, _targets, text = run_fixture_stub()
     fact = json.loads(json.dumps(result.facts[0]))
     fact["grounding"]["charSpan"]["start"] += 1
     with pytest.raises(SpanVerificationError):
@@ -189,3 +198,25 @@ def test_locate_quote_normalized_ambiguous():
 def test_locate_quote_not_found():
     assert locate_quote("nothing here", "absent", allow_normalized=True) is None
     assert locate_quote("nothing here", "   ", allow_normalized=True) is None
+
+
+# --- EXAMPLE CONTENT (moves with examples/) ----------------------------------
+#
+# The subject of the test below IS the committed starter content: that the
+# facts shipped under `starters/` are still exactly what the adapter emits from
+# the starter targets. It asserts nothing about the toolkit that the fixture
+# twin above does not already assert, so it travels with `starters/` rather
+# than being converted.
+
+@pytest.mark.parametrize("targets_name", sorted(STARTER_RUNS))
+def test_stub_reproduces_committed_facts(targets_name):
+    result, targets, _text = run_stub(targets_name)
+    scenario, _doc = STARTER_RUNS[targets_name]
+    assert len(result.facts) == len(targets["facts"])
+    for target, fact in zip(targets["facts"], result.facts):
+        committed_path = STARTERS / scenario / "facts" / target["file"]
+        # Byte-for-byte, including key order — the same serialization
+        # starters/tools/extract.py writes.
+        assert json.dumps(fact, indent=2, ensure_ascii=False) + "\n" == committed_path.read_text(
+            encoding="utf-8"
+        )

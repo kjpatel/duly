@@ -34,7 +34,7 @@ deleted is not a test.**
 | `receipts/fx-000N.json` | The receipt each case produces, committed |
 | `scenario/` | One *scenario*, which is what the demo surfaces read: a document, the extractor's rendition of it, and facts grounded in character spans of that rendition |
 | `targets/` | The scenario's extraction **targets** — the scripted quotes, values and confidences `StubAdapter` extracts from the rendition. The committed facts under `scenario/facts/` are what the adapter emits from this file, exactly how real starters are built; a demo content root places it at `starters/tools/targets/`, which is what makes the review arc reachable from a fixture-only deployment |
-| `dmn/` | Two DMN decision tables: one that compiles, one that is refused. The studio's import panel and the compiler's happy path were reachable only through `dmn/examples/`, which an adopter deletes |
+| `dmn/` | Two DMN decision tables — one that compiles, one that is refused — plus `widget-fee.pack.yaml`, the committed compilation, kept honest by `python -m duly_dmn verify` in the CLI suite. The studio's import panel and the compiler's happy path were reachable only through `dmn/examples/`, which an adopter deletes |
 | `build.py` | Regenerates the cases, receipts, targets and scenario, deterministically — the scenario's facts by running the real `StubAdapter` over the targets, never by hand-assembling |
 
 Five cases, chosen to cover what the toolkit's own tests need rather than to

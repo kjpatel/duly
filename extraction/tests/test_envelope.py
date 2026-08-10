@@ -1,5 +1,10 @@
 """Extraction-run envelopes: produce -> verify -> ingest -> revoke, and every
-tamper path rejected before anything reaches the store."""
+tamper path rejected before anything reaches the store.
+
+Toolkit behaviour, so it runs on the fixture scenario (`fixtures/scenario/` +
+`fixtures/targets/`) rather than on the starter content — see
+extractiontest_helpers.py.
+"""
 
 import copy
 import json
@@ -17,10 +22,10 @@ from duly_extraction.envelope import (
     verify_envelope,
 )
 
-from extractiontest_helpers import run_stub
+from extractiontest_helpers import run_fixture_stub
 from duly_core import schema_path
 
-KNOWLEDGE = "2026-07-30T16:00:00Z"       # after every starter fact's recordedAt
+KNOWLEDGE = "2026-07-30T16:00:00Z"       # after every fixture fact's recordedAt
 REVOKED_AT = "2026-07-31T09:00:00Z"
 AFTER_REVOKE = "2026-07-31T10:00:00Z"
 
@@ -34,8 +39,8 @@ def store():
 
 @pytest.fixture()
 def run():
-    """One committed starter run: (envelope, facts, rendition_text, targets)."""
-    result, targets, text = run_stub("notice-ny-dec-page.json")
+    """The committed fixture run: (envelope, facts, rendition_text, targets)."""
+    result, targets, text = run_fixture_stub()
     return result.envelope, result.facts, text, targets
 
 
@@ -76,7 +81,6 @@ def test_envelope_is_content_addressed(run):
 
 def test_envelope_validates_against_spec_schema(run):
     jsonschema = pytest.importorskip("jsonschema")
-    from extractiontest_helpers import REPO_ROOT
 
     schema = json.loads(
         schema_path("extraction-run").read_text(encoding="utf-8")
@@ -109,26 +113,43 @@ def test_ingest_is_idempotent(store, run):
     assert ingest_envelope(store, envelope, facts, text) == 0
 
 
-def test_revoke_only_touches_its_run(store):
-    dec = run_stub("notice-ny-dec-page.json")[0]
-    trid = run_stub("trid-loan-estimate.json")[0]
-    assert dec.envelope["runId"] != trid.envelope["runId"]
-    ingest_envelope(store, dec.envelope, dec.facts, dec.rendition.text)
-    ingest_envelope(store, trid.envelope, trid.facts, trid.rendition.text)
+def test_revoke_only_touches_its_run(store, run):
+    """Revocation is scoped by runId, and one document is enough to prove it.
 
-    revoked = revoke_run(store, trid.envelope["runId"], REVOKED_AT)
-    assert sorted(revoked) == sorted(trid.envelope["factIds"])
+    The second run is the same committed rendition re-extracted under a
+    different `runId` — a re-run, which is exactly the situation revocation
+    scoping exists for — and under its own `caseId`, so what survives the
+    revocation is unmistakably a run-scoping result rather than supersession
+    between two runs over one case.
+    """
+    _envelope, _facts, text, targets = run
+    first = run_fixture_stub()[0]
+    rerun_targets = dict(
+        targets,
+        runId=targets["runId"] + "-rerun",
+        caseId=targets["caseId"] + ":rerun",
+        facts=targets["facts"][:1],
+    )
+    second = run_fixture_stub(rerun_targets)[0]
+    assert first.envelope["runId"] != second.envelope["runId"]
+    assert set(first.envelope["factIds"]).isdisjoint(second.envelope["factIds"])
+
+    ingest_envelope(store, first.envelope, first.facts, text)
+    ingest_envelope(store, second.envelope, second.facts, text)
+
+    revoked = revoke_run(store, second.envelope["runId"], REVOKED_AT)
+    assert sorted(revoked) == sorted(second.envelope["factIds"])
     # The other run is untouched...
-    assert len(store.as_of("case:policy:HO-77401-NY", AFTER_REVOKE)) == len(dec.facts)
+    assert len(store.as_of(targets["caseId"], AFTER_REVOKE)) == len(first.facts)
     # ...and revoking again finds nothing live.
-    assert revoke_run(store, trid.envelope["runId"], AFTER_REVOKE) == []
+    assert revoke_run(store, second.envelope["runId"], AFTER_REVOKE) == []
 
 
 def test_revoke_unknown_run_is_a_noop(store, run):
-    envelope, facts, text, _targets = run
+    envelope, facts, text, targets = run
     ingest_envelope(store, envelope, facts, text)
     assert revoke_run(store, "run:never-happened", REVOKED_AT) == []
-    assert len(store.as_of("case:policy:HO-77401-NY", AFTER_REVOKE)) == len(facts)
+    assert len(store.as_of(targets["caseId"], AFTER_REVOKE)) == len(facts)
 
 
 # --- tamper detection: nothing reaches the store ------------------------------
@@ -142,14 +163,14 @@ def assert_rejected_and_store_empty(store, envelope, facts, text, targets, exc=E
 def test_modified_fact_rejected(store, run):
     envelope, facts, text, targets = run
     tampered = copy.deepcopy(facts)
-    tampered[0]["value"]["value"] = "2027-09-01"  # hash no longer matches
+    tampered[0]["value"]["value"] = "99"  # hash no longer matches
     assert_rejected_and_store_empty(store, envelope, tampered, text, targets)
 
 
 def test_modified_and_rehashed_fact_rejected(store, run):
     envelope, facts, text, targets = run
     tampered = copy.deepcopy(facts)
-    tampered[0]["value"]["value"] = "2027-09-01"
+    tampered[0]["value"]["value"] = "99"
     tampered[0] = rehash_fact(tampered[0])  # hash valid, but not the fact the manifest lists
     assert_rejected_and_store_empty(store, envelope, tampered, text, targets)
 

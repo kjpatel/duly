@@ -3,10 +3,15 @@
 Registry supplied: a nonconforming fact rejects the whole run loudly, with
 attribution, and nothing reaches the store. Registry omitted: byte-for-byte
 the pre-gate behavior — existing call sites change nothing.
+
+The registry here is the *fixture* ontology directory, not the repository's
+`ontologies/`: the gate's behaviour is toolkit behaviour, and a suite that
+loaded duly's own published ontologies would be asserting it against content an
+adopter deletes. `load_repo_registry` raises on an empty directory, so a
+fixture corpus that went missing fails here rather than quietly conforming.
 """
 
 import copy
-from pathlib import Path
 
 import pytest
 
@@ -19,19 +24,17 @@ from duly_extraction.envelope import (
     verify_envelope,
 )
 
-from extractiontest_helpers import run_stub
-
-REPO = Path(__file__).resolve().parents[2]
+from extractiontest_helpers import FIXTURE_ONTOLOGIES, run_fixture_stub
 
 
 @pytest.fixture(scope="module")
 def registry():
-    return load_repo_registry(REPO / "ontologies")
+    return load_repo_registry(FIXTURE_ONTOLOGIES)
 
 
 @pytest.fixture()
 def run():
-    result, targets, text = run_stub("notice-ny-dec-page.json")
+    result, _targets, text = run_fixture_stub()
     return result.envelope, result.facts, text
 
 
@@ -41,7 +44,8 @@ def _with_misspelled_attribute(envelope: dict, facts: list[dict]) -> tuple[dict,
     ontology gate can catch it."""
     facts = copy.deepcopy(facts)
     bad = facts[1]
-    bad["attribute"] = "nc:policyExpirationDat"
+    assert bad["attribute"] == "fx:category"  # the fixture run's second fact
+    bad["attribute"] = "fx:categor"
     digest = content_hash(bad)
     bad["contentHash"] = digest
     bad["id"] = f"urn:duly:fact:sha256:{digest}"
@@ -79,8 +83,8 @@ def test_registry_rejects_the_run_with_attribution(run, registry):
     message = str(exc.value)
     assert bad_facts[1]["id"] in message
     assert "unknown_attribute" in message
-    assert "duly-starter-notice@0.1.0" in message
-    assert "did you mean 'nc:policyExpirationDate'" in message
+    assert "duly-fixture@0.1.0" in message
+    assert "did you mean 'fx:category'" in message
 
 
 def test_ingest_with_registry_writes_nothing_on_rejection(run, registry):

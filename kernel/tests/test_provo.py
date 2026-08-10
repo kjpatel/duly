@@ -293,7 +293,7 @@ def test_envelope_export_types_activity_and_adapter_agent(envelope):
         ("spec/examples/fact-decpage-expiration.json", "fact"),
         ("fixtures/cases/fx-0004/facts/fx-score-corrected.json", "fact"),
         ("fixtures/receipts/fx-0001.json", "receipt"),
-        ("golden/receipts/rec-0015.json", "receipt"),
+        ("fixtures/receipts/fx-0003.json", "receipt"),
         ("spec/examples/envelopes/envelope-decpage-run.json", "envelope"),
     ],
 )

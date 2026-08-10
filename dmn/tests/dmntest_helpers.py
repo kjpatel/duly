@@ -13,6 +13,24 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parents[2]
+
+# The toolkit's own DMN corpus: what this suite compiles when it is asserting
+# *compiler* behaviour. Sized to the two hit policies that compile differently
+# and to one refusal; see fixtures/README.md.
+FIXTURES = REPO / "fixtures"
+FIXTURE_DMN_DIR = FIXTURES / "dmn"
+FIXTURE_DMN = FIXTURE_DMN_DIR / "widget-fee.dmn"
+FIXTURE_COMPILED = FIXTURE_DMN_DIR / "widget-fee.pack.yaml"
+FIXTURE_REFUSALS = FIXTURE_DMN_DIR / "refusals"
+FIXTURE_ONTOLOGIES = FIXTURES / "ontology"
+
+# EXAMPLE CONTENT (moves with `examples/`). Teaching content: the TRID table is
+# the one an adopter reads and then deletes. Only the two suites whose *subject*
+# is that content may reach for these — `test_equivalence.py` (does the compiled
+# pack decide what the hand-written one decides?) and `test_refusals.py` (does
+# every committed refusal example refuse?). A test about the compiler belongs on
+# the fixture constants above, or a `git rm -r dmn/examples/` leaves it passing
+# over an empty glob (CLAUDE.md).
 EXAMPLES = REPO / "dmn" / "examples"
 REFUSALS = EXAMPLES / "refusals"
 
@@ -91,23 +109,34 @@ def minimal_dmn(**overrides: str) -> str:
     return MINIMAL_DMN.format(**values)
 
 
-def refusal_value_kinds() -> dict[str, str]:
-    """Attribute CURIE -> duly value kind, from the committed ontologies.
+def value_kinds(ontologies: Path) -> dict[str, str]:
+    """Attribute CURIE -> duly value kind, from a directory of ontologies.
 
     The compiler takes this mapping rather than a path, so it never reaches
     for a directory of its own choosing. Tests and the spec demo are
-    repo-resident and may supply the repo's own `ontologies/`; a compiler
-    that did the same would be assuming a layout it cannot rely on.
+    repo-resident and may supply a repo directory; a compiler that did the
+    same would be assuming a layout it cannot rely on.
 
-    One refusal example needs it: a money column tested against a bare number
-    is the only defect DMN cannot self-diagnose, because DMN's `typeRef` is
-    the author's declaration and duly's value kinds are not DMN's.
+    It exists because of the one defect DMN cannot self-diagnose: a money
+    column tested against a bare number. DMN's `typeRef` is the author's
+    declaration and duly's value kinds are not DMN's.
     """
     from duly_conformance import load_repo_registry
 
     kinds: dict[str, str] = {}
-    for ontology in load_repo_registry(REPO / "ontologies"):
+    for ontology in load_repo_registry(ontologies):
         for klass in ontology.classes.values():
             for slot in klass.slots.values():
                 kinds[slot.curie] = slot.kind
     return kinds
+
+
+def fixture_value_kinds() -> dict[str, str]:
+    """The mapping for the fixture DMN's vocabulary (`fixtures/ontology/`)."""
+    return value_kinds(FIXTURE_ONTOLOGIES)
+
+
+def refusal_value_kinds() -> dict[str, str]:
+    """EXAMPLE CONTENT (moves with `examples/`): the mapping the committed
+    refusal *examples* pin, from this repository's own `ontologies/`."""
+    return value_kinds(REPO / "ontologies")

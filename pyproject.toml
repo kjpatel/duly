@@ -22,6 +22,14 @@ license = "Apache-2.0"
 # is the strongest claim SECURITY.md's dependency section can make.
 dependencies = [
     "pyyaml>=6.0",
+    # DECIDED (Kushan, 2026-08-06, at the 1.0.0 pause): core, not an extra.
+    # The review queue's C6 check — a low_confidence correction must
+    # supersede — validates the correction against the grounded-fact schema,
+    # and enforcement of a compatibility rule is not behaviour an optional
+    # extra may withhold. A bare install that could not run
+    # ReviewQueue.resolve() was the last gap between "installs small" and
+    # "installs the contract".
+    "jsonschema>=4.18",
 ]
 
 [project.scripts]

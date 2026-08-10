@@ -68,8 +68,9 @@ That two is asserted, not asserted-to:
 installs a built wheel into a clean virtualenv, runs the example against it with
 duly's source tree off `sys.path`, and fails if the install brought a third package.
 
-One documented gap remains, and it is a gap rather than a design: `duly_review`'s
-correction validation imports `jsonschema` lazily, and no extra declares it, so
-`ReviewQueue.resolve()` on a bare install raises `ModuleNotFoundError` instead of
-enforcing the compatibility rule it exists to enforce. Install it alongside duly
-until that is resolved.
+That gap is closed as of 1.0.0: `jsonschema` is a core dependency, because the
+review queue's correction validation enforces a compatibility rule
+([spec/compatibility.md](spec/compatibility.md) C6), and enforcement of a
+compatibility rule is not behaviour an optional extra may withhold. A plain
+install is duly, pyyaml, and jsonschema's small closure — seven packages, still
+pinned by the wheel check.

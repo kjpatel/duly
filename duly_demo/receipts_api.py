@@ -396,7 +396,10 @@ def _check_facts(receipt: dict, facts: list[dict], facts_status: dict) -> dict:
                 f"{len(pinned)} facts are pinned by hash, but their bodies were "
                 f"not supplied: {facts_status.get('reason', 'no facts available')}. "
                 "A receipt pins facts by content hash, so it cannot reproduce "
-                "them on its own."
+                "them on its own — and the viewer resolves bodies from disk "
+                "only for the committed corpus, so a receipt from a live "
+                "session must arrive with its facts. Paste them alongside it "
+                "and this check runs."
             ),
         }
     content_hash = _kernel("content_hash")
@@ -594,7 +597,11 @@ def _verify(
             "partial",
             "Nothing here can be checked without the kernel."
             if checks[0]["state"] == "unavailable"
-            else "Verified as far as the supplied inputs allow.",
+            else (
+                'Verified as far as the supplied inputs allow. "Not checked" '
+                "is a missing input, not a failed check — supply what each "
+                "card names and it runs."
+            ),
         )
     else:
         verdict, headline = "pass", "This receipt replays byte-for-byte."

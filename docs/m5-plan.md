@@ -854,7 +854,18 @@ proves it.
       identical `ModuleNotFoundError`s deeper in, which is the one place in
       this package where raising beats degrading. The `scheduling` extra went
       with it, per the decision recorded under Packaging below.*
-- [ ] **Packaging (1 PR).** Distribution version to `1.0.0` (release-process
+- [x] **Packaging (1 PR).** Done: version `1.0.0`, the five decided console
+      scripts in `[project.scripts]` with their parsers' `prog=` corrected to
+      the names users actually invoke, and a console-script smoke in the
+      minimal-integration workflow that runs each installed command's
+      `--help` and requires the command's own name in the usage line — the
+      check that catches both a broken `module:function` target and a parser
+      still claiming to be `python -m …`. `test_engine_identity` re-run
+      explicitly (its monkeypatch test rehearses this exact bump);
+      release-process §7 executed IN FULL including all four marker lanes —
+      the docling lane's 5 passing tests also retroactively validated part
+      5's converted-but-unexecuted fixture conversions. Original text:
+      Distribution version to `1.0.0` (release-process
       §3: distribution only — kernel stays `0.0.1` per D5, and
       `test_engine_identity.py` enforces the receipt side). Console entry
       points for the CLIs currently reachable only as `python -m …`
@@ -872,9 +883,10 @@ proves it.
       is the documented invocation; the suite keeps `uv run --with ortools
       pytest …`, because pytest is not the script and cannot read another
       file's metadata.*
-- [ ] **The smoke gate.** CI: build the wheel, install into a clean venv,
-      run the Phase 0 example against it. (May already exist from Phase 0 —
-      then just assert it still covers the final layout.)
+- [x] **The smoke gate.** Already existed from Phase 0 (`check_wheel.sh` +
+      `wheel_smoke.py`); this phase extended it rather than duplicating it:
+      the bare-install package-count assertion (PR 2 of this phase) and the
+      console-script `--help` smoke (PR 3) are the layout-shaped additions.
 - [ ] **Tag `v1.0.0`** at milestone close per release-process §6 — the first
       tag that is both milestone and package release; the checklist in §7
       of that doc runs in full, including every marker-gated suite.
@@ -1409,3 +1421,16 @@ and every exception behind it.**
   the eleven toolkit suites, verify's honest refusal (exit code and message),
   and the four demo pages against nothing, on every push. Phase 3's founding
   claim is now enforced, not asserted.
+
+- 2026-08-06 — [#70](https://github.com/kjpatel/duly/pull/70) — **Phase 4:
+  duly_demo** — the demo became an installable package; static ships as
+  package data; the wheel excludes the in-package tests it would otherwise
+  have shipped; the wheel-installed REPO_ROOT gap documented and routed.
+- 2026-08-06 — [#71](https://github.com/kjpatel/duly/pull/71) — **Phase 4:
+  extras** — a plain install is duly + pyyaml (was 18 packages), pinned by
+  assertion; extras `demo`/`report`; dev-group ride-along keeps `uv sync`
+  and CI unchanged; `scheduling` moved into its example as PEP 723 metadata.
+- 2026-08-06 — [#72](https://github.com/kjpatel/duly/pull/72) — **Phase 4:
+  packaging 1.0.0** — version, the five console scripts, prog= corrections,
+  console smoke; release-process §7 run in full; paused for Kushan (tag
+  decision attached, plus the jsonschema and FastAPI-version questions).

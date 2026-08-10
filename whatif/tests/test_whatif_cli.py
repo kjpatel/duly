@@ -60,7 +60,12 @@ def test_a_query_needs_a_case_or_facts_and_a_pack():
 def test_importing_the_cli_does_not_require_z3():
     from duly_whatif.__main__ import build_parser
 
-    assert build_parser().prog == "python -m duly_whatif"
+    # The console-script name, since M5 packaging: `duly-whatif` is what an
+    # installed user runs, and --help must introduce the command by the name
+    # that invoked it. `python -m duly_whatif` still works and argparse shows
+    # the same prog either way — one name in the usage line, chosen for the
+    # audience that sees it most.
+    assert build_parser().prog == "duly-whatif"
 
 
 # ---------------------------------------------------------------------------

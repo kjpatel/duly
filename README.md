@@ -83,8 +83,9 @@ its pack, and compared byte-for-byte against the receipt committed months earlie
 > **Before you build on it — pre-1.0, and honest about which parts.** The fact,
 > receipt and rule-IR contracts are **frozen**:
 > [what v1.0 promises, per contract](spec/compatibility.md), including what it
-> deliberately does not cover. Not yet on PyPI — installation is `git clone`
-> until the v1.0 release. The SQLite stores and in-process demo are a reference
+> deliberately does not cover. Not on PyPI — installation is `git clone`
+> (`pip install .` builds a real wheel; the `v1.0.0` tag marks the first
+> release-shaped distribution). The SQLite stores and in-process demo are a reference
 > wiring, not a deployment blueprint. Demo content that is invented rather than
 > real is labelled `DEMO-SYNTHETIC` in the file that carries it.
 

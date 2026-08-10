@@ -9,7 +9,7 @@ name = "duly"
 # hashes; aligning it with this number would invalidate every one of them
 # without a rule, a fact, or a decision having changed. See the comment there
 # before "tidying up" the version numbers that read 0.0.1 across this repo.
-version = "0.0.1"
+version = "1.0.0"
 description = "Auditable document decisioning for regulated workflows"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,6 +23,17 @@ license = "Apache-2.0"
 dependencies = [
     "pyyaml>=6.0",
 ]
+
+[project.scripts]
+# The five decided at the M5 packaging ASK (docs/m5-plan.md, DECIDED
+# 2026-08-06). duly-verify and duly-impact bypass the duly_assurance
+# dispatcher and bind the subcommand mains directly; generate, prove and
+# prove-equivalent remain `python -m duly_assurance <sub>` only.
+duly-verify = "duly_assurance.verify:main"
+duly-impact = "duly_assurance.impact:main"
+duly-conformance = "duly_conformance.__main__:main"
+duly-dmn = "duly_dmn.__main__:main"
+duly-whatif = "duly_whatif.__main__:main"
 
 [project.optional-dependencies]
 # The two HTTP surfaces: the demo workspace (`duly_demo`, four pages) and the

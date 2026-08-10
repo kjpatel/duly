@@ -31,7 +31,7 @@ def _differing_fields(recomputed: dict, committed: dict) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m duly_assurance verify",
+        prog="duly-verify",
         description="Re-adjudicate every golden case and byte-compare receipts.",
     )
     parser.add_argument("--golden", default="examples/golden", help="golden corpus directory (default: examples/golden)")

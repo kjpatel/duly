@@ -4,3 +4,8 @@ __pycache__/
 dist/
 *.egg-info/
 .claude/
+
+# Build context assembled by .github/workflows/deploy-demo.yml (and by hand,
+# following deploy/Dockerfile). Both halves are reproduced from source.
+deploy/duly-*.whl
+deploy/content/

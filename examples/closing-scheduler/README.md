@@ -5,12 +5,16 @@ with CP-SAT ([OR-Tools](https://developers.google.com/optimization)) doing the
 optimizing and duly doing the deciding.
 
 ```bash
-uv run --with ortools python examples/closing-scheduler/schedule.py
-uv run --with ortools python examples/closing-scheduler/schedule.py --json
-uv run --with ortools python examples/closing-scheduler/schedule.py \
+uv run examples/closing-scheduler/schedule.py
+uv run examples/closing-scheduler/schedule.py --json
+uv run examples/closing-scheduler/schedule.py \
     --closing-file examples/closing-scheduler/closing-file-ron.json   # the refusal case
-uv run python examples/closing-scheduler/schedule.py --no-solve       # duly half only; no solver
+uv run examples/closing-scheduler/schedule.py --no-solve              # duly half only; no solver
 ```
+
+No `--with` and no extra: `schedule.py` declares `ortools` in its own
+[PEP 723](https://peps.python.org/pep-0723/) script metadata, so `uv run` reads
+the requirement out of the file it is about to run.
 
 ## The principle, which is the entire point
 
@@ -56,7 +60,7 @@ go through a receipt.
 
 ## The plan it produces
 
-This is real output, not a sketch (`uv run --with ortools python
+This is real output, not a sketch (`uv run
 examples/closing-scheduler/schedule.py`), trimmed to the shape:
 
 ```
@@ -260,13 +264,24 @@ separate subprocesses under `PYTHONHASHSEED` 0, 1 and 42 and compares bytes.
 
 ## Dependencies
 
-`ortools` is optional, like `z3-solver` and `docling` before it:
+`ortools` is optional, like `z3-solver` and `docling` — but unlike them it is
+declared **here**, not in duly's `pyproject.toml`. There is no
+`--extra scheduling`. CP-SAT is a dependency of an *example of embedding duly*,
+not of duly, so the declaration lives in the file that needs it and leaves with
+`git rm -r examples/`: `schedule.py` opens with a PEP 723 `# /// script` block
+naming `ortools>=9.8` (and duly itself, by relative path, because a script with
+inline metadata runs in its own environment).
 
 ```bash
-uv sync --extra scheduling                  # or: uv run --with ortools …
-uv run --with ortools pytest examples/closing-scheduler -q -m ortools
+uv run examples/closing-scheduler/schedule.py                          # metadata resolves ortools
+uv run --with ortools pytest examples/closing-scheduler -q -m ortools  # the suite
 ```
 
-Without it, `schedule.py` prints the install command and exits 2 — never a
+The two lines differ because pytest is not the script: `uv run pytest` runs
+*pytest*, which cannot read another file's script metadata, so the suite asks
+for ortools explicitly. Its tests carry `@pytest.mark.ortools` and skip without
+it, which is what keeps the plain `uv run pytest` lane green.
+
+Without ortools, `schedule.py` prints the install command and exits 2 — never a
 traceback — and `--no-solve` still prints the adjudicated windows, because the
 duly half of this example has no optional dependency at all.

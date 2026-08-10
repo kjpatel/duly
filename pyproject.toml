@@ -14,14 +14,33 @@ description = "Auditable document decisioning for regulated workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
+# The document→receipt path, and nothing else. A rule pack is YAML, so the
+# kernel needs a YAML parser; everything past that — the HTTP surfaces, the PDF
+# renderer, the solvers, the extraction stack — is a *surface* built on the
+# path rather than part of it, and lives in an extra below. An adopter
+# embedding the kernel inherits one third-party package and its surface, which
+# is the strongest claim SECURITY.md's dependency section can make.
 dependencies = [
     "pyyaml>=6.0",
-    "fastapi>=0.115",
-    "uvicorn>=0.30",
-    "reportlab>=4.0",
 ]
 
 [project.optional-dependencies]
+# The two HTTP surfaces: the demo workspace (`duly_demo`, four pages) and the
+# review queue's API (`duly_review.api`). One extra covers both because they
+# are one dependency — FastAPI and an ASGI server — not because the review API
+# is part of the demo. `import duly_review` does not reach `api.py`; only
+# `duly_review.api` does, so the queue itself stays installable without this.
+demo = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+# The kernel's PDF audit report (`duly_kernel.report.render_report_pdf`, and
+# the demo's `/api/receipts/report.pdf` route that calls it). Lazily imported
+# inside the render function, so `import duly_kernel` never touches it and both
+# call sites already degrade honestly when it is absent.
+report = [
+    "reportlab>=4.0",
+]
 # Heavy (pulls torch et al.); the core suite never needs it. Install with
 # `uv sync --extra extraction` to run the live Docling adapter and its
 # @pytest.mark.docling tests.
@@ -37,16 +56,14 @@ extraction = [
 prove = [
     "z3-solver>=4.12",
 ]
-# CP-SAT for `examples/closing-scheduler`, which plans a closing around duly's
-# adjudications. Optional for the same reason as the two above and one more:
-# it belongs to an *example* of embedding duly, not to duly. The kernel, the
-# packs and the receipts the example consumes are all produced without it, and
-# the example's own compliance half runs without it too (`--no-solve`).
-# Install with `uv sync --extra scheduling` or `uv run --with ortools ...`;
-# the @pytest.mark.ortools tests skip when ortools is not importable.
-scheduling = [
-    "ortools>=9.8",
-]
+# There is deliberately no `scheduling` extra. CP-SAT belongs to an *example*
+# of embedding duly, not to duly, so its declaration lives in the example and
+# deletes with it: `examples/closing-scheduler/schedule.py` carries PEP 723
+# inline script metadata (`uv run examples/closing-scheduler/schedule.py`
+# resolves ortools by itself) and its suite runs as
+# `uv run --with ortools pytest examples/closing-scheduler -q -m ortools`.
+# An extra here would have made the root project the declaration site for a
+# dependency `git rm -r examples/` is supposed to take with it.
 
 [dependency-groups]
 dev = [
@@ -54,6 +71,19 @@ dev = [
     "pytest>=8.0",
     "httpx>=0.27",
     "pyld>=2.0",
+    # fastapi, uvicorn and reportlab appear here as well as in the `demo` and
+    # `report` extras above, and the duplication is the design. The extras gate
+    # the *wheel consumer*: `pip install duly` gets the kernel and nothing
+    # else. This group serves the *repository*: `uv sync` installs it, so every
+    # developer and every CI lane keeps working with the single command they
+    # already run, and no suite grows a skip for a dependency the repo always
+    # has. These are three light packages (reportlab's whole closure is three),
+    # which is why they ride the dev group rather than becoming pytest markers
+    # — markers are for heavy deps the repo genuinely cannot assume (docling,
+    # z3, ortools). Bumping a floor means bumping it in both places.
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "reportlab>=4.0",
 ]
 
 [build-system]

@@ -53,8 +53,22 @@ distribution yet.
 
 ## Dependencies
 
-The document→receipt path depends on `pyyaml` and the standard library. Everything
-else — the demo server, the PDF report renderer, the solver, the extraction stack —
-is behind an optional extra or a marker-gated test, so a kernel-only integration
-does not inherit their surface. Reducing the default install to exactly that set is
-tracked M5 work; today `pip install`-equivalent pulls more than the kernel needs.
+The document→receipt path depends on `pyyaml` and the standard library, and so does
+the default install: `pip install duly` brings exactly two packages, duly and
+PyYAML. Everything else — the HTTP surfaces (`duly[demo]`, which covers both the
+demonstration workspace and the review queue's API), the PDF report renderer
+(`duly[report]`), the extraction stack (`duly[extraction]`), the SMT solver behind
+`prove` and `whatif` (`duly[prove]`) — is behind an optional extra, so a kernel-only
+integration does not inherit their surface. The example that plans a closing with
+CP-SAT declares its own solver in the example, not in duly.
+
+That two is asserted, not asserted-to:
+[`examples/minimal-integration/check_wheel.sh`](examples/minimal-integration/check_wheel.sh)
+installs a built wheel into a clean virtualenv, runs the example against it with
+duly's source tree off `sys.path`, and fails if the install brought a third package.
+
+One documented gap remains, and it is a gap rather than a design: `duly_review`'s
+correction validation imports `jsonschema` lazily, and no extra declares it, so
+`ReviewQueue.resolve()` on a bare install raises `ModuleNotFoundError` instead of
+enforcing the compatibility rule it exists to enforce. Install it alongside duly
+until that is resolved.

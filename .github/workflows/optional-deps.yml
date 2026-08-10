@@ -112,15 +112,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      # `--extra prove` as well as `--extra scheduling`: one test in the suite
-      # cross-checks the scheduler's swept funding boundary against what-if's
-      # solved one. It skips without z3, and a skipped cross-check proves
-      # nothing, so this job installs both.
-      - run: uv sync --extra scheduling --extra prove
+      # `--extra prove`: one test in the suite cross-checks the scheduler's
+      # swept funding boundary against what-if's solved one. It skips without
+      # z3, and a skipped cross-check proves nothing.
+      #
+      # There is no `--extra scheduling` to pair it with — ortools belongs to
+      # the example, so `schedule.py` declares it in PEP 723 script metadata
+      # and the suite gets it with `--with`. That is why the two steps below
+      # invoke it differently: pytest is not the script, so it cannot read the
+      # script's metadata, while the script itself can and does.
+      - run: uv sync --extra prove
       - name: The example's suite — plan, separation, determinism, degradation
-        run: uv run pytest examples/closing-scheduler -q -m ortools
+        run: uv run --with ortools pytest examples/closing-scheduler -q -m ortools
       - name: The example is the demo; run it
-        run: uv run python examples/closing-scheduler/schedule.py
+        run: uv run examples/closing-scheduler/schedule.py
 
       # NOTE for whoever edits a rule pack: `examples/rulepacks/**` is deliberately
       # absent from this workflow's paths filter (see the comment on the z3

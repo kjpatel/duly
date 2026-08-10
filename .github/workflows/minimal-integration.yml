@@ -67,9 +67,18 @@ jobs:
       - name: Install it into a clean venv
         run: |
           python3 -m venv /tmp/smoke-venv
+          # `[demo,report]`, because this job smokes every *surface* the wheel
+          # ships, and two of them are behind extras: `duly_demo` cannot import
+          # without fastapi, and the PDF report cannot render without
+          # reportlab. That the bare install omits them is the point of the
+          # extras and is asserted elsewhere — `check_wheel.sh` pins the bare
+          # closure at two packages. Here the job's question is the opposite
+          # one: given the extras, does every package work outside the repo?
+          #
           # jsonschema is duly_review's lazily-imported validation dependency;
-          # the smoke run needs it to reach the code path that fails.
-          /tmp/smoke-venv/bin/pip install --quiet dist/duly-*.whl jsonschema
+          # the smoke run needs it to reach the code path that fails. It is in
+          # no extra — a gap, not a design (docs/m5-plan.md A2 note).
+          /tmp/smoke-venv/bin/pip install --quiet "$(ls dist/duly-*.whl)[demo,report]" jsonschema
 
       - name: Smoke every package from outside the repository
         run: |

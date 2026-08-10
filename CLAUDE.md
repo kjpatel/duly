@@ -29,6 +29,10 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
+# `uv sync` alone still serves every suite here: fastapi, uvicorn and reportlab
+# are in the dev group as well as in the `demo`/`report` extras. The extras gate
+# what `pip install duly` brings an adopter; the dev group gates what this
+# repository has. Don't "deduplicate" them — see the comment in pyproject.toml.
 uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run pytest examples/tests -q           # the example content's own tests (deleted with examples/)
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
@@ -47,7 +51,7 @@ uv run --with linkml --with pyshacl pytest examples/tests -q -m linkml      # te
 uv sync --extra prove  && uv run pytest assurance/tests  -q -m z3           # verifier encoding is sound
 uv sync --extra prove  && uv run pytest whatif/tests examples/tests -q -m z3   # what-if answers survive kernel verification
 uv sync --extra prove  && uv run pytest duly_demo/tests       -q -m z3           # the rule studio's equivalence panel
-uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools   # the closing scheduler example
+uv run --with ortools pytest examples/closing-scheduler -q -m ortools       # the closing scheduler example
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling  # live adapter (heavy: pulls torch)
 ```
 

@@ -75,9 +75,9 @@ Three parts are machine-checked by `validate_pack`, and the rest is style left t
 
 `NN = 00` is exempt from the echo check: `-00` is the default-rule slot repo-wide and a default very often concludes zero, so the coincidence carries no claim.
 
-**Opting in.** The checks run only for packs that declare `pack.idPrefix` — declaring one *is* the opt-in. Every pack in this repo declares one, and `kernel/tests/test_rule_ids.py` fails if a new one does not. An adopter porting a rulebase whose ids are already in their own receipts is not forced to rename what this section argues cannot be renamed; they leave `idPrefix` off, or adopt the convention for new packs only.
+**Opting in.** The checks run only for packs that declare `pack.idPrefix` — declaring one *is* the opt-in. Every pack in this repo declares one, and `examples/tests/test_example_rule_ids.py` fails if a new one does not. An adopter porting a rulebase whose ids are already in their own receipts is not forced to rename what this section argues cannot be renamed; they leave `idPrefix` off, or adopt the convention for new packs only.
 
-**Grandfathering.** The 46 rule ids committed before this convention existed are exempt, listed by pack in [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) — an explicit list, not a date cutoff or a heuristic, so the exemption is finite and countable. 17 of the 46 would fail the convention today: five jurisdiction-first county ids, five year-suffixed RON ids, and seven notice ids carrying day counts. `test_rule_ids.py` pins both numbers and asserts that every non-conforming committed id is on the list, so the list can only grow in a diff that says so.
+**Grandfathering.** The 46 rule ids committed before this convention existed are exempt, listed by pack in [`kernel/duly_kernel/rule_ids.py`](../kernel/duly_kernel/rule_ids.py) — an explicit list, not a date cutoff or a heuristic, so the exemption is finite and countable. 17 of the 46 would fail the convention today: five jurisdiction-first county ids, five year-suffixed RON ids, and seven notice ids carrying day counts. `examples/tests/test_example_rule_ids.py` pins both numbers and asserts that every non-conforming committed id is on the list, so the list can only grow in a diff that says so.
 
 **Rejected:**
 

@@ -50,7 +50,11 @@ from duly_whatif.query import (  # noqa: E402
     solve,
 )
 
-GOLDEN = ROOT / "golden" / "cases"
+# The example content root. A case's `pack:` is content-root relative, not
+# repository relative, so it resolves against this rather than against ROOT —
+# the same contract a deployment's own root honours.
+EXAMPLES = ROOT / "examples"
+GOLDEN = EXAMPLES / "golden" / "cases"
 
 
 def rule(text: str) -> None:
@@ -65,7 +69,7 @@ def load(case_id: str):
     facts = [
         json.loads(p.read_text()) for p in sorted((directory / "facts").glob("*.json"))
     ]
-    pack = yaml.safe_load((ROOT / str(case["pack"])).read_text())
+    pack = yaml.safe_load((EXAMPLES / str(case["pack"])).read_text())
     return case, facts, pack
 
 
@@ -84,7 +88,7 @@ def ask(case_id: str, free: str, **overrides) -> None:
     print(render(solve(Query(**kwargs), REGISTRY)))
 
 
-REGISTRY = load_repo_registry(ROOT / "ontologies")
+REGISTRY = load_repo_registry(EXAMPLES / "ontologies")
 
 
 # ---------------------------------------------------------------------------

@@ -1,17 +1,37 @@
 # examples/
 
-Reference wiring: **duly used from the outside**, by a system that is not duly.
+Everything an adopter **deletes**: the content duly's examples are made of, and
+the reference wiring that consumes it. `git rm -r examples/` must leave a
+working, empty toolkit — that claim is the reason this directory exists, and
+[`fixtures/`](../fixtures/README.md) is the corpus the toolkit's own suites run
+on so deleting this one does not quietly stop testing anything.
 
-The rest of the repo shows what duly does. This directory shows what it is like
-to depend on it — where the seam between "the kernel decided" and "our software
-acted" actually falls, and what an adopter has to write on their side of it.
+## Example content — what a *user* of the toolkit authors
 
-Every example here holds to the same three rules, and they are the reason the
-directory exists separately from `demo/`:
+Ours exist to be read, copied, and deleted; an adopting organization replaces
+them with its own rules, documents, ontologies and regression corpus.
+
+| Directory | What it holds |
+|---|---|
+| [`rulepacks/`](rulepacks/README.md) | six rule packs across two domains, each `pack.yaml` + `expected.yaml` — start here to author one |
+| [`starters/`](starters/README.md) | synthetic documents, renditions and span-verified facts, one demo scenario per vertical |
+| [`golden/`](golden/README.md) | 351 committed cases + receipts: the replay and impact baseline |
+| [`ontologies/`](ontologies/README.md) | versioned, immutable LinkML artifacts the facts' `schemaRef`s pin |
+| [`dmn/`](../dmn/README.md) | the DMN compiler's teaching inputs: the TRID acceptance table, its committed compilation, and one minimal document per [refusal class](dmn/refusals/README.md) |
+| [`tests/`](tests) | the suites whose *subject* is the content above — they move and die with it |
+
+## Reference wiring — duly used from the outside
+
+The rest of the repo shows what duly does. These show what it is like to depend
+on it — where the seam between "the kernel decided" and "our software acted"
+actually falls, and what an adopter has to write on their side of it.
+
+Every example below holds to the same three rules, and they are the reason
+these live separately from `demo/`:
 
 - **It consumes decisions; it never restates them.** If an example needs to know
   a rule, it asks a pack and reads the receipt. A copy of a rule outside
-  `rulepacks/` is the defect these examples exist to argue against.
+  `examples/rulepacks/` is the defect these examples exist to argue against.
 - **Its own inputs are labelled synthetic.** Business calendars, staffing,
   costs and thresholds that are the *adopter's* concern are invented, and say so
   in the file that holds them.

@@ -19,9 +19,9 @@ import pytest
 from duly_kernel.ir import load_pack
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RULEPACKS = REPO_ROOT / "rulepacks"
-ONTOLOGIES = REPO_ROOT / "ontologies"
-DMN_PACK = REPO_ROOT / "dmn" / "examples" / "trid-fee-tolerance.pack.yaml"
+RULEPACKS = REPO_ROOT / "examples" / "rulepacks"
+ONTOLOGIES = REPO_ROOT / "examples" / "ontologies"
+DMN_PACK = REPO_ROOT / "examples" / "dmn" / "trid-fee-tolerance.pack.yaml"
 
 # Example content, discovered rather than listed — and **absent is a legal
 # state**. `rulepacks/` is teaching content an adopter deletes, and a

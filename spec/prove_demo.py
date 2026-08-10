@@ -44,11 +44,11 @@ from duly_assurance.prove import (  # noqa: E402
 from duly_conformance.registry import load_repo_registry  # noqa: E402
 from duly_kernel.ir import PackValidationError, load_pack, validate_pack  # noqa: E402
 
-ESIGN = ROOT / "rulepacks/esign-closing-package/pack.yaml"
-RECORDING = ROOT / "rulepacks/county-recording-us/pack.yaml"
-TILA = ROOT / "rulepacks/tila-rescission-us-federal/pack.yaml"
-TRID = ROOT / "rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
-DMN_PACK = ROOT / "dmn/examples/trid-fee-tolerance.pack.yaml"
+ESIGN = ROOT / "examples/rulepacks/esign-closing-package/pack.yaml"
+RECORDING = ROOT / "examples/rulepacks/county-recording-us/pack.yaml"
+TILA = ROOT / "examples/rulepacks/tila-rescission-us-federal/pack.yaml"
+TRID = ROOT / "examples/rulepacks/trid-fee-tolerance-us-federal/pack.yaml"
+DMN_PACK = ROOT / "examples/dmn/trid-fee-tolerance.pack.yaml"
 
 
 def rule(text: str) -> None:
@@ -113,7 +113,7 @@ OVERLAPPING = {
 
 
 def main() -> int:
-    registry = load_repo_registry(ROOT / "ontologies")
+    registry = load_repo_registry(ROOT / "examples" / "ontologies")
     failures: list[str] = []
 
     # -----------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 The committed ontology files under ``ontologies/`` are genuine LinkML —
 loadable by linkml-runtime, compilable to SHACL (proven by the
-marker-gated tests in conformance/tests/test_real_linkml.py). This module
+marker-gated tests in examples/tests/test_real_linkml.py). This module
 is NOT a LinkML implementation; it reads exactly the subset the
 conformance gate enforces and treats everything else as documentation.
 

@@ -8,7 +8,7 @@ import copy
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-ONTOLOGIES_DIR = REPO / "ontologies"
+ONTOLOGIES_DIR = REPO / "examples" / "ontologies"
 
 # A minimal, self-contained schema exercising every construct the subset
 # interprets: builtin ranges, a duly:money type, a closed enum with a code

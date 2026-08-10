@@ -171,7 +171,7 @@ than convenient: a closing that has not happened yet has no documents to extract
 from. "We intend to consummate on the 17th" is a statement a human coordinator
 owns, so it is grounded as one (`grounding.kind: "attestation"`,
 `assertion.kind: "human"`). Point the same code at extractor-produced facts —
-[`starters/`](../../starters) has span-grounded facts on exactly these
+[`examples/starters/`](../starters) has span-grounded facts on exactly these
 attributes — and nothing else in `schedule.py` changes.
 
 ## The refusal case

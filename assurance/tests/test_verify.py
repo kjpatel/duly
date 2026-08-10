@@ -46,7 +46,7 @@ def test_verify_passes_on_the_fixture_corpus(capsys):
 def test_verify_passes_on_the_committed_golden_corpus(capsys):
     """Example content: the subject is the teaching corpus itself, so this
     moves with it rather than onto a fixture."""
-    golden = REPO / "golden"
+    golden = REPO / "examples" / "golden"
     assert (golden / "cases").is_dir(), "golden corpus has not been generated"
     assert verify.main(["--golden", str(golden)]) == 0
     assert "verified 351 cases" in capsys.readouterr().out

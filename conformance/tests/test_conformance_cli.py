@@ -15,7 +15,7 @@ import pytest
 from duly_conformance.__main__ import main
 from conformancetest_helpers import REPO
 
-ONTOLOGIES = str(REPO / "ontologies")
+ONTOLOGIES = str(REPO / "examples" / "ontologies")
 
 
 def test_the_registry_directory_has_no_default(capsys, monkeypatch):

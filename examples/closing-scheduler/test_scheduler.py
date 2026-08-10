@@ -233,7 +233,7 @@ def test_every_minted_fact_passes_the_ontology_conformance_gate(planned):
     from duly_conformance.registry import load_repo_registry
 
     closing, _plan, _windows, _probe = planned
-    registry = load_repo_registry(REPO_ROOT / "ontologies")
+    registry = load_repo_registry(REPO_ROOT / "examples" / "ontologies")
     facts = S.facts_for(closing, "2026-02-17")
     assert len(facts) == len(closing["known"]) + 3
     for fact in facts:
@@ -345,7 +345,7 @@ def test_the_funding_boundary_agrees_with_what_if(planned):
             target={"kind": "boolean", "value": True},
             extremal="min",
         ),
-        load_repo_registry(REPO_ROOT / "ontologies"),
+        load_repo_registry(REPO_ROOT / "examples" / "ontologies"),
     )
     assert report.verdict == SATISFIABLE
     assert report.extremal is not None

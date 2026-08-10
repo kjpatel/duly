@@ -72,7 +72,7 @@ convention cannot quietly regrow when the next package lands.
   rule going forward rather than a description of the past.
 - **Ontologies** — `<name>/<version>.yaml`, **immutable once committed**. New
   terms go in a new version file and the facts re-pin to it
-  ([ontologies/README.md](../ontologies/README.md)).
+  ([examples/ontologies/README.md](../examples/ontologies/README.md)).
 
 ## 3. Which numbers move?
 
@@ -136,7 +136,7 @@ is the one move this document exists to prevent.
    correct, not collateral damage: a receipt sealed under semantics X should
    not be reproducible under semantics Y. If it were, the bump would be a lie.
 2. **The corpus is regenerated** under the new semantics — the reviewed,
-   deliberate act described in [golden/README.md](../golden/README.md), with
+   deliberate act described in [examples/golden/README.md](../examples/golden/README.md), with
    `impact` run and every flip justified in the PR.
 3. **Old receipts remain valid documents.** Their hashes are intact and they
    say exactly what they said. What they lose is replayability under a kernel
@@ -187,7 +187,7 @@ nothing and fixes something real.
 |---|---|---|
 | **Fact** ([schema](../core/duly_core/schemas/grounded-fact.schema.json)) | any change to hashed bytes; adding a field (`additionalProperties: false`) | `spec/validate.py`, conformance sweep |
 | **Receipt** ([schema](../core/duly_core/schemas/decision-receipt.schema.json)) | same — the hash covers the whole body, so *there is no additive change* | `verify` |
-| **Rule IR** ([spec](../spec/rule-ir.md)) | a pack that used to load no longer does, or loads and means something else | `kernel/tests/test_rulepacks.py`, `expected.yaml` |
+| **Rule IR** ([spec](../spec/rule-ir.md)) | a pack that used to load no longer does, or loads and means something else | `examples/tests/test_rulepacks.py`, `expected.yaml` |
 | **Pack** | rules changed such that historical decisions move | `impact` (the CI comment) |
 | **Ontology** | editing a committed version file — never do this | `conformance/tests/test_repo_conformance.py` |
 | **HTTP API** | a removed route, a renamed field, a changed status code | nothing automated today |
@@ -234,8 +234,8 @@ uv sync
 uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run python -m duly_assurance verify
 uv run spec/validate.py
-uv run python3 starters/tools/check_facts.py
-uv run python -m duly_conformance --ontologies ontologies check starters golden/cases rulepacks spec/examples
+uv run python3 examples/starters/tools/check_facts.py
+uv run python -m duly_conformance --ontologies examples/ontologies check examples/starters examples/golden/cases examples/rulepacks spec/examples
 uv run python -m duly_assurance impact
 ```
 
@@ -253,7 +253,7 @@ uv sync --extra extraction && uv run pytest extraction/tests -q -m docling
 
 Then, before tagging:
 
-- [ ] `git diff -- golden/` is empty, **or** the regeneration is deliberate,
+- [ ] `git diff -- examples/golden/` is empty, **or** the regeneration is deliberate,
       justified per case, and described in the commit body.
 - [ ] `impact` output is in the PR description if any pack changed.
 - [ ] `SEMANTICS_VERSION` is untouched unless §4 was followed deliberately.
@@ -278,7 +278,7 @@ project previously made is worth more space than the feature that found it.
 - **Never bump `SEMANTICS_VERSION` to make the version numbers agree.** It is
   the one edit that silently invalidates 351 receipts. There is no cosmetic
   reason good enough.
-- **Never regenerate `golden/` to make `verify` pass.** Regeneration is a
+- **Never regenerate `examples/golden/` to make `verify` pass.** Regeneration is a
   reviewed baseline change with a justification per flipped case, never a way
   to clear a red check.
 - **Never hand-edit a case or receipt.** Change the generator or the pack and
@@ -294,7 +294,7 @@ project previously made is worth more space than the feature that found it.
 - [spec/compatibility.md](../spec/compatibility.md) — what v1.0 promises, per
   contract, and the arguments behind every rule this document applies
 - [CLAUDE.md](../CLAUDE.md) — the `engine` block gotcha, stated for agents
-- [golden/README.md](../golden/README.md) — corpus contract and regeneration rules
-- [rulepacks/README.md](../rulepacks/README.md) — pack authoring and what is not auto-wired
-- [ontologies/README.md](../ontologies/README.md) — the immutability rule
+- [examples/golden/README.md](../examples/golden/README.md) — corpus contract and regeneration rules
+- [examples/rulepacks/README.md](../examples/rulepacks/README.md) — pack authoring and what is not auto-wired
+- [examples/ontologies/README.md](../examples/ontologies/README.md) — the immutability rule
 - [CHANGELOG.md](../CHANGELOG.md) — what each release turned out to mean

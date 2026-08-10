@@ -15,9 +15,9 @@ from conformancetest_helpers import ONTOLOGIES_DIR, REPO
 from duly_conformance import check_fact, load_repo_registry
 
 FACT_GLOBS = [
-    "starters/*/facts/*.json",
-    "golden/cases/*/facts/*.json",
-    "rulepacks/*/fixtures/*/facts/*.json",
+    "examples/starters/*/facts/*.json",
+    "examples/golden/cases/*/facts/*.json",
+    "examples/rulepacks/*/fixtures/*/facts/*.json",
     "spec/examples/*.json",
 ]
 
@@ -54,7 +54,7 @@ def test_every_committed_fact_conforms(registry):
 def test_review_case_still_cites_the_insurance_ontology(registry):
     # golden/cases/review-0001 is preserved forever (no seed regenerates
     # it); the consolidation deliberately kept the name its facts pin.
-    for path in sorted((REPO / "golden/cases/review-0001/facts").glob("*.json")):
+    for path in sorted((REPO / "examples/golden/cases/review-0001/facts").glob("*.json")):
         doc = json.loads(path.read_text(encoding="utf-8"))
         assert doc["schemaRef"] == {"ontology": "duly-starter-notice", "version": "0.1.0"}
         assert check_fact(doc, registry) == []
@@ -63,7 +63,7 @@ def test_review_case_still_cites_the_insurance_ontology(registry):
 def test_mortgage_cases_cite_the_consolidated_ontology(registry):
     seen = set()
     for prefix in ("trid", "ron", "esign", "resc", "rec"):
-        for path in sorted(REPO.glob(f"golden/cases/{prefix}-*/facts/*.json"))[:3]:
+        for path in sorted(REPO.glob(f"examples/golden/cases/{prefix}-*/facts/*.json"))[:3]:
             doc = json.loads(path.read_text(encoding="utf-8"))
             assert doc["schemaRef"] == {"ontology": "duly-mortgage-closing", "version": "0.1.0"}
             seen.add(prefix)

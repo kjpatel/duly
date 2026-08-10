@@ -33,8 +33,8 @@ from duly_kernel.api import adjudicate
 from duly_kernel.engine import AdjudicationError
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PACK_PATH = ROOT / "rulepacks/tila-rescission-us-federal/pack.yaml"
-FACTS_DIR = ROOT / "starters/tila-rescission/facts"
+PACK_PATH = ROOT / "examples/rulepacks/tila-rescission-us-federal/pack.yaml"
+FACTS_DIR = ROOT / "examples/starters/tila-rescission/facts"
 
 # The week around the window. 2026-05-22 is a Friday; the three precise
 # business days that follow are Sat 5/23, Tue 5/26, Wed 5/27 — Sunday 5/24

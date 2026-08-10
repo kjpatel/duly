@@ -98,28 +98,28 @@ class Gate:
 GATES: tuple[Gate, ...] = (
     Gate(
         step="sign",
-        pack_path="rulepacks/notarization-ron-us-states/pack.yaml",
+        pack_path="examples/rulepacks/notarization-ron-us-states/pack.yaml",
         question="ron:ronPermitted",
         required=True,
         why="whether the governing state authorized remote online notarization on that date",
     ),
     Gate(
         step="sign",
-        pack_path="rulepacks/notarization-ron-us-states/pack.yaml",
+        pack_path="examples/rulepacks/notarization-ron-us-states/pack.yaml",
         question="ron:notarizationCompliant",
         required=True,
         why="whether the notarial act, performed the planned way on that date, is compliant",
     ),
     Gate(
         step="fund",
-        pack_path="rulepacks/tila-rescission-us-federal/pack.yaml",
+        pack_path="examples/rulepacks/tila-rescission-us-federal/pack.yaml",
         question="resc:fundingPermitted",
         required=True,
         why="whether the TILA rescission period has expired, given the signing date",
     ),
     Gate(
         step="record",
-        pack_path="rulepacks/county-recording-us/pack.yaml",
+        pack_path="examples/rulepacks/county-recording-us/pack.yaml",
         question="rec:recordable",
         required=True,
         why="whether the instrument will be accepted for recording as submitted",

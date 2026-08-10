@@ -67,8 +67,13 @@ def test_importing_the_cli_does_not_require_z3():
 # Roots: what this CLI is allowed to assume about where things live
 # ---------------------------------------------------------------------------
 #
-# Both defects here are one assumption — that duly's own checkout is the
-# content — and both were invisible from inside it (M5 plan, A9).
+# Both defects here were one assumption — that duly's own checkout is the
+# content — and both were invisible from inside it (M5 plan, A9). Only the
+# pack-resolution half is asserted here now; the registry half needs a pack
+# whose kinds are all inferable from use, which the fixture pack is not, so
+# `test_without_a_registry_the_report_says_so` moved to
+# `examples/tests/test_example_whatif_boundaries.py` with the notice pack it
+# has to pose the question with.
 
 
 @needs_z3
@@ -89,28 +94,10 @@ def test_a_case_resolves_its_pack_without_this_package_knowing_where_it_lives(tm
 
 @needs_z3
 @pytest.mark.z3
-def test_without_a_registry_the_report_says_so():
-    """The A9 defect proper. Absence is legal — kinds are inferred from use —
-    but the answer is weaker in a way nothing else in the output reveals, so
-    silence would hand back the weaker answer looking like the stronger.
-
-    Still on example content, and deliberately: reaching this note requires a
-    pack whose kinds are *all* inferable from use, and the fixture pack is not
-    one (its widest guard compares two bound variables, so `fx:score` has no
-    inferable kind — which is what the next test exercises). Phase 3 part 3
-    gives the fixtures an inferable pack; until then this moves with `golden/`.
-    """
-    result = run_cli(
-        "--case", "golden/cases/notice-ny-0001",
-        "--free", "nc:noticeMailedDate", "--target", "true", "--json", expect=0,
-    )
-    notes = json.loads(result.stdout)["notes"]
-    assert any("no ontology registry supplied" in n for n in notes)
-
-
-@needs_z3
-@pytest.mark.z3
 def test_with_a_registry_it_does_not():
+    """A supplied registry means no "no ontology registry" note — the positive
+    half of the pair whose negative half now lives with the example content
+    (see the block comment above)."""
     result = run_cli(
         "--ontologies", "fixtures/ontology",
         "--case", "fixtures/cases/fx-0001",

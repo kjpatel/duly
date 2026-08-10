@@ -1,8 +1,14 @@
 """Calibration label export: (raw_score, correct) pairs and value equality.
 
-The export's contract (duly_review.queue.ReviewQueue.calibration_pairs):
+TOOLKIT. The export's contract (duly_review.queue.ReviewQueue.calibration_pairs):
 confirm -> (score, 1); contradict -> (score, 0); dismissals, no-confidence
 entries, and store-unknown machine facts -> NO pair, never a guessed one.
+
+None of that is about any particular pack, so the arcs come from
+[`fixtures/`](../../fixtures/README.md). `TestValueEquality` below is purer
+still — it calls `values_equal` on literal value documents and reaches no
+corpus at all, which is why it was the only part of this file the move did
+not break.
 """
 
 from __future__ import annotations
@@ -17,13 +23,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from reviewtest_helpers import (  # noqa: E402
     ARC_AS_OF_KNOWLEDGE,
     ARC_CORRECTION_TS,
-    ARC_MAILED_CONFIDENCE,
-    MAILED,
+    ARC_SCORE_CONFIDENCE,
+    SCORE,
     adjudicate_arc,
     build_arc_facts,
-    mailed_fact,
     make_correction,
     rehash,
+    scored_fact,
 )
 
 from duly_calibration import PlattCalibrator  # noqa: E402
@@ -47,14 +53,13 @@ def store() -> FactStore:
     return s
 
 
-def _open_arc(queue, store, case_suffix: str, *, mailed_confidence=None, ingest=True):
+def _open_arc(queue, store, case_suffix: str, *, score_confidence=None, ingest=True):
     """One enqueued arc; returns (facts, item_id)."""
     case = f"case:review:labels-{case_suffix}"
     facts = build_arc_facts(
         case,
-        mailed_confidence=mailed_confidence,
-        notice_entity=f"notice:{case_suffix}",
-        policy_entity=f"policy:{case_suffix}",
+        score_confidence=score_confidence,
+        entity=f"widget:{case_suffix}",
     )
     if ingest:
         for f in facts:
@@ -67,16 +72,16 @@ def _open_arc(queue, store, case_suffix: str, *, mailed_confidence=None, ingest=
 class TestPairEmission:
     def test_confirmation_yields_correct_1(self, queue, store):
         facts, item_id = _open_arc(queue, store, "confirm")
-        queue.resolve(item_id, make_correction(mailed_fact(facts)), store, T1)
-        assert calibration_pairs(queue) == [(ARC_MAILED_CONFIDENCE["score"], 1)]
+        queue.resolve(item_id, make_correction(scored_fact(facts)), store, T1)
+        assert calibration_pairs(queue) == [(ARC_SCORE_CONFIDENCE["score"], 1)]
 
     def test_contradiction_yields_correct_0(self, queue, store):
         facts, item_id = _open_arc(queue, store, "contradict")
-        wrong_date_fixed = make_correction(
-            mailed_fact(facts), value={"kind": "date", "value": "2026-07-20"}
+        wrong_score_fixed = make_correction(
+            scored_fact(facts), value={"kind": "decimal", "value": "80"}
         )
-        queue.resolve(item_id, wrong_date_fixed, store, T1)
-        assert calibration_pairs(queue) == [(ARC_MAILED_CONFIDENCE["score"], 0)]
+        queue.resolve(item_id, wrong_score_fixed, store, T1)
+        assert calibration_pairs(queue) == [(ARC_SCORE_CONFIDENCE["score"], 0)]
 
     def test_dismissal_yields_no_pair(self, queue, store):
         _, item_id = _open_arc(queue, store, "dismiss")
@@ -86,12 +91,11 @@ class TestPairEmission:
     def test_no_confidence_entry_yields_no_pair(self, queue, store):
         """A machine fact with no confidence fails closed under the policy;
         its entry carries no score, so there is nothing honest to pair."""
-        facts = build_arc_facts("case:review:labels-nc",
-                                notice_entity="notice:nc", policy_entity="policy:nc")
-        target = mailed_fact(facts)
+        facts = build_arc_facts("case:review:labels-nc", entity="widget:nc")
+        target = scored_fact(facts)
         stripped = {k: v for k, v in target.items() if k != "confidence"}
         stripped = rehash(stripped)
-        facts = [stripped if f["attribute"] == MAILED else f for f in facts]
+        facts = [stripped if f["attribute"] == SCORE else f for f in facts]
         for f in facts:
             store.ingest(f)
         receipt = adjudicate_arc(facts)
@@ -106,7 +110,7 @@ class TestPairEmission:
         """When the abstained fact never reached the store, no machine value
         exists to compare against — no pair, never a guessed one."""
         facts, item_id = _open_arc(queue, store, "nostore", ingest=False)
-        queue.resolve(item_id, make_correction(mailed_fact(facts)), store, T1)
+        queue.resolve(item_id, make_correction(scored_fact(facts)), store, T1)
         assert queue.item(item_id)["status"] == "resolved"
         assert calibration_pairs(queue) == []
 
@@ -121,10 +125,10 @@ class TestPairEmission:
         ):
             score = 0.5 + i / 10
             facts, item_id = _open_arc(
-                queue, store, suffix, mailed_confidence={"score": score, "method": "platt"}
+                queue, store, suffix, score_confidence={"score": score, "method": "platt"}
             )
-            value = None if confirm else {"kind": "date", "value": "2026-07-01"}
-            queue.resolve(item_id, make_correction(mailed_fact(facts), value=value), store, T1)
+            value = None if confirm else {"kind": "decimal", "value": "80"}
+            queue.resolve(item_id, make_correction(scored_fact(facts), value=value), store, T1)
             pairs_in.append((score, confirm))
         assert calibration_pairs(queue) == pairs_in
 
@@ -135,10 +139,10 @@ class TestPairEmission:
             confirm = i % 2 == 0
             facts, item_id = _open_arc(
                 queue, store, f"fit-{i}",
-                mailed_confidence={"score": 0.3 + i / 10, "method": "platt"},
+                score_confidence={"score": 0.3 + i / 10, "method": "platt"},
             )
-            value = None if confirm else {"kind": "date", "value": "2026-07-01"}
-            queue.resolve(item_id, make_correction(mailed_fact(facts), value=value), store, T1)
+            value = None if confirm else {"kind": "decimal", "value": "80"}
+            queue.resolve(item_id, make_correction(scored_fact(facts), value=value), store, T1)
         pairs = calibration_pairs(queue)
         assert validate_pairs(pairs, require_both_classes=True) == pairs
         params = PlattCalibrator().fit(pairs)

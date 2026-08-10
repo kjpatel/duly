@@ -18,7 +18,7 @@ As with the fact contract, the DMN compiler, the conformance gate and the static
 |---|---|---|---|
 | **Fact** ([schema](../core/duly_core/schemas/grounded-fact.schema.json)) | the schema is closed; a given fact's hashed bytes never change | any schema change at all | `spec/validate.py`, conformance sweep |
 | **Receipt** ([schema](../core/duly_core/schemas/decision-receipt.schema.json)) | the same, and there is no extension point (C2) | any schema change at all | `verify` |
-| **Rule IR** ([spec](rule-ir.md)) | a pack that loads under v1.0 loads under every later 1.x, and decides the same way | a pack that used to load doesn't, or loads and decides differently | `kernel/tests/test_rulepacks.py`, each pack's `expected.yaml` |
+| **Rule IR** ([spec](rule-ir.md)) | a pack that loads under v1.0 loads under every later 1.x, and decides the same way | a pack that used to load doesn't, or loads and decides differently | `examples/tests/test_rulepacks.py`, each pack's `expected.yaml` |
 
 The fact and receipt rows say *any change at all* for a reason that is structural rather than strict: both schemas are `additionalProperties: false` and both bodies are hashed whole. **"Additive and backward-compatible" does not exist for a content-addressed document.** Adding an optional field nobody sets still changes the canonical bytes of every document that adopts it, and a document that declines to adopt it is a document the new schema and the old one disagree about. There is no version of this that is only slightly breaking.
 
@@ -157,7 +157,7 @@ The scheme was never written down, and — worth knowing before reading the rule
 
 - **content-year** — the calendar year of the legal content the pack states, not the year it was released. Moving it resets the other two.
 - **substantive** — a change that can flip a decision: rule logic, guards, priorities, effective windows, a rule added or removed. `impact` is expected to report flips, or the PR explains why a genuine logic change moved nothing.
-- **clarifying** — a change that reaches the receipt but cannot flip a decision: citation text or URL corrections, a rule's own `version`. `rulesFired` carries all three, so these *are* corpus churn; `impact` must report zero flips against a non-empty `golden/` diff.
+- **clarifying** — a change that reaches the receipt but cannot flip a decision: citation text or URL corrections, a rule's own `version`. `rulesFired` carries all three, so these *are* corpus churn; `impact` must report zero flips against a non-empty `examples/golden/` diff.
 - **no component moves** for a change that reaches no receipt at all: `phrasing:`, `question`, comments, `MODELING BOUNDARY` headers. This is already what [release-process.md](../docs/release-process.md) §3 records, and the reason presentation is excluded from every hashed body in the first place.
 
 The third bullet is the one worth having, because it is the only version rule in this repository whose correctness CI can check: *clarifying bump ⇒ zero flips and a non-empty diff* is a mechanical assertion, and it fails loudly on a substantive change mislabelled as a typo fix.

@@ -27,14 +27,14 @@ sequenceDiagram
 
 ## 1. The document
 
-The source is a committed synthetic PDF, [`starters/notice-ny/documents/nonrenewal-notice.pdf`](../starters/notice-ny/documents/nonrenewal-notice.pdf). Its SHA-256 — which every fact extracted from it will carry — is:
+The source is a committed synthetic PDF, [`examples/starters/notice-ny/documents/nonrenewal-notice.pdf`](../examples/starters/notice-ny/documents/nonrenewal-notice.pdf). Its SHA-256 — which every fact extracted from it will carry — is:
 
 ```
-$ shasum -a 256 starters/notice-ny/documents/nonrenewal-notice.pdf
+$ shasum -a 256 examples/starters/notice-ny/documents/nonrenewal-notice.pdf
 638dbca9307b198efc5b2e85e2bce3877628078f03ac8d5fda350f51d95d9fcd
 ```
 
-Character offsets against "the PDF" are meaningless — every extractor produces different text from the same bytes — so spans are defined against a **rendition**: the immutable extracted text, retained as long as the facts derived from it ([spec D4](../spec/grounded-facts.md#d4-spans-reference-a-hashed-document-rendition)). The committed rendition is [`starters/notice-ny/renditions/nonrenewal-notice.txt`](../starters/notice-ny/renditions/nonrenewal-notice.txt); its first four lines:
+Character offsets against "the PDF" are meaningless — every extractor produces different text from the same bytes — so spans are defined against a **rendition**: the immutable extracted text, retained as long as the facts derived from it ([spec D4](../spec/grounded-facts.md#d4-spans-reference-a-hashed-document-rendition)). The committed rendition is [`examples/starters/notice-ny/renditions/nonrenewal-notice.txt`](../examples/starters/notice-ny/renditions/nonrenewal-notice.txt); its first four lines:
 
 ```text
 HOMESTEAD MUTUAL INSURANCE COMPANY
@@ -47,10 +47,10 @@ Offsets are Unicode code points, end-exclusive ([spec, resolved question 1](../s
 
 ## 2. The extraction instruction
 
-The starter pipeline is an honest stub: instead of a model proposing facts, a committed **targets file** lists what to extract and the exact quote to ground it in, and the stub adapter locates each quote in the rendition by substring search ([`starters/tools/extract.py`](../starters/tools/extract.py), a CLI over [`extraction/duly_extraction/stub.py`](../extraction/duly_extraction/stub.py)). A real deployment swaps in a document-AI extractor that emits the same contract; the Docling adapter ([`extraction/duly_extraction/docling_adapter.py`](../extraction/duly_extraction/docling_adapter.py)) already does, producing its own rendition and measuring its own spans. The mailed-date entry:
+The starter pipeline is an honest stub: instead of a model proposing facts, a committed **targets file** lists what to extract and the exact quote to ground it in, and the stub adapter locates each quote in the rendition by substring search ([`examples/starters/tools/extract.py`](../examples/starters/tools/extract.py), a CLI over [`extraction/duly_extraction/stub.py`](../extraction/duly_extraction/stub.py)). A real deployment swaps in a document-AI extractor that emits the same contract; the Docling adapter ([`extraction/duly_extraction/docling_adapter.py`](../extraction/duly_extraction/docling_adapter.py)) already does, producing its own rendition and measuring its own spans. The mailed-date entry:
 
 ```jsonc
-// starters/tools/targets/notice-ny-nonrenewal-notice.json
+// examples/starters/tools/targets/notice-ny-nonrenewal-notice.json
 {
   "documentId": "doc:nonrenewal-notice:HO-77401-NY:2026-07-25",
   "caseId": "case:policy:HO-77401-NY",
@@ -92,7 +92,7 @@ One target = one quote + one entity–attribute–value triple + a confidence. T
 What extraction commits to disk — the fact this whole document follows, in full:
 
 ```json
-// starters/notice-ny/facts/fact-notice-mailed.json
+// examples/starters/notice-ny/facts/fact-notice-mailed.json
 {
   "id": "urn:duly:fact:sha256:3cbbd14b0d2f0db140d2eaa86186b3319a7348cfc93d5a95fccab3abb97ca953",
   "contentHash": "3cbbd14b0d2f0db140d2eaa86186b3319a7348cfc93d5a95fccab3abb97ca953",
@@ -158,7 +158,7 @@ Field by field:
 Neither claim needs to be taken on faith. The span really does resolve to the quote:
 
 ```python
-text = open("starters/notice-ny/renditions/nonrenewal-notice.txt", encoding="utf-8").read()
+text = open("examples/starters/notice-ny/renditions/nonrenewal-notice.txt", encoding="utf-8").read()
 assert text[57:87] == "Date of Mailing: July 25, 2026"
 ```
 
@@ -166,14 +166,14 @@ and the hash really does re-derive from the committed bytes:
 
 ```python
 import hashlib, json
-fact = json.load(open("starters/notice-ny/facts/fact-notice-mailed.json"))
+fact = json.load(open("examples/starters/notice-ny/facts/fact-notice-mailed.json"))
 body = {k: v for k, v in fact.items() if k not in ("id", "contentHash")}
 digest = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"),
                                    ensure_ascii=False).encode("utf-8")).hexdigest()
 assert digest == fact["contentHash"] == fact["id"].removeprefix("urn:duly:fact:sha256:")
 ```
 
-Neither check is special to this document: `uv run spec/validate.py` verifies the hash of every spec example on every push, `uv run python starters/tools/check_facts.py` runs the span check (and the hash check) over every committed starter fact, and the extraction adapters re-verify each span on every emission ([`extraction/duly_extraction/adapter.py`](../extraction/duly_extraction/adapter.py)).
+Neither check is special to this document: `uv run spec/validate.py` verifies the hash of every spec example on every push, `uv run python examples/starters/tools/check_facts.py` runs the span check (and the hash check) over every committed starter fact, and the extraction adapters re-verify each span on every emission ([`extraction/duly_extraction/adapter.py`](../extraction/duly_extraction/adapter.py)).
 
 ## 4. The run envelope
 
@@ -204,18 +204,18 @@ Facts do not arrive one by one; an extraction run emits an **envelope** per rend
 }
 ```
 
-The two `factIds` are the content hashes of [`spec/examples/fact-decpage-expiration.json`](../spec/examples/fact-decpage-expiration.json) and [`spec/examples/fact-decpage-state.json`](../spec/examples/fact-decpage-state.json) — the run's membership is pinned to exact fact contents, not to names. The envelope's own `contentHash` is computed by the same D8 rule as a fact's (and re-derives; same snippet, different file). Honest footnote: this spec fixture's `documentSha256` and `rendition.sha256` are illustrative values, unlike the starter facts, whose document hashes are the real hashes of the committed PDFs (compare stage 3's `638dbca9…`, or `shasum -a 256 starters/notice-ny/documents/dec-page.pdf` against [`starters/notice-ny/facts/fact-decpage-expiration.json`](../starters/notice-ny/facts/fact-decpage-expiration.json)). The producer and verifier live in [`extraction/duly_extraction/envelope.py`](../extraction/duly_extraction/envelope.py); at demo startup every envelope is verified — manifest hash, every fact hash, every span against the rendition — before its facts are ingested ([demo tour §9](demo_tour.md#9-the-review-arc)).
+The two `factIds` are the content hashes of [`spec/examples/fact-decpage-expiration.json`](../spec/examples/fact-decpage-expiration.json) and [`spec/examples/fact-decpage-state.json`](../spec/examples/fact-decpage-state.json) — the run's membership is pinned to exact fact contents, not to names. The envelope's own `contentHash` is computed by the same D8 rule as a fact's (and re-derives; same snippet, different file). Honest footnote: this spec fixture's `documentSha256` and `rendition.sha256` are illustrative values, unlike the starter facts, whose document hashes are the real hashes of the committed PDFs (compare stage 3's `638dbca9…`, or `shasum -a 256 examples/starters/notice-ny/documents/dec-page.pdf` against [`examples/starters/notice-ny/facts/fact-decpage-expiration.json`](../examples/starters/notice-ny/facts/fact-decpage-expiration.json)). The producer and verifier live in [`extraction/duly_extraction/envelope.py`](../extraction/duly_extraction/envelope.py); at demo startup every envelope is verified — manifest hash, every fact hash, every span against the rendition — before its facts are ingested ([demo tour §9](demo_tour.md#9-the-review-arc)).
 
 ## 5. The store
 
-Ingestion appends events; nothing is ever updated in place. The bitemporal store ([`store/`](../store/)) records each fact with its knowledge time and serves **as-of projections**: "the live facts of this case, as known at time K, effective at time E" ([D6](../spec/grounded-facts.md#d6-bitemporal-from-birth), [D7](../spec/grounded-facts.md#d7-facts-are-immutable-corrections-supersede)). Supersession — coming in stage 7 — is likewise an event plus a projection: the old fact's record is untouched, its `superseded` status is computed, and a projection at an earlier knowledge time still shows the world as it was believed then. Every adjudication below runs against such a projection, and the golden corpus ([golden/README.md](../golden/README.md)) replays them continuously.
+Ingestion appends events; nothing is ever updated in place. The bitemporal store ([`store/`](../store/)) records each fact with its knowledge time and serves **as-of projections**: "the live facts of this case, as known at time K, effective at time E" ([D6](../spec/grounded-facts.md#d6-bitemporal-from-birth), [D7](../spec/grounded-facts.md#d7-facts-are-immutable-corrections-supersede)). Supersession — coming in stage 7 — is likewise an event plus a projection: the old fact's record is untouched, its `superseded` status is computed, and a projection at an earlier knowledge time still shows the world as it was believed then. Every adjudication below runs against such a projection, and the golden corpus ([examples/golden/README.md](../examples/golden/README.md)) replays them continuously.
 
 ## 6. Adjudication, act one: the abstention
 
-The rulebase is [`rulepacks/termination-notice-us-states/pack.yaml`](../rulepacks/termination-notice-us-states/pack.yaml) (version 2026.3.0). Two of its rules star here: **NY-NR-45** derives `nc:requiredMinimumNoticeDays = 45` for a New York nonrenewal (citing N.Y. Ins. Law § 3425(d)(1)), and **NC-NR-01** (priority 200) concludes non-compliance when `days_between(mailed, expiration) < minDays`, overriding the priority-0 presumption of compliance, **NC-DEF-00**. The pack also carries the adjudication-time confidence policy — this block is why act one abstains:
+The rulebase is [`examples/rulepacks/termination-notice-us-states/pack.yaml`](../examples/rulepacks/termination-notice-us-states/pack.yaml) (version 2026.3.0). Two of its rules star here: **NY-NR-45** derives `nc:requiredMinimumNoticeDays = 45` for a New York nonrenewal (citing N.Y. Ins. Law § 3425(d)(1)), and **NC-NR-01** (priority 200) concludes non-compliance when `days_between(mailed, expiration) < minDays`, overriding the priority-0 presumption of compliance, **NC-DEF-00**. The pack also carries the adjudication-time confidence policy — this block is why act one abstains:
 
 ```yaml
-# rulepacks/termination-notice-us-states/pack.yaml
+# examples/rulepacks/termination-notice-us-states/pack.yaml
 abstentionPolicy:
   minConfidence: 0.75
   attributes:
@@ -227,11 +227,11 @@ The stage-3 fact, at confidence 0.989, clears the 0.9 attribute floor; the strai
 The review arc re-runs the *same* document with the mailing date read badly — confidence **0.62**, below the 0.9 floor. Honest accounting of where that act lives in the repo, because the post-correction golden receipt in stage 8 no longer shows it:
 
 - The demo ingests the notice document with the scripted 0.62 score ([`demo/app.py`](../demo/app.py), `REVIEW_MAILED_CONFIDENCE = {"score": 0.62, "method": "platt"}`), and [`demo/tests/test_review_arc.py`](../demo/tests/test_review_arc.py) pins the resulting abstention: reason `low_confidence`, attribute `nc:noticeMailedDate`, score 0.62 against floor 0.9, floor source `attribute` from pack `termination-notice-us-states` — and the decision falling to the presumption: an amber *Compliant*, "presumption only".
-- The committed golden case [`review-0001`](../golden/cases/review-0001) freezes the *resolved* arc, so its receipt is post-correction. The pre-correction receipt is not committed; [`review/tests/test_golden.py`](../review/tests/test_golden.py) replays the whole arc from fixed constants — asserting the `low_confidence` abstention on the first adjudication — and regenerates the committed case byte-identically from the second.
+- The committed golden case [`review-0001`](../examples/golden/cases/review-0001) freezes the *resolved* arc, so its receipt is post-correction. The pre-correction receipt is not committed; [`review/tests/test_golden.py`](../review/tests/test_golden.py) replays the whole arc from fixed constants — asserting the `low_confidence` abstention on the first adjudication — and regenerates the committed case byte-identically from the second.
 - The corpus does commit receipts with live abstention entries — in the county-recording pack, whose review scenario abstains the same way. The entry, verbatim, so you can see the shape the notice arc produces too:
 
 ```json
-// golden/receipts/rec-0015.json, "abstentions" (a county-recording case; the notice arc's entry has the same shape)
+// examples/golden/receipts/rec-0015.json, "abstentions" (a county-recording case; the notice arc's entry has the same shape)
 [
   {
     "entity": "submission:rec-0015",
@@ -262,7 +262,7 @@ Read the entry against [the receipt schema's commitments](../spec/grounded-facts
 A reviewer opens the queue item, confirms what the extractor read but could not vouch for, and the correction enters the store as a first-class fact. From the committed golden case, in full:
 
 ```json
-// golden/cases/review-0001/facts/nc-noticeMailedDate.json
+// examples/golden/cases/review-0001/facts/nc-noticeMailedDate.json
 {
   "assertion": {
     "actor": {
@@ -306,14 +306,14 @@ The same contract as stage 3, with three differences worth staring at:
 - **`grounding.kind: "attestation"`** — this value exists in no document span; its provenance is *who said so, through what channel, when*. Forcing it into a fake span would corrupt the provenance story exactly where it matters ([D3](../spec/grounded-facts.md#d3-every-fact-says-where-it-came-from-a-span-or-an-attestation)). No `confidence` block: confidence is for machine assertions.
 - **`supersedes`** — pointing at the content-address of the 0.62 machine fact. That fact is not a file in this case directory, deliberately: the case's `facts/` is a store projection at the resolution's knowledge time (`2026-07-28T09:00:00Z`), and a superseded fact is no longer live in it. The machine fact survives in the store's event log and in any earlier-knowledge-time projection, and [`review/tests/reviewtest_helpers.py`](../review/tests/reviewtest_helpers.py) reconstructs it byte-identically (score 0.62, method platt, same date value — hash `88e14fe4…`). The demo's [evidence browser](demo_tour.md#11-the-evidence-browser) is this paragraph as an interface: run the same arc in the review-arc scenario, then drag its knowledge dial back one stop and watch the correction become not-yet-known and the 0.62 fact return to live. Whether a queue resolution *must* supersede, or may merely outrank, is [spec open question 2](../spec/grounded-facts.md#open-questions); this arc uses the supersession form.
 
-The other three facts in [`golden/cases/review-0001/facts/`](../golden/cases/review-0001/facts) — notice type, governing state, policy expiration — are the machine facts, untouched: the reviewer ruled on one fact, and only that fact's history changed ([D7](../spec/grounded-facts.md#d7-facts-are-immutable-corrections-supersede)).
+The other three facts in [`examples/golden/cases/review-0001/facts/`](../examples/golden/cases/review-0001/facts) — notice type, governing state, policy expiration — are the machine facts, untouched: the reviewer ruled on one fact, and only that fact's history changed ([D7](../spec/grounded-facts.md#d7-facts-are-immutable-corrections-supersede)).
 
 ## 8. Adjudication, act two: the flip
 
 Re-adjudicating the post-correction projection produces the committed golden receipt, in full:
 
 ```json
-// golden/receipts/review-0001.json
+// examples/golden/receipts/review-0001.json
 {
   "id": "urn:duly:receipt:sha256:748550d046122074633fbb75fd113e57d540703971d4e9bea6e1ee26244b3ce3",
   "receiptSha256": "748550d046122074633fbb75fd113e57d540703971d4e9bea6e1ee26244b3ce3",
@@ -430,10 +430,10 @@ Reading it top to bottom:
 - **`decision`** — `nc:noticeCompliant = false`. The verdict flipped: act one's presumption-only *compliant* is gone because the mailed date now binds — 2026-07-25 to expiration 2026-09-01 is 38 days against the 45-day minimum.
 - **`asOf`** — knowledge time `2026-07-28T09:00:00Z` is the correction's timestamp: this decision is evaluated *as of knowing the correction*. Replay the case at an earlier knowledge time and you get act one back, abstention and all.
 - **`rulesFired`** — NY-NR-45 establishes the minimum; NC-NR-01 finds the deficiency and records that it **defeated NC-DEF-00**, the presumption. The defeat is on the receipt because the non-monotonic step is precisely what an auditor needs to see.
-- **`derivation`** — a proof tree. The second premise of NC-NR-01 is `87ee4342…` — the *human* fact from stage 7, bound where the machine fact used to be. The four premise ids resolve to the four files in `golden/cases/review-0001/facts/`: `120aa512…` is the policy expiration, `87ee4342…` the corrected mailed date, `2e35314c…` the notice type, and `76456b2f…` the governing state. Every leaf of the tree is a content-addressed fact with a grounding.
+- **`derivation`** — a proof tree. The second premise of NC-NR-01 is `87ee4342…` — the *human* fact from stage 7, bound where the machine fact used to be. The four premise ids resolve to the four files in `examples/golden/cases/review-0001/facts/`: `120aa512…` is the policy expiration, `87ee4342…` the corrected mailed date, `2e35314c…` the notice type, and `76456b2f…` the governing state. Every leaf of the tree is a content-addressed fact with a grounding.
 - **`abstentions": []`** — empty, because the below-floor fact is superseded out of the projection; nothing the decision needed was declined.
 - **`receiptSha256`** — the receipt is content-addressed the same way facts are (canonical JSON minus `id` and `receiptSha256`). `uv run python -m duly_assurance verify` re-adjudicates this case — and 350 others — from its committed facts and asserts the receipt re-derives byte-for-byte, on every push.
 
 ## Where this leaves you
 
-One attribute, `nc:noticeMailedDate`, appeared in every artifact the architecture defines: a hashed span in a rendition, a target, a content-addressed fact, an envelope's membership list, a store projection, an abstention entry, a supersession link, and two receipts with opposite verdicts — every hop verifiable from the committed bytes. To go deeper: the contract's rationale is [spec/grounded-facts.md](../spec/grounded-facts.md), the rule semantics are [spec/rule-ir.md](../spec/rule-ir.md), the corpus rules are [golden/README.md](../golden/README.md), authoring a pack is [rulepacks/README.md](../rulepacks/README.md), and the interactive version of both acts is [demo tour §9](demo_tour.md#9-the-review-arc).
+One attribute, `nc:noticeMailedDate`, appeared in every artifact the architecture defines: a hashed span in a rendition, a target, a content-addressed fact, an envelope's membership list, a store projection, an abstention entry, a supersession link, and two receipts with opposite verdicts — every hop verifiable from the committed bytes. To go deeper: the contract's rationale is [spec/grounded-facts.md](../spec/grounded-facts.md), the rule semantics are [spec/rule-ir.md](../spec/rule-ir.md), the corpus rules are [examples/golden/README.md](../examples/golden/README.md), authoring a pack is [examples/rulepacks/README.md](../examples/rulepacks/README.md), and the interactive version of both acts is [demo tour §9](demo_tour.md#9-the-review-arc).

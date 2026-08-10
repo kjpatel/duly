@@ -190,7 +190,7 @@ def test_strata_tables_fit_their_corpus_quota():
 def test_committed_corpus_covers_all_six_packs():
     """The committed golden corpus carries cases for every rule pack in the
     repo, so `impact` can see a change to any of them."""
-    cases = REPO / "golden" / "cases"
+    cases = REPO / "examples" / "golden" / "cases"
     by_prefix: dict[str, int] = {}
     packs: set[str] = set()
     questions: set[str] = set()
@@ -226,7 +226,7 @@ def test_committed_recording_receipts_carry_low_confidence_abstentions():
     recordability presumption survives; at it the measurement binds and the
     deficiency stands."""
     abstained, at_floor_bound = [], []
-    for path in sorted((REPO / "golden" / "receipts").glob("rec-*.json")):
+    for path in sorted((REPO / "examples" / "golden" / "receipts").glob("rec-*.json")):
         receipt = json.loads(path.read_text())
         entries = [a for a in receipt["abstentions"] if a["reason"] == "low_confidence"]
         for entry in entries:
@@ -235,7 +235,7 @@ def test_committed_recording_receipts_carry_low_confidence_abstentions():
             assert entry["threshold"]["pack"] == "county-recording-us"
         if any(e["attribute"] == "rec:firstPageTopSpaceInches" for e in entries):
             abstained.append(receipt)
-        case_dir = REPO / "golden" / "cases" / path.stem / "facts"
+        case_dir = REPO / "examples" / "golden" / "cases" / path.stem / "facts"
         scores = {
             f["attribute"]: f["confidence"]["score"]
             for f in (json.loads(p.read_text()) for p in case_dir.glob("*.json"))
@@ -282,7 +282,7 @@ def test_pack_calendar_reconciles_with_generator_business_day_table():
     from duly_kernel import expr as kexpr
 
     pack = yaml.safe_load(
-        (REPO / "rulepacks/tila-rescission-us-federal/pack.yaml").read_text()
+        (REPO / "examples" / "rulepacks/tila-rescission-us-federal/pack.yaml").read_text()
     )
     calendars = kexpr.parse_calendars(pack["calendars"])
     cal = calendars["tila-precise"]

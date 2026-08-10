@@ -20,9 +20,9 @@ each with the symptom that made it hard to find. Most of a first PR's surprises 
 already written down there.
 
 Then read the component README for whatever you are touching:
-[rulepacks/](rulepacks/README.md) before any rule pack,
-[ontologies/](ontologies/README.md) before any ontology,
-[golden/](golden/README.md) before anything that regenerates the corpus.
+[examples/rulepacks/](examples/rulepacks/README.md) before any rule pack,
+[examples/ontologies/](examples/ontologies/README.md) before any ontology,
+[examples/golden/](examples/golden/README.md) before anything that regenerates the corpus.
 
 ## The four invariants
 
@@ -58,7 +58,7 @@ Run all four before every commit. Tests behind the four optional-dependency mark
 (`linkml`, `z3`, `ortools`, `docling`) are skipped by that pytest line and run in
 their own workflow; [CLAUDE.md](CLAUDE.md) lists how to run them locally.
 
-**`git diff -- golden/` should be empty** unless regenerating the corpus is the
+**`git diff -- examples/golden/` should be empty** unless regenerating the corpus is the
 point of your change. If it is not empty and you did not mean it, your change was
 not inert — fix the change rather than the corpus.
 
@@ -101,7 +101,7 @@ worth reading: it has been kept true.
 ## Contributing a rule pack
 
 Rule packs are the contribution path with the most leverage and the most rules.
-[rulepacks/README.md](rulepacks/README.md) walks it end to end, including what is
+[examples/rulepacks/README.md](examples/rulepacks/README.md) walks it end to end, including what is
 *not* auto-wired. Three things catch people:
 
 - **Every rule cites its authority.** A rule with no citation and no

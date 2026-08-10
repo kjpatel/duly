@@ -22,7 +22,7 @@
 [![CI](https://github.com/kjpatel/duly/actions/workflows/ci.yml/badge.svg)](https://github.com/kjpatel/duly/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
-[![Golden replay](https://img.shields.io/badge/golden_replay-351_receipts_byte--exact-brightgreen)](golden/README.md)
+[![Golden replay](https://img.shields.io/badge/golden_replay-351_receipts_byte--exact-brightgreen)](examples/golden/README.md)
 [![Contracts](https://img.shields.io/badge/contracts-v1.0_policy_published-brightgreen)](spec/compatibility.md)
 
 *duly* — as in duly authorized, duly recorded, duly noted: in accordance with proper procedure.
@@ -42,8 +42,8 @@ under the rules in force on two different dates.**
 import glob, json, yaml
 from duly_kernel import adjudicate
 
-facts = [json.load(open(p)) for p in sorted(glob.glob("golden/cases/notice-ny-0010/facts/*.json"))]
-pack = yaml.safe_load(open("rulepacks/termination-notice-us-states/pack.yaml"))
+facts = [json.load(open(p)) for p in sorted(glob.glob("examples/golden/cases/notice-ny-0010/facts/*.json"))]
+pack = yaml.safe_load(open("examples/rulepacks/termination-notice-us-states/pack.yaml"))
 
 for effective in ("2025-06-01", "2026-06-01"):        # one file, two rulebooks
     r = adjudicate(facts, pack, effective, "2026-08-04T12:00:00Z", "nc:noticeCompliant")
@@ -98,7 +98,7 @@ its pack, and compared byte-for-byte against the receipt committed months earlie
 | The actual bytes: PDF text → receipt → correction | [follow one fact](docs/follow-one-fact.md) |
 | The objection you are about to raise | [FAQ](docs/faq.md) |
 | The contract, argued decision by decision | [grounded facts](spec/grounded-facts.md), [rule IR](spec/rule-ir.md) |
-| To write a rule pack | [rulepacks/README.md](rulepacks/README.md) |
+| To write a rule pack | [examples/rulepacks/README.md](examples/rulepacks/README.md) |
 | To contribute, or to point an agent at it | [CONTRIBUTING.md](CONTRIBUTING.md), [CLAUDE.md](CLAUDE.md) |
 
 ## The problem
@@ -129,8 +129,8 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Rule IR](spec/rule-ir.md) | Defeasible rules — priority, overrides, legal citation, effective window — in a YAML authoring format; Datalog/ASP compilation targets come later | v0 shipped |
 | [Reference kernel](kernel/) | Deterministic interpreter: typed expressions (decimal-only money), stratified evaluation, defeat semantics, effective-dated rule selection, receipt emission | working, tested |
 | [Audit report renderer](kernel/duly_kernel/report.py) | Deterministic derivation-tree → layered report for compliance and technical readers ([example](docs/example-audit-report.md)). One section structure, three renderers over it — Markdown, PDF, and JSON blocks for the browser — so a new medium is a new walk, not a second report | working |
-| [Rule packs](rulepacks/) | Insurance: state termination-notice timing (NY/FL/CA). Mortgage closing: TRID fee tolerance, RON eligibility by state (real authorization dates, incl. California's not-until-2030 statute), eSign/eNote signing-method routing (ESIGN + GSE eNote requirements), TILA right of rescission (12 CFR 1026.23), and county recording readiness (CA/AZ) — each rule cited to its statute or marked TODO(verify), with declared expected outcomes run in CI | six packs, two domains |
-| [Starters](starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for every vertical ([layout and tooling](starters/README.md)) | six shipped |
+| [Rule packs](examples/rulepacks/) | Insurance: state termination-notice timing (NY/FL/CA). Mortgage closing: TRID fee tolerance, RON eligibility by state (real authorization dates, incl. California's not-until-2030 statute), eSign/eNote signing-method routing (ESIGN + GSE eNote requirements), TILA right of rescission (12 CFR 1026.23), and county recording readiness (CA/AZ) — each rule cited to its statute or marked TODO(verify), with declared expected outcomes run in CI | six packs, two domains |
+| [Starters](examples/starters/) | Synthetic documents, extracted renditions, and span-verified grounded facts for every vertical ([layout and tooling](examples/starters/README.md)) | six shipped |
 | [Demo](demo/) | Interactive adjudication UI: highlighted grounding spans, derivation tree, rule citations, receipts, as-of replay, and the review arc — abstention, inline correction, golden-case export | working |
 | [Rule studio](docs/demo_tour.md#10-the-rule-studio) | The demo's second surface, for the rules rather than the documents: every pack rendered as decision-table grids, editable as cells, forms or YAML, with the validator, the pack's declared cases, an ad-hoc case, golden-corpus impact and the solver all run over one in-memory draft. Drafts are session-only — it hands you `pack.yaml` and a diff, and committing stays a human act | working |
 | [Evidence browser](docs/demo_tour.md#11-the-evidence-browser) | The demo's third surface, for the evidence rather than the answer: every document a case holds (source bytes beside the extractor's rendition) and every fact ever asserted about it, each with its provenance, confidence, content hash, ontology slot and supersession chain. A knowledge-time dial replays the store's event log — drag it back and a correction becomes not-yet-known, the fact it replaced goes live again, and the citations move with it | working |
@@ -139,7 +139,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Bitemporal fact store](store/) | Append-only events, as-of projections across effective and knowledge time, supersession chains (SQLite; Postgres-portable schema) | working |
 | [Review queue](review/) | Abstention routing; human corrections re-enter as first-class facts and auto-become golden cases; calibration label export | working (API + library) |
 | [Calibration](calibration/) | Temperature/Platt/conformal calibrators and abstention math, consuming the review queue's labeled pairs | working |
-| [Assurance harness](assurance/) | Replay verifier, 351-case [golden corpus](golden/) (350 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
+| [Assurance harness](assurance/) | Replay verifier, 351-case [golden corpus](examples/golden/) (350 synthetic + 1 review-born), rule-change impact analysis with CI PR comments | working |
 | [PROV-O export](spec/prov-o.md) | External JSON-LD contexts + exporter: facts and receipts become W3C PROV for any RDF/SPARQL tool, stored bytes unchanged — lineage queries with off-the-shelf tooling ([SPARQL demo](spec/provo_sparql_demo.py), `GET /api/report?format=jsonld`) | shipped |
 | [Pack-embedded calendars](spec/rule-ir.md) | Business-day arithmetic inside the deterministic evaluator: `add_business_days` walks a calendar carried in the pack itself — excluded weekdays, cited holiday dates, and a hard coverage window that raises rather than guessing past its edge ([demo](spec/calendar_demo.py)). "Last Monday in May" is legal content, versioned and receipt-pinned with the rules that use it, not engine code | shipped |
 | [DMN compiler](spec/dmn.md) | A second authoring surface: DMN 1.3+ decision tables compile into the rule IR, and the kernel cannot tell the result from a hand-written pack ([demo](spec/dmn_demo.py), `python -m duly_dmn`). Deliberately narrow — S-FEEL cells, three of seven hit policies, a mandatory citation and effective date on every row — and it refuses rather than approximates: an uncited row is a compile error, not an invented `TODO(verify)` | shipped |
@@ -149,7 +149,7 @@ Everything above the contract is probabilistic and replaceable; everything below
 | [Closing scheduler example](examples/closing-scheduler/) | duly as a decision component inside an optimizer: CP-SAT plans a mortgage closing where every hard constraint is a table of days an adjudication permitted, and every chosen date cites the receipt ids that constrained it. The scheduler encodes no rule — a test perturbs the TILA pack from three business days to five and requires the plan to move without `schedule.py` being edited | shipped |
 | [Static pack verifier](spec/pack-verification.md) | Solver-backed validation-time analysis of a rulebase: proves same-priority rules mutually exclusive where the syntactic validator cannot, witnesses the overlaps it cannot prove away, enumerates the input regions no rule covers, and proves two packs decide alike over the input space instead of over a fixture list ([demo](spec/prove_demo.py), `python -m duly_assurance prove`) | shipped |
 | [Compatibility policy](spec/compatibility.md) | What v1.0 promises, per contract, and what it deliberately does not cover. The receipt has no extension point and never will; replay is scoped to a **semantics version**, enforced by a kernel that refuses a receipt whose semantics it does not implement rather than replaying it by coincidence; and `decision_digest()` says when two receipts record the same adjudication — which is how two evaluation backends are defined to agree, since their bytes cannot ([demo](spec/compatibility_demo.py), [vectors](spec/decision-digest-vectors.json)) | shipped |
-| [Ontology conformance gate](spec/ontology-conformance.md) | The enforcement half of bring-your-own-ontology: versioned LinkML artifacts ([ontologies/](ontologies/), two committed samples with a verified MISMO/FIBO crosswalk) + a pure-Python gate rejecting misspelled attributes, wrong value kinds, and out-of-enum codes at the contract line ([demo](spec/conformance_gate_demo.py), `python -m duly_conformance`) | shipped |
+| [Ontology conformance gate](spec/ontology-conformance.md) | The enforcement half of bring-your-own-ontology: versioned LinkML artifacts ([examples/ontologies/](examples/ontologies/), two committed samples with a verified MISMO/FIBO crosswalk) + a pure-Python gate rejecting misspelled attributes, wrong value kinds, and out-of-enum codes at the contract line ([demo](spec/conformance_gate_demo.py), `python -m duly_conformance`) | shipped |
 
 ## What you keep and what you replace
 
@@ -158,10 +158,10 @@ duly is meant to be adopted the way you adopt a telemetry stack: the toolkit is 
 | Kind | Directories | An adopting org… |
 |---|---|---|
 | **The toolkit** — the seam itself | `spec/`, `kernel/`, `store/`, `extraction/`, `conformance/`, `calibration/`, `review/`, `assurance/` | imports and runs these unchanged; they contain zero domain knowledge |
-| **Example content** — what a *user* of the toolkit authors | `rulepacks/`, `starters/`, `ontologies/`, `golden/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
-| **Reference wiring** | `demo/`, `examples/` | treats these as worked examples of tying the pieces into a service (`demo/`) or of consuming duly from a system that is not duly (`examples/`), not as the product |
+| **Example content** — what a *user* of the toolkit authors | `examples/rulepacks/`, `examples/starters/`, `examples/ontologies/`, `examples/golden/`, `examples/dmn/` | replaces these with its own rules, documents, ontologies, and regression corpus — ours exist to be read, copied, and deleted |
+| **Reference wiring** | `demo/`, `examples/minimal-integration/`, `examples/closing-scheduler/` | treats these as worked examples of tying the pieces into a service (`demo/`) or of consuming duly from a system that is not duly, not as the product |
 
-The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M5 below; until it lands, [rulepacks/README.md](rulepacks/README.md) and the per-component READMEs cover each edge individually.
+The six rule packs, seven scenarios, and 350-case synthetic corpus are teaching artifacts: dense enough to prove the machinery under real statutes, disposable by design. The procedural bring-your-own path — your extractors, your ontology, your packs, your corpus, end to end — is the adopter's guide roadmapped in M5 below; until it lands, [examples/rulepacks/README.md](examples/rulepacks/README.md) and the per-component READMEs cover each edge individually.
 
 ## Design choices and why
 
@@ -221,25 +221,25 @@ uv run uvicorn demo.app:app --port 8788
 
 Open http://localhost:8788, pick a scenario, and ask its question — or follow the step-by-step [demo tour](docs/demo_tour.md).  The document pane highlights the exact phrases each fact was grounded in; the reasoning pane shows the derivation tree (click a fact to jump to its source sentence), the rules that fired with their legal citations, and which presumption each rule defeated; the receipt downloads as JSON and the full audit report as Markdown or PDF ([example](docs/example-audit-report.md)). Change the as-of date and the same facts produce a different outcome under the rules in force at that date — the effective-dated replay the architecture exists to provide. In the review-arc scenario the decision abstains from the below-floor fact, falls to the presumption, and says so; an inline correction supersedes the shaky fact with a human-asserted one, flips the verdict on re-adjudication, and exports as a replayable golden regression case ([tour §9](docs/demo_tour.md)).
 
-The same server has a second surface for the rules themselves: <http://localhost:8788/rules> renders every pack as decision-table grids you can edit as cells, forms or YAML, and puts the five instruments a rule change needs in one rail — the kernel's validator, the pack's declared `expected.yaml` outcomes, an ad-hoc case you build by changing input values, golden-corpus impact analysis over the draft, and (with `--extra prove`) a solver proof of whether the draft and the committed pack decide alike. The stock demonstration is watching two of them disagree: change New York's 45-day minimum to 60, and every declared case still passes while the corpus reports one flipped decision — declared outcomes catch a pack that *breaks*, only the corpus catches one whose *meaning moved*. Drafts live in the process and are never written into `rulepacks/`; the studio hands you `pack.yaml` and a diff, and committing is a human act ([tour §10](docs/demo_tour.md#10-the-rule-studio)).
+The same server has a second surface for the rules themselves: <http://localhost:8788/rules> renders every pack as decision-table grids you can edit as cells, forms or YAML, and puts the five instruments a rule change needs in one rail — the kernel's validator, the pack's declared `expected.yaml` outcomes, an ad-hoc case you build by changing input values, golden-corpus impact analysis over the draft, and (with `--extra prove`) a solver proof of whether the draft and the committed pack decide alike. The stock demonstration is watching two of them disagree: change New York's 45-day minimum to 60, and every declared case still passes while the corpus reports one flipped decision — declared outcomes catch a pack that *breaks*, only the corpus catches one whose *meaning moved*. Drafts live in the process and are never written into `examples/rulepacks/`; the studio hands you `pack.yaml` and a diff, and committing is a human act ([tour §10](docs/demo_tour.md#10-the-rule-studio)).
 
 A third surface is for the evidence: <http://localhost:8788/evidence> shows a case's documents — the committed PDF beside the extractor's rendition, with the spans drawn only on the rendition they are measured in — and every fact ever asserted about it, each with its provenance, confidence method, content hash, ontology slot, and the questions that cite it. The strip along the top is a knowledge-time dial whose stops are the moments the case's knowledge actually changed. Drag it back past the review arc's correction: the corrected fact becomes not-yet-known, the below-floor machine fact it superseded goes live again, and the citations move with them. Nothing is stored to make that work — it is the same append-only event log projected at a different horizon, which is what "bitemporal" has meant here since M2 and what nothing until now displayed ([tour §11](docs/demo_tour.md#11-the-evidence-browser)).
 
 No browser needed for the core of it — the same decision from the terminal, including the as-of flip:
 
 ```bash
-uv run python -m duly_kernel --facts starters/notice-ny/facts \
-  --pack rulepacks/termination-notice-us-states/pack.yaml \
+uv run python -m duly_kernel --facts examples/starters/notice-ny/facts \
+  --pack examples/rulepacks/termination-notice-us-states/pack.yaml \
   --asof 2026-07-29 --question nc:noticeCompliant
 # → "value": false — 38 days notice given, 45 required under NY-NR-45
-uv run python -m duly_kernel --facts starters/notice-ny/facts \
-  --pack rulepacks/termination-notice-us-states/pack.yaml \
+uv run python -m duly_kernel --facts examples/starters/notice-ny/facts \
+  --pack examples/rulepacks/termination-notice-us-states/pack.yaml \
   --asof 2025-06-01 --question nc:noticeCompliant
 # → "value": true — same facts, compliant under the rule then in force
 # add --report audit.md (or --report-pdf audit.pdf) for the full audit report
 ```
 
-Honest labels on the demo content: the documents are synthetic (generated by [starters/tools](starters/tools/) and per-starter scripts, with facts span-verified against the actual PDF text); extraction runs the Docling adapter when the `extraction` extra is installed and the honest scripted stub otherwise, with the UI labeling which extractor produced the rendition; the below-floor confidences (0.62 in the notice review arc, 0.58 in the recording scenario) are scripted so the abstention arc is reproducible; and the pre-2026 "30-day" historical rule version exists only to demonstrate effective-dated replay — it is marked `DEMO-SYNTHETIC` in the pack and is not real statutory history. The RON pack's effective dates, by contrast, are real statutory history — that is its point.
+Honest labels on the demo content: the documents are synthetic (generated by [examples/starters/tools](examples/starters/tools/) and per-starter scripts, with facts span-verified against the actual PDF text); extraction runs the Docling adapter when the `extraction` extra is installed and the honest scripted stub otherwise, with the UI labeling which extractor produced the rendition; the below-floor confidences (0.62 in the notice review arc, 0.58 in the recording scenario) are scripted so the abstention arc is reproducible; and the pre-2026 "30-day" historical rule version exists only to demonstrate effective-dated replay — it is marked `DEMO-SYNTHETIC` in the pack and is not real statutory history. The RON pack's effective dates, by contrast, are real statutory history — that is its point.
 
 ## Roadmap
 
@@ -265,13 +265,13 @@ Sequencing principle: build nothing until its consumer exists — where a consum
 ### M2 — replay and regression (complete)
 - [x] Bitemporal fact store ([store/](store/)): append-only events on SQLite with a Postgres-portable schema; as-of projections across knowledge and effective time; supersession chains and knowledge-time travel ("what did we know in March") tested end to end
 - [x] Replay verifier: `python -m duly_assurance verify` re-adjudicates every golden case and asserts byte-identical receipts
-- [x] Golden corpus ([golden/](golden/)): 350 committed synthetic cases with receipts, seeded and deterministically regenerable, exercising every rule in every pack including effective-date boundaries and defeat chains (extended in M4 when the mortgage-closing packs landed)
-- [x] Rule-change impact analysis in CI: PRs touching rulepacks/ get a sticky comment — "N of M decisions flip" — with before/after receipts and reasoning-only-change tracking ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+- [x] Golden corpus ([examples/golden/](examples/golden/)): 350 committed synthetic cases with receipts, seeded and deterministically regenerable, exercising every rule in every pack including effective-date boundaries and defeat chains (extended in M4 when the mortgage-closing packs landed)
+- [x] Rule-change impact analysis in CI: PRs touching `examples/rulepacks/` get a sticky comment — "N of M decisions flip" — with before/after receipts and reasoning-only-change tracking ([.github/workflows/ci.yml](.github/workflows/ci.yml))
 - [x] Florida and California rule packs, statutorily verified (Fla. Stat. § 627.4133; Cal. Ins. Code §§ 678, 677.4) with explicit scope comments and TODO(verify) markers; jurisdiction scoping validated by equality-guard disjointness in the pack validator
 
 ### M3 — extraction and review (complete)
 - [x] Extraction adapter interface + Docling adapter ([extraction/](extraction/)): rendition-anchored spans verified on every emission; the demo's scripted stub is adapter #1 behind the same contract
-- [x] Human corrections auto-become golden regression cases (moved from M2; depends on the review queue): `python -m duly_review golden` freezes a resolved item as a replayable `review-*` case — one committed ([review-0001](golden/cases/review-0001)), regenerated byte-identically in tests
+- [x] Human corrections auto-become golden regression cases (moved from M2; depends on the review queue): `python -m duly_review golden` freezes a resolved item as a replayable `review-*` case — one committed ([review-0001](examples/golden/cases/review-0001)), regenerated byte-identically in tests
 - [x] Extraction-run batch envelope: content-addressed manifest so a whole run can be verified or revoked at once (deferred from M0; [envelope.py](extraction/duly_extraction/envelope.py), spec resolved question 4 — asymmetric signatures remain an open question)
 - [x] Calibration module (temperature/Platt/conformal) with abstention policy hooks ([calibration/](calibration/)): pack-level `abstentionPolicy` confidence floors in the kernel, labeled-pair export from the review queue
 - [x] Review queue API: abstention routing (pack-level `abstentionPolicy.routeTo` → receipt `routedTo`), human facts re-entering the store through its public API, dedup'd append-only queue with FastAPI surface ([review/](review/)), and calibration label export (with its censored-sample caveat stated where the labels come out)

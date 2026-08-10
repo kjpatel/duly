@@ -30,7 +30,8 @@ review:
 
 The checks run **only for packs that declare `pack.idPrefix`** — declaring one
 is how a pack opts into the convention. Every pack in this repo declares one
-(`kernel/tests/test_rule_ids.py` sweeps `rulepacks/` and fails if one does
+(`examples/tests/test_example_rule_ids.py` sweeps the committed packs and
+fails if one does
 not); an adopter porting a rulebase with its own established ids is not forced
 to rename anything, which matters because renaming is exactly what this module
 argues is impossible after the fact.

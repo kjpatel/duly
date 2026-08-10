@@ -398,7 +398,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m duly_assurance impact",
         description="Report which golden decisions flip under the working-tree rule packs.",
     )
-    parser.add_argument("--golden", default="golden", help="golden corpus root (default: golden)")
+    parser.add_argument("--golden", default="examples/golden", help="golden corpus root (default: examples/golden)")
     parser.add_argument("--json", dest="json_out", default=None, metavar="OUT.JSON",
                         help="write the full machine-readable report")
     parser.add_argument("--markdown", dest="markdown_out", default=None, metavar="OUT.MD",

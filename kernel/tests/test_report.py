@@ -7,9 +7,10 @@ suite that proved it worked only against `starters/`+`rulepacks/` would stop
 being collected the day that teaching content moves under `examples/`, which
 reads exactly like success (fixtures/README.md).
 
-Three tests below keep their teaching-content subject and say so: what the NY
-notice and TRID reports *say* is a claim about those packs, and deleting them
-should take those tests with them rather than leave them passing vacuously.
+The three tests whose subject was the teaching content — what the NY notice and
+TRID reports *say* — now live in `examples/tests/test_example_reports.py`, so
+that deleting `examples/` deletes them rather than leaving them passing
+vacuously.
 """
 
 import copy
@@ -18,7 +19,6 @@ import json
 import pytest
 
 from duly_kernel.api import adjudicate
-from duly_kernel.ir import load_pack
 from duly_kernel.report import (
     PII_REDACTION,
     render_report_blocks,
@@ -26,10 +26,7 @@ from duly_kernel.report import (
     render_report_pdf,
 )
 
-from conftest import REPO_ROOT, FIXTURE_CORPUS, fixture_case, fixture_pack, rehash_fact
-
-AS_OF_EFFECTIVE = "2026-07-25"
-AS_OF_KNOWLEDGE = "2026-07-30T16:00:00Z"
+from conftest import FIXTURE_CORPUS, fixture_case, fixture_pack, rehash_fact
 
 # The fixture corpus's committed bitemporal point (fixtures/cases/fx-0001/
 # case.yaml). Passed explicitly everywhere: the scenario facts carry no
@@ -37,15 +34,6 @@ AS_OF_KNOWLEDGE = "2026-07-30T16:00:00Z"
 # tests fail on a date rather than on a defect.
 FX_AS_OF_EFFECTIVE = "2026-06-01"
 FX_AS_OF_KNOWLEDGE = "2026-03-02T12:00:00Z"
-
-
-def _load_facts(directory) -> list[dict]:
-    facts = []
-    for path in sorted(directory.glob("*.json")):
-        doc = json.loads(path.read_text(encoding="utf-8"))
-        if "receiptSha256" not in doc:
-            facts.append(doc)
-    return facts
 
 
 # ---------------------------------------------------------------------------
@@ -97,37 +85,6 @@ def fx_scenario() -> tuple[dict, list[dict], dict]:
     return receipt, facts, pack
 
 
-# ---------------------------------------------------------------------------
-# Example content (moves with `examples/`)
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module")
-def ny() -> tuple[dict, list[dict], dict]:
-    """EXAMPLE CONTENT (moves with `starters/` + `rulepacks/`)."""
-    facts = _load_facts(REPO_ROOT / "starters" / "notice-ny" / "facts")
-    pack = load_pack(
-        REPO_ROOT / "rulepacks" / "termination-notice-us-states" / "pack.yaml"
-    )
-    receipt = adjudicate(
-        facts, pack, AS_OF_EFFECTIVE, AS_OF_KNOWLEDGE, "nc:noticeCompliant"
-    )
-    return receipt, facts, pack
-
-
-@pytest.fixture(scope="module")
-def trid() -> tuple[dict, list[dict], dict]:
-    """EXAMPLE CONTENT (moves with `starters/` + `rulepacks/`)."""
-    facts = _load_facts(REPO_ROOT / "starters" / "trid" / "facts")
-    pack = load_pack(
-        REPO_ROOT / "rulepacks" / "trid-fee-tolerance-us-federal" / "pack.yaml"
-    )
-    receipt = adjudicate(
-        facts, pack, AS_OF_EFFECTIVE, AS_OF_KNOWLEDGE, "trid:toleranceCureAmount"
-    )
-    return receipt, facts, pack
-
-
 class TestDeterminism:
     def test_markdown_byte_identical(self, fx_scenario):
         receipt, facts, pack = fx_scenario
@@ -140,19 +97,6 @@ class TestDeterminism:
         a = render_report_pdf(receipt, facts, pack)
         b = render_report_pdf(receipt, facts, pack)
         assert a == b
-
-    def test_trid_pdf_byte_identical(self, trid):
-        """EXAMPLE CONTENT (moves with `starters/` + `rulepacks/`): the TRID
-        report is the renderer's second shape — a money decision over a
-        multi-fee starter — and the reason to render it twice is that *this*
-        content, not a fixture, is what an adopter downloads. The toolkit's
-        determinism claim is carried by the two tests above, which survive the
-        move; this one goes with the pack it renders.
-        """
-        receipt, facts, pack = trid
-        assert render_report_pdf(receipt, facts, pack) == render_report_pdf(
-            receipt, facts, pack
-        )
 
     def test_blocks_identical(self, fx_scenario):
         receipt, facts, pack = fx_scenario
@@ -278,39 +222,6 @@ class TestMarkdownContent:
         # The defeat is still named, but what the defeated rule would have
         # concluded is not knowable without the pack.
         assert "FX-DEFAULT-00, which would otherwise have concluded its own conclusion" in md
-
-
-class TestNyMarkdownContent:
-    def test_citation_quote_defeat_and_verdict(self, ny):
-        """EXAMPLE CONTENT (moves with `starters/` + `rulepacks/`): every
-        string here is a claim about the NY non-renewal starter and the
-        termination-notice pack — the statutory citation, the quote the
-        extractor grounded, that pack's own rule ids. Deleting the starter
-        should take this test with it; the renderer capability it exercises
-        (defeat narration, citation, verdict) is covered on the fixture
-        corpus by TestMarkdownContent above.
-        """
-        receipt, facts, pack = ny
-        md = render_report_markdown(receipt, facts, pack)
-        assert "N.Y. Ins. Law § 3425(d)(1)" in md
-        assert "Date of Mailing: July 25, 2026" in md
-        # The exception rule's defeat of the default presumption is narrated.
-        assert "NC-DEF-00" in md
-        assert "overrode NC-DEF-00" in md
-        assert "Not compliant" in md
-
-
-class TestTridMarkdownContent:
-    def test_cure_amount_and_citation(self, trid):
-        """EXAMPLE CONTENT (moves with `starters/` + `rulepacks/`): the cure
-        amount and the CFR citation are facts about the TRID pack, not about
-        the renderer. Money rendering itself is asserted on the fixture pack's
-        fx:assessedFee decision in TestMarkdownContent.
-        """
-        receipt, facts, pack = trid
-        md = render_report_markdown(receipt, facts, pack)
-        assert "250.00" in md
-        assert "12 CFR 1026.19(e)(3)(i)" in md
 
 
 class TestPdfShape:

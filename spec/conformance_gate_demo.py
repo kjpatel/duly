@@ -29,7 +29,7 @@ import pathlib
 from duly_conformance import check_fact, load_repo_registry
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FACT_PATH = ROOT / "starters/trid/facts/fact-cd-fee-type.json"
+FACT_PATH = ROOT / "examples/starters/trid/facts/fact-cd-fee-type.json"
 
 
 def show(label: str, fact: dict, registry) -> None:
@@ -49,7 +49,7 @@ def show(label: str, fact: dict, registry) -> None:
 
 
 def main() -> int:
-    registry = load_repo_registry(ROOT / "ontologies")
+    registry = load_repo_registry(ROOT / "examples" / "ontologies")
     print(f"registry: {', '.join(registry.refs())}\n")
 
     fact = json.loads(FACT_PATH.read_text(encoding="utf-8"))

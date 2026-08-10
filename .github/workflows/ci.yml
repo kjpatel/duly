@@ -22,7 +22,7 @@ jobs:
       - name: Run test suites
         run: |
           suites=""
-          for d in kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests; do
+          for d in core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests examples/tests; do
             if [ -d "$d" ]; then
               suites="$suites $d"
             else
@@ -36,10 +36,10 @@ jobs:
 
       - name: Verify golden corpus (replay determinism)
         run: |
-          if [ -d golden/cases ]; then
+          if [ -d examples/golden/cases ]; then
             uv run python -m duly_assurance verify
           else
-            echo "golden/cases not present; skipping verify"
+            echo "examples/golden/cases not present; skipping verify"
           fi
 
   rule-impact:
@@ -57,7 +57,7 @@ jobs:
         with:
           filters: |
             rulepacks:
-              - 'rulepacks/**'
+              - 'examples/rulepacks/**'
 
       - uses: astral-sh/setup-uv@v5
         if: steps.changes.outputs.rulepacks == 'true'
@@ -69,10 +69,10 @@ jobs:
       - name: Run impact analysis
         if: steps.changes.outputs.rulepacks == 'true'
         run: |
-          if [ -d golden/cases ]; then
+          if [ -d examples/golden/cases ]; then
             uv run python -m duly_assurance impact --markdown impact.md
           else
-            echo "golden/cases not present; skipping impact analysis"
+            echo "examples/golden/cases not present; skipping impact analysis"
           fi
 
       - name: Post sticky PR comment

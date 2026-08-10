@@ -91,7 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--facts-db", required=True, help="fact store SQLite database")
     p.add_argument("--item", required=True, help="resolved review item id")
     p.add_argument("--pack", required=True, help="repo-relative pack path for case.yaml")
-    p.add_argument("--golden", default="golden", help="golden corpus directory (default: golden)")
+    p.add_argument("--golden", default="examples/golden", help="golden corpus directory (default: examples/golden)")
     p.add_argument("--case-id", default=None, help="explicit case id (default: next review-NNNN)")
     p.set_defaults(func=_cmd_golden)
 

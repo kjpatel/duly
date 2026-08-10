@@ -127,7 +127,7 @@ duly provides:
 - A [review loop](../review/README.md) that routes abstentions, lets human
   corrections enter as first-class facts, and turns resolved cases into
   replayable regression cases.
-- An assurance harness: [golden replay](../golden/README.md), rule-change
+- An assurance harness: [golden replay](../examples/golden/README.md), rule-change
   impact analysis, schema and hash validation, and ontology conformance checks.
 - An [ontology conformance gate](../spec/ontology-conformance.md) that validates
   facts against versioned, immutable LinkML artifacts supplied by the adopter.

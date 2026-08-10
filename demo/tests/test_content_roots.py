@@ -29,9 +29,16 @@ from demo.content import CONTENT, ENV_VAR, REPO_ROOT, ContentRoots  # noqa: E402
 # --- the roots themselves ---------------------------------------------------
 
 
-def test_the_default_root_is_this_repository():
-    """So `uvicorn demo.app:app` needs no configuration, as before."""
-    assert ContentRoots.from_env({}).root == REPO_ROOT
+def test_the_default_root_is_this_repositorys_example_content():
+    """So `uvicorn demo.app:app` needs no configuration, as before.
+
+    The default moved with the content: this repository keeps its teaching
+    content under `examples/`, so that is what it offers as the default root.
+    The *contract* did not move — a root still holds `starters/`, `golden/`,
+    `rulepacks/`, `ontologies/`, `dmn/` directly, and nobody pointing
+    `DULY_DEMO_CONTENT` at their own corpus mirrors this repo's nesting.
+    """
+    assert ContentRoots.from_env({}).root == REPO_ROOT / "examples"
 
 
 def test_the_env_var_moves_every_root_together(tmp_path):
@@ -39,8 +46,11 @@ def test_the_env_var_moves_every_root_together(tmp_path):
     assert content.root == tmp_path.resolve()
     for name in ("starters", "golden", "rulepacks", "ontologies"):
         assert getattr(content, name).parent == tmp_path.resolve()
-    assert content.spec_examples == tmp_path.resolve() / "spec" / "examples"
-    assert content.dmn_examples == tmp_path.resolve() / "dmn" / "examples"
+    assert content.dmn_examples == tmp_path.resolve() / "dmn"
+    # Deliberately NOT moved by the env var: the built-in fixture scenario is
+    # the demo's own, served from this repository's committed spec examples —
+    # it ships with the demo rather than travelling with anyone's content.
+    assert content.spec_examples == REPO_ROOT / "spec" / "examples"
 
 
 def test_containment_accepts_a_path_inside_the_root(tmp_path):
@@ -103,29 +113,39 @@ def test_every_page_still_renders_with_no_content(empty_content, path):
 
 
 @pytest.mark.parametrize(
-    "endpoint,key",
+    "endpoint,key,floor",
     [
-        ("/api/scenarios", None),
-        ("/api/rules/packs", "packs"),
-        ("/api/receipts/corpus", "receipts"),
+        # The scenario listing is never fully empty: the built-in fixture
+        # scenario ships with the demo (see the design-change test below), so
+        # an empty corpus lists exactly that one, and nothing else.
+        ("/api/scenarios", None, 1),
+        ("/api/rules/packs", "packs", 0),
+        ("/api/receipts/corpus", "receipts", 0),
     ],
 )
-def test_every_listing_reports_empty_rather_than_failing(empty_content, endpoint, key):
+def test_every_listing_reports_empty_rather_than_failing(empty_content, endpoint, key, floor):
     response = empty_content.get(endpoint)
     assert response.status_code == 200, response.text
     body = response.json()
     items = body if key is None else (body.get(key) or [])
-    assert len(items) == 0
+    assert len(items) == floor
 
 
-def test_the_built_in_fixture_scenario_is_content_too(empty_content):
-    """It reads the committed spec examples, so a deployment pointed at its own
-    corpus does not have it. Absent, not fabricated: `_build_fixture_scenario`
-    returns None rather than raising, because a missing *demonstration* must
-    not read as a broken server."""
+def test_the_built_in_fixture_scenario_ships_with_the_demo(empty_content):
+    """DESIGN CHANGE with the examples/ move, on purpose: the built-in fixture
+    scenario is served from this repository's committed `spec/examples` — the
+    contract's own worked example — and no longer disappears under a custom
+    content root. It could not stay content-derived: the repo's default root
+    is now `examples/`, which does not contain `spec/`, so a content-derived
+    path would have taken the built-in away from the *default* deployment.
+    A deployment with an empty corpus therefore still has one honest thing to
+    show, and `git rm -r examples/` leaves the demo demonstrating the contract
+    rather than nothing at all."""
     import demo.app
 
-    assert demo.app._build_fixture_scenario() is None
+    scenario = demo.app._build_fixture_scenario()
+    assert scenario is not None
+    assert scenario["extraction"]["source"] == "fixture"
 
 
 def test_the_repo_default_still_finds_everything():

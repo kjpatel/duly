@@ -419,7 +419,7 @@ immutability requirement applies to ontology artifacts.
 Because pack identity sits *inside* the hashed body, two packs are two
 identities even when they encode the same rules. The DMN work made this
 concrete: a decision table compiled from
-[`dmn/examples/trid-fee-tolerance.dmn`](../dmn/examples/trid-fee-tolerance.dmn)
+[`examples/dmn/trid-fee-tolerance.dmn`](../examples/dmn/trid-fee-tolerance.dmn)
 reaches the same decision as the hand-written TRID pack, fires the same rules
 in the same order with the same defeat chains, and consumes the same facts —
 and cannot produce the same `receiptSha256`, because the two packs do not
@@ -973,7 +973,7 @@ These are extension paths, not commitments or a second roadmap. The
 | Demonstrated need | Credible extension | Invariant to preserve |
 |---|---|---|
 | Rule authors need safer tools | DMN-to-IR authoring, Z3 overlap/coverage analysis, and backward what-if queries (**all shipped** — see below), plus a rule-id convention with the pre-existing ids grandfathered rather than renamed | Authoring tools assist and solvers advise; only the deterministic kernel emits receipts, and no solver runs on the adjudication path |
-| Rule authors need those tools *together* | A browsing/drafting surface that runs the validator, the pack's declared cases, an ad-hoc case, corpus impact and the solver over one draft (**shipped** — the demo's rule studio, [tour §10](demo_tour.md)) | A draft is a session artifact until a human commits it; nothing the studio does writes into `rulepacks/`, and every instrument it exposes is the shipped one called unmodified |
+| Rule authors need those tools *together* | A browsing/drafting surface that runs the validator, the pack's declared cases, an ad-hoc case, corpus impact and the solver over one draft (**shipped** — the demo's rule studio, [tour §10](demo_tour.md)) | A draft is a session artifact until a human commits it; nothing the studio does writes into `examples/rulepacks/`, and every instrument it exposes is the shipped one called unmodified |
 | An append-only history nobody can look at is indistinguishable from one that was edited | A surface that projects the case at any point on its own event log, showing what became of every fact rather than only which ones survive (**shipped** — the demo's evidence browser, [tour §11](demo_tour.md#11-the-evidence-browser)) | The browser reads; it never writes. Its projection must agree with the store's `as_of` at every horizon, and it must degrade to "there is no event log here" rather than presenting a disk fact set as a timeline with one point |
 | A receipt is only as good as the recipient's ability to check it | A surface that opens any receipt — committed, or pasted from another deployment — and re-verifies it on open rather than on request (**shipped** — the demo's receipt viewer, [tour §12](demo_tour.md#12-the-receipt-viewer)) | Verification never renders what it cannot source: a missing fact set or a moved pack version is reported as unchecked, never approximated from whatever is on disk. The report is the kernel's own section structure in a third medium, never a second renderer |
 | Production extraction quality must be managed | Second real adapter, representative evaluation, drift segmentation, bounded validate-and-repair before review | Every repaired proposal remains grounded, attributable, and reviewable |
@@ -1012,7 +1012,7 @@ requirement without weakening replay.
   subset and the gate's honest boundaries.
 - [PROV-O alignment](../spec/prov-o.md) explains the partial external
   provenance mapping.
-- [Rule-pack authoring guide](../rulepacks/README.md) is the starting point for
+- [Rule-pack authoring guide](../examples/rulepacks/README.md) is the starting point for
   changing decision content.
 - [`extraction/duly_extraction`](../extraction/duly_extraction) contains the
   adapter and run-envelope boundary.

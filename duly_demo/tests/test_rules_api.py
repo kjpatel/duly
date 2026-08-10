@@ -1,4 +1,4 @@
-"""API tests for the demo's Rule Studio (demo/rules_api.py).
+"""API tests for the demo's Rule Studio (duly_demo/rules_api.py).
 
 The studio is **toolkit** (M5 plan, D2): it browses and edits whatever packs a
 deployment has, not any particular ones. So these run against a content root
@@ -36,7 +36,7 @@ teardown: roots are bound at import, so pointing them at a temp root leaks into
 every later file in the directory run unless it is put back.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
+    PATH="/opt/homebrew/bin:$PATH" uv run pytest duly_demo/tests -q
 """
 
 from __future__ import annotations
@@ -92,13 +92,13 @@ def client(content_root, monkeypatch):
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     reload_demo()
 
-    import demo.app
-    import demo.rules_api
+    import duly_demo.app
+    import duly_demo.rules_api
 
-    demo.rules_api.reset_drafts()
-    with TestClient(demo.app.app) as c:
+    duly_demo.rules_api.reset_drafts()
+    with TestClient(duly_demo.app.app) as c:
         yield c
-    demo.rules_api.reset_drafts()
+    duly_demo.rules_api.reset_drafts()
 
     monkeypatch.undo()
     reload_demo()

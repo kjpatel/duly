@@ -17,7 +17,7 @@ Copy [termination-notice-us-states](termination-notice-us-states/) for a jurisdi
 
 ## Read the packs before you write one
 
-`uv run uvicorn demo.app:app --port 8788`, then <http://localhost:8788/rules>. The **rule studio** renders every committed pack as decision-table grids — rows are rules, columns are the inputs they bind — which is the fastest way to see how a real pack is shaped before you copy one. It also drafts and tests: edit a cell, a rule form or the YAML, and the panel beside it runs the kernel's validator, this pack's `expected.yaml`, an ad-hoc case you build by changing input values, golden-corpus impact analysis, and the solver. Drafts are session-only — the studio hands you `pack.yaml` bytes and a diff and never writes into this directory, so everything below still applies. It is a good place to *understand* and *try*; it is not a shortcut past steps 2–7. Walkthrough: [demo tour §10](../../docs/demo_tour.md#10-the-rule-studio).
+`uv run uvicorn duly_demo.app:app --port 8788`, then <http://localhost:8788/rules>. The **rule studio** renders every committed pack as decision-table grids — rows are rules, columns are the inputs they bind — which is the fastest way to see how a real pack is shaped before you copy one. It also drafts and tests: edit a cell, a rule form or the YAML, and the panel beside it runs the kernel's validator, this pack's `expected.yaml`, an ad-hoc case you build by changing input values, golden-corpus impact analysis, and the solver. Drafts are session-only — the studio hands you `pack.yaml` bytes and a diff and never writes into this directory, so everything below still applies. It is a good place to *understand* and *try*; it is not a shortcut past steps 2–7. Walkthrough: [demo tour §10](../../docs/demo_tour.md#10-the-rule-studio).
 
 ## Most wiring is automatic. Three things are not.
 
@@ -103,13 +103,13 @@ uv run python3 starters/tools/check_facts.py         # schema, hashes, quote spa
 uv run python -m duly_assurance verify               # every golden case still replays
 uv run python -m duly_assurance impact               # what your change moved
 uv run spec/validate.py                              # spec examples and schemas
-uv run uvicorn demo.app:app --port 8788              # see it adjudicate
+uv run uvicorn duly_demo.app:app --port 8788              # see it adjudicate
 ```
 
 Then the full suite, because a pack touches more than it looks like it touches:
 
 ```bash
-uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
+uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests -q
 ```
 
 A useful final check that no test performs: perturb one of your rules, run `impact`, and confirm it reports the flips you expect. If it reports zero, your pack has no corpus coverage — see item 1 above.
@@ -126,7 +126,7 @@ Moved here from the root CLAUDE.md: every one is about authoring pack content, a
 
 - **`expected.yaml` is not the corpus.** Pack outcome declarations run in CI, but impact analysis runs *over `golden/`*. A pack without a generator template in `assurance/duly_assurance/generate.py` gets "0 decisions flip" for every edit. Both are required.
 
-- **Non-boolean decisions need *pack* phrasing.** A decision that isn't boolean renders as a bare `attribute = value` unless its `decisions[]` entry carries a `phrasing:` block ([spec/rule-ir.md](../../spec/rule-ir.md), "Decision phrasing"). The fix is in the pack, never in `demo/app.py`; `validate_pack` rejects a malformed block, an unknown placeholder, or a tone outside `pos/neg/warn/""` where the pack loads. Booleans still get a Yes/No fallback. Phrasing is presentation and must stay out of every hashed body — putting it in a receipt would change every hash.
+- **Non-boolean decisions need *pack* phrasing.** A decision that isn't boolean renders as a bare `attribute = value` unless its `decisions[]` entry carries a `phrasing:` block ([spec/rule-ir.md](../../spec/rule-ir.md), "Decision phrasing"). The fix is in the pack, never in `duly_demo/app.py`; `validate_pack` rejects a malformed block, an unknown placeholder, or a tone outside `pos/neg/warn/""` where the pack loads. Booleans still get a Yes/No fallback. Phrasing is presentation and must stay out of every hashed body — putting it in a receipt would change every hash.
 
 - **Rule ids are permanent, and now conventional.** Ids sit in `rulesFired` on every receipt that cited them, so an id encoding a day count, a year, or a statute section is wrong forever once the law moves — `NY-NR-45` is in 76 golden receipts. New ids are `<PREFIX>-<TOPIC>[-QUALIFIER][-NN]` with `PREFIX = pack.idPrefix`; `validate_pack` refuses digits outside the two-digit tail, a tail echoing the rule's own numbers, and an id outside the pack's family. The 46 pre-convention ids are exempt by an explicit list in [kernel/duly_kernel/rule_ids.py](../../kernel/duly_kernel/rule_ids.py) — 17 of them would fail today. Checks run only for packs declaring `idPrefix`; a kernel test requires every committed pack to declare one.
 

@@ -83,7 +83,7 @@ _PACK_NAME = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 # The kernel, reached lazily
 # ---------------------------------------------------------------------------
 #
-# Every kernel reach in demo/app.py is lazy on purpose: the demo has to start
+# Every kernel reach in duly_demo/app.py is lazy on purpose: the demo has to start
 # when duly_kernel is not importable and say so, rather than 500 on the one
 # question it cannot answer. A module-scope import here would break that for
 # all four pages at once, since app.py includes this router unconditionally —
@@ -107,7 +107,7 @@ def _kernel(name: str) -> Any:
     Resolved per call rather than cached: `sys.modules` makes the success path
     a dict lookup, and the failure path stays retryable, so a kernel that
     appears while the demo is running is picked up — the same behaviour
-    ``demo/app.py._run_kernel`` goes out of its way to keep.
+    ``duly_demo/app.py._run_kernel`` goes out of its way to keep.
     """
     module, attribute = _KERNEL_ENTRY_POINTS[name]
     try:

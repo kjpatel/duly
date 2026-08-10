@@ -40,7 +40,7 @@ on:
       - 'extraction/**'
       - 'spec/**'
       - 'examples/**'
-      - 'demo/**'
+      - 'duly_demo/**'
       - 'pyproject.toml'
       - '.github/workflows/optional-deps.yml'
   schedule:
@@ -82,7 +82,7 @@ jobs:
       # that needs z3 — that an edited draft comes back with the input where
       # it and the committed pack part, not merely "they differ".
       - name: Rule studio's solver-backed panel
-        run: uv run pytest demo/tests -q -m z3
+        run: uv run pytest duly_demo/tests -q -m z3
 
       # Deliberately NOT a gate on rule-pack PRs, which is why `examples/rulepacks/**`
       # is absent from the paths filter above. `validate_pack` already refuses

@@ -156,7 +156,7 @@ blind to it: strip every comment from a pack and validation passes, the 351
 golden receipts replay byte-for-byte, and impact analysis reports zero. The
 honest-labeling invariant lives entirely in a layer nothing checks.
 
-The practical consequence, which the [rule studio](../demo/rules_api.py) had
+The practical consequence, which the [rule studio](../duly_demo/rules_api.py) had
 to answer directly: any tool that re-emits a pack from the IR — a compiler, a
 formatter, a structured editor — destroys the arguing part while leaving both
 governed halves provably intact. duly's response is neither to forbid the
@@ -685,7 +685,7 @@ pack version the receipt itself names, is a claim that needs no trust in the
 producer at all. A decision record that only its author can verify is
 documentation. One that its recipient can verify is a receipt, and the
 difference is not in the artifact — it is in whether the checking is available
-to the person with a reason to doubt. The [receipt viewer](../demo/receipts_api.py)
+to the person with a reason to doubt. The [receipt viewer](../duly_demo/receipts_api.py)
 exists to make that availability concrete rather than theoretical
 ([tour §12](demo_tour.md#12-the-receipt-viewer)).
 
@@ -826,10 +826,10 @@ until a workload supplies acceptance criteria.
 | Backward query over the rulebase ("what would have had to be true?") | Implemented as a validation-time tool reusing the verifier's encoding unmodified, with every answer re-adjudicated through the kernel before it is returned ([spec/whatif.md](../spec/whatif.md)). No artifact is produced and nothing reaches a receipt |
 | Static verification of the rulebase by a solver | Implemented as a validation-time tool over a documented fragment: booleans, decimals and money as reals (currency unmodeled), dates as bounded integers, strings and codes as finite domains resolved from the ontology, and the IR operators that encode faithfully ([spec/pack-verification.md](../spec/pack-verification.md)). Constructs outside it are refused by name rather than approximated. `z3-solver` is an optional extra; the kernel neither imports it nor depends on it, and no solver output reaches a receipt |
 | Business-editable decision tables compiled to the decision logic | Implemented for a deliberately narrow subset: DMN 1.3+ tables, S-FEEL cells, three of seven hit policies, mandatory per-row citation and effective date ([spec/dmn.md](../spec/dmn.md)). The compiler is an authoring surface, not a second engine — its output is an ordinary rule pack the same kernel executes |
-| Rules browsed and edited as decision tables in a UI | Implemented as a *projection* of the rule IR, computed with the kernel's own expression parser ([demo/rules_api.py](../demo/rules_api.py), [tour §10](demo_tour.md)). It is not a DMN round trip: the compiler is one-way by design, so a guard relating several bindings is shown as a cross-input condition the grid cannot hold rather than flattened into a cell that would misstate it |
+| Rules browsed and edited as decision tables in a UI | Implemented as a *projection* of the rule IR, computed with the kernel's own expression parser ([duly_demo/rules_api.py](../duly_demo/rules_api.py), [tour §10](demo_tour.md)). It is not a DMN round trip: the compiler is one-way by design, so a guard relating several bindings is shown as a cross-input condition the grid cannot hold rather than flattened into a cell that would misstate it |
 | Rule change measured before it is committed | Implemented: a candidate pack that exists only in memory is re-adjudicated over the full golden corpus, and — with the optional solver — proved decision- and trace-equivalent (or not, with a witness input) against the committed pack. The order matters more than the tooling: an impact number the author sees *before* writing the file is the only one that can change their mind |
-| Evidence browsed as objects rather than as one decision's citations | Implemented ([demo/evidence_api.py](../demo/evidence_api.py), [tour §11](demo_tour.md#11-the-evidence-browser)): a case's documents — source bytes beside the extractor's rendition — and every fact ever asserted about it, at a knowledge time the reader chooses. Spans are drawn only on the rendition they are measured in, and liveness is recomputed from the event log rather than read off `as_of`, so superseded and not-yet-known facts stay visible instead of vanishing |
-| A decision record its recipient can verify without trusting its producer | Implemented ([demo/receipts_api.py](../demo/receipts_api.py), [tour §12](demo_tour.md#12-the-receipt-viewer)): three independent checks — the receipt's hash from its own bytes, each pinned fact against its content hash, and a full re-adjudication compared byte-for-byte — reported separately, because a re-sealed forgery passes the first two. Checks whose inputs were not supplied report *not checked*; a pack whose version has moved is refused rather than substituted |
+| Evidence browsed as objects rather than as one decision's citations | Implemented ([duly_demo/evidence_api.py](../duly_demo/evidence_api.py), [tour §11](demo_tour.md#11-the-evidence-browser)): a case's documents — source bytes beside the extractor's rendition — and every fact ever asserted about it, at a knowledge time the reader chooses. Spans are drawn only on the rendition they are measured in, and liveness is recomputed from the event log rather than read off `as_of`, so superseded and not-yet-known facts stay visible instead of vanishing |
+| A decision record its recipient can verify without trusting its producer | Implemented ([duly_demo/receipts_api.py](../duly_demo/receipts_api.py), [tour §12](demo_tour.md#12-the-receipt-viewer)): three independent checks — the receipt's hash from its own bytes, each pinned fact against its content hash, and a full re-adjudication compared byte-for-byte — reported separately, because a re-sealed forgery passes the first two. Checks whose inputs were not supplied report *not checked*; a pack whose version has moved is refused rather than substituted |
 | Model-generated explanation constrained by a receipt | Possible extension; not current behavior |
 | Natural-language-to-formal-query interface | Possible extension; not current behavior |
 | RDF or property-graph decision core | Not implemented |
@@ -1017,7 +1017,7 @@ requirement without weakening replay.
 - [`extraction/duly_extraction`](../extraction/duly_extraction) contains the
   adapter and run-envelope boundary.
 - [`store/duly_store`](../store/duly_store) contains append-only bitemporal
-  storage; [`demo/evidence_api.py`](../demo/evidence_api.py) reads that log
+  storage; [`duly_demo/evidence_api.py`](../duly_demo/evidence_api.py) reads that log
   back at an arbitrary horizon, which is the shortest way to see what the two
   time axes actually do.
 - [`core/duly_core`](../core/duly_core) is the canonical form and content
@@ -1036,11 +1036,11 @@ requirement without weakening replay.
   correction loop.
 - [`dmn/duly_dmn`](../dmn/duly_dmn) compiles DMN decision tables into rule
   packs, and refuses the tables it cannot compile honestly.
-- [`demo/rules_api.py`](../demo/rules_api.py) is the rule studio: packs as
+- [`duly_demo/rules_api.py`](../duly_demo/rules_api.py) is the rule studio: packs as
   decision-table grids, session-only drafts, and the validator, declared
   cases, ad-hoc adjudication, corpus impact and the solver all run over one
   candidate pack ([tour §10](demo_tour.md)).
-- [`demo/receipts_api.py`](../demo/receipts_api.py) is the receipt viewer: the
+- [`duly_demo/receipts_api.py`](../duly_demo/receipts_api.py) is the receipt viewer: the
   corpus browsable, any receipt openable, and three independent checks — hash,
   fact integrity, replay — run on open rather than on request
   ([tour §12](demo_tour.md#12-the-receipt-viewer)).

@@ -7,7 +7,7 @@ the rules actually say*, and *what happens if I change them*.
 Three stances hold this file together, and each of them is a refusal:
 
 **Edits are session drafts; the server never writes into `rulepacks/`.** Same
-principle as the golden-case export in ``demo/app.py``: committing an artifact
+principle as the golden-case export in ``duly_demo/app.py``: committing an artifact
 into the repository is a human act, made through a diff a human read. The
 studio hands you `pack.yaml` bytes and a diff; `git add` is yours. A draft
 lives in this process and dies with it.
@@ -635,7 +635,7 @@ def _load_facts(rel_path: str) -> list[dict[str, Any]]:
 def _input_value(template: dict[str, Any], raw: str) -> dict[str, Any]:
     """A fact value of the template's kind carrying the tester's scalar.
 
-    Deliberately not ``demo.app._corrected_value``: that one serves a human
+    Deliberately not ``duly_demo.app._corrected_value``: that one serves a human
     *review correction*, refuses kinds a reviewer should not be inventing, and
     is bound to the review contract. This one serves a scratchpad test, so it
     accepts every kind the IR has — including money, where a reviewer form

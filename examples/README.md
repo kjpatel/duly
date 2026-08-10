@@ -27,7 +27,7 @@ on it — where the seam between "the kernel decided" and "our software acted"
 actually falls, and what an adopter has to write on their side of it.
 
 Every example below holds to the same three rules, and they are the reason
-these live separately from `demo/`:
+these live separately from `duly_demo/`:
 
 - **It consumes decisions; it never restates them.** If an example needs to know
   a rule, it asks a pack and reads the receipt. A copy of a rule outside

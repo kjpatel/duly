@@ -181,6 +181,21 @@ def _review():
         assert _default_fact_schema()["title"] == "GroundedFact"
 
 
+@check("duly_demo")
+def _demo():
+    """Importing the app mounts `static/`, so this is the wheel carrying it.
+
+    The demo's four surfaces are Python plus a directory of pages, scripts,
+    stylesheets and fonts that no import statement mentions. `StaticFiles`
+    raises at mount time when that directory is absent, and the mount happens
+    in `duly_demo.app`'s module body — so a wheel that shipped the code and
+    dropped the assets fails right here, which is the only place it can.
+    """
+    from duly_demo.app import app
+
+    assert app is not None
+
+
 def _refuse_if_running_from_the_source_tree() -> None:
     """This script is only meaningful against an installed wheel.
 

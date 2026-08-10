@@ -23,13 +23,13 @@ New to the codebase? README for the argument, [docs/demo_tour.md](docs/demo_tour
 | `whatif/` | Backward queries: free one input, solve the pack for it, verify every answer by re-running the kernel (`python -m duly_whatif`, optional z3) |
 | `dmn/` | DMN 1.3+ decision-table compiler: S-FEEL cell compiler, hit-policy mapping, deterministic pack emitter, CLI (`python -m duly_dmn`) — [dmn/README.md](dmn/README.md) |
 | `examples/` | **Everything an adopter deletes**, and the claim is that deleting it leaves a working toolkit. The teaching content: `rulepacks/` (six packs), `starters/` (synthetic documents + scenarios), `golden/` (351 committed cases + receipts, the replay/impact baseline), `ontologies/` (versioned immutable LinkML artifacts — read its README before touching), `dmn/` (the TRID decision-table example + refusals), `tests/` (the example content's own tests, run in CI while the content exists), plus the reference wiring: `minimal-integration` (the whole contract at its smallest, proved to run with the source tree absent) and `closing-scheduler` (CP-SAT) — [examples/README.md](examples/README.md) |
-| `demo/` | FastAPI + vanilla-JS decision workspace (`app.py`), rule studio (`rules_api.py` + `static/rules.*`), evidence browser (`evidence_api.py` + `static/evidence.*`) and receipt viewer (`receipts_api.py` + `static/receipt.*`). Content directories come from `content.py` (`DULY_DEMO_CONTENT`, default `examples/`; the content-root contract is flat — `starters/`, `golden/`, `rulepacks/`, `ontologies/`, `dmn/` directly under the root) — never a per-module `REPO_ROOT` |
+| `duly_demo/` | FastAPI + vanilla-JS decision workspace (`app.py`), rule studio (`rules_api.py` + `static/rules.*`), evidence browser (`evidence_api.py` + `static/evidence.*`) and receipt viewer (`receipts_api.py` + `static/receipt.*`). A shipped package, not a script directory: the surfaces import each other relatively and `static/` is package data. Content directories come from `content.py` (`DULY_DEMO_CONTENT`, default `examples/`; the content-root contract is flat — `starters/`, `golden/`, `rulepacks/`, `ontologies/`, `dmn/` directly under the root) — never a per-module `REPO_ROOT` |
 
 ## Verify
 
 ```bash
 uv sync                              # add --extra extraction for live Docling (tests are marker-gated without it)
-uv run pytest core/tests kernel/tests demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
+uv run pytest core/tests kernel/tests duly_demo/tests assurance/tests store/tests calibration/tests extraction/tests review/tests conformance/tests dmn/tests whatif/tests -q
 uv run pytest examples/tests -q           # the example content's own tests (deleted with examples/)
 uv run python -m duly_assurance verify    # all 351 golden receipts, byte-for-byte
 uv run python -m duly_assurance impact    # what your change flips vs the committed baseline
@@ -37,7 +37,7 @@ uv run spec/validate.py                   # spec examples: schemas + hashes
 uv run python3 examples/starters/tools/check_facts.py   # starter facts: schema, hashes, quote spans
 uv run python -m duly_conformance --ontologies examples/ontologies check examples/starters examples/golden/cases examples/rulepacks spec/examples   # every committed fact
 uv run --with z3-solver python -m duly_assurance prove --ontologies examples/ontologies examples/rulepacks/*/pack.yaml   # disjointness + coverage (optional dep)
-uv run uvicorn demo.app:app --port 8788   # the demo (/ decision workspace, /rules rule studio, /evidence evidence browser, /receipt receipt viewer)
+uv run uvicorn duly_demo.app:app --port 8788   # the demo (/ decision workspace, /rules rule studio, /evidence evidence browser, /receipt receipt viewer)
 ```
 
 Tests behind the four optional-dependency markers (`linkml`, `z3`, `ortools`, `docling` — six suites carry them) are **skipped** by the command above — they need optional dependencies the kernel deliberately does not require. They run in their own workflow ([.github/workflows/optional-deps.yml](.github/workflows/optional-deps.yml)); run them locally with:
@@ -46,7 +46,7 @@ Tests behind the four optional-dependency markers (`linkml`, `z3`, `ortools`, `d
 uv run --with linkml --with pyshacl pytest examples/tests -q -m linkml      # teaching ontologies are real LinkML
 uv sync --extra prove  && uv run pytest assurance/tests  -q -m z3           # verifier encoding is sound
 uv sync --extra prove  && uv run pytest whatif/tests examples/tests -q -m z3   # what-if answers survive kernel verification
-uv sync --extra prove  && uv run pytest demo/tests       -q -m z3           # the rule studio's equivalence panel
+uv sync --extra prove  && uv run pytest duly_demo/tests       -q -m z3           # the rule studio's equivalence panel
 uv sync --extra scheduling && uv run pytest examples/closing-scheduler -q -m ortools   # the closing scheduler example
 uv sync --extra extraction && uv run pytest extraction/tests -q -m docling  # live adapter (heavy: pulls torch)
 ```
@@ -64,7 +64,7 @@ Run the full suite, replay, and spec validation before any commit. A change that
 
 The cross-cutting set lives here. The rest are **routed to where the work happens**, in files that load exactly when you touch that area — a gotcha in a file nothing auto-loads is a gotcha nobody reads:
 
-- [demo/CLAUDE.md](demo/CLAUDE.md) — the four surfaces: studio re-emission, JSON fidelity, the evidence browser's projections and reload discipline, the receipt viewer's three checks, the review arc
+- [duly_demo/CLAUDE.md](duly_demo/CLAUDE.md) — the four surfaces: studio re-emission, JSON fidelity, the evidence browser's projections and reload discipline, the receipt viewer's three checks, the review arc
 - [examples/rulepacks/README.md](examples/rulepacks/README.md) — everything about authoring pack content: disjointness proofs, `overrides`, phrasing, rule ids, calendars, abstention policy, `expected.yaml`
 - [assurance/CLAUDE.md](assurance/CLAUDE.md) — what a green `prove` run means, `impact`'s in-memory overrides
 - [whatif/CLAUDE.md](whatif/CLAUDE.md) — solver proposes, kernel disposes
@@ -115,8 +115,8 @@ The pass is mechanical enough to run every time:
 - **Commits**: imperative subject; body says *why*, includes test counts and (for rule/corpus changes) the impact result.
 - **New packages** register in `pyproject.toml` `[tool.hatch.build.targets.wheel] packages`. Heavy optional deps go in an extras group with marker-gated tests (see `docling`).
 - **Test helpers** are `<pkg>test_helpers.py` modules, not `conftest.py` (test dirs have no `__init__.py`; identical filenames across suites collide).
-- **Demo discipline**: verdict wording is **pack data**, rendered server-side by `_determination()` from the decision's `phrasing:` block — never in JS, and never re-hardcoded per pack in `demo/app.py`; no `innerHTML` with server data anywhere; status pill modes are styled per state; the demo must degrade honestly when the kernel or store is unavailable (fixture mode refuses questions it can't answer rather than answering the wrong one).
-- **One shape per job, across all four pages.** Navigation is text with a rule under the current item — the header nav *and* the in-pane view switchers (`.tabs`/`.tab` in `style.css`, shared, not copied per page). The pill shape (`border-radius: 999px`) is reserved for labels that state a fact and cannot be clicked: status, counts, hit policy, priority, Computed/Fixture. There are no clickable pills; adding one makes it the only one. A new page's orientation strip is a `data-guide` key in [demo/static/guide.js](demo/static/guide.js), never inline copy — `demo/tests/test_guide.py` fails a page without a guide and a guide without a page. Watch for `display` on an element that also ships `hidden`: an author declaration beats the UA's `[hidden] { display: none }`, which is how the guide strip's dismiss button silently stopped working.
+- **Demo discipline**: verdict wording is **pack data**, rendered server-side by `_determination()` from the decision's `phrasing:` block — never in JS, and never re-hardcoded per pack in `duly_demo/app.py`; no `innerHTML` with server data anywhere; status pill modes are styled per state; the demo must degrade honestly when the kernel or store is unavailable (fixture mode refuses questions it can't answer rather than answering the wrong one).
+- **One shape per job, across all four pages.** Navigation is text with a rule under the current item — the header nav *and* the in-pane view switchers (`.tabs`/`.tab` in `style.css`, shared, not copied per page). The pill shape (`border-radius: 999px`) is reserved for labels that state a fact and cannot be clicked: status, counts, hit policy, priority, Computed/Fixture. There are no clickable pills; adding one makes it the only one. A new page's orientation strip is a `data-guide` key in [duly_demo/static/guide.js](duly_demo/static/guide.js), never inline copy — `duly_demo/tests/test_guide.py` fails a page without a guide and a guide without a page. Watch for `display` on an element that also ships `hidden`: an author declaration beats the UA's `[hidden] { display: none }`, which is how the guide strip's dismiss button silently stopped working.
 - **Auto-discovery over registration** wherever possible: `rulepacks/*/expected.yaml`, `starters/*/scenario.json`, and per-template corpus generation are all glob-driven. Prefer extending a registry of data to adding dispatch code.
 
 ## Documentation map

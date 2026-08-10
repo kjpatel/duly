@@ -14,7 +14,7 @@
 # `factsFrom` paths are written relative to **this repository**, which is where
 # they resolve when the fixtures are read in place. A demo content root lays the
 # same cases out under `golden/cases/<id>/facts`, so
-# demo/tests/demotest_helpers.py rewrites them on assembly — the same treatment,
+# duly_demo/tests/demotest_helpers.py rewrites them on assembly — the same treatment,
 # and for the same reason, as the scenario manifest's `rulePack`. The committed
 # artifact is correct for the tree it sits in; the two paths are not the same
 # path and pretending otherwise is how a fixture starts lying about itself.

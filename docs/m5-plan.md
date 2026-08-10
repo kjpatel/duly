@@ -810,11 +810,23 @@ proves it.
 
 **Objective:** `pip install duly` gives an adopter the seam.
 
-- [ ] **`demo` becomes `duly_demo` (1 PR).** It is not currently a package —
+- [x] **`demo` becomes `duly_demo` (1 PR).** It is not currently a package —
       no `__init__.py`, generic top-level name that would collide in
       site-packages, `static/` not package data. Rename, package, ship
       static assets as package data, keep `uvicorn duly_demo.app:app`
       working, update tests. No hash implications.
+      *Done — `git mv`, `__init__.py`, relative imports between the four
+      surfaces, `static/` (fonts included) in the wheel, a tenth
+      `wheel_smoke.py` check, `duly_demo/tests` and `duly_demo/CLAUDE.md`
+      excluded from the wheel. 1,003 tests pass, no byte of any receipt
+      moved. Two things the plan had not anticipated. The suite is the only
+      one **inside** a package — every other lives beside one — so the wheel
+      needed an `exclude` no other target needs. And packaging the demo does
+      not make an installed demo useful: `content.py`'s default root is still
+      `__file__.parent.parent / "examples"`, which under site-packages does
+      not exist, so it boots to the built-in `spec/examples` scenario and
+      honest empty listings. Whether the wheel carries content or the
+      limitation is documented is left to the packaging PR below.*
 - [ ] **Dependencies (1 PR)** — added after Phase 0 measured it (A2). A
       kernel-only `pip install duly` installs 18 packages including `fastapi`,
       `starlette`, `uvicorn`, `pydantic`, `reportlab`, `pillow`, `click`,

@@ -6,7 +6,7 @@ exists; otherwise a built-in "notice-ny (fixture)" scenario is synthesized from
 the committed examples in spec/examples/.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run uvicorn demo.app:app --port 8788
+    PATH="/opt/homebrew/bin:$PATH" uv run uvicorn duly_demo.app:app --port 8788
 """
 
 from __future__ import annotations
@@ -1883,8 +1883,8 @@ def api_document(scenario_id: str, document_id: str) -> dict[str, Any]:
 # as its own module because it shares nothing with adjudication but the kernel
 # — different artifacts (packs, not cases), different verbs (draft and prove,
 # not answer). Mounted here rather than run standalone so one `uvicorn
-# demo.app:app` still starts the whole demonstration.
-from demo import rules_api  # noqa: E402, PLC0415
+# duly_demo.app:app` still starts the whole demonstration.
+from . import rules_api  # noqa: E402, PLC0415
 
 app.include_router(rules_api.router)
 
@@ -1901,7 +1901,7 @@ def rules_studio() -> Response:
 # reason as the studio — the workspace is scoped to one question's receipt, and
 # this is scoped to everything the store holds, which is a different projection
 # of the same case rather than a bigger version of the same pane.
-from demo import evidence_api  # noqa: E402, PLC0415
+from . import evidence_api  # noqa: E402, PLC0415
 
 app.include_router(evidence_api.router)
 
@@ -1917,7 +1917,7 @@ def evidence_browser() -> Response:
 # holds. Mounted alongside the workspace for the same reason as the studio —
 # it shares only the kernel with adjudication, and reaches it from the other
 # end: the workspace produces a receipt, this reads one back.
-from demo import receipts_api  # noqa: E402, PLC0415
+from . import receipts_api  # noqa: E402, PLC0415
 
 app.include_router(receipts_api.router)
 

@@ -4,7 +4,7 @@ The example content's own tests (see `exampletest_helpers`): they run while
 `examples/` exists, they are deleted with it, and CI runs them as
 `uv run pytest examples/tests -q`.
 
-Extracted from `demo/tests/test_review_arc.py`, where the arc itself — extract,
+Extracted from `duly_demo/tests/test_review_arc.py`, where the arc itself — extract,
 abstain below the floor, correct, re-adjudicate, export a golden bundle — is
 asserted against a content root assembled from `fixtures/`, because none of it
 names a scenario. The one test here does name one, and that is the point of it:
@@ -12,9 +12,9 @@ the recording scenario's 0.58 top-space confidence is *scripted content*, and
 deleting the starter should take the test with it.
 
 No `DULY_DEMO_CONTENT`: the demo's default content root is this directory's
-parent, so a plain `TestClient(demo.app.app)` serves the teaching content
-exactly as `uvicorn demo.app:app` does. What the client fixture below does
-still have to do is drop `DULY_DEMO_FORCE_FIXTURE` (`demo/tests/test_api.py`
+parent, so a plain `TestClient(duly_demo.app.app)` serves the teaching content
+exactly as `uvicorn duly_demo.app:app` does. What the client fixture below does
+still have to do is drop `DULY_DEMO_FORCE_FIXTURE` (`duly_demo/tests/test_api.py`
 sets it process-wide at *import*, so a combined run arrives here with it set)
 and pin the stub extractor.
 """
@@ -33,13 +33,13 @@ if str(REPO_ROOT) not in sys.path:
 # `reload_demo` is imported rather than written out again. It is the guard that
 # rebinds every demo module's content roots, and CLAUDE.md records what copying
 # it costs: a second copy is one short of the version that gets edited wrong.
-# The dependency only points this way — `demo/tests/` never reaches in here —
+# The dependency only points this way — `duly_demo/tests/` never reaches in here —
 # so `git rm -r examples/` leaves the helper and its own suite intact.
-_DEMO_TESTS = str(REPO_ROOT / "demo" / "tests")
+_DEMO_TESTS = str(REPO_ROOT / "duly_demo" / "tests")
 if _DEMO_TESTS not in sys.path:
     sys.path.insert(0, _DEMO_TESTS)
 
-import demo.app as demo_app  # noqa: E402
+import duly_demo.app as demo_app  # noqa: E402
 from demotest_helpers import reload_demo  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 

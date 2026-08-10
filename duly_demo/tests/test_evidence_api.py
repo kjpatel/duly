@@ -1,4 +1,4 @@
-"""API tests for the demo's Evidence Browser (demo/evidence_api.py).
+"""API tests for the demo's Evidence Browser (duly_demo/evidence_api.py).
 
 The browser is **toolkit** (M5 plan, D2): it shows whatever documents, facts
 and event log a deployment's cases have, not any particular ones. So these run
@@ -45,7 +45,7 @@ module deliberately replays the event log rather than calling ``as_of``, so
 that the two can be compared. Everything else here is ordinary coverage.
 
 Run from the repo root:
-    PATH="/opt/homebrew/bin:$PATH" uv run pytest demo/tests -q
+    PATH="/opt/homebrew/bin:$PATH" uv run pytest duly_demo/tests -q
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def content_root(tmp_path_factory) -> Path:
 @pytest.fixture
 def client(content_root, monkeypatch):
     monkeypatch.setenv("DULY_DEMO_CONTENT", str(content_root))
-    # demo/tests/test_api.py forces fixture mode process-wide at import time,
+    # duly_demo/tests/test_api.py forces fixture mode process-wide at import time,
     # so a collection that includes it leaves DULY_DEMO_FORCE_FIXTURE set for
     # everyone. These tests are about the store-backed browser; monkeypatch
     # puts the variable back afterwards so that suite still gets its fixtures.
@@ -125,15 +125,15 @@ def client(content_root, monkeypatch):
     monkeypatch.setenv("DULY_DEMO_EXTRACTOR", "stub")
     reload_demo()
 
-    import demo.app
-    import demo.evidence_api
+    import duly_demo.app
+    import duly_demo.evidence_api
 
-    demo.app._reset_runtime()
-    demo.evidence_api.reset_caches()
-    with TestClient(demo.app.app) as c:
+    duly_demo.app._reset_runtime()
+    duly_demo.evidence_api.reset_caches()
+    with TestClient(duly_demo.app.app) as c:
         yield c
-    demo.app._reset_runtime()
-    demo.evidence_api.reset_caches()
+    duly_demo.app._reset_runtime()
+    duly_demo.evidence_api.reset_caches()
 
     # Roots are bound at import, so a suite that reloads on setup and not on
     # teardown leaves every later file in the directory run serving a temp
@@ -186,7 +186,7 @@ def test_every_case_is_browsable_and_store_backed(client):
     ids = {c["id"] for c in payload["cases"]}
     # Equality, not containment: the review arc's case exists only in the
     # session store, so a content root whose scenarios cannot be ingested would
-    # quietly offer the scenario alone (demo/app.py swallows that failure by
+    # quietly offer the scenario alone (duly_demo/app.py swallows that failure by
     # design, so nothing else here would say so).
     assert ids == set(CASES)
     for case in payload["cases"]:
@@ -225,7 +225,7 @@ def test_the_browsers_projection_is_the_stores(client):
     as_of by design does not. A divergence is a bug in one of them, and either
     one would put a wrong fact set in front of a reader.
     """
-    import demo.app as demo_app
+    import duly_demo.app as demo_app
 
     runtime = demo_app._active_runtime()
     assert runtime is not None
@@ -469,14 +469,14 @@ def test_without_a_store_the_browser_says_so_instead_of_faking_a_timeline(
     monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
     reload_demo()
 
-    import demo.app
-    import demo.evidence_api
+    import duly_demo.app
+    import duly_demo.evidence_api
 
-    monkeypatch.setattr(demo.app, "_build_runtime", lambda: None)
-    demo.app._reset_runtime()
-    demo.evidence_api.reset_caches()
+    monkeypatch.setattr(duly_demo.app, "_build_runtime", lambda: None)
+    duly_demo.app._reset_runtime()
+    duly_demo.evidence_api.reset_caches()
     try:
-        with TestClient(demo.app.app) as c:
+        with TestClient(duly_demo.app.app) as c:
             listing = c.get("/api/evidence/cases").json()
             assert listing["cases"], "no case to degrade honestly over"
             assert listing["capabilities"]["store"] is False
@@ -493,7 +493,7 @@ def test_without_a_store_the_browser_says_so_instead_of_faking_a_timeline(
             assert detail["history"] == []
             assert detail["conformance"]["available"] is True
     finally:
-        demo.app._reset_runtime()
-        demo.evidence_api.reset_caches()
+        duly_demo.app._reset_runtime()
+        duly_demo.evidence_api.reset_caches()
         monkeypatch.undo()
         reload_demo()

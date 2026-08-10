@@ -132,7 +132,7 @@ The pass is mechanical enough to run every time:
 - [CHANGELOG.md](CHANGELOG.md) — what each release turned out to mean; read it before assuming why something is the way it is
 - [docs/guiding-prd.md](docs/guiding-prd.md) — who this is for, the product principles, what is out of scope, and how success is measured; read it before proposing work that widens the surface
 - [docs/concepts.md](docs/concepts.md) — the vocabulary this repo uses precisely; read it before assuming a term means what it usually means
-- [docs/capacity-envelope.md](docs/capacity-envelope.md) — what one adjudication costs, measured with machine and date, and the five workload shapes where the reference interpreter stops; `docs/capacity_bench.py` reproduces it and is the only stopwatch in the repository
+- [docs/capacity-envelope.md](docs/capacity-envelope.md) — what one adjudication costs, measured with machine and date, and the five workload shapes where the reference interpreter stops; `bench/capacity_bench.py` reproduces it and is the only stopwatch in the repository
 - [docs/follow-one-fact.md](docs/follow-one-fact.md) — one committed fact traced byte by byte from PDF text to receipt to human correction; the fastest way to see the actual shapes rather than their descriptions
 - [docs/faq.md](docs/faq.md) — the objections a skeptical reader raises first, answered in one place
 - [examples/rulepacks/README.md](examples/rulepacks/README.md) — authoring a pack end to end, including what is *not* auto-wired

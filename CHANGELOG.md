@@ -11,7 +11,7 @@ Entries are written after the fact, from merged work.
 ### Added
 
 - **Both contribution paths are walkable** — the roadmap's "only one of them has a path" is closed. [examples/rulepacks/README.md](examples/rulepacks/README.md) gained "Contributing it back" (what a pack PR triggers, what each check cannot see, what nobody wires for you); [extraction/README.md](extraction/README.md) is the adapter edge's new component contract, whose central observation makes recording harnesses unnecessary: conversion and proposal are separable stages with a content-addressed artifact between them, so *the rendition is the recording* and `StubAdapter` is the replay adapter that already exists.
-- **[The capacity envelope](docs/capacity-envelope.md)** — ~3,100 adjudications/s/core with the pack in memory (p50 0.32 ms); parse is the 30× lever; scaling additive in rules and facts; five named shapes where the reference interpreter is the wrong tool. One curve published rather than tuned: `validate_pack` is quadratic in rules-per-attribute, cause located. `docs/capacity_bench.py` is the only stopwatch in the repository, by design.
+- **[The capacity envelope](docs/capacity-envelope.md)** — ~3,100 adjudications/s/core with the pack in memory (p50 0.32 ms); parse is the 30× lever; scaling additive in rules and facts; five named shapes where the reference interpreter is the wrong tool. One curve published rather than tuned: `validate_pack` is quadratic in rules-per-attribute, cause located. `bench/capacity_bench.py` is the only stopwatch in the repository, by design.
 
 ### Fixed
 

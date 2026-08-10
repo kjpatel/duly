@@ -39,12 +39,12 @@ not belong in one. They belong here, with the machine and the date attached.
 | Date | 2026-08-10 |
 
 ```bash
-uv run python docs/capacity_bench.py                        # all four sections
-uv run python docs/capacity_bench.py --only corpus          # one section
-uv run python docs/capacity_bench.py --json /tmp/bench.json # raw numbers too
+uv run python bench/capacity_bench.py                        # all four sections
+uv run python bench/capacity_bench.py --only corpus          # one section
+uv run python bench/capacity_bench.py --json /tmp/bench.json # raw numbers too
 ```
 
-[`docs/capacity_bench.py`](capacity_bench.py) is the harness, and it is a
+[`bench/capacity_bench.py`](capacity_bench.py) is the harness, and it is a
 standalone script rather than a package module on purpose: it is the only code
 in this repository that times anything (`perf_counter` appears nowhere else),
 and it must not become importable from anything that adjudicates — a stopwatch

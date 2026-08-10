@@ -8,9 +8,9 @@ a receipt, a golden file, or any other replayable artifact: timings are not
 deterministic and do not belong in one. They belong in a document, with the
 machine and the date attached.
 
-    uv run python docs/capacity_bench.py                 # everything
-    uv run python docs/capacity_bench.py --only corpus   # one section
-    uv run python docs/capacity_bench.py --json out.json # machine-readable
+    uv run python bench/capacity_bench.py                 # everything
+    uv run python bench/capacity_bench.py --only corpus   # one section
+    uv run python bench/capacity_bench.py --json out.json # machine-readable
 
 Sections:
   corpus   per-case adjudication latency over the committed golden corpus,

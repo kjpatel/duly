@@ -321,9 +321,9 @@ The standards work strengthens the interchange contract; the rest makes rule cha
 
 **Exit:** a domain author can create, validate, test, review, and impact-assess a rule change without modifying the kernel. Met.
 
-### M5 — adoption and v1.0
+### M5 — adoption and v1.0 (complete)
 
-The next consumer is an adopting engineering team. Make duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples; do this before implementing a second execution backend.
+The consumer was an adopting engineering team: make duly a toolkit that can be installed and extended without cloning the repository or reverse-engineering the examples, before implementing a second execution backend. Shipped across [v1.0.0–v1.1.1](https://github.com/kjpatel/duly/releases); what each piece turned out to mean is in the [changelog](CHANGELOG.md#v100--m5-adoption-and-v10).
 
 - [x] **Example/toolkit separation** — the teaching content lives under `examples/`, and `git rm -r examples/` leaving a working toolkit is **enforced by CI on every push**: the deletion gate deletes the directory, runs every toolkit suite, asserts the replay verifier refuses honestly, and boots all four demo surfaces against nothing.
 - [x] **Installable distribution** — [released](https://github.com/kjpatel/duly/releases): wheel and sdist on the version tag, five console scripts, a plain install of seven packages with the floor asserted at build time. Since tags became releases, **milestones are M-numbers and version numbers belong to releases** — a minor release mid-milestone (1.1.0's API additions) moves the version without moving the plan.
@@ -332,7 +332,7 @@ The next consumer is an adopting engineering team. Make duly a toolkit that can 
 - [x] **Reference capacity envelope** — published in [docs/capacity-envelope.md](docs/capacity-envelope.md): what one adjudication costs on the committed corpus and where a pure-Python reference interpreter stops being the right thing to run. Measurement, not optimization: an adopter sizing a workload needs a number before a deployment exists to produce one, and this answers the standing question in the [PRD](docs/guiding-prd.md#open-questions).
 - [x] **Claims starter — deliberately not built.** Its admission test was "only to expose a semantic gap", and none surfaced; generality got validated by three invented domains instead (the fixture corpus, and the two the guide's author and its cold executor each built from scratch).
 
-Shipped so far in M5. What each turned out to mean is in the [changelog](CHANGELOG.md#unreleased--m5):
+Also shipped in M5, before the exit items above:
 
 - [x] **Rule studio** ([tour §10](docs/demo_tour.md#10-the-rule-studio)) — every pack as decision-table grids, with the kernel's validator, the pack's declared cases, an ad-hoc case, corpus impact analysis and the solver all running over one in-memory draft.
 - [x] **Evidence browser** ([tour §11](docs/demo_tour.md#11-the-evidence-browser)) — a case's documents beside the extractor's renditions, and every fact ever asserted about them, at a knowledge time you choose.

@@ -27,15 +27,17 @@ Each of the four pages opens with a three-step orientation strip under its title
 
 ## 1. Start with the insurance scenario
 
-The scenario picker (top right) defaults to **New York homeowners nonrenewal notice timing**. The left pane shows the case's two documents as tabs — the Declarations Page and the Notice of Nonrenewal. Flip between them and note the yellow highlights: those are the exact phrases facts were extracted from. Nothing else is highlighted because nothing else was used.
+Open the scenario picker (top right) and choose **New York homeowners nonrenewal notice timing** — steps 1 to 8 follow that case. (The demo opens on whichever scenario sorts first, today the LA County deed of trust; the tour names the one it wants rather than relying on that order.) The left pane shows the case's two documents as tabs — the Declarations Page and the Notice of Nonrenewal. Flip between them and note the yellow highlights: those are the exact phrases facts were extracted from. Nothing else is highlighted because nothing else was used.
 
 ## 2. Ask the question
 
-Click the question chip: *"Was this termination notice compliant?"* You get the verdict — **Not compliant** — with a plain-English sentence (38 days notice given, 45 required) and a **LIVE** badge. The badge means the kernel adjudicated this request just now; it is not a canned response. (An amber **fixture** badge would mean the demo fell back to a pre-committed receipt.)
+The centre pane is two labelled sections: **Question**, then **Answer**. Open the question picker and choose *"Was this termination notice compliant?"* — it is a wrapping listbox rather than a dropdown, because a question you cannot finish reading is a poor thing to put above its own answer. With it focused, the arrow keys step through the pack's questions and re-adjudicate each one against the same documents.
+
+You get the verdict — **Not compliant** — with a plain-English sentence (38 days notice given, 45 required) and a **Computed** badge. The badge means the kernel adjudicated this request just now; it is not a canned response. (An amber **Fixture** badge would mean the demo fell back to a pre-committed receipt.)
 
 ## 3. Read the reasoning like a proof
 
-The right pane shows the derivation tree. Note its shape: the conclusion (`noticeCompliant = false`, rule NC-NR-01) sits on top, with a *sub-conclusion* nested inside — `requiredMinimumNoticeDays = 45`, from rule NY-NR-45 — because the deficiency rule needed the minimum established before it could compare. That two-level structure is the defeasible rulebase at work.
+The right pane is the audit trail, in three tabs — **Derivation**, **Rules fired**, **Abstentions**, each carrying its own count — and it opens on the derivation tree. Note its shape: the conclusion (`noticeCompliant = false`, rule NC-NR-01) sits on top, with a *sub-conclusion* nested inside — `requiredMinimumNoticeDays = 45`, from rule NY-NR-45 — because the deficiency rule needed the minimum established before it could compare. That two-level structure is the defeasible rulebase at work.
 
 ## 4. Click a fact chip
 
@@ -43,7 +45,7 @@ Click any fact in the tree (say, the mailing date). The document pane switches t
 
 ## 5. Read the rules-fired cards
 
-Below the tree, each fired rule shows its citation (a link to the actual statute text), version, priority, and effective window. On NC-NR-01, note the red **defeated: NC-DEF-00** badge: the default presumption of compliance was overridden, and the receipt says so explicitly.
+On the **Rules fired** tab, each fired rule shows its citation (a link to the actual statute text), version, priority, and effective window. On NC-NR-01, note the red **defeated: NC-DEF-00** badge: the default presumption of compliance was overridden, and the receipt says so explicitly.
 
 ## 6. The flip
 
@@ -75,13 +77,13 @@ Before you start, note the small line under the document list in the left pane: 
 
 Ask *"Was this termination notice compliant?"* The verdict is an amber **Compliant** — *"Presumption only — noticeMailedDate excluded at confidence 0.62, below the 0.9 floor."* The kernel did not use the shaky date; it fell back to the default presumption and the receipt says so. The audit pane's **Abstentions** tab — its label now reads `Abstentions · 1` — shows the entry: the reason (`Low confidence`), the score against the floor, where the floor came from (pack + version, attribute override vs. default), and the excluded fact itself — click it and the document pane still jumps to *"Date of Mailing: July 25, 2026"*, because an excluded fact is still a grounded fact.
 
-The **Derivation** tab carries a matching **Input excluded** card naming the rule that went unevaluated for want of that fact, with a button through to the abstention itself. It is a pointer rather than a second telling — the score, the floor's provenance and the correction form live in one place — and it sits *after* the tree rather than inside it, because the tree is the receipt's own derivation and a synthetic node within it would be the page inventing a step the kernel never took.
+The **Derivation** tab carries a matching **Wanted but excluded** section naming the rule that went unevaluated for want of that fact, and a *Why it was excluded* link through to the abstention itself. The excluded fact is drawn as an ordinary fact chip — same shape, same click-to-source, only the colour differs — because an excluded fact is still a grounded fact. It is a pointer rather than a second telling — the score, the floor's provenance and the correction form live in one place — and it sits *after* the tree rather than inside it, because the tree is the receipt's own derivation and a synthetic node within it would be the page inventing a step the kernel never took.
 
 Ask the LA County scenario's SB 2 fee question to see the other half. The same case still carries the same exclusion, and the receipt is byte-identical in that respect, but no rule behind *that* answer reads the attribute: the tab reads `Abstentions · none`, the derivation shows no gap, and the exclusion folds under one line. Relevance is decided once, by `duly_kernel.relevance`, so this pane and the audit report a regulator reads cannot disagree about it.
 
 ### 9b. Correct it
 
-Click **Review & correct**. The inline form is prefilled with the machine's value — the extraction read the right date, it was just not confident enough. Confirm the value (or type a different one), add your name and role, and apply. The correction becomes a first-class human-asserted GroundedFact that **supersedes** the below-floor machine fact, is validated and ingested through the review queue (`duly_review`), and the decision re-adjudicates on the spot: the verdict flips to red **Not compliant** (38 days notice given, 45 required), the abstention section disappears, and the derivation now cites the human fact with its actor — look for the `human · reviewer:… (role)` line on the fact chip. The status pill notes the transition. Corrections live in this server process only and reset on restart.
+Click **Review & correct**. The inline form is prefilled with the machine's value — the extraction read the right date, it was just not confident enough. Confirm the value (or type a different one), add your name and role, and apply. The correction becomes a first-class human-asserted GroundedFact that **supersedes** the below-floor machine fact, is validated and ingested through the review queue (`duly_review`), and the decision re-adjudicates on the spot: the verdict flips to red **Not compliant** (38 days notice given, 45 required), the **Abstentions** tab drops to `· none` and says so in words — *"Nothing was excluded in this case"* — and the derivation now cites the human fact with its actor — look for the `human · reviewer:… (role)` line on the fact chip. The status pill notes the transition. Corrections live in this server process only and reset on restart.
 
 ### 9c. Export the regression case
 

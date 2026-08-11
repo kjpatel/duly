@@ -167,37 +167,49 @@
     </div>
 
     <div class="pane-body">
-      <div class="section-heading">
-        <div>
-          <div class="field-label">Derivation</div>
-          <p>Open a fact to trace it back to source text.</p>
-        </div>
-      </div>
-      <div id="derivation" class="derivation"></div>
+      <!-- The audit trail is three views of one adjudication, not one column
+           of five stacked sections. The switcher is the shared `.tabs`
+           component the other three pages already use; this pane was the last
+           one stacking instead. -->
+      <div class="tabs" id="audit-tabs" role="tablist" aria-label="Audit trail views"></div>
 
-      <div class="section-heading rules-heading" id="abstentions-title" style="display:none">
-        <div>
-          <div class="field-label">Abstentions</div>
-          <p>Facts excluded from the case before any rule ran, and why — recorded on every receipt for the case, whichever question is asked.</p>
+      <div id="tab-derivation" class="audit-view">
+        <div class="section-heading">
+          <div>
+            <div class="field-label">Derivation</div>
+            <p>Open a fact to trace it back to source text.</p>
+          </div>
         </div>
+        <div id="derivation" class="derivation"></div>
       </div>
-      <div id="abstentions"></div>
 
-      <div class="section-heading rules-heading" id="corrections-title" style="display:none">
-        <div>
-          <div class="field-label">Corrections applied</div>
-          <p>Human resolutions from this session.</p>
+      <div id="tab-rules" class="audit-view" hidden>
+        <div class="section-heading">
+          <div>
+            <div class="field-label">Rules fired</div>
+            <p>Applicable rules in evaluation order.</p>
+          </div>
         </div>
+        <div id="rules-fired"></div>
       </div>
-      <div id="corrections"></div>
 
-      <div class="section-heading rules-heading" id="rules-title">
-        <div>
-          <div class="field-label">Rules fired</div>
-          <p>Applicable rules in evaluation order.</p>
+      <div id="tab-abstentions" class="audit-view" hidden>
+        <div class="section-heading" id="abstentions-title">
+          <div>
+            <div class="field-label">Abstentions</div>
+            <p>Facts excluded from the case before any rule ran, and why — recorded on every receipt for the case, whichever question is asked.</p>
+          </div>
         </div>
+        <div id="abstentions"></div>
+
+        <div class="section-heading rules-heading" id="corrections-title" style="display:none">
+          <div>
+            <div class="field-label">Corrections applied</div>
+            <p>Human resolutions from this session.</p>
+          </div>
+        </div>
+        <div id="corrections"></div>
       </div>
-      <div id="rules-fired"></div>
 
       <div class="export-panel">
         <div class="export-copy">

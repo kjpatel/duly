@@ -14,6 +14,7 @@ const state = {
   factIndex: {},
   engineMode: null,
   abstentions: [],         // enriched receipt abstention entries from the server
+  auditTab: "derivation",  // which audit-trail view is showing
   review: null,            // review-queue state for the case (availability, resolved items)
   lastVerdictKey: null,
   requestSeq: 0,
@@ -132,8 +133,10 @@ async function selectScenario(id, wantedAttribute = null) {
   $("error-card").classList.add("hidden");
   $("derivation").replaceChildren();
   $("rules-fired").replaceChildren();
+  state.auditTab = "derivation";
   renderAbstentions();
   renderCorrections();
+  renderAuditTabs();
   renderExtractionLabel();
   setDownloadsEnabled(false);
 
@@ -314,6 +317,13 @@ function renderQuestions() {
     btn.dataset.attribute = q.attribute;
     btn.addEventListener("click", () => {
       state.activeAttribute = q.attribute;
+      /* A new question is a new adjudication: open on the reasoning. Landing
+       * on whichever tab the last question left behind means arriving at
+       * "Abstentions · none" — a pane that is empty *because this question is
+       * different*, which reads as the page having lost something. A
+       * correction re-adjudicates in place and deliberately does not reset:
+       * you stay where you were working. */
+      state.auditTab = "derivation";
       highlightActiveQuestion();
       runAdjudication();
     });
@@ -380,9 +390,11 @@ async function runAdjudication() {
     state.abstentions = [];
     state.review = null;
     $("derivation").replaceChildren();
+    state.auditTab = "derivation";
     renderAbstentions();
     renderCorrections();
     renderRulesFired();
+    renderAuditTabs();
     renderDocument();
     setDownloadsEnabled(false);
     setWorkspaceStatus("Evaluation failed", "error");
@@ -412,6 +424,7 @@ function applyAdjudication(payload) {
   renderAbstentions();
   renderCorrections();
   renderRulesFired();
+  renderAuditTabs();
   renderDocument(); // re-highlight with the (possibly new) fact index
   setDownloadsEnabled(true);
 }
@@ -542,6 +555,51 @@ function derivationNode(node) {
   return details;
 }
 
+/* ---------- audit trail tabs ----------
+ *
+ * Three views of one adjudication. The switcher is `.tabs`/`.tab` from
+ * style.css — the same component the receipt viewer, evidence browser and
+ * rule studio use, which this pane was the last to do without. Counts on the
+ * labels because "Abstentions · none" is a useful thing for a decision to
+ * say, not an empty tab. */
+
+const AUDIT_TABS = ["derivation", "rules", "abstentions"];
+
+function auditTabLabel(id) {
+  if (id === "derivation") return "Derivation";
+  if (id === "rules") {
+    const n = (state.receipt && state.receipt.rulesFired || []).length;
+    return n ? `Rules fired · ${n}` : "Rules fired";
+  }
+  const n = pertinentAbstentions().length;
+  return n ? `Abstentions · ${n}` : "Abstentions · none";
+}
+
+function selectAuditTab(id) {
+  state.auditTab = AUDIT_TABS.includes(id) ? id : "derivation";
+  renderAuditTabs();
+}
+
+function renderAuditTabs() {
+  const bar = $("audit-tabs");
+  bar.replaceChildren();
+  const active = state.auditTab || "derivation";
+  for (const id of AUDIT_TABS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("role", "tab");
+    button.className = "tab" + (id === active ? " active" : "");
+    button.setAttribute("aria-selected", id === active ? "true" : "false");
+    button.textContent = auditTabLabel(id);
+    button.addEventListener("click", () => selectAuditTab(id));
+    bar.append(button);
+    /* `hidden` is the switch, and nothing may ship a `display` that outranks
+     * the UA's `[hidden] { display: none }` — that is how the guide strip's
+     * dismiss button silently stopped working. */
+    $("tab-" + id).hidden = id !== active;
+  }
+}
+
 function renderDerivation() {
   const container = $("derivation");
   container.replaceChildren();
@@ -558,10 +616,14 @@ function pertinentAbstentions() {
   return (state.abstentions || []).filter((e) => e.consultedByDecision !== false);
 }
 
-/* An input the derivation wanted and did not get. It is deliberately *not* a
- * derivation node: the tree is the receipt's, and a synthetic node inside it
- * would be this page inventing a step the kernel never took. It sits after the
- * tree, styled as a gap, saying which rule went unevaluated and why. */
+/* An input the derivation wanted and did not get.
+ *
+ * A pointer, not a second telling. The score, the floor, where the floor came
+ * from, the excluded fact and the correction form all live one tab away; this
+ * line exists so a reader of the reasoning learns there *is* a gap, and can
+ * get to it in one click. It also sits after the tree rather than inside it —
+ * the tree is the receipt's own derivation, and a synthetic node within it
+ * would be the page inventing a step the kernel never took. */
 function derivationGap(entry) {
   const card = document.createElement("div");
   card.className = "derivation-gap";
@@ -577,17 +639,6 @@ function derivationGap(entry) {
   head.append(tag, attr);
   card.append(head);
 
-  const why = document.createElement("p");
-  why.className = "gap-detail";
-  const score = (entry.confidence || {}).score;
-  const floor = (entry.threshold || {}).minConfidence;
-  why.textContent =
-    score != null && floor != null
-      ? `This question's rules read ${shortAttr(entry.attribute)}, which was ` +
-        `excluded at confidence ${score} — below the ${floor} floor.`
-      : `This question's rules read ${shortAttr(entry.attribute)}, which was excluded.`;
-  card.append(why);
-
   for (const rule of entry.blockedRules || []) {
     const line = document.createElement("p");
     line.className = "gap-rule";
@@ -597,12 +648,12 @@ function derivationGap(entry) {
     card.append(line);
   }
 
-  const consequence = document.createElement("p");
-  consequence.className = "gap-detail muted";
-  consequence.textContent =
-    "What the rule would have concluded is unknown — the fact never bound. " +
-    "Correct it below to find out.";
-  card.append(consequence);
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "ghost-btn small";
+  go.textContent = "See the abstention";
+  go.addEventListener("click", () => selectAuditTab("abstentions"));
+  card.append(go);
   return card;
 }
 
@@ -639,8 +690,15 @@ function renderAbstentions() {
     (e) => e.consultedByDecision === false
   );
 
-  $("abstentions-title").style.display = pertinent.length ? "" : "none";
   for (const entry of pertinent) container.append(abstentionCard(entry));
+  if (!pertinent.length && !elsewhere.length && state.receipt) {
+    const none = document.createElement("p");
+    none.className = "empty";
+    none.textContent =
+      "Nothing was excluded in this case: every fact cleared the pack's " +
+      "confidence floor, and no attribute was asserted twice.";
+    container.append(none);
+  }
   if (elsewhere.length) container.append(otherAbstentions(elsewhere));
   if (pertinent.length && state.review && state.review.calibrationNote) {
     container.append(calibrationNote());
@@ -1028,7 +1086,6 @@ function renderRulesFired() {
     }
     container.append(card);
   }
-  $("rules-title").style.display = rules.length ? "" : "none";
   $("rules-count").textContent = plural(rules.length, "rule");
 }
 

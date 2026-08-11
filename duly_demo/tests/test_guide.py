@@ -99,3 +99,45 @@ def test_the_guide_never_reaches_for_innerhtml():
     # test against documenting the rule.
     for sink in (".innerHTML", ".outerHTML", ".insertAdjacentHTML"):
         assert sink not in source, f"guide.js reaches for {sink}"
+
+
+class TestTheAuditTrailIsTabbed:
+    """The workspace's audit pane is three views, switched by the shared tab
+    component — not five sections stacked in one column.
+
+    These are static assertions over the shipped markup and stylesheet. They
+    cannot prove the switcher works (the browser does that), but they catch
+    the two ways it has silently broken before: a pane disappearing from the
+    markup, and a `display` declaration outranking `[hidden]`.
+    """
+
+    def _static(self, name: str) -> str:
+        from duly_demo.content import CONTENT  # noqa: PLC0415
+
+        del CONTENT
+        import duly_demo  # noqa: PLC0415
+
+        return (Path(duly_demo.__file__).parent / "static" / name).read_text()
+
+    def test_every_audit_view_the_switcher_names_exists(self):
+        html = self._static("index.html")
+        js = self._static("app.js")
+        assert 'id="audit-tabs"' in html
+        for pane in ("derivation", "rules", "abstentions"):
+            assert f'id="tab-{pane}"' in html, f"no pane for the {pane} tab"
+            assert f'"{pane}"' in js, f"{pane} is not in the switcher's list"
+
+    def test_no_rule_gives_an_audit_view_a_display_that_beats_hidden(self):
+        """`hidden` is the switch. An author `display` on `.audit-view` wins
+        against the UA's `[hidden] { display: none }`, which is exactly how the
+        guide strip's dismiss button stopped working — the same trap, one
+        component over."""
+        css = self._static("style.css")
+        for block in css.split("}"):
+            if ".audit-view" not in block.split("{")[0]:
+                continue
+            selector, _, body = block.partition("{")
+            if selector.strip().endswith(".audit-view") or selector.strip() == ".audit-view":
+                assert "display" not in body, (
+                    f"`{selector.strip()}` sets display; [hidden] cannot win against it"
+                )

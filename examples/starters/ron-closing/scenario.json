@@ -3,6 +3,8 @@
   "title": "California remote online notarization eligibility for a closing",
   "domain": "mortgage",
   "caseId": "case:closing:ESC-4821-CA",
+  "defaultAsOf": "2026-03-12",
+  "defaultAsOfWhy": "the closing date the remote notarization was performed on",
   "ontology": {
     "ontology": "duly-mortgage-closing",
     "version": "0.1.0"

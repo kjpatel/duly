@@ -8,7 +8,7 @@ examples/starters/<name>/
   documents/*.pdf       # committed, sha256-pinned in scenario.json
   renditions/*.txt      # the extracted text that fact spans index into
   facts/*.json          # span-verified GroundedFacts
-  scenario.json         # manifest: id, title, domain, caseId, documents, facts, rulePack
+  scenario.json         # manifest: id, title, domain, caseId, defaultAsOf, documents, facts, rulePack
 ```
 
 `rulePack` in the manifest is **content-root relative** (`rulepacks/<name>/pack.yaml`), like a golden case's `pack`: the demo resolves it against its content root, which is `examples/` here and yours in a deployment.
@@ -41,6 +41,7 @@ uv run python3 examples/starters/tools/check_facts.py           # schema, hashes
 ## What gates a starter, and what does not
 
 - **`check_facts.py` proves the provenance chain**: every content hash recomputes and every quote matches `rendition[start:end]` exactly. It runs in CI as part of the pack verification block. What it cannot check is whether a quote is *unique* in the rendition — a quote appearing twice is honestly scored low and may fall below a pack's abstention floor, which from the pack looks like a rule that never fired.
+- **`defaultAsOf` is required, and it is a curation decision rather than a derived one.** It is the effective date the scenario's page opens on, and every adjudication made from that page carries it. The demo used to derive the date — latest `effectiveFrom` among the facts, falling back to `date.today()` — and since no committed fact carries that field, the fallback was the only branch that ever ran: every scenario's default answer drifted with the calendar, in a project whose claim is that a decision replays under the rules of a *named* date. It also hid teaching. `tila-rescission` answers `fundingPermitted = true` at any date past the rescission window, so the floating default showed the dull steady state instead of the rule doing work; pinned to consummation day it answers `false`, because the borrower can still rescind. Pick the moment the case turns on — the day the notice was mailed, the day the loan closed — and say why in the sibling `defaultAsOfWhy`, which is the only comment JSON allows you. `examples/tests/test_example_starter_generators.py` fails a starter that declares neither.
 - **Nothing pins a scripted confidence.** If the scenario depends on an exact value — a below-floor fact that must abstain to demonstrate the review arc — set `"demoExtractor": "stub"` in `scenario.json`, or Docling measures its own and silently overwrites it. `county-recording` is the committed example. No test warns at authoring time; this one was found by looking at the running demo.
 - **`domain` is a display contract.** An unknown slug gets a title-cased label and a missing field lands the scenario in "Other" — graceful, and unlabeled.
 

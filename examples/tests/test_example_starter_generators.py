@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import datetime as _date
 import shutil
 import subprocess
 import sys
@@ -176,3 +177,33 @@ def test_merge_into_nothing_is_the_generated_manifest():
     merge = _shared_module().merge_manifest
     generated = {"id": "new", "documents": [{"id": "d", "sha256": "x"}]}
     assert merge({}, generated) == generated
+
+
+def test_every_starter_declares_the_moment_it_opens_at():
+    """Every shipped scenario pins its own effective date.
+
+    Without one the demo falls back to `date.today()`, and a starter whose
+    default answer moves with the calendar is a starter whose documented
+    verdict can go stale on a day nobody touched the repository. The date is
+    also a curation choice the facts cannot express: tila-rescission is only
+    interesting *inside* the rescission window, and at any later date it
+    answers `fundingPermitted = true` — the dull steady state.
+    """
+    manifests = sorted(STARTERS.glob("*/scenario.json"))
+    assert manifests, "no starters found — this test would pass over an empty glob"
+
+    missing = []
+    for path in manifests:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        as_of = manifest.get("defaultAsOf")
+        if not isinstance(as_of, str) or not as_of.strip():
+            missing.append(path.parent.name)
+            continue
+        # Parseable, and a plain day rather than a timestamp: it is what the
+        # page's date input opens on.
+        _date.date.fromisoformat(as_of)
+        assert manifest.get("defaultAsOfWhy"), (
+            f"{path.parent.name} pins a date without saying why it is that "
+            "date — the sibling field is where that reason lives"
+        )
+    assert not missing, f"starters with no declared defaultAsOf: {missing}"

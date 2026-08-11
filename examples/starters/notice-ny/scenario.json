@@ -3,6 +3,8 @@
   "title": "New York homeowners nonrenewal notice timing",
   "domain": "insurance",
   "caseId": "case:policy:HO-77401-NY",
+  "defaultAsOf": "2026-07-25",
+  "defaultAsOfWhy": "the day the nonrenewal notice was mailed — the act the statute measures",
   "ontology": {
     "ontology": "duly-starter-notice",
     "version": "0.1.0"

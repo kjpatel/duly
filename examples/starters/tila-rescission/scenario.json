@@ -3,6 +3,8 @@
   "title": "TILA right of rescission: refinance funding timing",
   "domain": "mortgage",
   "caseId": "case:loan:RF-2026-3117",
+  "defaultAsOf": "2026-05-22",
+  "defaultAsOfWhy": "consummation day: the rescission window is open, so funding must wait",
   "ontology": {
     "ontology": "duly-mortgage-closing",
     "version": "0.1.0"

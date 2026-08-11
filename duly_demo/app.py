@@ -709,10 +709,32 @@ def _load_starter_scenario(scenario_dir: Path) -> dict[str, Any] | None:
     if not documents or not facts or not questions:
         return None
 
+    # Which moment this scenario opens at, in falling order of authority.
+    #
+    # A declared `defaultAsOf` wins, because choosing when to adjudicate a case
+    # is *curation* and not derivation: the TILA scenario is only interesting
+    # inside the rescission window, and a date derived from the facts cannot
+    # know that. Declared beats computed for the same reason `expected.yaml`
+    # exists — what a scenario is meant to show is authored, not inferred.
+    #
+    # Then the latest `effectiveFrom` among the facts: adjudicate once all the
+    # evidence is in force. No committed starter fact carries the field today,
+    # so this branch is dormant — kept because a store-backed or bitemporal
+    # corpus will populate it, and it is the right answer when it does.
+    #
+    # Wall clock last, and only as a floor. It used to be the only branch that
+    # ever ran, which made every scenario's default answer drift with the
+    # calendar — an awkward property for a project whose claim is that
+    # decisions are reproducible under the rules of a named date.
     effective_dates = sorted(
         d for d in (_date_prefix(f.get("effectiveFrom")) for f in facts) if d
     )
-    default_as_of = effective_dates[-1] if effective_dates else date.today().isoformat()
+    declared = manifest.get("defaultAsOf")
+    default_as_of = (
+        str(declared).strip()
+        if isinstance(declared, str) and declared.strip()
+        else effective_dates[-1] if effective_dates else date.today().isoformat()
+    )
 
     return {
         "id": manifest.get("id", scenario_dir.name),

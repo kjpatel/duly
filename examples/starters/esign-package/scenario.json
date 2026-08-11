@@ -3,6 +3,8 @@
   "title": "eSign routing: closing-package promissory note as a registered eNote",
   "domain": "mortgage",
   "caseId": "case:closing-package:CP-2026-0847",
+  "defaultAsOf": "2026-07-12",
+  "defaultAsOfWhy": "when the electronic package was assembled for delivery",
   "ontology": {
     "ontology": "duly-mortgage-closing",
     "version": "0.1.0"

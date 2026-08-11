@@ -3,6 +3,8 @@
   "title": "TRID transfer-tax tolerance between Loan Estimate and Closing Disclosure",
   "domain": "mortgage",
   "caseId": "case:loan:L-2026-0142",
+  "defaultAsOf": "2026-07-28",
+  "defaultAsOfWhy": "when the closing figures were read off the disclosures",
   "ontology": {
     "ontology": "duly-mortgage-closing",
     "version": "0.1.0"

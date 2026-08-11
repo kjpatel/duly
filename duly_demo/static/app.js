@@ -14,6 +14,8 @@ const state = {
   factIndex: {},
   engineMode: null,
   abstentions: [],         // enriched receipt abstention entries from the server
+  questionOpen: false,     // is the question listbox showing
+  questionActive: 0,       // highlighted option while it is open
   auditTab: "derivation",  // which audit-trail view is showing
   review: null,            // review-queue state for the case (availability, resolved items)
   lastVerdictKey: null,
@@ -90,7 +92,18 @@ async function init() {
     select.append(group);
   }
   select.addEventListener("change", () => selectScenario(select.value));
-  $("question-select").addEventListener("change", onQuestionPicked);
+  $("question-button").addEventListener("click", () => {
+    if (state.questionOpen) closeQuestions();
+    else openQuestions();
+  });
+  $("question-button").addEventListener("keydown", onQuestionKey);
+  /* Pointer-down anywhere outside dismisses, which is what a dropdown owes a
+   * reader who changed their mind. Not `blur`: committing on mousedown fires
+   * before blur, and closing on blur would race it. */
+  document.addEventListener("mousedown", (event) => {
+    if (!state.questionOpen) return;
+    if (!$("question-picker").contains(event.target)) closeQuestions();
+  });
   $("asof-input").addEventListener("change", () => {
     if (state.scenario && state.activeAttribute) runAdjudication();
   });
@@ -308,26 +321,103 @@ function focusFact(factId) {
 
 /* ---------- question / answer pane ---------- */
 
-function renderQuestions() {
-  const select = $("question-select");
-  select.replaceChildren();
-  for (const q of state.scenario.questions) {
-    const option = document.createElement("option");
-    option.value = q.attribute;
-    option.textContent = q.question;
-    select.append(option);
-  }
-  select.disabled = state.scenario.questions.length === 0;
-  $("question-count").textContent = plural(state.scenario.questions.length, "question");
+/* ---------- the question picker ----------
+ *
+ * A listbox rather than a <select>, for one reason: a select's closed state is
+ * a single truncated line in every browser, and the question is the longest
+ * string on the page. Conventions are the receipt viewer's combobox — roving
+ * `aria-activedescendant`, commit on mousedown, Escape closes — minus the
+ * search, because there is nothing here to filter.
+ */
+
+function questionOptionId(index) {
+  return `question-option-${index}`;
 }
 
-/* Stepping the select with the arrow keys walks the pack's questions and
- * re-adjudicates each one against the same document — which is the picker
- * earning its place over the list it replaced. */
-function onQuestionPicked() {
-  const chosen = $("question-select").value;
-  if (!chosen || chosen === state.activeAttribute) return;
-  state.activeAttribute = chosen;
+function questions() {
+  return (state.scenario && state.scenario.questions) || [];
+}
+
+function activeQuestionIndex() {
+  const i = questions().findIndex((q) => q.attribute === state.activeAttribute);
+  return i < 0 ? 0 : i;
+}
+
+function renderQuestions() {
+  const list = $("question-listbox");
+  const button = $("question-button");
+  list.replaceChildren();
+
+  questions().forEach((q, index) => {
+    const item = document.createElement("li");
+    item.id = questionOptionId(index);
+    item.className = "q-picker-option";
+    item.setAttribute("role", "option");
+    item.textContent = q.question;
+    /* Commit on mousedown: a click would land after the button's blur has
+     * already closed the list out from under the pointer. */
+    item.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      commitQuestion(q.attribute);
+    });
+    item.addEventListener("mousemove", () => {
+      if (state.questionActive === index) return;
+      state.questionActive = index;
+      paintQuestionPicker();
+    });
+    list.append(item);
+  });
+
+  button.disabled = questions().length === 0;
+  $("question-count").textContent = plural(questions().length, "question");
+  paintQuestionPicker();
+}
+
+/* Everything the picker shows, derived from state — the list is only ever a
+ * view of `state.scenario.questions` and `state.activeAttribute`. */
+function paintQuestionPicker() {
+  const button = $("question-button");
+  const list = $("question-listbox");
+  const current = questions()[activeQuestionIndex()];
+
+  $("question-label").textContent = current ? current.question : "No question to ask";
+  button.setAttribute("aria-expanded", state.questionOpen ? "true" : "false");
+  list.hidden = !state.questionOpen;
+
+  if (!state.questionOpen) {
+    button.removeAttribute("aria-activedescendant");
+    return;
+  }
+  [...list.children].forEach((item, index) => {
+    const active = index === state.questionActive;
+    item.classList.toggle("active", active);
+    item.classList.toggle("current", questions()[index].attribute === state.activeAttribute);
+    item.setAttribute("aria-selected", active ? "true" : "false");
+    if (active) {
+      button.setAttribute("aria-activedescendant", item.id);
+      item.scrollIntoView({ block: "nearest" });
+    }
+  });
+}
+
+function openQuestions() {
+  if (state.questionOpen || questions().length === 0) return;
+  state.questionOpen = true;
+  state.questionActive = activeQuestionIndex();
+  paintQuestionPicker();
+}
+
+function closeQuestions() {
+  if (!state.questionOpen) return;
+  state.questionOpen = false;
+  paintQuestionPicker();
+}
+
+function commitQuestion(attribute) {
+  closeQuestions();
+  $("question-button").focus();
+  if (!attribute || attribute === state.activeAttribute) return;
+  state.activeAttribute = attribute;
   /* A new question is a new adjudication: open on the reasoning. Landing on
    * whichever tab the last question left behind means arriving at
    * "Abstentions · none" — a pane that is empty *because this question is
@@ -335,12 +425,52 @@ function onQuestionPicked() {
    * re-adjudicates in place and deliberately does not reset: you stay where
    * you were working. */
   state.auditTab = "derivation";
+  paintQuestionPicker();
   runAdjudication();
 }
 
+/* Closed, the arrow keys step the question and re-adjudicate — the behaviour a
+ * native select gives you on some platforms and not others, made uniform.
+ * Open, they move the highlight and Enter commits. */
+function onQuestionKey(event) {
+  const all = questions();
+  if (!all.length) return;
+  const key = event.key;
+
+  if (!state.questionOpen) {
+    if (key === "ArrowDown" || key === "ArrowUp") {
+      event.preventDefault();
+      const step = key === "ArrowDown" ? 1 : -1;
+      const next = (activeQuestionIndex() + step + all.length) % all.length;
+      commitQuestion(all[next].attribute);
+    } else if (key === "Enter" || key === " " || key === "Spacebar") {
+      event.preventDefault();
+      openQuestions();
+    }
+    return;
+  }
+
+  if (key === "ArrowDown" || key === "ArrowUp") {
+    event.preventDefault();
+    const step = key === "ArrowDown" ? 1 : -1;
+    state.questionActive = (state.questionActive + step + all.length) % all.length;
+    paintQuestionPicker();
+  } else if (key === "Enter" || key === " " || key === "Spacebar") {
+    event.preventDefault();
+    commitQuestion(all[state.questionActive].attribute);
+  } else if (key === "Escape") {
+    event.preventDefault();
+    closeQuestions();
+    $("question-button").focus();
+  } else if (key === "Home" || key === "End") {
+    event.preventDefault();
+    state.questionActive = key === "Home" ? 0 : all.length - 1;
+    paintQuestionPicker();
+  }
+}
+
 function highlightActiveQuestion() {
-  const select = $("question-select");
-  if (state.activeAttribute) select.value = state.activeAttribute;
+  paintQuestionPicker();
 }
 
 /* How a decision reads is decided server-side and sent as `determination`, so

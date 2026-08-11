@@ -128,18 +128,27 @@
            chips because the list grew with the pack and pushed the answer —
            the point of the pane — further down for every question added. -->
       <div class="field-label">Question</div>
-      <div class="control-field question-field">
-        <div class="control-input">
+      <!-- Not a <select>: its closed state is one truncated line in every
+           browser, and a question you cannot finish reading is a poor thing to
+           put above its answer. This follows the receipt viewer's combobox
+           conventions (aria-expanded, roving aria-activedescendant, commit on
+           mousedown) with the search dropped — there is nothing to filter. -->
+      <div class="question-field q-picker" id="question-picker">
+        <button type="button" id="question-button" class="q-picker-button"
+                aria-haspopup="listbox" aria-expanded="false"
+                aria-controls="question-listbox" aria-label="Decision question">
           <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
             <path d="M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.7.6-.7 1.1v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <select id="question-select" aria-label="Decision question"></select>
+          <span class="q-picker-label" id="question-label"></span>
           <svg class="select-chevron" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
             <path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        </div>
+        </button>
+        <ul class="q-picker-list" id="question-listbox" role="listbox"
+            aria-label="Decision questions" hidden></ul>
       </div>
 
       <div class="field-label answer-label" id="answer-label" hidden>Answer</div>

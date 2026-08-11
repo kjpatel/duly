@@ -1872,17 +1872,108 @@ summary:focus-visible {
   color: var(--color-accent);
 }
 
-/* The question picker: the header's control shape, reused inside the pane.
- * It lives with its answer rather than up in the header strip, because the
- * header scopes the *case* (which document, as of when) while the question is
- * asked of that case — and the question strings are the longest of the three,
- * so a third header control would truncate the one line most worth reading. */
-.question-field {
+/* The question picker. It borrows the header control's frame — icon, border,
+ * chevron — but its label *wraps*, which is the whole reason it is not a
+ * <select>: a question you cannot finish reading is a poor thing to put above
+ * its answer.
+ *
+ * It lives with its answer rather than in the header strip, because the header
+ * scopes the *case* (which document, as of when) while the question is asked of
+ * that case. */
+.q-picker {
+  position: relative;
   margin-bottom: 16px;
 }
 
-.question-field .control-input select {
-  text-overflow: ellipsis;
+.q-picker-button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  color: var(--color-text);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.q-picker-button:hover:not(:disabled),
+.q-picker-button[aria-expanded="true"] {
+  border-color: var(--color-accent);
+}
+
+.q-picker-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.q-picker-button > svg:first-child {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-text-muted);
+}
+
+/* The point of the control: the full question, on as many lines as it needs.
+ *
+ * `min-width: 0` is load-bearing. A flex item's default `min-width: auto` is
+ * its content's minimum, so a long question refused to shrink into its share
+ * of the row and ran under the chevron instead of wrapping before it. */
+.q-picker-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.q-picker-button > .select-chevron {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-text-muted);
+  transition: transform 160ms ease;
+}
+
+.q-picker-button[aria-expanded="true"] > .select-chevron {
+  transform: rotate(180deg);
+}
+
+/* `hidden` does the showing and hiding, so nothing here may set `display` —
+ * an author declaration outranks the UA's `[hidden] { display: none }`. */
+.q-picker-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  max-height: 260px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgb(15 15 40 / 12%);
+}
+
+.q-picker-option {
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.q-picker-option.active {
+  background: var(--color-bg);
+}
+
+.q-picker-option.current {
+  color: var(--color-accent-dark);
+  font-weight: 550;
 }
 
 /* Question and Answer are peers. The heading is what separates them, so it

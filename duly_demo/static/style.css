@@ -1871,3 +1871,22 @@ summary:focus-visible {
 .link-btn:hover {
   color: var(--color-accent);
 }
+
+/* The question picker: the header's control shape, reused inside the pane.
+ * It lives with its answer rather than up in the header strip, because the
+ * header scopes the *case* (which document, as of when) while the question is
+ * asked of that case — and the question strings are the longest of the three,
+ * so a third header control would truncate the one line most worth reading. */
+.question-field {
+  margin-bottom: 16px;
+}
+
+.question-field .control-input select {
+  text-overflow: ellipsis;
+}
+
+/* Question and Answer are peers. The heading is what separates them, so it
+ * needs the air a section heading gets, not the gap between two paragraphs. */
+.answer-label {
+  margin-top: 18px;
+}

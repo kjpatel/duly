@@ -90,6 +90,7 @@ async function init() {
     select.append(group);
   }
   select.addEventListener("change", () => selectScenario(select.value));
+  $("question-select").addEventListener("change", onQuestionPicked);
   $("asof-input").addEventListener("change", () => {
     if (state.scenario && state.activeAttribute) runAdjudication();
   });
@@ -130,6 +131,7 @@ async function selectScenario(id, wantedAttribute = null) {
   state.review = null;
   state.lastVerdictKey = null;
   $("answer-card").classList.add("hidden");
+  $("answer-label").hidden = true;
   $("error-card").classList.add("hidden");
   $("derivation").replaceChildren();
   $("rules-fired").replaceChildren();
@@ -307,37 +309,38 @@ function focusFact(factId) {
 /* ---------- question / answer pane ---------- */
 
 function renderQuestions() {
-  const chips = $("question-chips");
-  chips.replaceChildren();
+  const select = $("question-select");
+  select.replaceChildren();
   for (const q of state.scenario.questions) {
-    const btn = document.createElement("button");
-    btn.className = "chip";
-    btn.type = "button";
-    btn.textContent = q.question;
-    btn.dataset.attribute = q.attribute;
-    btn.addEventListener("click", () => {
-      state.activeAttribute = q.attribute;
-      /* A new question is a new adjudication: open on the reasoning. Landing
-       * on whichever tab the last question left behind means arriving at
-       * "Abstentions · none" — a pane that is empty *because this question is
-       * different*, which reads as the page having lost something. A
-       * correction re-adjudicates in place and deliberately does not reset:
-       * you stay where you were working. */
-      state.auditTab = "derivation";
-      highlightActiveQuestion();
-      runAdjudication();
-    });
-    chips.append(btn);
+    const option = document.createElement("option");
+    option.value = q.attribute;
+    option.textContent = q.question;
+    select.append(option);
   }
+  select.disabled = state.scenario.questions.length === 0;
   $("question-count").textContent = plural(state.scenario.questions.length, "question");
 }
 
+/* Stepping the select with the arrow keys walks the pack's questions and
+ * re-adjudicates each one against the same document — which is the picker
+ * earning its place over the list it replaced. */
+function onQuestionPicked() {
+  const chosen = $("question-select").value;
+  if (!chosen || chosen === state.activeAttribute) return;
+  state.activeAttribute = chosen;
+  /* A new question is a new adjudication: open on the reasoning. Landing on
+   * whichever tab the last question left behind means arriving at
+   * "Abstentions · none" — a pane that is empty *because this question is
+   * different*, which reads as the page having lost something. A correction
+   * re-adjudicates in place and deliberately does not reset: you stay where
+   * you were working. */
+  state.auditTab = "derivation";
+  runAdjudication();
+}
+
 function highlightActiveQuestion() {
-  for (const btn of $("question-chips").querySelectorAll(".chip")) {
-    const active = btn.dataset.attribute === state.activeAttribute;
-    btn.classList.toggle("active", active);
-    btn.setAttribute("aria-pressed", String(active));
-  }
+  const select = $("question-select");
+  if (state.activeAttribute) select.value = state.activeAttribute;
 }
 
 /* How a decision reads is decided server-side and sent as `determination`, so
@@ -383,6 +386,7 @@ async function runAdjudication() {
     const card = $("error-card");
     card.textContent = errorText;
     card.classList.remove("hidden");
+    $("answer-label").hidden = true;
     // Drop the superseded receipt: a stale derivation beside "Evaluation failed"
     // reads as the audit trail for the question that just failed.
     state.receipt = null;
@@ -443,6 +447,7 @@ function setDownloadsEnabled(enabled) {
 function renderAnswer(payload) {
   const card = $("answer-card");
   card.classList.remove("hidden");
+  $("answer-label").hidden = false;
   card.removeAttribute("aria-busy");
 
   const badge = $("engine-badge");

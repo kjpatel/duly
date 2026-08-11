@@ -14,6 +14,7 @@ const state = {
   factIndex: {},
   engineMode: null,
   abstentions: [],         // enriched receipt abstention entries from the server
+  ruleText: {},            // ruleId -> the pack author's sentence (never in the receipt)
   questionOpen: false,     // is the question listbox showing
   questionActive: 0,       // highlighted option while it is open
   auditTab: "derivation",  // which audit-trail view is showing
@@ -551,6 +552,7 @@ function applyAdjudication(payload) {
   state.factIndex = payload.factIndex || {};
   state.engineMode = payload.engineMode;
   state.abstentions = payload.abstentions || [];
+  state.ruleText = payload.ruleText || {};
   state.review = payload.review || null;
 
   renderAnswer(payload);
@@ -673,6 +675,8 @@ function derivationNode(node) {
     const rule = document.createElement("span");
     rule.className = "node-rule";
     rule.textContent = node.rule;
+    const saidHere = (state.ruleText || {})[node.rule];
+    if (saidHere) rule.title = saidHere;
     summary.append(rule);
   }
   details.append(summary);
@@ -1215,6 +1219,17 @@ function renderRulesFired() {
     }
     card.append(head);
 
+    /* What the rule *says*, before what it is called. An id and a citation
+     * identify a rule to someone who already knows it; NY-NR-45 beside
+     * NY-NR-45-LEGACY is unreadable without the sentence that separates them. */
+    const said = (state.ruleText || {})[r.ruleId];
+    if (said) {
+      const description = document.createElement("p");
+      description.className = "rule-description";
+      description.textContent = said;
+      card.append(description);
+    }
+
     const citation = document.createElement("div");
     citation.className = "rule-citation";
     if (r.citation && r.citation.url) {
@@ -1241,6 +1256,14 @@ function renderRulesFired() {
       badge.className = "defeated-badge";
       badge.textContent = "defeated: " + r.defeated.join(", ");
       card.append(badge);
+      for (const beaten of r.defeated) {
+        const said_ = (state.ruleText || {})[beaten];
+        if (!said_) continue;
+        const line = document.createElement("p");
+        line.className = "rule-description defeated-text";
+        line.textContent = beaten + " — " + said_;
+        card.append(line);
+      }
     }
     container.append(card);
   }

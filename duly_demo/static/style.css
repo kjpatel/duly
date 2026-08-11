@@ -1981,3 +1981,17 @@ summary:focus-visible {
 .answer-label {
   margin-top: 18px;
 }
+
+/* What a rule says, above what it is called. An id and a citation identify a
+ * rule to a reader who already knows it — NY-NR-45 beside NY-NR-45-LEGACY is
+ * unreadable without the sentence that tells them apart. */
+.rule-description {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.rule-description.defeated-text {
+  color: var(--color-text-muted);
+}

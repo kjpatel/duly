@@ -650,7 +650,11 @@ function derivationGap(entry) {
 
   const go = document.createElement("button");
   go.type = "button";
-  go.className = "ghost-btn small";
+  /* Text, not a bordered button: this control moves the reader to another
+   * view and nothing else, and navigation in this demo is text (CLAUDE.md,
+   * "One shape per job"). A button element rather than an anchor because
+   * there is no URL to go to — the tab is state, not a location. */
+  go.className = "link-btn";
   go.textContent = "See the abstention";
   go.addEventListener("click", () => selectAuditTab("abstentions"));
   card.append(go);

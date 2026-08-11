@@ -470,24 +470,6 @@
   line-height: 1.55;
 }
 
-.evidence .link-btn {
-  display: inline-block;
-  padding: 0;
-  color: var(--color-accent-dark);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.72rem;
-  font-weight: 550;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.evidence .link-btn:hover {
-  color: var(--color-accent);
-}
-
 .evidence .verdict-line {
   margin: 0 0 8px;
   font-size: 0.73rem;

@@ -19,7 +19,12 @@ import pytest
 
 import duly_kernel.ir as ir
 from duly_kernel.ir import validate_pack
-from duly_kernel.phrasing import PHRASING_FORMATS, PHRASING_TOKEN, determination
+from duly_kernel.phrasing import (
+    PHRASING_FORMATS,
+    PHRASING_TOKEN,
+    determination,
+    low_confidence_caveat,
+)
 
 from conftest import fixture_case, fixture_pack
 
@@ -41,7 +46,16 @@ def _pack(phrasing, attribute="d:answer"):
                 "priority": 0,
                 "citation": {"text": "Inline fixture (fictional)"},
                 "effectiveFrom": "1900-01-01",
-                "given": {"thing": {"entityType": "d:Thing"}},
+                # `score` is bound, not merely declared: `{caveat}` and the
+                # `abstained` guard are scoped to attributes the decision's
+                # rules can actually consult, so a fixture whose rule reads
+                # nothing would abstain over something irrelevant and
+                # correctly get no caveat.
+                "given": {
+                    "thing": {"entityType": "d:Thing"},
+                    "score": {"attribute": "d:score"},
+                    "a": {"attribute": "d:a"},
+                },
                 "then": {
                     "entity": "thing",
                     "attribute": attribute,
@@ -319,6 +333,59 @@ def test_the_validator_resolves_placeholders_with_the_renderers_own_regex():
     than re-stating the pattern."""
     assert ir._PHRASING_TOKEN is PHRASING_TOKEN
     assert ir._PHRASING_FORMATS is PHRASING_FORMATS
+
+
+def test_a_caveat_names_only_exclusions_this_decision_could_consult():
+    """Abstentions are case-wide; a caveat is about *this* answer.
+
+    The kernel excludes below-floor facts from the whole live-fact universe
+    before any rule runs, so a receipt carries exclusions that had nothing to
+    do with the question it answers. Unscoped, a decision that never read the
+    attribute got captioned "Presumption only — … excluded" — a false claim
+    about why that answer is what it is, and one that reaches the audit report
+    a regulator reads. The corpus could not catch it: it asks one question per
+    case, so its abstentions are always relevant. Asking two questions of one
+    case is what exposes it.
+    """
+    pack = _pack([{"when": {"value": True}, "verdict": "Yes", "detail": "{caveat}"}])
+    consulted = {
+        "reason": "low_confidence",
+        "attribute": "d:score",
+        "confidence": {"score": 0.42},
+        "threshold": {"minConfidence": 0.8},
+    }
+    unrelated = {**consulted, "attribute": "d:somethingElse"}
+    value = {"kind": "boolean", "value": True}
+
+    # The fixture's rule binds d:score, so this exclusion shaped the answer.
+    assert "score excluded" in determination(
+        _receipt(value, abstentions=[consulted]), [], pack
+    )["detail"]
+
+    # No rule concluding d:answer reads d:somethingElse, so the decision is
+    # not "presumption only" on its account — the case falls through to a
+    # phrasing alternative that claims nothing.
+    assert determination(_receipt(value, abstentions=[unrelated]), [], pack)["detail"] == ""
+
+    # And an unrelated exclusion does not resurrect a caveat beside a real one.
+    both = determination(_receipt(value, abstentions=[unrelated, consulted]), [], pack)
+    assert "score excluded" in both["detail"]
+    assert "somethingElse" not in both["detail"]
+
+
+def test_without_a_pack_a_caveat_stays_unscoped_rather_than_vanishing():
+    """`None` from `consulted_attributes` means *unknown*, not *nothing*.
+
+    A caller with no pack cannot tell relevance, and silently dropping a
+    caveat it cannot verify would hide a real exclusion. Over-reporting is the
+    safe direction here; under-reporting is not.
+    """
+    receipt = _receipt(
+        {"kind": "boolean", "value": True},
+        abstentions=[{"reason": "low_confidence", "attribute": "d:whatever"}],
+    )
+    assert low_confidence_caveat(receipt) is not None
+    assert low_confidence_caveat(receipt, None) is not None
 
 
 def test_every_placeholder_the_validator_accepts_the_renderer_resolves():

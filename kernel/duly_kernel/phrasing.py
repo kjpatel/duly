@@ -34,6 +34,8 @@ import re
 from datetime import date
 from typing import Any
 
+from .relevance import consulted_attributes
+
 # Shared with `duly_kernel.ir`'s validator, which imports both from here. A
 # validator and a renderer that disagree about what a placeholder *is* fail in
 # the worst possible way: the pack loads, and the sentence silently comes out
@@ -108,19 +110,39 @@ def _fact_value(facts: list[dict[str, Any]], attribute_suffix: str) -> Any:
     return None
 
 
-def low_confidence_caveat(receipt: dict[str, Any]) -> str | None:
+def low_confidence_caveat(receipt: dict[str, Any], pack: Any = None) -> str | None:
     """The `{caveat}` sentence: "Presumption only — …" when this decision
     stands only because a below-floor fact was excluded, else None.
 
     Unresolvable-when-absent is the point. A pack writes `detail: "{caveat}"`
     for the guarded case and a different alternative for the unguarded one, so
     a decision that abstained over nothing never claims it did.
+
+    **Scoped to the attributes this decision's rules can consult** when a pack
+    is supplied. Abstentions are case-wide — the kernel excludes below-floor
+    facts before any rule runs — so a receipt carries exclusions that had
+    nothing to do with the question it answers. Unscoped, a decision that never
+    read the attribute would be captioned "Presumption only — … excluded",
+    which is a false claim about *why that answer is what it is*, and it would
+    reach the audit report a regulator reads.
+
+    No committed artifact changes: all 43 corpus receipts carrying a
+    `low_confidence` entry have the abstained attribute genuinely consulted by
+    their decision, because the corpus asks one question per case. The demo
+    asks several of one case, which is where the divergence is visible.
+
+    Without a pack the old unscoped behaviour stands, because the alternative
+    is to silently drop caveats a caller cannot verify: `None` from
+    `consulted_attributes` means *unknown*, not *consults nothing*.
     """
     low_confidence = [
         a
         for a in receipt.get("abstentions") or []
         if isinstance(a, dict) and a.get("reason") == "low_confidence"
     ]
+    consulted = consulted_attributes(pack, (receipt.get("decision") or {}).get("attribute"))
+    if consulted is not None:
+        low_confidence = [a for a in low_confidence if a.get("attribute") in consulted]
     if not low_confidence:
         return None
     parts = []
@@ -187,6 +209,7 @@ def _token(
     receipt: dict[str, Any],
     facts: list[dict[str, Any]],
     value: dict[str, Any],
+    pack: Any = None,
 ) -> str | None:
     """Resolve one `{token}`. None means *unresolvable*, which discards the
     template alternative that used it — that is how a pack says "phrase it
@@ -202,7 +225,7 @@ def _token(
         )
         return text or None
     if head == "caveat":
-        return low_confidence_caveat(receipt)
+        return low_confidence_caveat(receipt, pack)
     if head == "fact":
         raw = _fact_value(facts, arg)
         return None if raw is None else _scalar(raw, fmt)
@@ -220,13 +243,14 @@ def _render(
     receipt: dict[str, Any],
     facts: list[dict[str, Any]],
     value: dict[str, Any],
+    pack: Any = None,
 ) -> str | None:
     if not isinstance(template, str):
         return None
     out: list[str] = []
     pos = 0
     for match in PHRASING_TOKEN.finditer(template):
-        resolved = _token(match.group(1), receipt, facts, value)
+        resolved = _token(match.group(1), receipt, facts, value, pack)
         if resolved is None:
             return None
         out.append(template[pos:match.start()])
@@ -241,6 +265,7 @@ def _first(
     receipt: dict[str, Any],
     facts: list[dict[str, Any]],
     value: dict[str, Any],
+    pack: Any = None,
 ) -> str | None:
     """The first alternative whose every token resolves, or None."""
     if isinstance(candidates, str):
@@ -248,7 +273,7 @@ def _first(
     if not isinstance(candidates, list):
         return None
     for candidate in candidates:
-        rendered = _render(candidate, receipt, facts, value)
+        rendered = _render(candidate, receipt, facts, value, pack)
         if rendered is not None:
             return rendered
     return None
@@ -272,6 +297,7 @@ def _case_applies(
     receipt: dict[str, Any],
     facts: list[dict[str, Any]],
     value: dict[str, Any],
+    pack: Any = None,
 ) -> bool:
     """Every declared guard must hold; an absent/empty `when` always holds."""
     if not when:
@@ -289,7 +315,7 @@ def _case_applies(
         if (when["amount"] == "positive") is not _money_is_positive(value):
             return False
     if "abstained" in when:
-        excluded = low_confidence_caveat(receipt) is not None
+        excluded = low_confidence_caveat(receipt, pack) is not None
         if (when["abstained"] == "lowConfidence") is not excluded:
             return False
     guard = when.get("fact")
@@ -302,7 +328,7 @@ def _case_applies(
                 return False
             expected_text = guard["equals"]
             if isinstance(expected_text, str) and "{" in expected_text:
-                expected_text = _render(expected_text, receipt, facts, value)
+                expected_text = _render(expected_text, receipt, facts, value, pack)
                 if expected_text is None:
                     return False
             if str(raw) != str(expected_text):
@@ -358,12 +384,12 @@ def determination(
     for case in decision_phrasing(pack, attribute) or []:
         if not isinstance(case, dict):
             continue
-        if not _case_applies(case.get("when"), receipt, facts, value):
+        if not _case_applies(case.get("when"), receipt, facts, value, pack):
             continue
-        verdict = _first(case.get("verdict"), receipt, facts, value)
+        verdict = _first(case.get("verdict"), receipt, facts, value, pack)
         if verdict is None:
             continue
-        detail = _first(case.get("detail"), receipt, facts, value)
+        detail = _first(case.get("detail"), receipt, facts, value, pack)
         return {
             "verdict": verdict,
             "detail": detail or "",

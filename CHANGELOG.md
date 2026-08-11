@@ -30,6 +30,7 @@ Entries are written after the fact, from merged work.
 
 ### Changed
 
+- **The decision workspace's audit pane is three tabs rather than five stacked sections** — Derivation, Rules fired, Abstentions, each labelled with its count, because *Abstentions · none* is a useful thing for a decision to say and an empty section is not. It uses the `.tabs` component the receipt viewer, evidence browser and rule studio already shared and this pane was the last to do without, which is the "one shape per job" convention doing its job: the fix for a crowded column was to reach for the system, not to add a fifth top-level page. A page would also have cost the demo its best moment — correcting a fact and watching the verdict flip *on the spot* — by putting a navigation between the two halves of it.
 - [docs/neuro-symbolic-architecture.md](docs/neuro-symbolic-architecture.md) sharpens the claim this work put pressure on. The doc already argued that a record only its author can verify is documentation, while one its recipient can verify is a receipt — "the difference is not in the artifact, it is in whether the checking is available to the person with a reason to doubt." What the download exposed is that this availability has a *packaging* precondition: **integrity travels inside the artifact; availability is a retention decision somebody has to make.** The separation is not a gap in the scheme — it is what lets a receipt prove what was decided to someone not entitled to read the evidence it was decided from.
 
 ## v1.1.1 — both edges walkable, and the envelope measured

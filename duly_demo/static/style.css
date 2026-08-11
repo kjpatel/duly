@@ -1842,3 +1842,15 @@ summary:focus-visible {
 .other-abstentions[open] > summary {
   margin-bottom: 8px;
 }
+
+/* One audit view at a time. `hidden` does the switching, so nothing here may
+ * set `display` on `.audit-view` — an author declaration outranks the UA's
+ * `[hidden] { display: none }`, which is how the guide strip's dismiss button
+ * silently stopped working. */
+.audit-view > .section-heading:first-child {
+  margin-top: 4px;
+}
+
+.derivation-gap > .ghost-btn {
+  margin-top: 8px;
+}

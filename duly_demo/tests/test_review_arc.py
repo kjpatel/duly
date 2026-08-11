@@ -576,3 +576,45 @@ def test_golden_export_bundle_replays_byte_for_byte(client, content_root):
     assert fresh_bytes == bundle.read(f"receipts/{case_id}.json")
     assert fresh["decision"]["value"] == {"kind": "boolean", "value": False}
     assert fresh["abstentions"] == []  # the superseded fact is out of the projection
+
+
+def test_a_pertinent_abstention_names_the_rules_it_stopped():
+    """The derivation pane needs more than "a fact was excluded".
+
+    A reader of a derivation wants "this rule could not be evaluated", so the
+    view enriches a *consulted* entry with the rules inside the decision's
+    reach that bind the excluded attribute. It stays a statement about what
+    did not happen: whether the rule would have concluded anything had the
+    fact cleared the floor is unknowable, and the pane must not imply it.
+    """
+    pack = {
+        "rules": [
+            {
+                "id": "FX-GATE-01",
+                "description": "Blocks when the score falls short.",
+                "citation": {"text": "Fixture § 1"},
+                "given": {
+                    "w": {"entityType": "fx:Widget"},
+                    "s": {"attribute": "fx:score"},
+                },
+                "then": {"attribute": "fx:permitted"},
+            },
+            {
+                "id": "FX-OTHER-01",
+                "given": {"w": {"entityType": "fx:Widget"}, "s": {"attribute": "fx:score"}},
+                "then": {"attribute": "fx:label"},
+            },
+        ]
+    }
+    consulted = demo_app._consulted_attributes(pack, "fx:permitted")
+    blocked = demo_app._rules_reading(pack, consulted, "fx:score")
+
+    ids = [b["ruleId"] for b in blocked]
+    assert ids == ["FX-GATE-01"], "only rules inside this decision's reach"
+    assert blocked[0]["citation"] == "Fixture § 1"
+    assert "FX-OTHER-01" not in ids, "a rule concluding another decision is not this gap"
+
+    # An attribute no in-reach rule binds stops nothing, and says so with an
+    # empty list rather than by omission.
+    assert demo_app._rules_reading(pack, consulted, "fx:unrelated") == []
+    assert demo_app._rules_reading(None, consulted, "fx:score") == []

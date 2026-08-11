@@ -1150,41 +1150,60 @@ def _calibration_note(pair_count: int) -> str | None:
 
 
 def _consulted_attributes(pack: Any, decision_attr: str | None) -> set[str] | None:
-    """Fact attributes the rules concluding `decision_attr` consult, following
-    `derived` bindings transitively (and including the decision attribute
-    itself). Returns None when the pack or decision is not in hand.
-
-    Presentation only. Receipt abstentions are case-wide — the kernel filters
-    the live-fact universe before any rule runs (spec/rule-ir.md, "Abstention
-    policy") — so an entry can name an attribute the selected question's rules
-    never look at. This computes that relationship so the UI can label it,
-    without touching receipt bytes.
+    """Delegates to the kernel. Kept as a name because this module's callers
+    and its tests use it, but never as a second implementation: two surfaces
+    that answer "does this question consult that attribute?" differently is
+    the defect `duly_kernel.phrasing` exists to prevent, wearing a new hat.
+    The kernel's `low_confidence_caveat` scopes the audit report's caveat with
+    this same function, so the demo's panes and the examiner's document agree
+    by construction rather than by review.
     """
-    if not isinstance(pack, dict) or not decision_attr:
+    consulted = _kernel_relevance()
+    return None if consulted is None else consulted(pack, decision_attr)
+
+
+def _kernel_relevance() -> Any:
+    """`duly_kernel.relevance.consulted_attributes`, or None when the kernel is
+    absent — the demo degrades rather than failing to start."""
+    try:
+        from duly_kernel.relevance import consulted_attributes  # noqa: PLC0415
+    except Exception:
         return None
-    by_conclusion: dict[str, list[dict[str, Any]]] = {}
+    return consulted_attributes
+
+
+def _rules_reading(pack: Any, consulted: set[str], attribute: str) -> list[dict[str, str]]:
+    """The rules inside this decision's reach that bind `attribute`.
+
+    Presentation only, and additive: what must not diverge between surfaces is
+    *whether* an exclusion is relevant, and that judgement is the kernel's
+    (`duly_kernel.relevance`). Naming the rules it stopped is this pane's own
+    embellishment — it turns "a fact was excluded" into "this rule could not
+    be evaluated", which is the sentence a reader of a derivation wants.
+
+    Deliberately not a claim about the counterfactual. A rule that never bound
+    its input did not fire; whether it *would have* concluded anything had the
+    fact cleared the floor is unknowable from here, and the UI must not say it.
+    """
+    if not isinstance(pack, dict):
+        return []
+    found: list[dict[str, str]] = []
     for rule in pack.get("rules") or []:
         if not isinstance(rule, dict):
             continue
-        conclusion = (rule.get("then") or {}).get("attribute")
-        if conclusion:
-            by_conclusion.setdefault(conclusion, []).append(rule)
-    consulted: set[str] = set()
-    pending = [decision_attr]
-    while pending:
-        attr = pending.pop()
-        if attr in consulted:
+        if (rule.get("then") or {}).get("attribute") not in consulted:
             continue
-        consulted.add(attr)
-        for rule in by_conclusion.get(attr, []):
-            for binding in (rule.get("given") or {}).values():
-                if not isinstance(binding, dict):
-                    continue
-                if binding.get("attribute"):
-                    consulted.add(binding["attribute"])
-                elif binding.get("derived"):
-                    pending.append(binding["derived"])
-    return consulted
+        for binding in (rule.get("given") or {}).values():
+            if isinstance(binding, dict) and binding.get("attribute") == attribute:
+                found.append(
+                    {
+                        "ruleId": str(rule.get("id", "")),
+                        "description": str(rule.get("description") or ""),
+                        "citation": str((rule.get("citation") or {}).get("text") or ""),
+                    }
+                )
+                break
+    return found
 
 
 def _review_state(
@@ -1204,9 +1223,13 @@ def _review_state(
         scenario.get("pack"), (receipt.get("decision") or {}).get("attribute")
     )
     if consulted is not None:
+        pack = scenario.get("pack")
         for view in views:
-            if view.get("attribute"):
-                view["consultedByDecision"] = view["attribute"] in consulted
+            if not view.get("attribute"):
+                continue
+            view["consultedByDecision"] = view["attribute"] in consulted
+            if view["consultedByDecision"]:
+                view["blockedRules"] = _rules_reading(pack, consulted, view["attribute"])
     review_meta = scenario.get("review") or {}
     runtime = _active_runtime()
     available = bool(review_meta.get("available")) and runtime is not None

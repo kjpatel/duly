@@ -548,6 +548,62 @@ function renderDerivation() {
   if (state.receipt && state.receipt.derivation) {
     container.append(derivationNode(state.receipt.derivation));
   }
+  for (const entry of pertinentAbstentions()) container.append(derivationGap(entry));
+}
+
+/* Abstentions this question's rules could have consulted. Anything the server
+ * could not classify (no pack, no kernel) counts as pertinent: "unknown" must
+ * not silently hide an exclusion that shaped the answer. */
+function pertinentAbstentions() {
+  return (state.abstentions || []).filter((e) => e.consultedByDecision !== false);
+}
+
+/* An input the derivation wanted and did not get. It is deliberately *not* a
+ * derivation node: the tree is the receipt's, and a synthetic node inside it
+ * would be this page inventing a step the kernel never took. It sits after the
+ * tree, styled as a gap, saying which rule went unevaluated and why. */
+function derivationGap(entry) {
+  const card = document.createElement("div");
+  card.className = "derivation-gap";
+
+  const head = document.createElement("div");
+  head.className = "rule-head";
+  const tag = document.createElement("span");
+  tag.className = "gap-tag";
+  tag.textContent = "Input excluded";
+  const attr = document.createElement("span");
+  attr.className = "node-attr";
+  attr.textContent = shortAttr(entry.attribute);
+  head.append(tag, attr);
+  card.append(head);
+
+  const why = document.createElement("p");
+  why.className = "gap-detail";
+  const score = (entry.confidence || {}).score;
+  const floor = (entry.threshold || {}).minConfidence;
+  why.textContent =
+    score != null && floor != null
+      ? `This question's rules read ${shortAttr(entry.attribute)}, which was ` +
+        `excluded at confidence ${score} — below the ${floor} floor.`
+      : `This question's rules read ${shortAttr(entry.attribute)}, which was excluded.`;
+  card.append(why);
+
+  for (const rule of entry.blockedRules || []) {
+    const line = document.createElement("p");
+    line.className = "gap-rule";
+    line.textContent = rule.citation
+      ? `${rule.ruleId} (${rule.citation}) was not evaluated.`
+      : `${rule.ruleId} was not evaluated.`;
+    card.append(line);
+  }
+
+  const consequence = document.createElement("p");
+  consequence.className = "gap-detail muted";
+  consequence.textContent =
+    "What the rule would have concluded is unknown — the fact never bound. " +
+    "Correct it below to find out.";
+  card.append(consequence);
+  return card;
 }
 
 /* ---------- extraction provenance ---------- */
@@ -567,15 +623,41 @@ function renderExtractionLabel() {
  * decision-receipt schema, not verdict wording — that stays server-side). */
 const REASON_LABELS = { low_confidence: "Low confidence", conflict: "Conflict" };
 
+/* Abstentions are case-wide: the kernel excludes below-floor facts from the
+ * whole live-fact universe before any rule runs, so every receipt for a case
+ * carries every exclusion the case had. Beside a question whose rules never
+ * read the attribute, such an entry is not "a fact this decision declined to
+ * use" — it is a fact about the case — and shown as a peer of the real ones it
+ * reads as a defect. So the pertinent ones are the section, and the rest sit
+ * folded underneath: still reachable, because they are in the receipt and this
+ * page does not get to decide the receipt says less than it does. */
 function renderAbstentions() {
   const container = $("abstentions");
   container.replaceChildren();
-  const entries = state.abstentions || [];
-  $("abstentions-title").style.display = entries.length ? "" : "none";
-  for (const entry of entries) container.append(abstentionCard(entry));
-  if (entries.length && state.review && state.review.calibrationNote) {
+  const pertinent = pertinentAbstentions();
+  const elsewhere = (state.abstentions || []).filter(
+    (e) => e.consultedByDecision === false
+  );
+
+  $("abstentions-title").style.display = pertinent.length ? "" : "none";
+  for (const entry of pertinent) container.append(abstentionCard(entry));
+  if (elsewhere.length) container.append(otherAbstentions(elsewhere));
+  if (pertinent.length && state.review && state.review.calibrationNote) {
     container.append(calibrationNote());
   }
+}
+
+function otherAbstentions(entries) {
+  const wrap = document.createElement("details");
+  wrap.className = "other-abstentions";
+  const summary = document.createElement("summary");
+  summary.textContent =
+    entries.length === 1
+      ? "1 other fact was excluded in this case, but no rule behind this answer reads it"
+      : `${entries.length} other facts were excluded in this case, but no rule behind this answer reads them`;
+  wrap.append(summary);
+  for (const entry of entries) wrap.append(abstentionCard(entry));
+  return wrap;
 }
 
 function calibrationNote() {

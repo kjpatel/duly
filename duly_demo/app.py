@@ -1492,7 +1492,45 @@ def _adjudication_payload(
         "abstentions": abstentions,
         "review": review,
         "extraction": scenario.get("extraction"),
+        "ruleText": _rule_descriptions(scenario.get("pack"), receipt),
     }
+
+
+def _rule_descriptions(pack: Any, receipt: dict[str, Any]) -> dict[str, str]:
+    """What each fired rule *says*, in the pack author's own sentence.
+
+    A receipt names rules by id, version and citation and carries no prose:
+    `description` is pack data, not decision data, and putting it inside a
+    hashed body would mean a wording fix invalidated every receipt that quoted
+    it. So the sentence is looked up here, at render time.
+
+    Safe in this direction, and only in this direction. The pack in hand is the
+    object that just adjudicated — same process, same version — so the sentence
+    is necessarily the one the fired rule carried. The receipt viewer faces the
+    opposite case and refuses it: a receipt whose `rulePack.version` has moved
+    gets no rule text at all, because prose from a version the receipt never
+    saw would read as the text its rules had.
+    """
+    if not isinstance(pack, dict):
+        return {}
+    fired = {
+        r.get("ruleId")
+        for r in receipt.get("rulesFired") or []
+        if isinstance(r, dict)
+    }
+    # Defeated rules are named on the cards too, and a reader asking "what did
+    # this override?" wants that sentence as much as the winner's.
+    for entry in receipt.get("rulesFired") or []:
+        if isinstance(entry, dict):
+            fired.update(entry.get("defeated") or [])
+    out: dict[str, str] = {}
+    for rule in pack.get("rules") or []:
+        if not isinstance(rule, dict):
+            continue
+        rule_id = rule.get("id")
+        if rule_id in fired and rule.get("description"):
+            out[str(rule_id)] = str(rule["description"])
+    return out
 
 
 @app.post("/api/adjudicate")

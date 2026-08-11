@@ -13,14 +13,17 @@
 
 FROM python:3.12-slim
 
-# The `demo` extra brings fastapi + uvicorn. Deliberately NOT `prove`: z3 is
+# `demo` brings fastapi + uvicorn; `report` brings reportlab, without which
+# the PDF audit report is a button that 503s — the extra was missed when this
+# image was first written, and the demo offered the download anyway.
+# Deliberately NOT `prove`: z3 is
 # the most CPU-expensive thing the rule studio can be asked to run, which is a
 # poor thing to expose to anonymous callers.
 #
 # Copied by glob so a version bump needs no edit here. The extras suffix has to
 # be applied in the shell, because a glob inside quotes will not expand.
 COPY duly-*.whl /tmp/
-RUN pip install --no-cache-dir "$(ls /tmp/duly-*.whl)[demo]" && rm -f /tmp/duly-*.whl
+RUN pip install --no-cache-dir "$(ls /tmp/duly-*.whl)[demo,report]" && rm -f /tmp/duly-*.whl
 
 # The content-root contract is flat: starters/, golden/, rulepacks/,
 # ontologies/ and dmn/ sit directly under the root (duly_demo/content.py). The

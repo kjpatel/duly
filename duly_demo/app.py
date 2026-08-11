@@ -1827,7 +1827,18 @@ def api_report(
         content: bytes = render_report_markdown(receipt, facts, pack).encode("utf-8")
         media_type = "text/markdown; charset=utf-8"
     else:
-        content = render_report_pdf(receipt, facts, pack)
+        # `duly_kernel.report` imports reportlab lazily, inside the render
+        # function, so the module-level guard above cannot see this one: the
+        # import succeeds and the failure arrives at call time. Unhandled, that
+        # is a raw 500 on a button the page offered — the receipt viewer's PDF
+        # route has always answered this honestly and this one did not.
+        try:
+            content = render_report_pdf(receipt, facts, pack)
+        except ModuleNotFoundError:
+            raise HTTPException(
+                status_code=503,
+                detail="PDF rendering needs reportlab, which is not installed.",
+            )
         media_type = "application/pdf"
 
     filename = f"duly-audit-{scenarioId}-{_date_prefix(effective)}.{format}"

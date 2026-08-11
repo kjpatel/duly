@@ -1851,6 +1851,29 @@ summary:focus-visible {
   margin-top: 4px;
 }
 
-.derivation-gap > .ghost-btn {
+.derivation-gap > .link-btn {
   margin-top: 8px;
+}
+
+/* A text action that goes somewhere: the shape "navigation is text" asks for,
+ * and the one to reach for instead of a bordered button when a control moves
+ * the reader rather than changing anything. Shared, because it is used on more
+ * than one page — it lived in evidence.css until the decision workspace needed
+ * it and the copy would have been the second one. */
+.link-btn {
+  display: inline-block;
+  padding: 0;
+  color: var(--color-accent-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 550;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  color: var(--color-accent);
 }

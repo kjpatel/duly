@@ -1779,45 +1779,39 @@ summary:focus-visible {
   }
 }
 
-/* An input the derivation wanted and did not get. It sits after the tree, not
- * inside it: the tree is the receipt's own derivation, and a synthetic node
- * within it would be the page inventing a step the kernel never took. Warning
- * colours because a gap in the reasoning is exactly what it is. */
+/* An input the derivation wanted and did not get. No box: it lives inside the
+ * derivation container and uses the same chip and column rhythm as the
+ * premises above it, so the widths line up instead of a bordered card sitting
+ * inside a bordered card. A rule and a label carry the "not part of the tree"
+ * meaning that a competing border used to shout. */
 .derivation-gap {
-  padding: 12px 14px;
-  margin-top: 10px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.gap-label {
+  margin-bottom: 6px;
+  color: var(--warning-text, var(--color-text-muted));
+}
+
+/* Same chip, marked. Shape, padding, type and click behaviour are the
+ * premise's; only the colour says this one did not bind. */
+.fact-chip.excluded {
+  border-color: var(--warning-border);
   background: var(--warning-soft);
-  border: 1px solid var(--warning-border);
-  border-radius: 12px;
 }
 
-.gap-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--warning-border);
-  color: var(--color-text);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.gap-detail,
 .gap-rule {
-  margin: 6px 0 0;
-  font-size: 0.7rem;
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   line-height: 1.5;
 }
 
-.gap-rule {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: var(--color-text-muted);
-}
-
-.gap-detail.muted {
-  color: var(--color-text-muted);
+.derivation-gap > .link-btn {
+  margin-top: 8px;
 }
 
 /* Case-wide exclusions no rule behind this answer reads. Folded rather than

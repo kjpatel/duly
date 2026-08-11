@@ -122,9 +122,27 @@
     </div>
 
     <div class="pane-body">
+      <!-- Question and Answer are two labelled sections of one column, and the
+           symmetry is what separates them: the same `field-label` shape the
+           audit pane stacks its sections with. A picker rather than a list of
+           chips because the list grew with the pack and pushed the answer —
+           the point of the pane — further down for every question added. -->
       <div class="field-label">Question</div>
-      <div class="chips" id="question-chips" role="group" aria-label="Decision questions"></div>
+      <div class="control-field question-field">
+        <div class="control-input">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.7.6-.7 1.1v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <select id="question-select" aria-label="Decision question"></select>
+          <svg class="select-chevron" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+            <path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
 
+      <div class="field-label answer-label" id="answer-label" hidden>Answer</div>
       <div class="answer-card hidden" id="answer-card" aria-live="polite">
         <div class="answer-main">
           <span class="determination-icon" id="determination-icon" aria-hidden="true"></span>

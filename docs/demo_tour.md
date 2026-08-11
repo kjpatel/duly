@@ -51,6 +51,8 @@ Change the **As of** date (top right) to a date in 2025 — say `12/15/2025`. Th
 
 (The pre-2026 30-day rule is marked `DEMO-SYNTHETIC` in the pack: it exists to demonstrate effective-dated replay and is not real statutory history.)
 
+Every verdict this tour quotes holds on whatever day you read it, because each scenario opens at a date it *declares* — `defaultAsOf` in its `scenario.json`, here the day the notice was mailed — rather than at today's. That was not always true: the date used to fall back to the wall clock, so a tour written on Tuesday described a demo that could answer differently on Friday.
+
 ## 7. Download the artifacts
 
 Four buttons at bottom right:

@@ -18,6 +18,7 @@ statement about what this repository happens to ship. It is
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -151,3 +152,88 @@ def test_the_built_in_fixture_scenario_ships_with_the_demo(empty_content):
     scenario = duly_demo.app._build_fixture_scenario()
     assert scenario is not None
     assert scenario["extraction"]["source"] == "fixture"
+
+
+class TestAScenarioOpensAtADeclaredMoment:
+    """Which moment a scenario opens at is authored, not inferred.
+
+    The demo used to derive it: the latest `effectiveFrom` among the case's
+    facts, falling back to `date.today()`. No committed fact carries that
+    field, so the fallback was the only branch that ever ran and every
+    scenario's default answer drifted with the calendar — which is an awkward
+    property for a project whose claim is that a decision is reproducible
+    under the rules of a *named* date. Worse, it hid teaching: the TILA
+    scenario answers `fundingPermitted = true` at any date past the rescission
+    window, so the floating default showed the dull steady state rather than
+    the rule doing work.
+    """
+
+    def _root_with(self, tmp_path, as_of):
+        from demotest_helpers import SCENARIO, build_content_root
+
+        root = build_content_root(tmp_path / "content")
+        manifest_path = root / "starters" / SCENARIO / "scenario.json"
+        manifest = json.loads(manifest_path.read_text())
+        if as_of is None:
+            manifest.pop("defaultAsOf", None)
+        else:
+            manifest["defaultAsOf"] = as_of
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        return root
+
+    def _scenarios(self, root, monkeypatch):
+        from demotest_helpers import reload_demo
+
+        monkeypatch.setenv(ENV_VAR, str(root))
+        monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+        reload_demo()
+        import duly_demo.app
+
+        try:
+            return duly_demo.app.load_scenarios()
+        finally:
+            monkeypatch.undo()
+            reload_demo()
+
+    def test_a_declared_date_is_what_the_scenario_opens_at(self, tmp_path, monkeypatch):
+        from demotest_helpers import SCENARIO
+
+        root = self._root_with(tmp_path, "2026-03-04")
+        scenarios = self._scenarios(root, monkeypatch)
+        assert scenarios[SCENARIO]["defaultAsOf"] == "2026-03-04"
+
+    def test_without_one_the_date_falls_back_rather_than_failing(
+        self, tmp_path, monkeypatch
+    ):
+        # The fallback is still there and still honest — a scenario that
+        # declares nothing must load, not break. What it must not do is be the
+        # only path, which is why the sibling test above exists.
+        from demotest_helpers import SCENARIO
+
+        root = self._root_with(tmp_path, None)
+        scenarios = self._scenarios(root, monkeypatch)
+        assert scenarios[SCENARIO]["defaultAsOf"]
+
+    def test_the_declared_date_is_what_the_browser_is_handed(
+        self, tmp_path, monkeypatch
+    ):
+        # Reading the manifest is not the property worth pinning; serving it
+        # is. The date the API reports is the one the page's picker opens on
+        # and the one every adjudication from that page carries.
+        from demotest_helpers import SCENARIO, reload_demo
+
+        root = self._root_with(tmp_path, "2026-03-04")
+        monkeypatch.setenv(ENV_VAR, str(root))
+        monkeypatch.delenv("DULY_DEMO_FORCE_FIXTURE", raising=False)
+        reload_demo()
+        import duly_demo.app
+
+        try:
+            with TestClient(duly_demo.app.app) as client:
+                body = client.get("/api/scenarios").json()
+            rows = body if isinstance(body, list) else body["scenarios"]
+            row = next(r for r in rows if r["id"] == SCENARIO)
+            assert row["defaultAsOf"] == "2026-03-04"
+        finally:
+            monkeypatch.undo()
+            reload_demo()

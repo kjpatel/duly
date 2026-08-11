@@ -1888,7 +1888,7 @@ summary:focus-visible {
 .q-picker-button {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   padding: 9px 11px;
   color: var(--color-text);
@@ -1918,9 +1918,14 @@ summary:focus-visible {
   color: var(--color-text-muted);
 }
 
-/* The point of the control: the full question, on as many lines as it needs. */
+/* The point of the control: the full question, on as many lines as it needs.
+ *
+ * `min-width: 0` is load-bearing. A flex item's default `min-width: auto` is
+ * its content's minimum, so a long question refused to shrink into its share
+ * of the row and ran under the chevron instead of wrapping before it. */
 .q-picker-label {
   flex: 1 1 auto;
+  min-width: 0;
   line-height: 1.45;
 }
 

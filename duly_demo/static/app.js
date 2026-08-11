@@ -618,26 +618,45 @@ function pertinentAbstentions() {
 
 /* An input the derivation wanted and did not get.
  *
- * A pointer, not a second telling. The score, the floor, where the floor came
- * from, the excluded fact and the correction form all live one tab away; this
- * line exists so a reader of the reasoning learns there *is* a gap, and can
- * get to it in one click. It also sits after the tree rather than inside it —
- * the tree is the receipt's own derivation, and a synthetic node within it
- * would be the page inventing a step the kernel never took. */
+ * Rendered with `factChip`, the same component every premise above it uses,
+ * and for two reasons. An excluded fact is still a *grounded* fact — it has a
+ * document, a span and a quote — so in the one view whose promise is "click a
+ * fact to reach the sentence it came from", it must click. And a bespoke card
+ * made the single most interesting item on the page the one item that looked
+ * foreign and did nothing.
+ *
+ * It sits after the tree under its own label rather than inside `.premises`,
+ * because the tree is the receipt's derivation and a premise the kernel never
+ * bound is not one of its steps. Same shapes, different heading: uniform
+ * without claiming something untrue.
+ *
+ * What this view carries is what a *reasoning* reader needs — which input was
+ * missing, and which rule went unevaluated for want of it. Why the floor
+ * excluded it, and how to correct it, are policy and remedy, and they live
+ * once, on the tab that owns them. */
 function derivationGap(entry) {
-  const card = document.createElement("div");
-  card.className = "derivation-gap";
+  const wrap = document.createElement("div");
+  wrap.className = "derivation-gap";
 
-  const head = document.createElement("div");
-  head.className = "rule-head";
-  const tag = document.createElement("span");
-  tag.className = "gap-tag";
-  tag.textContent = "Input excluded";
-  const attr = document.createElement("span");
-  attr.className = "node-attr";
-  attr.textContent = shortAttr(entry.attribute);
-  head.append(tag, attr);
-  card.append(head);
+  const label = document.createElement("div");
+  label.className = "field-label gap-label";
+  label.textContent = "Wanted but excluded";
+  wrap.append(label);
+
+  const premises = document.createElement("div");
+  premises.className = "premises";
+  for (const factId of entry.facts || []) {
+    const chip = factChip(factId);
+    chip.classList.add("excluded");
+    premises.append(chip);
+  }
+  if (!premises.childNodes.length) {
+    const attr = document.createElement("span");
+    attr.className = "node-attr";
+    attr.textContent = shortAttr(entry.attribute);
+    premises.append(attr);
+  }
+  wrap.append(premises);
 
   for (const rule of entry.blockedRules || []) {
     const line = document.createElement("p");
@@ -645,7 +664,7 @@ function derivationGap(entry) {
     line.textContent = rule.citation
       ? `${rule.ruleId} (${rule.citation}) was not evaluated.`
       : `${rule.ruleId} was not evaluated.`;
-    card.append(line);
+    wrap.append(line);
   }
 
   const go = document.createElement("button");
@@ -655,10 +674,10 @@ function derivationGap(entry) {
    * "One shape per job"). A button element rather than an anchor because
    * there is no URL to go to — the tab is state, not a location. */
   go.className = "link-btn";
-  go.textContent = "See the abstention";
+  go.textContent = "Why it was excluded";
   go.addEventListener("click", () => selectAuditTab("abstentions"));
-  card.append(go);
-  return card;
+  wrap.append(go);
+  return wrap;
 }
 
 /* ---------- extraction provenance ---------- */
